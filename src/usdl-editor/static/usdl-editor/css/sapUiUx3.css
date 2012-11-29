@@ -1,0 +1,213 @@
+.sapUiUx3NavBar {
+    -moz-user-select: none;
+    border-bottom: 2px solid #CCCCCC;
+    display: block;
+    height: 27px;
+    position: relative;
+    width: 100%;
+}
+
+.sapUiUx3NavBar {
+    border-bottom: 2px solid #222222;
+    text-transform: uppercase;
+}
+
+.sapUiUx3TIFacetBar {
+    height: 38px;
+    left: 0;
+    padding: 10px 5px 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.sapUiUx3NavBarList {
+    display: inline-block;
+    height: 27px;
+    left: 0;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    right: 6px;
+    white-space: nowrap;
+}
+
+.sapUiUx3NavBarBack, .sapUiUx3NavBarForward {
+    background-position: center center;
+    background-repeat: no-repeat;
+    display: none;
+    font-size: 14px;
+    font-weight: bold;
+    height: 16px;
+    overflow: hidden;
+    padding: 2px;
+    position: absolute;
+    text-decoration: none;
+    top: 2px;
+    width: 20px;
+}
+
+.sapUiUx3NavBarBack {
+    left: 0;
+}
+
+.sapUiUx3NavBarBack, .sapUiUx3NavBarForward {
+    background-image: url("../images/navigationbar.png");
+    padding: 2px 0 2px 20px;
+    width: 0;
+}
+
+.sapUiUx3NavBarBack {
+    background-position: -3px -83px;
+}
+
+
+.sapUiUx3NavBarList {
+    display: inline-block;
+    height: 27px;
+    left: 0;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    right: 6px;
+    white-space: nowrap;
+}
+
+.sapUiUx3NavBarList > li {
+    display: inline-block;
+}
+
+.sapUiUx3NavBarItem {
+//    -moz-transition-duration: 0.3s;
+//    -moz-transition-property: color, font-size, padding;
+    color: #000000;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0 2px;
+    padding: 3px 9px 7px;
+}
+
+.sapUiUx3NavBarDummyItem {
+    font-size: 16px;
+    margin: 0;
+    padding: 0 1px 4px 0;
+    width: 0;
+}
+
+.sapUiUx3NavBarItem {
+    color: #999999;
+}
+
+.sapUiUx3NavBarArrow {
+    background-color: transparent;
+    background-image: url("../images/navigationbar.png");
+    background-position: -16px 0;
+    bottom: 0;
+    display: block;
+    height: 5px;
+    left: -100px;
+    position: absolute;
+    width: 10px;
+}
+
+.sapUiUx3NavBarItemSel {
+    -moz-transition-duration: 0.3s;
+    -moz-transition-property: color, font-size, padding;
+    font-size: 16px;
+    padding: 0 9px;
+}
+
+.sapUiUx3TIToolbar {
+    background-color: #F2F2F2;
+    bottom: 1px;
+    height: 40px;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    right: 0;
+}
+
+.sapUiUx3TIGenericActions {
+    display: inline-block;
+    float: left;
+    list-style: none outside none;
+    margin: 0;
+    padding: 7px 0 7px 18px;
+}
+
+.sapUiUx3TIItem {
+    cursor: pointer;
+    display: inline-block;
+    height: 22px;
+    padding: 2px 2px 2px 0;
+    position: relative;
+}
+
+.sapUiUx3TIAction {
+    display: inline-block;
+    height: 16px;
+    padding: 3px;
+    width: 16px;
+}
+
+.sapUiUx3TIUpdateAction {
+    background-image: url("../images/update_regular.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.sapUiUx3TISettingsAction {
+    background-image: url("../images/Settings_regular.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.sapUiUx3TIPublishAction {
+    background-image: url("../images/Shortcut_regular.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.sapUiUx3TISearchAction {
+    background-image: url("../images/Search_regular.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.sapUiUx3TIFollowAction {
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.sapUiUx3TIFollowAction.Default {
+    background-image: url("../images/not_following_regular.png");
+}
+
+.sapUiUx3TIFavoriteAction {
+    background-image: url("../images/favorite_regular.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.sapUiUx3TIFavoriteAction.Selected {
+    background-image: url("../images/favorite_selected.png");
+}
+
+.sapUiUx3TIFlagAction {
+    background-image: url("../images/flag_regular.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.sapUiUx3TIThingActions {
+    display: inline-block;
+    float: right;
+    list-style: none outside none;
+    margin: 0;
+    padding: 0 20px 0 0;
+}

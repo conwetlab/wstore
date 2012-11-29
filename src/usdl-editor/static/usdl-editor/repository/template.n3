@@ -1,0 +1,137 @@
+@base <http://bizweb.sap.com/services/WarrantyManagementSolution/> .
+@prefix :    <http://bizweb.sap.com/services/WarrantyManagementSolution/#> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-servicelevel#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<>  rdf:type usdl:ServiceDescription ; # this document is a USDL service description
+    dcterms:title "Enter title";
+    rdfs:label "Enter label" ;
+    dcterms:description "Enter description" ;
+    owl:versionInfo "Enter version";
+    dcterms:created "2011-11-23"^^xsd:date .
+
+<#WarrantyManagementGenericSolution> a usdl:ServiceModel;
+       usdl:hasNature usdl:Manual;
+       usdl:versionInfo "Enter version";
+       usdl:hasClassification [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:SolutionType ;
+                                rdfs:label "Business Solution"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:PlatformType ;
+                                rdfs:label "Android"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:BusinessArea ;
+                                rdfs:label "Services"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:Industry ;
+                                rdfs:label "Consumer Products"];
+#       usdl:hasServiceModel <http://bizweb.sap.com/services/solutionModel> ;
+       dcterms:modified "2011-03-03"^^xsd:datetime;
+       dcterms:created "2011-03-03"^^xsd:datetime;
+       dcterms:title ""@en;
+       usdl:shortDescription "Enter description"@en;
+       usdl:longDescription "Enter detailed description"@en;
+       foaf:thumbnail <http://ddrsl001xb.drss.sap.corp:8888/bizwebportal/resources/assets/icons/05_Icon_UIDivision.png>;
+       foaf:depiction <http://ddrsl001xb.drss.sap.corp:8888/bizweb/icons/GBFlipper_AW.png>;
+       usdl:hasProvider :provider;
+       usdl:hasLegalCondition :termsAndConditions .
+
+<#WarrantyManagementSolution> a usdl:Service;
+       usdl:versionInfo "";
+       usdl:hasClassification [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:SolutionType ;
+                                rdfs:label "Business Solution"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:PlatformType ;
+                                rdfs:label "Android"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:BusinessArea ;
+                                rdfs:label "Services"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:Industry ;
+                                rdfs:label "Consumer Products"];
+       usdl:hasServiceModel <#WarrantyManagementGenericSolution> ;
+       dcterms:modified ""^^xsd:datetime;
+       dcterms:created ""^^xsd:datetime;
+       dcterms:title ""@en;
+       usdl:shortDescription ""@en;
+       usdl:longDescription ""@en;
+       foaf:thumbnail <http://ddrsl001xb.drss.sap.corp:8888/bizwebportal/resources/assets/icons/05_Icon_UIDivision.png>;
+       foaf:depiction <http://ddrsl001xb.drss.sap.corp:8888/bizweb/icons/GBFlipper_AW.png>;
+       usdl:hasProvider :provider;
+       usdl:hasLegalCondition :termsAndConditions;
+       sla:hasServiceLevelProfile :sl_profile_1.
+
+
+:termsAndConditions a legal:TermsAndConditions;
+       dcterms:title "Terms and Conditions"@en;
+       dcterms:description "Defines terms of use, liability, data safety and so on."@en;
+       legal:hasClause [ a legal:Clause;
+                         legal:name "General Terms";
+                         legal:text "Enter text"@en ] .
+
+
+:provider a gr:BusinessEntity;
+      foaf:name "Enter provider name";
+      foaf:homepage <http://www.application-provider.com>;
+      foaf:logo <http://deqkalvm272.qkal.sap.corp:1080/ServicePad/images/03_Icon_50.png>;
+      usdl:legalForm "" ;
+      dcterms:description "Enter description";
+      vcard:adr [ a vcard:Work;
+                  dcterms:description "";
+                  vcard:tel "";
+                  vcard:email "";
+                  vcard:locality "";
+                  vcard:street-address "";
+                  vcard:postal-code "";
+                  vcard:country-name ""@en ] .
+
+# service level profile
+
+:sl_profile_1 a usdl:ServiceLevelProfile;
+      usdl:hasServiceLevel [ a usdl:GuaranteedAction;
+                                usdl:serviceLevelExpression "all regions" ;
+                                usdl:obligatedParty usdl:Consumer ] .
+
+
+:offering a usdl:ServiceOffering;
+#   usdl:includes <#WarrantyManagementSolution>;
+   usdl:hasPricePlan :price_plan_1;
+   usdl:validFrom "2011-12-01"^^xsd:datetime;
+   usdl:validThrough "2011-12-31"^^xsd:datetime;
+#   usdl:hasServiceLevelProfile :WarrantyManagement_ServiceLevelProfile
+   .
+
+:price_plan_1 a price:PricePlan;
+   dcterms:title "Enter title"@en;
+   dcterms:description "Enter description"@en.
+
+
+
+   
+
+
+
+   
+

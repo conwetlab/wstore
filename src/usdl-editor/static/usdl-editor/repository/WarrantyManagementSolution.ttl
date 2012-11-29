@@ -1,0 +1,239 @@
+    
+    <file:///home/d029752/WarrantyManagementSolution.n3>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#ServiceDescription> .
+    
+    <file:///home/d029752/WarrantyManagementSolution.n3>     <http://purl.org/dc/terms/contributor> _:L30C26 .
+    
+    <file:///home/d029752/WarrantyManagementSolution.n3>     <http://purl.org/dc/terms/created> "2011-09-29"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <file:///home/d029752/WarrantyManagementSolution.n3>     <http://purl.org/dc/terms/creator> <http://bizweb.sap.com/services/WarrantyManagementSolution#Torsten_Leidig> .
+    
+    <file:///home/d029752/WarrantyManagementSolution.n3>     <http://purl.org/dc/terms/description> "This description is an example of describing USDL services in RDF. These service descriptions are read by Web shops (stores) and marketplaces in order to present the business relevent information to the consumer." .
+    
+    <file:///home/d029752/WarrantyManagementSolution.n3>     <http://purl.org/dc/terms/title> "USDL service description for the Yard Management EC Service" .
+    
+    <file:///home/d029752/WarrantyManagementSolution.n3>     <http://www.w3.org/2000/01/rdf-schema#label> "Service description for the BizWeb Warranty Management Solution" .
+    
+    <file:///home/d029752/WarrantyManagementSolution.n3>     <http://www.w3.org/2002/07/owl#versionInfo> "0.1" .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#ServiceModel> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://bizweb.sap.com/TR/blueprint#hasGenericBlueprint> <http://www.sap.com/bizweb/blueprints/1212345345> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://purl.org/dc/terms/created> "2011-03-03"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://purl.org/dc/terms/modified> "2011-03-03"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://purl.org/dc/terms/title> "Warranty Management Generic Solution"@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L42C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L45C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L48C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L51C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L54C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasDocumentation> <https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasLegalCondition> <http://bizweb.sap.com/services/WarrantyManagementSolution#termsAndConditions> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasNature> <http://www.w3.org/TR/usdl#Automated> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasProvider> <http://bizweb.sap.com/services/WarrantyManagementSolution#provider> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#hasServiceModel> <http://bizweb.sap.com/services/solutionModel> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#longDescription> "This Warrenty Management Solution will support your consumers/end customers in keeping track of their warranties, finding information for bought products and getting updates on recall campaigns.<p>Your benefits by providing this application:<ul><li>customer loyalty and satisfaction</li><li>growth in sales by regular customers</li><li>information about your customers (optional)</li></ul>"@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#shortDescription> "The Warranty Management Solution supports your end customers in keeping track of their warranties and supports you in your customer loyalty activities."@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://www.w3.org/TR/usdl#versionInfo> "0.9" .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://xmlns.com/foaf/0.1/depiction> <http://deqkalvm272.qkal.sap.corp:1080/ServicePad/images/GBFlipper_AW.png> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution>     <http://xmlns.com/foaf/0.1/thumbnail> <http://deqkalvm272.qkal.sap.corp:1080/ServicePad/images/05_Icon_UIDivision.png> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Service> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://bizweb.sap.com/TR/blueprint#hasGenericBlueprint> <http://www.sap.com/bizweb/blueprints/1212345345> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://purl.org/dc/terms/created> "2011-03-03"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://purl.org/dc/terms/modified> "2011-03-03"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://purl.org/dc/terms/title> "Warranty Management Custom Solution"@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L72C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L75C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L78C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L81C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#hasClassification> _:L84C31 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#hasDocumentation> <https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#hasLegalCondition> <http://bizweb.sap.com/services/WarrantyManagementSolution#termsAndConditions> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#hasProvider> <http://bizweb.sap.com/services/WarrantyManagementSolution#provider> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#hasServiceModel> <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementGenericSolution> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#longDescription> "This Warrenty Management Solution will support your consumers/end customers in keeping track of their warranties, finding information for bought products and getting updates on recall campaigns.<p>Your benefits by providing this application:<ul><li>customer loyalty and satisfaction</li><li>growth in sales by regular customers</li><li>information about your customers (optional)</li></ul>"@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#shortDescription> "The Warranty Management Solution supports your end customers in keeping track of their warranties and supports you in your customer loyalty activities."@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://www.w3.org/TR/usdl#versionInfo> "0.9" .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://xmlns.com/foaf/0.1/depiction> <http://deqkalvm272.qkal.sap.corp:1080/ServicePad/images/GBFlipper_AW.png> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution>     <http://xmlns.com/foaf/0.1/thumbnail> <http://deqkalvm272.qkal.sap.corp:1080/ServicePad/images/05_Icon_UIDivision.png> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#offering>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#ServiceOffering> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#offering>     <http://www.w3.org/TR/usdl#hasPricePlan> <http://bizweb.sap.com/services/WarrantyManagementSolution#price_plan_1> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#offering>     <http://www.w3.org/TR/usdl#hasServiceLevelProfile> <http://bizweb.sap.com/services/WarrantyManagementSolution#sl_profile_1> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#offering>     <http://www.w3.org/TR/usdl#includes> <http://bizweb.sap.com/services/WarrantyManagementSolution#WarrantyManagementSolution> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#offering>     <http://www.w3.org/TR/usdl#validFrom> "2011-12-01"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#offering>     <http://www.w3.org/TR/usdl#validThrough> "2011-12-31"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#price_plan_1>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/price#PricePlan> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#price_plan_1>     <http://purl.org/dc/terms/description> "Please request a proposal tailored to  your business."@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#price_plan_1>     <http://purl.org/dc/terms/title> "Request for Proposal"@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#provider>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/goodrelations/v1#BusinessEntity> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#provider>     <http://purl.org/dc/terms/description> "Describe provider here ..." .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#provider>     <http://www.w3.org/2006/vcard/ns#adr> _:L114C17 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#provider>     <http://www.w3.org/TR/usdl#legalForm> "GmbH" .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#provider>     <http://xmlns.com/foaf/0.1/homepage> <http://www.application-provider.com> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#provider>     <http://xmlns.com/foaf/0.1/logo> <http://deqkalvm272.qkal.sap.corp:1080/ServicePad/images/03_Icon_50.png> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#provider>     <http://xmlns.com/foaf/0.1/name> "Application Provider GmbH" .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#sl_profile_1>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#ServiceLevelProfile> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#sl_profile_1>     <http://www.w3.org/TR/usdl#hasServiceLevel> _:L126C28 .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#termsAndConditions>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/legal#TermsAndConditions> .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#termsAndConditions>     <http://purl.org/dc/terms/description> "Defines terms of use, liability, data safety and so on."@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#termsAndConditions>     <http://purl.org/dc/terms/title> "Terms and Conditions"@en .
+    
+    <http://bizweb.sap.com/services/WarrantyManagementSolution#termsAndConditions>     <http://www.w3.org/TR/legal#hasClause> _:L103C24 .
+    
+    _:L30C26     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/firstName> "Torsten" .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/lastName> "Leidig" .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/name> "Torsten Leidig" .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/phone> "+49 6227 7 52535" .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/title> "Dr" .
+    
+    _:L42C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L42C31     <http://www.w3.org/2000/01/rdf-schema#label> "Business Solution" .
+    
+    _:L42C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#SolutionType> .
+    
+    _:L45C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L45C31     <http://www.w3.org/2000/01/rdf-schema#label> "Android" .
+    
+    _:L45C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#PlatformType> .
+    
+    _:L48C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L48C31     <http://www.w3.org/2000/01/rdf-schema#label> "Services" .
+    
+    _:L48C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#BusinessArea> .
+    
+    _:L51C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L51C31     <http://www.w3.org/2000/01/rdf-schema#label> "Consumer Products" .
+    
+    _:L51C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#Industry> .
+    
+    _:L54C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L54C31     <http://www.w3.org/2000/01/rdf-schema#label> "Retail" .
+    
+    _:L54C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#Industry> .
+    
+    _:L72C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L72C31     <http://www.w3.org/2000/01/rdf-schema#label> "Business Solution" .
+    
+    _:L72C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#SolutionType> .
+    
+    _:L75C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L75C31     <http://www.w3.org/2000/01/rdf-schema#label> "Android" .
+    
+    _:L75C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#PlatformType> .
+    
+    _:L78C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L78C31     <http://www.w3.org/2000/01/rdf-schema#label> "Services" .
+    
+    _:L78C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#BusinessArea> .
+    
+    _:L81C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L81C31     <http://www.w3.org/2000/01/rdf-schema#label> "Consumer Products" .
+    
+    _:L81C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#Industry> .
+    
+    _:L84C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L84C31     <http://www.w3.org/2000/01/rdf-schema#label> "Retail" .
+    
+    _:L84C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#Industry> .
+    
+    _:L103C24     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/legal#Clause> .
+    
+    _:L103C24     <http://www.w3.org/TR/legal#name> "General Terms" .
+    
+    _:L103C24     <http://www.w3.org/TR/legal#text> "See Terms and Conditions of Application Provider GmbH: www.application-provider.com"@en .
+    
+    _:L114C17     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2006/vcard/ns#Work> .
+    
+    _:L114C17     <http://purl.org/dc/terms/description> "Headquarter" .
+    
+    _:L114C17     <http://www.w3.org/2006/vcard/ns#country-name> "France"@en .
+    
+    _:L114C17     <http://www.w3.org/2006/vcard/ns#email> "Info-test@application-provider.com" .
+    
+    _:L114C17     <http://www.w3.org/2006/vcard/ns#locality> "Town" .
+    
+    _:L114C17     <http://www.w3.org/2006/vcard/ns#postal-code> "98765" .
+    
+    _:L114C17     <http://www.w3.org/2006/vcard/ns#street-address> "Street  98" .
+    
+    _:L114C17     <http://www.w3.org/2006/vcard/ns#tel> "0049 12345-6789-0" .
+    
+    _:L126C28     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#GuaranteedAction> .
+    
+    _:L126C28     <http://www.w3.org/TR/usdl#obligatedParty> <http://www.w3.org/TR/usdl#Consumer> .
+    
+    _:L126C28     <http://www.w3.org/TR/usdl#serviceLevelExpression> "all regions" .
+    

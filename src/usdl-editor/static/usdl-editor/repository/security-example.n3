@@ -1,0 +1,48 @@
+@base <http://bizweb.sap.com/services/YardManagement/> .
+@prefix :    <http://bizweb.sap.com/services/YardManagement/#> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-servicelevel#> .
+@prefix sec:  <http://www.linked-usdl.org/ns/usdl-security#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#mySampleSecurityProfile> a sec:SecurityProfile;
+      dc:title "Standard security profile"@en;
+      dc:description "This profile is the default security profile";
+      sec:providesSecurityFeature [
+            a sec:SecurityFeature;
+            sec:hasRealizationLevel sec:Service;
+            sec:hasSecurityMeasure
+              [
+                a sec:Obligation;
+                dcterms:description "some description here...";
+                sec:hasImplementation sec:PPL
+              ],
+              [ a sec:AccessControl;
+                dcterms:description "some description here...";
+                sec:hasImplementation sec:XACML ]
+              ];
+      sec:hasSecurityGoal sec:Privacy, sec:Authorization, sec:Authentication.
+
+
+:mySampleService a usdl:Service;
+      sec:hasSecurityProfile <#mySampleSecurityProfile> .

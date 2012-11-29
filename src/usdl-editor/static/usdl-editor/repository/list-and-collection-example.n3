@@ -1,0 +1,187 @@
+# Discussion document, suggest removal.  Do not use for instructive purposes.
+
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc:         <http://purl.org/dc/elements/1.1/> .
+@prefix dtype:      <http://www.w3.org/2001/XMLSchema#> . 
+@prefix foaf:       <http://xmlns.com/foaf/0.1/> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix vCard:      <http://www.w3.org/2001/vcard-rdf/3.0#> .
+
+@prefix fresnel:    <http://www.w3.org/2004/09/fresnel#> .
+@prefix :           <http://example.org/foaf#> .
+
+# -----------------------------------------------
+# About this document
+<> rdfs:comment     "Collection and List example."@en^^dtype:string ;
+   dc:date          "2005-04-1"^^dtype:date ;
+   dc:format        "RDF" ;
+   dc:author        "Chris Bizer <chris@bizer.de>" ;
+   dc:identifier    <> ;
+   .
+
+# -----------------------------------------------
+# Collection and List Example
+# -----------------------------------------------   
+#
+# We decided in yesterday's discussion to use fresnel:_x
+# for handling lists and collections.
+#
+# The example below explains the usage of fresnel:_x
+
+
+# Contents:
+#
+# 1. Example data with rdf:Seq
+# 2. Lenses using fresnel:_x for 1.
+# 3. Example data with rdf:List
+# 4. Lenses using fresnel:_x for 3.
+
+# -----------------------------------------------
+# 1. Example data with rdf:Seq
+# -----------------------------------------------
+
+:chris rdf:type foaf:Person ;
+       foaf:mbox <mailto:chris@bizer.de> ;
+       foaf:knows [ rdf:type rdf:Seq ; 
+                    rdf:_1 :emmanuel ;
+                    rdf:_2 :ryan ;
+                    rdf:_3 :stefano ] .
+
+                    
+# -----------------------------------------------
+# 2.Fresnel Lenses 
+# -----------------------------------------------
+
+# -----------------------------------------------
+# 2.1 Basic Naming
+# -----------------------------------------------
+
+# First approach using basic naming and one sublens for the rdf:Seq. 
+# This lens contains another sublens using fresnel:_x to display the members of the sequence.
+
+:foafPersonLens rdf:type fresnel:Lens ;
+            fresnel:purpose fresnel:defaultLens ;
+			fresnel:classLensDomain foaf:Person ;
+			fresnel:group :foafGroup ;			
+			fresnel:showProperties ( foaf:mbox 
+			                         [ rdf:type fresnel:PropertyDescription ; 
+			                           fresnel:property foaf:knows ;
+			                           fresnel:sublens :knowsSequenceLens ]  ) .
+
+:knowsSequenceLens rdf:type fresnel:Lens ;
+			fresnel:group :foafGroup ;
+			fresnel:showProperties [ rdf:type fresnel:PropertyDescription ; 
+			                         fresnel:property fresnel:_x ;
+			                         fresnel:sublens :foafFriendsLens ] .
+
+:foafFriendsLens rdf:type fresnel:Lens ;
+			fresnel:classLensDomain foaf:Person ;
+			fresnel:group :foafGroup ;
+			fresnel:showProperties ( foaf:name foaf:mbox ) .
+				                         
+			                         
+# -----------------------------------------------
+# 2.2 FSL
+# -----------------------------------------------
+
+# Second approach using fresnel:_x inside a FSL path.
+
+:foafPersonLens rdf:type fresnel:Lens ;
+            fresnel:purpose fresnel:defaultLens ;
+			fresnel:classLensDomain foaf:Person ;
+			fresnel:group :foafGroup ;			
+			fresnel:showProperties ( foaf:mbox 
+			                         [ rdf:type fresnel:PropertyDescription ; 
+			                           fresnel:property "foaf:knows/*/fresnel:_x/*" ;
+			                           fresnel:sublens :foafFriendsLens ]  ) .
+
+:foafFriendsLens rdf:type fresnel:Lens ;
+			fresnel:classLensDomain foaf:Person ;
+			fresnel:group :foafGroup ;
+			fresnel:showProperties ( foaf:name foaf:mbox ) .			
+			
+
+			
+# -----------------------------------------------
+# 3. Example data with rdf:List
+# -----------------------------------------------
+
+:chris rdf:type foaf:Person ;
+       foaf:mbox <mailto:chris@bizer.de> ;
+       foaf:knows :friendOne .
+       
+       :friendOne rdf:type rdf:List ;
+                  rdf:first :emmanuel ;
+                  rdf:rest :friendTwo .
+
+       :friendTwo rdf:type rdf:List ;
+                  rdf:first :ryan ;
+                  rdf:rest  :friendThree .
+                  
+       :friendThree rdf:type rdf:List ; 
+                  rdf:first :stefano ;
+                  rdf:rest  rdf:nil .            
+
+                    
+# -----------------------------------------------
+# 4.Fresnel Lenses 
+# -----------------------------------------------
+
+# Lists are pretty resistent to being styled with Frenel, 
+# because they are a sequence of connected nodes :-(
+
+# My approach would be to treat a list like and rdf container, meaning
+# use fresnel:_x to express what should be displayed and 
+# have the browser do a 'logical' transformation into a rdf:Seq. Hacky.
+
+# Anybody better ideas?
+
+# -----------------------------------------------
+# 4.1 Basic Naming
+# -----------------------------------------------
+
+# First approach using basic naming and one sublens for the rdf:Seq. 
+# This lens contains another sublens using fresnel:_x to display the members of the sequence.
+
+:foafPersonLens rdf:type fresnel:Lens ;
+            fresnel:purpose fresnel:defaultLens ;
+			fresnel:classLensDomain foaf:Person ;
+			fresnel:group :foafGroup ;			
+			fresnel:showProperties ( foaf:mbox 
+			                         [ rdf:type fresnel:PropertyDescription ; 
+			                           fresnel:property foaf:knows ;
+			                           fresnel:sublens :knowsSequenceLens ]  ) .
+
+:knowsSequenceLens rdf:type fresnel:Lens ;
+			fresnel:group :foafGroup ;
+			fresnel:showProperties [ rdf:type fresnel:PropertyDescription ; 
+			                         fresnel:property fresnel:_x ;
+			                         fresnel:sublens :foafFriendsLens ] .
+
+:foafFriendsLens rdf:type fresnel:Lens ;
+			fresnel:classLensDomain foaf:Person ;
+			fresnel:group :foafGroup ;
+			fresnel:showProperties ( foaf:name foaf:mbox ) .
+				                         
+			                         
+# -----------------------------------------------
+# 4.2 FSL
+# -----------------------------------------------
+
+# Second approach using fresnel:_x inside a FSL path.
+
+:foafPersonLens rdf:type fresnel:Lens ;
+            fresnel:purpose fresnel:defaultLens ;
+			fresnel:classLensDomain foaf:Person ;
+			fresnel:group :foafGroup ;			
+			fresnel:showProperties ( foaf:mbox 
+			                         [ rdf:type fresnel:PropertyDescription ; 
+			                           fresnel:property "foaf:knows/*/fresnel:_x/*" ;
+			                           fresnel:sublens :foafFriendsLens ]  ) .
+
+:foafFriendsLens rdf:type fresnel:Lens ;
+			fresnel:classLensDomain foaf:Person ;
+			fresnel:group :foafGroup ;
+			fresnel:showProperties ( foaf:name foaf:mbox ) .			
+			

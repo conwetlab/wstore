@@ -1,0 +1,50 @@
+@base <http://bizweb.sap.com/services/WarrantyManagementSolutionBlueprint/> .
+@prefix :    <http://bizweb.sap.com/services/WarrantyManagementSolutionBlueprint/#> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-price#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix bp:  <http://www.linked-usdl.org/ns/usdl-blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<>  rdf:type bp:BlueprintDescription ; # this document is a USDL blueprint description
+    dcterms:title "USDL blueprint description for the Warranty Managment Solution";
+    dcterms:creator :Torsten_Leidig ;
+    rdfs:label "USDL blueprint description for the Warranty Managment Solution" ;
+    dcterms:description "Example of a blueprint description" ;
+    owl:versionInfo "0.1";
+    dcterms:contributor  [
+       a foaf:Person ;
+       foaf:name "Torsten Leidig";
+       foaf:title "Dr";
+       foaf:firstName "Torsten";
+       foaf:phone "+49 6227 7 52535";
+       foaf:lastName "Leidig" ] ;  # Ha, I'm the author of this document!
+    dcterms:created "2011-11-25"^^xsd:datetime .
+
+<#blueprint> a bp:Blueprint;
+   rdfs:label "Blueprint name";
+   dcterms:title "Blueprint Title";
+   dcterms:created "2011-11-25"^^xsd:datetime;
+   owl:versionInfo "0.1";
+   bp:hasArtefact <#a1>, <#a2>;
+   
+
+

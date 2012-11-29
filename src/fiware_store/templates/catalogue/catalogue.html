@@ -1,0 +1,75 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Fi-ware Store</title>
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/aplication.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap-responsive.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/docs.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/js/google-code-prettify/prettify.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
+
+        <link href="http://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.8.2.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/EndpointManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/MessageManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/catalogue/CreateAppForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/catalogue/CatalogueView.js"></script>
+       
+        <script type="text/x-jquery-tmpl" id="catalogue_search_template">{% include "catalogue/catalogue_search_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="create_app_form_template">{% include "catalogue/create_app_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="radio_template">{% include "catalogue/radio_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="modal_template">{% include "modal_template.html" %}</script>
+
+    </head>
+    <body>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span1">
+                    <img src="{{ STATIC_URL }}/assets/img/logo.png" />
+                </div>
+                <div class="span2 store_title">
+                    <h1>Fi-ware</h1>
+                    <h2>Store</h2>
+                </div>
+                <div class="span3 float-right">
+                    <ul class="nav nav-pills">
+                        <li ><a href="/">Home</a>
+                        </li>
+                        <li class="active">
+                            <a href="#">Catalogue</a>
+                        </li>
+                        {% if user.is_staff %}
+                            <li><a href="/administration">Administration</a></li>
+                        {% endif %}
+                        <div class="btn btn-success float-right dropdown">
+                            <div href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <i class="icon-user icon-white"></i>
+                                {{ user.username }}
+                                <b class="caret"></b>
+                            </div>
+                            <ul class="dropdown-menu">
+                                <li><a href="/logout">Logout</a></li>
+                            </ul>
+                        </div>
+                    </ul>
+                </div>
+            </div>
+            <div class="row-fluid title_wrapper">
+                Catalogue
+            </div>
+        </div>
+        <div class="container-fluid" >
+            <div class="row">
+                <div id="message-container"></div>
+            </div>
+            <div class="row-fluid" id="catalogue-container">
+            </div>
+        </div>
+    </body>
+</html>
+

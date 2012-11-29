@@ -1,0 +1,266 @@
+# Discussion document, suggest removal.  Do not use for instruction, out
+# of date.
+
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc:         <http://purl.org/dc/elements/1.1/> .
+@prefix dtype:      <http://www.w3.org/2001/XMLSchema#> . 
+@prefix foaf:       <http://xmlns.com/foaf/0.1/> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix vCard:      <http://www.w3.org/2001/vcard-rdf/3.0#> .
+
+@prefix lens:       <http://www.w3.org/2004/09/fresnel/lens#> .
+@prefix style:      <http://www.w3.org/2004/09/fresnel/style#> .
+@prefix :           <http://example.org/foaf#> .
+
+# -----------------------------------------------
+# About this document
+<> rdfs:comment     "Lenses and Styles for foaf:Person."@en ;
+   dc:date          "2004-09-16" ;
+   dc:format        "RDF" ;
+   dc:identifier    <> ;
+   .
+
+# Contents:
+
+# 1. Lenses for foaf:Person
+# 1.1. Standard Lenses
+# 1.2. Identification and Type Lens
+# 1.3. Contact Lens
+# 1.4. Persons' Projects Lens
+# 1.5. Project Lens
+# 1.6. Knows Lens
+# 2. Styles
+# 3. Views
+
+# -----------------------------------------------
+# 1.1. Standard Lenses for FOAF Person
+# -----------------------------------------------
+
+:StandardLens	 	rdf:type lens:StandardLens ;
+			rdfs:label "Standard Lens for FOAF persons"@en ;
+			lens:lensDomain foaf:Person ;
+			lens:showProperties ( foaf:name foaf:surname foaf:depiction ) .
+
+:ExtendedStandardLens 	rdf:type lens:Lens ;
+			rdfs:label "Lens which extends the standard Lens for FOAF person with some properties (good for drill down)"@en ;
+			lens:lensDomain foaf:Person ;
+			lens:moreDetailsFor :StandardLens ;
+			lens:showProperties ( foaf:name foaf:surname foaf:mbox foaf:homepage foaf:depiction ) .
+
+:PersonLabelLens	rdf:type lens:LabelLens ;
+			rdfs:label "Lens labelling FOAF persons"@en ;
+			lens:lensDomain foaf:Person ;
+			lens:showProperties ( foaf:name ) .
+			  
+    				
+# -----------------------------------------------
+# 1.2. Identification and Type Lens
+# -----------------------------------------------
+
+:IdentificationLens	rdf:type lens:Lens ;
+			rdfs:label "Identification and Type Lens for FOAF Persons"@en ;
+			lens:lensDomain foaf:Person ;
+			lens:additionalInformationFor :StandardLens ;
+			lens:showProperties ( foaf:mbox foaf:mbox_sha1sum owl:sameAs rdf:type ) .
+
+# -----------------------------------------------
+# 1.3. Contact Information Lens
+# -----------------------------------------------
+
+:ContactLens		rdf:type lens:Lens ;
+			rdfs:label "Contact Information Lens"@en ;
+			lens:lensDomain foaf:Person ;
+			lens:additionalInformationFor :StandardLens ;
+			lens:showProperties ( foaf:homepage 
+ # Use a RDFpath condition to show only private numbers
+    "@vCard:TEL [ * [ @rdf:type=<http://www.w3.org/2001/vcard-rdf/3.0#home> ]"
+ # Use a sublens to show addresses
+    [ rdf:type lens:Property ; lens:property vCard:ADR ; lens:sublens :vCardAddressLens ; ]
+ # Different approach using an RDFpath path
+    "@vCard:ADR/*/@vCard:Street"
+    "@vCard:ADR/*/@vCard:Country"
+			) .
+
+# -----------------------------------------------   
+# vCard Address SubLens
+# -----------------------------------------------
+						   
+:vCardAddressLens   	rdf:type lens:StandardLens ;
+			rdfs:label "vCard Address Lens"@en ;
+			lens:lensDomain vCard:work ;
+			lens:lensDomain vCard:home ;
+			lens:showProperties ( vCard:Street vCard:Pcode vCard:Locality vCard:Country ) .
+
+# -----------------------------------------------
+# 1.4. Persons' Projects Lens
+# -----------------------------------------------
+
+:PersonsProjectsLens 	rdf:type lens:Lens ;
+			rdfs:label "Persons' Projects Lens"@en ;
+			lens:lensDomain foaf:Person ;
+			lens:additionalInformationFor :StandardLens ;
+			lens:showProperties ([ rdf:type lens:Property ;
+ # Show the values of two poperties together using RDFpath (e.g. for ordering the values)
+	lens:property "@foaf:currentProject && @foaf:pastProject" ;
+	lens:sublens :ProjectsLens ;
+    			]) .
+
+:ProjectLabelLens	rdf:type lens:LabelLens ;
+			rdfs:label "Lens labelling FOAF projects"@en ;
+			lens:lensDomain foaf:Project ;
+			lens:showProperties ( foaf:name ) .
+
+# -----------------------------------------------
+# 1.5. Project Lens
+# -----------------------------------------------
+
+:ProjectsLens		rdf:type lens:StandardLens ;
+			rdfs:label "Projects Lens"@en ;
+    			lens:lensDomain foaf:Project ;
+			lens:showProperties ( foaf:name dc:description
+ # Use alternative property if first property is missing.
+ # Or we leave this to the interence layer, as David proposes
+	"@foaf:homepage || @foaf:workInfoHomepage"
+    			) .
+		   
+# -----------------------------------------------
+# 1.6. Knows Lens
+# -----------------------------------------------
+
+:KnowsLens		rdf:type lens:Lens ;
+			rdfs:label "Knows Lens"@en ;
+			lens:lensDomain foaf:Person ;
+			lens:additionalInformationFor :StandardLens ;
+			lens:showProperties ([	rdf:type lens:Property ;
+						lens:property foaf:knows ; 
+					  	lens:sublens  :StandardLens ;
+					  	lens:closure "1"@en^^dtype:nonNegativeInteger ])  .
+
+  
+# -----------------------------------------------
+# 2. Styles 
+# -----------------------------------------------
+
+:StandardStyle		rdf:type style:DefaultDisplayStyle ;
+			rdfs:comment "Root style for all properties. Used if nothing else is specified."@en ;
+			style:styleDomain rdf:Property ;
+			style:cssHook "StandardTextCssStyle"^^dtype:string ;
+			style:attribute style:ShowLabel ;
+			style:attribute style:DisplayAsLink ;
+			style:attribute style:MultiValue ;
+			style:attribute style:MultiLine ; 
+			style:group :FOAFStyles .
+
+# -----------------------------------------------
+# FOAF standard stlye inheriting from the general standard style above
+# -----------------------------------------------
+					
+:StandardStyleForFoaf	rdf:type style:DisplayStyleProperty ;
+                    # RDFpath expression using the function startsWith() to select all properties in the FOAF namespace
+			style:styleDomain "@startsWith('http://xmlns.com/foaf/0.1/')" ;
+			rdfs:comment "Standard style for all FOAF properties, if nothing else is specified."@en ;
+			style:cssHook "StandardFOAFTextCssStyle"^^dtype:string ;
+			style:group :FOAFStyles .
+
+# -----------------------------------------------
+# Styles for several specific FOAF properties
+# -----------------------------------------------
+					
+:FOAFImageStyle 	rdf:type style:DisplayStyleImage ;
+			style:styleDomain foaf:depict ;
+			rdfs:comment "Style for the FOAF depict property."@en ;
+			style:attribute style:SingleValue ;
+			style:cssHook "ImageBorderCssStyle"^^dtype:string ;
+			style:group :FOAFStyles .
+								
+:FOAFBulletList     	rdf:type style:DisplayStyleBulletList ;
+			style:styleDomain foaf:homepage ;
+			style:styleDomain foaf:workHomepage ;
+			style:styleDomain foaf:mbox ;
+			rdfs:comment "Standard style for all FOAF bullet lists."@en ;
+			style:attribute style:SortDESC ;
+			style:attribute style:DisplayAsLink ;
+			style:cssHook "FOAFListCssStyle"^^dtype:string ;
+			style:group :FOAFStyles .
+
+:PrivateTelStyle    	rdf:type style:DisplayStyleProperty ;
+			style:styleDomain "@vCard:TEL [ * [ @rdf:type=<http://www.w3.org/2001/vcard-rdf/3.0#home> ]" ;
+			# overwrite the standard label
+			:label "Private telephone number: "@en ;
+			style:attribute style:SingleValue ;
+			style:cssHook "RedTextCssStyle"^^dtype:string ;
+			style:group :FOAFStyles .
+
+# -----------------------------------------------
+# Substitution example					
+# -----------------------------------------------
+
+# rdf:type foaf:person is substituted with an image.
+
+:TypeImageSubstitution 	rdf:type style:DisplayStyleProperty ;
+			style:styleDomain "rdf:type [@rdf:type=<http://xmlns.com/foaf/0.1/Person> ]" ;
+			style:attribute style:DoNotShow ;
+			style:displayBeforeValue
+				[ rdf:type style:ImagePart ;
+				style:imageUrl <http://www.example.org/PersonIcon.gif> ] ;
+			style:group :FOAFStyles .
+
+
+# -----------------------------------------------
+# Table style example
+# -----------------------------------------------
+
+# Display a person's projects as a table
+# Projects are only displayed as a table, if they are linked to a person
+# and the person is currently displayed as parent resource.
+# The columns of the table are speficied by the  "lens:sublens :ProjectsLens" definition in :ProjectsLens.
+# Is this getting to complicated?
+					
+:ProjectTableStyle  	rdf:type style:DisplayStyleTable ;
+			style:styleDomain "foaf:Person/@foaf:currentProject/foaf:Project" ;
+			style:styleDomain "foaf:Person/@foaf:pastProject/foaf:Project" .
+
+# Specifies fixed elements that should be added when displaying related persons.	
+# Fixed elements:
+# 1. The header: "Knows the following persons :" 
+# 2. A line before each person.
+# The attributes of the related persons are specified by :StandardLens.
+
+# -----------------------------------------------
+# Adding fixed elements example					
+# -----------------------------------------------
+	
+:FOAFKnowsLayout    	rdf:type style:DisplayStyle ;
+			style:styleDomain foaf:knows ;
+			rdfs:comment "Some fixed elements that should be added when displaying related persons."@en ;
+			style:displayBeforeAllValues
+				[ rdf:type style:TextPart ;
+				style:text "Knows the following persons :"@en ;
+				style:cssHook "HeaderStyle"^^dtype:string ] ;
+			style:displayBeforeValue style:Line ;		
+			style:group :FOAFStyles .
+
+# -----------------------------------------------
+# 3. Views
+# -----------------------------------------------
+
+:PersonView		rdf:type lens:View ;
+			lens:showLenses (:StandardLens :ExtendedStandardLens :PersonLabelLens :KnowsLens) ;
+			lens:viewContext :PersonContext ;
+			.
+
+:PersonContext		rdf:type lens:DefaultContext ;
+			rdfs:label "Person Context"@en ;
+			rdfs:comment "Use as the context for a foaf:Person foaf:knows viewer."@en ;
+			.
+
+:AddressView		rdf:type lens:View ;
+			lens:showLenses (:PersonLabelLens :ContactLens :vCardAddressLens) ;
+			lens:viewContext :AddressContext ;
+			.
+
+:AddressContext 	rdf:type lens:Context ;
+			rdfs:label "Address Context"@en ;
+			rdfs:comment "Use as the context for an foaf:Person address viewer."@en ;
+			.

@@ -1,0 +1,73 @@
+@base <http://bizweb.sap.com/services/YardManagement/> .
+@prefix :    <http://bizweb.sap.com/services/YardManagement/#> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-servicelevel#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+:WarrantyManagement_ServiceLevelProfile a sla:ServiceLevelProfile;
+      sla:hasServiceLevel [
+            a sla:GuaranteedState;
+            sla:serviceLevelExpression [
+                a sla:ServiceLevelExpression;
+                dcterms:description "For the given reporting period of one month, the probability of service responsiveness is[ResponsivenessProbability]. Reponsiveness means that the response time is less than [ResponsetimeThreshold] given that the consumer workload does not exceed [ConsumerWorkloadThreshold]. Responsiveness conditions are evaluated for single time slots of 1 minute. Probability of service responseness is the percentage of responsive minute slots.";
+                sla:hasVariable :ResponsivenessProbability, :ResponseTimeThreshold, :ConsumerWorkloadThreshold];
+                sla:obligatedParty usdl:Provider
+          ],
+          [ a sla:GuaranteedState;
+            sla:serviceLevelExpression [ 
+                a sla:ServiceLevelExpression;
+                dcterms:description "For the given reporting period of one month, the probability of violating the workload obligation is [ConsumerWorkloadViolationProbability].  Violation means that the workload exceeds [ConsumerWorkloadThreshold]. Workload condition is evaluated for single time slots of 1 minute. Probability of workload violation is the percentage of violated minute slots.";
+                sla:hasVariable :ConsumerWorkloadThreshhold, :ConsumerWorkloadViolationProbability ];
+                sla:obligatedParty usdl:Consumer
+          ] .
+
+:ResponsivenessProbability
+             a sla:Variable;
+             rdf:label "ResponsivenessProbability";
+             sla:hasDefault [ a gr:QuantitativeValue;
+                                gr:hasValue "95";
+                                gr:unitOfMeasurement "percent" ] .
+
+:ResponseTimeThreshold
+             a sla:Variable;
+             rdf:label "ResponseTimeThreshold";
+             sla:hasDefault [ a gr:QuantitativeValue;
+                                gr:hasValue "500";
+                                gr:unitOfMeasurement "milli seconds" ] .
+
+:ConsumerWorkloadThreshold
+             a sla:Variable;
+             rdf:label "ConsumerWorkloadThreshold";
+             sla:hasDefault [ a gr:QuantitativeValue;
+                                gr:hasValue "100";
+                                gr:unitOfMeasurement "per minute" ] .
+
+:ConsumerWorkloadViolationProbability
+             a sla:Variable;
+             rdf:label "ConsumerWorkloadViolationProbability";
+             sla:hasDefault [ a gr:QuantitativeValue;
+                                gr:hasValue "5";
+                                gr:unitOfMeasurement "percent" ] .
+							 						 							 
+							 
+							 

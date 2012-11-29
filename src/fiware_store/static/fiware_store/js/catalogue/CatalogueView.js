@@ -1,0 +1,40 @@
+
+(function () {
+
+    var getRepositories = function getRepositories(callback) {
+        $.ajax({
+            type: "GET",
+            url: EndpointManager.getEndpoint('REPOSITORY_COLLECTION'),
+            dataType: 'json',
+            success: function(response) {
+                callback(response);
+            },
+            error: function(xhr) {
+                var msg = 'Error the server responds with code ' + xhr.status;
+                MessageManager.showMessage('Error', msg);
+            }
+        });
+    };
+
+    var showRegisterResourceForm = function showRegisterResourceForm() {
+        // Creates the modal
+        MessageManager.showMessage('Register new resource', '');
+
+        // Creates the form        // Inserts the form into the modal
+    };
+
+    var paintCatalogue = function paintCatalogue() {
+        // Get the catalogue template
+        $.template('catalogueTemplate', $('#catalogue_search_template'));
+        $.tmpl('catalogueTemplate', {}).appendTo('#catalogue-container');
+
+        if ($('#create-app').length > 0) {
+            $('#create-app').click(function () {
+                getRepositories(showCreateAppForm);
+            });
+            $('#register-res').click(showRegisterResourceForm);
+        }
+    };
+
+    $(document).ready(paintCatalogue);
+})();

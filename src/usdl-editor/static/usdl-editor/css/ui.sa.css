@@ -1,0 +1,562 @@
+body {
+    margin: 5px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10pt;
+    padding: 0px;
+    background: white;
+}
+
+.snippet {
+   visibility: hidden;
+}
+
+.noactivity {
+   visibility: hidden;
+}
+
+.hidden {
+   display: none;
+}
+
+.snippet_column {
+    border: none;
+    margin: 0px;
+}
+
+.valueCol .placeholder {
+    color: #b0b0b0;
+}
+
+.valueCol.placeholder {
+    color: #b0b0b0;
+}
+
+::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
+  color: #b0b0b0;
+}
+
+input:-moz-placeholder, textarea:-moz-placeholder {
+  color: #b0b0b0;
+}
+
+
+.editable {
+    min-height: 1.5em;
+}
+
+.ui-header {
+       font-family: Arial, Helvetic, sans-serif;
+//       font-variant: small-caps;
+       font-size: 18pt;
+       border: none;
+       margin: 0;
+       background: url(../images/navigation_s.png);
+       position: absolute;
+       width: 100%;
+       top: 0px;
+       left: 0px;
+}
+
+#workarea {
+     position: absolute;
+     overflow: hidden;
+     right: 0px;
+     left: 0px;
+     bottom: 0px;
+     top: 0px;
+     background: grey;
+     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#373c5b');
+     background:  -moz-linear-gradient(top, #ffffff, #373c5b);
+     background:  -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#373c5b));
+}
+
+.chrome #workarea {
+     position: absolute;
+     overflow: hidden;
+     right: 10px;
+     left: 10px;
+//     bottom: 46px;
+     bottom: 0;
+     top: 36pt;
+     background: grey;
+     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#373c5b');
+     background:  -moz-linear-gradient(top, #ffffff, #373c5b);
+     background:  -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#373c5b));
+}
+
+#header {
+     visibility: hidden;
+}
+
+.chrome #header {
+     visibility: visible;
+}
+
+#footer {
+     visibility: hidden;
+}
+
+.chrome #footer {
+     visibility: visible;
+}
+
+
+@media mobile {
+   ui-header {
+       background: none;
+       height: 40px;
+   }
+}
+
+#toolbar {
+    right: 0px;
+    font-variant: normal;
+    color: #CCCCCC;
+    display: block;
+}
+
+#toolbar .header {
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.2em;
+    margin-left: 2em;
+}
+
+#toolbarFrame {
+    width: 100%;
+    top: 0;
+}
+
+#toolbar ul {
+    background: url("../images/navigation.png") repeat-x scroll 0 -41px transparent;
+    height: 41px;
+}
+
+#toolbar ul, #toolbar ul li {
+    float: left;
+    font-size: 13px;
+    line-height: 38px;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#toolbar ul li a {
+    background: url("../images/navigation_s.png") no-repeat scroll right top transparent;
+    color: #CCCCCC;
+    display: block;
+    float: left;
+    height: 41px;
+    padding: 0 18px;
+    text-decoration: none;
+}
+
+#toolbar ul li a:hover {
+    color: #ffffff;
+}
+
+.ui-header h1 {
+       margin-top: 16;
+}
+
+#columnNavigation {
+      font-size: 10pt;
+      font-family: Arial, Helvetica, sans-serif;
+//      font-weight: bold;
+      position: absolute;
+//      width: 210pt;
+      left: 0pt;
+      padding: 5pt;
+}
+
+#columnStory {
+      font-size: 10pt;
+      left: 0;
+//      top: 2pt;
+      margin-right: 5pt;
+      margin-left: 220pt;
+}
+
+#columnStory h1 {
+      font-size: 1.2em;
+      margin-top: 0;
+      color: #000000;
+}
+
+#columnStory h2 {
+      font-size: 0.9em;
+      color: #000000;
+}
+
+#columnNavigation h2 {
+      font-size: 12pt;
+      background: transparent;
+      color: white;
+}
+
+ul.mainMenu {
+   list-style: none;
+   padding: 0;
+   margin: 0;
+}
+
+.mainMenu li {
+   margin: 0;
+   padding: 1em;
+   padding-left: 20pt;
+   background-repeat: no-repeat;
+   background-position: 5pt center;
+   background-color: transparent;
+   border-top: 1px solid white;
+   border-bottom: 1px solid black;
+   text-align: left;
+   width: 100%;
+   overflow: hidden;
+   white-space: nowrap;
+   display: block;
+   color: #444;
+   font-weight: bold;
+}
+
+
+.mainMenu a {
+   text-decoration: none;
+}
+
+.selectMenu li { color: #777; padding-right: 1em; padding-left: 2.3em; padding-top: 0.5em; padding-bottom: 0.5em;}
+//.selectMenu .ui-selecting {  }
+.selectMenu .ui-selected { font-size: 1.5em; color: #444; font-weight: bold; background-size: 1.7em; padding-left: 1.8em;}
+//.selectMenu { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+//.selectMenu li { margin: 3px; padding: 0.4em; font-size: 1.4em; height: 18px; }
+
+.story .snippetFrame {
+   margin: 0;
+   padding: 1em;
+   top: 0;
+   position:absolute;
+   height: 550px;
+   background: #F2F2F2;
+   -moz-box-shadow: -5px 10px 10px #555;
+   -webkit-box-shadow: -5px 10px 10px #555;
+   box-shadow: -5px 10px 10px #555;
+   border-radius: 4px 4px 4px 4px;
+}
+
+.snippet_content {
+   overflow: hidden;
+   margin: 0;
+   padding: 0;
+   height: 520px;
+}
+
+.snippetContainer {
+       position: absolute;
+}
+
+
+.smallCard {
+   width: 400px;
+}
+
+.bigCard {
+   width: 600px;
+}
+
+
+table.display {
+    clear: both;
+    margin: 1em auto;
+}
+
+.ui-widget-content th {
+     border-bottom: 1px solid #ccc;
+     border-top: none;
+     border-left: none;
+     border-right: none;
+     color: #1D7DB3;
+}
+
+.ui-widget-content th,td {
+     padding: 0.3em;
+}
+
+.ui-widget {
+     font-size: 8pt;
+}
+
+.ui-buttonset .ui-button {
+    padding: 0.3em;
+}
+
+.ui-button {
+    padding: 0.5em;
+}
+
+.ui-button.delete {
+    background-image: url("../images/Delete32.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 1em;
+    top: 0.1em;
+    display: none;
+    margin: 0.3em;
+    width: 1em;
+}
+
+.mainMenu li:hover .delete {
+    display: inline;
+}
+
+.left {
+     text-align: left;
+}
+
+.right {
+     text-align: right;
+}
+
+.center {
+     text-align: center;
+
+
+}
+
+.top {
+     vertical-align: top;
+}
+
+.middle {
+     vertical-align: middle;
+}
+
+.bottom {
+     vertical-align: bottom;
+}
+
+.caps {
+     font-variant: small-caps;
+}
+
+.listTable {
+     border: 1pt solid #aaa;
+     background: white;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+     margin: 0;
+     margin-bottom: 1em;
+     padding: 0;
+     width: 100%;
+}
+
+.listTable tr {
+     border-collapse: collapse;
+}
+
+//.listTable tr:last-child td {
+//     border-bottom: none;
+//}
+
+.listTable tfoot tr:first-child td {
+     border: none;
+}
+
+.propertyTable tr:last-child td {
+     border-bottom: none;
+}
+
+.listTable td {
+     padding: 0.5em 1em;
+     border-bottom: 1px solid #ccc;
+}
+
+.link {
+     cursor: pointer;
+}
+
+ .link {
+//     background: url("../images/cp2.png") no-repeat scroll -238px -457px transparent;
+     background: url(../images/left.png) no-repeat right;
+     background-size: 1em;
+}
+ .link div {
+     margin-left: 0.5em;
+     padding: 0;
+}
+
+.helpTable {
+     border: none;
+     background: none;
+     border-spacing: 0;
+     border-collapse: collapse;
+     margin: 0;
+     padding: 0;
+}
+
+.propertyTable {
+     border: 1pt solid #aaa;
+     background: white;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+     margin-left: 0em;
+     margin-bottom: 1em;
+     padding: 0.5em 0.5em 0em .5em;
+     width: 100%;
+     border-spacing: 0.5em;
+}
+
+.propertyTable th {
+     font-size: 0.8em;
+     font-weight: bold;
+     color: #000000;
+     border-bottom: 1px solid #CCCCCC;
+     padding: 0 0 0.3em;
+     border-right: 0.5em solid white;
+}
+
+.propertyTable td {
+     padding: 0.5em 0em;
+//     padding: 0 0 0.5em;
+}
+
+.propertyCol {
+     width: 8em;
+     text-align: left;
+     font-weight: bold;
+     font-size: 9pt;
+     color: #444444;
+     padding-top: 0.5em;
+}
+
+.valueCol {
+     text-align: left;
+     border-bottom: 1px solid #ccc;
+     padding-bottom: 0.5em;
+     color:  #424242;
+     font-size:9pt;
+}
+
+.valueCol ul {
+     padding-left: 1em;
+}
+
+.valueColEdit {
+     width: 100%;
+     font-size: 9pt;
+}
+
+table {
+     font-size: 9pt;
+}
+
+.css_right {
+     float: right;
+}
+
+//.ui-selecting { background: #FECA40; }
+//.ui-selected { background: #F39814; color: white; }
+
+.dateTimeEdit {
+  border: none;
+  width: 100%;
+   font-family: Arial, Helvetica, sans-serif;
+   font-size: 9pt;
+  margin: 0;
+  padding: 0;
+  color: #424242;
+}
+
+.textEdit input {
+   width: 100%;
+   font-family: Arial, Helvetica, sans-serif;
+   font-size: 9pt;
+}
+
+.rightInput input {
+   text-align: right;
+}
+
+.uriEdit input {
+   width: 100%;
+   font-family: Arial, Helvetica, sans-serif;
+   font-size: 9pt;
+}
+
+.option input {
+   width: 100%;
+   font-family: Arial, Helvetica, sans-serif;
+   font-size: 9pt;
+}
+
+.editHtml {
+   padding: 0;
+}
+
+.small-box {
+     max-height: 250px;
+     overflow-y: auto;
+}
+
+.easyEditorToolBar {font-size:0.8em}
+.editor iframe {border:1px solid #DDD}
+.easyEditorToolBar table {border:none}
+.easyEditorToolBar tr {border:none}
+.easyEditorToolBar td{border:1px solid #888; padding:2px 1px 2px 1px; vertical-align:middle}
+.easyEditorToolBar td.separator{border:0}
+.easyEditorToolBar .button{border:0;color:#444}
+.easyEditorToolBar .buttonON{background-color:#EEE}
+.easyEditorToolBar {margin:0.25em 0}
+.easyEditorToolBar .boldButton {font-weight:bold}
+.easyEditorToolBar .italicButton .button {font-style:italic;padding-right:0.65em}
+.easyEditorToolBar .underlineButton .button {text-decoration:underline}
+.easyEditorToolBar .strikeButton .button {text-decoration:line-through}
+.easyEditorToolBar .unorderedListButton {margin-left:0.7em}
+.easyEditorToolBar .justifyleftButton .button {padding-left:0.1em}
+.easyEditorToolBar .justifyrightButton .button {padding-right:0.1em}
+.easyEditorToolBar .justifyfullButton .button, .easyEditorToolBar .indentButton .button, .easyEditorToolBar .outdentButton .button {padding-left:0.1em;padding-right:0.1em}
+.easyEditorToolBar .increasefontsizeButton .button {padding-left:0.15em;padding-right:0.15em; font-size:1.3em; line-height:0.75em}
+.easyEditorToolBar .decreasefontsizeButton .button {padding-left:0.4em;padding-right:0.4em; font-size:0.6em;}
+.easyEditorToolBar .forecolorButton .button {color:red;}
+.easyEditorToolBar .fontnameButton .button {font-family:serif}
+.easyEditorToolBar .createlinkButton .button {color:blue;text-decoration:underline;}
+
+.ui-dialog {
+   background: #F2F2F2;
+   -moz-box-shadow: -5px 10px 20px black;
+   -webkit-box-shadow: -5px 10px 20px black;
+   box-shadow: -5px 10px 20px black;
+   border-radius: 4px 4px 4px 4px;
+}
+
+.ui-dialog label {
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+
+.dialog {
+   border: 1pt solid #AAA;
+   background: white;
+   -webkit-border-radius: 5px;
+   -moz-border-radius: 5px;
+   border-radius: 5px;
+   padding: 0.5em 0.5em 1em 0.5em;
+}
+
+.ui-dialog .ui-dialog-buttonpane {
+   border-width: 0;
+   margin: 0;
+   background:transparent;
+}
+
+.ui-dialog-titlebar {
+   background: transparent;
+   border: none;
+   font-size: 1.2em;
+}
+
+div.jGrowl div.jGrowl-notification, div.jGrowl div.jGrowl-closer {
+    opacity: 0.5;
+}
+
+

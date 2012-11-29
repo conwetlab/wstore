@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+	xmlns="http://bizweb.sap.com/services/YardManagement#"
+	xmlns:ctag="http://commontag.org/ns#"
+	xmlns:dcterms="http://purl.org/dc/terms/"
+	xmlns:dctypes="http://purl.org/dc/dcmitype/"
+	xmlns:foaf="http://xmlns.com/foaf/0.1/"
+	xmlns:gr="http://purl.org/goodrelations/v1#"
+	xmlns:msm="http://cms-wg.sti2.org/ns/minimal-service-model#"
+	xmlns:org="http://www.w3.org/ns/org#"
+	xmlns:owl="http://www.w3.org/2002/07/owl#"
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+	xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+	xmlns:time="http://www.w3.org/2006/time#"
+	xmlns:usdl="http://www.w3.org/TR/usdl#"
+	xmlns:legal="http://www.w3.org/TR/legal#"
+	xmlns:price="http://www.w3.org/TR/price#"
+	xmlns:blueprint="http://bizweb.sap.com/TR/blueprint#"
+	xmlns:vcard="http://www.w3.org/2006/vcard/ns#"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+	xmlns:sawsdl="http://www.w3.org/ns/sawsdl#"
+	xmlns:sarest="http://www.knoesis.org/research/srl/standards/sa-rest/#"
+	xmlns:wl="http://www.wsmo.org/ns/wsmo-lite#"
+	xmlns:http="http://www.w3.org/2011/http#">
+
+<rdf:Description rdf:about="http://127.0.0.1/">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#ServiceDescription"/>
+	<dcterms:title>USDL service description for the Yard Management EC Service</dcterms:title>
+	<dcterms:creator rdf:resource="http://bizweb.sap.com/services/YardManagement#Torsten_Leidig"/>
+	<rdfs:label>Service description for Yard Management EC Service</rdfs:label>
+	<dcterms:description>This description is an example of describing USDL services in RDF. These service descriptions are read by Web shops (stores) and marketplaces in order to present the business relevent information to the consumer.</dcterms:description>
+	<owl:versionInfo>0.1</owl:versionInfo>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x1">
+	<rdf:type rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+	<foaf:name>Torsten Leidig</foaf:name>
+	<foaf:title>Dr</foaf:title>
+	<foaf:firstName>Torsten</foaf:firstName>
+	<foaf:phone>+49 6227 7 52535</foaf:phone>
+	<foaf:lastName>Leidig</foaf:lastName>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://127.0.0.1/">
+	<dcterms:contributor rdf:nodeID="node16dbgo4m2x1"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-09-29</dcterms:created>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#YardManagmentECService">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Service"/>
+	<rdf:type rdf:resource="http://cms-wg.sti2.org/ns/minimal-service-model#Service"/>
+	<usdl:hasNature rdf:resource="http://www.w3.org/TR/usdl#Automated"/>
+	<usdl:hasServiceModel rdf:resource="http://bizweb.sap.com/services/solutionModel"/>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-03-03</dcterms:modified>
+	<dcterms:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-03-03</dcterms:issued>
+	<dcterms:title xml:lang="en">Yard Management EC Service</dcterms:title>
+	<dcterms:description xml:lang="en">The service realizes access to data of the yard management application in an enterprise system utilizing Gateway</dcterms:description>
+	<usdl:hasProvider rdf:resource="http://bizweb.sap.com/services/YardManagement#sample_business_owner"/>
+	<usdl:hasInteractionProtocol rdf:resource="http://bizweb.sap.com/services/YardManagement#ip_1"/>
+	<usdl:hasImplementation rdf:resource="http://www.sap.com/bizweb/github/YardMgmt/1212345345.war"/>
+	<blueprint:hasGenericBlueprint rdf:resource="http://www.sap.com/bizweb/blueprints/1212345345"/>
+	<usdl:hasDocumentation rdf:resource="https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1"/>
+	<usdl:hasLegalCondition rdf:resource="http://bizweb.sap.com/services/YardManagement#termsAndConditions"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#termsAndConditions">
+	<rdf:type rdf:resource="http://www.w3.org/TR/legal#TermsAndConditions"/>
+	<dcterms:title xml:lang="en">Terms and Conditions</dcterms:title>
+	<dcterms:description xml:lang="en">Defines terms of use, liability, data safety and so on.</dcterms:description>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x2">
+	<rdf:type rdf:resource="http://www.w3.org/TR/legal#Clause"/>
+	<legal:name>Liablity</legal:name>
+	<legal:text xml:lang="en">HAMBURG HAFEN WILL NOT BE LIABLE FOR ANY DAMAGES IN EXCESS OF THE DECLARED VALUE OR US$100 OR THE AMOUNT SET BY THE MONTREAL OR WARSAW CONVENTIONS (AS AMENDED), WHICHEVER IS GREATER, FOR CARRIAGE OF A SHIPMENT ARISING FROM TRANSPORTATION SUBJECT TO THE TERMS AND CONDITIONS CONTAINED IN THE SERVICE GUIDE, WHETHER OR NOT HAMBURG HAFEN KNEW OR SHOULD HAVE KNOWN THAT SUCH DAMAGES MIGHT BE INCURRED.</legal:text>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#termsAndConditions">
+	<legal:hasClause rdf:nodeID="node16dbgo4m2x2"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Artifact"/>
+	<usdl:artifactType rdf:resource="http://www.w3.org/TR/usdl#Mixed"/>
+	<dcterms:title>Description of the Yard Management application and services</dcterms:title>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://www.sap.com/bizweb/github/YardMgmt/1212345345.war">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Artifact"/>
+	<usdl:artifactType rdf:resource="http://www.w3.org/TR/usdl#Software"/>
+	<dcterms:title>Software package for the Yard Managment application</dcterms:title>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#sample_business_owner">
+	<rdf:type rdf:resource="http://purl.org/goodrelations/v1#BusinessEntity"/>
+	<foaf:name>Hamburg Hafen und Logistic AG</foaf:name>
+	<foaf:homepage rdf:resource="http://www.hafen-hamburg.de"/>
+	<foaf:logo rdf:resource="http://www.hhla.de/fileadmin/pic/pagetitle/hhla_logo.gif"/>
+	<usdl:legalForm>AG</usdl:legalForm>
+	<dcterms:description>Goods flows and their accompanying data are interlinking our world to an increasing extent. Hamburger Hafen und Logistik AG (HHLA) is actively and far-sightedly shaping this process. With its efficient container terminals, high-performance transport systems and comprehensive logistics services, HHLA constitutes a complete network between the overseas port and the European hinterland. Logistics chains are therefore created that conserve the climate and promote development in the world economy.</dcterms:description>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x3">
+	<rdf:type rdf:resource="http://www.w3.org/2006/vcard/ns#Work"/>
+	<vcard:tel>030 999 8753</vcard:tel>
+	<vcard:email>info@hafen-hamburg.com</vcard:email>
+	<vcard:locality>Hamburg</vcard:locality>
+	<vcard:street-address>Bei St. Annen 1</vcard:street-address>
+	<vcard:postal-code>20457 </vcard:postal-code>
+	<vcard:country-name xml:lang="en">Germany</vcard:country-name>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#sample_business_owner">
+	<vcard:adr rdf:nodeID="node16dbgo4m2x3"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#ip_1">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#InteractionProtocol"/>
+	<dcterms:title>Read and write dock appointments</dcterms:title>
+	<dcterms:description xml:lang="en">Read and write dock appointments, time slots and driver information from the Enterprise Yard mgmt. solution</dcterms:description>
+	<usdl:hasTechnicalInterface rdf:resource="http://bizweb.sap.com/services/YardManagement#SAPDataInterface_1"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x4">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Interaction"/>
+	<dcterms:title xml:lang="en">Get dock appointments</dcterms:title>
+	<dcterms:description xml:lang="en">Get all dock appointments for a specific dock and return a list of details for the dock appointment</dcterms:description>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x5">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Dock ID</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x4">
+	<usdl:hasInput rdf:nodeID="node16dbgo4m2x5"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x6">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Carrier ID</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x4">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x6"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x7">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Driver ID</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x4">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x7"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x8">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Dock address</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x4">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x8"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x9">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Dock telephone</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x4">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x9"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x10">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Start date</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x4">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x10"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x11">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">End date</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x4">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x11"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#ip_1">
+	<usdl:hasInteraction rdf:nodeID="node16dbgo4m2x4"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x12">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Interaction"/>
+	<dcterms:title xml:lang="en">Make dock appointment</dcterms:title>
+	<dcterms:description xml:lang="en">Make a dock appointment given a list of details for the dock appointment</dcterms:description>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x13">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Dock ID</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x12">
+	<usdl:hasInput rdf:nodeID="node16dbgo4m2x13"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x14">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Carrier ID</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x12">
+	<usdl:hasInput rdf:nodeID="node16dbgo4m2x14"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x15">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Driver ID</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x12">
+	<usdl:hasInput rdf:nodeID="node16dbgo4m2x15"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x16">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Dock address</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x12">
+	<usdl:hasInput rdf:nodeID="node16dbgo4m2x16"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x17">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Dock telephone</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x12">
+	<usdl:hasInput rdf:nodeID="node16dbgo4m2x17"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x18">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Start date</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x12">
+	<usdl:hasInput rdf:nodeID="node16dbgo4m2x18"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x19">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">End date</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x12">
+	<usdl:hasInput rdf:nodeID="node16dbgo4m2x19"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x20">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">Status</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x12">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x20"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#ip_1">
+	<usdl:hasInteraction rdf:nodeID="node16dbgo4m2x12"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x21">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Interaction"/>
+	<dcterms:title xml:lang="en">Get time slots</dcterms:title>
+	<dcterms:description xml:lang="en">Get alist of free timeslots for a potential dock appointment</dcterms:description>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x22">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">list of time slots</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x21">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x22"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#ip_1">
+	<usdl:hasInteraction rdf:nodeID="node16dbgo4m2x21"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x23">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Interaction"/>
+	<dcterms:title xml:lang="en">Get time of days</dcterms:title>
+	<dcterms:description xml:lang="en">Get the specific time of day blocks. Usually something like moring, noon, afternoon, ...</dcterms:description>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x24">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">time of days</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x23">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x24"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#ip_1">
+	<usdl:hasInteraction rdf:nodeID="node16dbgo4m2x23"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x25">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Interaction"/>
+	<dcterms:title xml:lang="en">Get drivers</dcterms:title>
+	<dcterms:description xml:lang="en">Get all drivers registered to the system</dcterms:description>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x26">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+	<rdfs:label xml:lang="en">list of drivers</rdfs:label>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x25">
+	<usdl:hasOutput rdf:nodeID="node16dbgo4m2x26"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#ip_1">
+	<usdl:hasInteraction rdf:nodeID="node16dbgo4m2x25"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#sl_profile_1">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#ServiceLevelProfile"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x27">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#GuaranteedAction"/>
+	<usdl:serviceLevelExpression>Mon-Wed:0900-1700;Thu:0900-1900;Fri:0900-1500</usdl:serviceLevelExpression>
+	<usdl:obligatedParty rdf:resource="http://www.w3.org/TR/usdl#Provider"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#sl_profile_1">
+	<usdl:hasServiceLevel rdf:nodeID="node16dbgo4m2x27"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x28">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#GuaranteedState"/>
+	<usdl:serviceLevelExpression>for businesses within the boundaries of the European Union</usdl:serviceLevelExpression>
+	<usdl:obligatedParty rdf:resource="http://www.w3.org/TR/usdl#Consumer"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#sl_profile_1">
+	<usdl:hasServiceLevel rdf:nodeID="node16dbgo4m2x28"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#offering">
+	<rdf:type rdf:resource="http://www.w3.org/TR/usdl#ServiceOffering"/>
+	<usdl:includes rdf:resource="http://bizweb.sap.com/services/YardManagement#YardManagmentECService"/>
+	<usdl:hasPricePlan rdf:resource="http://bizweb.sap.com/services/YardManagement#price_plan_1"/>
+	<usdl:validFrom rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-12-01</usdl:validFrom>
+	<usdl:validThrough rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-12-31</usdl:validThrough>
+	<usdl:hasServiceLevelProfile rdf:resource="http://bizweb.sap.com/services/YardManagement#sl_profile_1"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#price_plan_1">
+	<rdf:type rdf:resource="http://www.w3.org/TR/price#PricePlan"/>
+	<dcterms:title xml:lang="en">Standard Plan</dcterms:title>
+	<dcterms:description xml:lang="en">Our unbeatable one fits all price plan</dcterms:description>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x29">
+	<rdf:type rdf:resource="http://purl.org/goodrelations/v1#PriceSpecification"/>
+	<gr:hasCurrency>EUR</gr:hasCurrency>
+	<gr:hasCurrencyValue rdf:datatype="http://www.w3.org/2001/XMLSchema#float">99.99</gr:hasCurrencyValue>
+	<gr:unitOfMeasurement>per/month</gr:unitOfMeasurement>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#price_plan_1">
+	<price:hasPriceCap rdf:nodeID="node16dbgo4m2x29"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x30">
+	<rdf:type rdf:resource="http://purl.org/goodrelations/v1#PriceSpecification"/>
+	<gr:hasCurrency>EUR</gr:hasCurrency>
+	<gr:hasValueFloat rdf:datatype="http://www.w3.org/2001/XMLSchema#float">29.99</gr:hasValueFloat>
+	<gr:unitOfMeasurement>per/month</gr:unitOfMeasurement>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#price_plan_1">
+	<price:hasPriceFloor rdf:nodeID="node16dbgo4m2x30"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x31">
+	<rdf:type rdf:resource="http://www.w3.org/TR/price#PriceComponent"/>
+	<dcterms:title>Fixed component</dcterms:title>
+	<dcterms:description>Initial fee for setup and arrangements.</dcterms:description>
+	<gr:hasCurrency>EUR</gr:hasCurrency>
+	<gr:hasCurrencyValue rdf:datatype="http://www.w3.org/2001/XMLSchema#float">29.99</gr:hasCurrencyValue>
+	<gr:unitOfMeasurement>per user</gr:unitOfMeasurement>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#price_plan_1">
+	<price:hasPriceComponent rdf:nodeID="node16dbgo4m2x31"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x32">
+	<rdf:type rdf:resource="http://www.w3.org/TR/price#PriceComponent"/>
+	<dcterms:title>Monthly rate</dcterms:title>
+	<dcterms:description>Monthly fee to pay for the service.</dcterms:description>
+	<gr:hasCurrency>EUR</gr:hasCurrency>
+	<gr:hasCurrencyValue rdf:datatype="http://www.w3.org/2001/XMLSchema#float">9.99</gr:hasCurrencyValue>
+	<gr:unitOfMeasurement>per month per user</gr:unitOfMeasurement>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#price_plan_1">
+	<price:hasPriceComponent rdf:nodeID="node16dbgo4m2x32"/>
+</rdf:Description>
+
+<rdf:Description rdf:nodeID="node16dbgo4m2x33">
+	<rdf:type rdf:resource="http://www.w3.org/TR/price#PriceComponent"/>
+	<dcterms:title>Value Added Tax</dcterms:title>
+	<dcterms:description>The Value Added Tax, or VAT, in the European Union is a general, broadly based consumption tax assessed on the value added to goods and services.</dcterms:description>
+	<gr:hasValueFloat rdf:datatype="http://www.w3.org/2001/XMLSchema#float">16.0</gr:hasValueFloat>
+	<gr:unitOfMeasurement>percent</gr:unitOfMeasurement>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://bizweb.sap.com/services/YardManagement#price_plan_1">
+	<price:hasTax rdf:nodeID="node16dbgo4m2x33"/>
+</rdf:Description>
+
+</rdf:RDF>

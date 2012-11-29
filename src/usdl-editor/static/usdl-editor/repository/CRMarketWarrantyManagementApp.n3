@@ -1,0 +1,117 @@
+@base <http://bizweb.sap.com/services/CRMarketWarrantyManagementApp/> .
+@prefix :    <http://bizweb.sap.com/services/CRMarketWarrantyManagementApp/#> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<>  rdf:type usdl:ServiceDescription ; # this document is a USDL service description
+    dcterms:title "USDL service description for the Warranty Managment App";
+    dcterms:creator :Torsten_Leidig ;
+    owl:versionInfo "0.1";
+    dcterms:contributor  [
+       a foaf:Person ;
+       foaf:name "Torsten Leidig";
+       foaf:title "Dr";
+       foaf:firstName "Torsten";
+       foaf:phone "+49 6227 7 52535";
+       foaf:lastName "Leidig" ] ;  # Ha, I'm the author of this document!
+    dcterms:created "2011-11-18"^^xsd:date .
+
+<#CRMarketWarrantyManagementApp> a usdl:Service;
+       usdl:versionInfo "0.9";
+       usdl:hasClassification [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:SolutionType ;
+                                rdfs:label "Mobile Application"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:PlatformType ;
+                                rdfs:label "Android"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:BusinessArea ;
+                                rdfs:label "Marketing"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:Industry ;
+                                rdfs:label "Consumer Products"],
+                              [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:Industry ;
+                                rdfs:label "Retail"];
+       dcterms:modified "2011-11-18"^^xsd:date;
+       dcterms:created "2011-11-18"^^xsd:date;
+       dcterms:title "CR Market Warranty Management App"@en;
+       usdl:shortDescription "This Warrenty Management App provided by CR Market GmbH will support you in keeping track of your warranties, finding information for bought products and getting updates on recall campaigns."@en;
+       usdl:longDescription "<p>This Warrenty Management App provided by CR Market GmbH will support you in keeping track of your warranties, finding information for bought products and getting updates on recall campaigns.</p><p>You take a picture of the barcode of a bought product. By doing so the warranty of the productwill be added to you warranty store. You can browse all warranties, can get details on the warranty, including product-related information.</p>"@en;
+       foaf:thumbnail <http://ddrsl001xb.drss.sap.corp:8888/bizwebportal/resources/assets/icons/06_Icon_CR.png>;
+       usdl:hasProvider :provider;
+       blueprint:modelReference <http://bizweb.sap.com/blueprints/CRMarketWarrantyManagementApp#61>;
+       usdl:hasDocumentation <https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1> ;
+       usdl:hasLegalCondition :termsAndConditions .
+
+:termsAndConditions a legal:TermsAndConditions;
+       dcterms:title "Terms and Conditions"@en;
+       dcterms:description "Defines terms of use, liability, data safety and so on."@en;
+       legal:hasClause [ a legal:Clause;
+                         legal:name "General Terms";
+                         legal:text "See Terms and Conditions of Application Provider GmbH: www.application-provider.com"@en ] .
+
+
+:provider a gr:BusinessEntity;
+      foaf:name "CR Market GmbH";
+      foaf:homepage <http://www.cr-market.fr>;
+      foaf:logo <http://deqkalvm272.qkal.sap.corp:1080/ServicePad/images/03_Icon_50.png>;
+      usdl:legalForm "GmbH" ;
+      dcterms:description "Describe provider here ...";
+      vcard:adr [ a vcard:Work;
+                  dcterms:description "Headquarter";
+                  vcard:tel "0049 12345-6789-0";
+                  vcard:email "Info-test@application-provider.com";
+                  vcard:locality "Town";
+                  vcard:street-address "Street 98";
+                  vcard:postal-code "98765";
+                  vcard:country-name "France"@en ] .
+
+:sl_profile_1 a usdl:ServiceLevelProfile;
+      usdl:hasServiceLevel [ a usdl:GuaranteedAction;
+                               dcterms:title "Regional availability";
+                               usdl:serviceLevelExpression "CR Markets in France" ;
+                               usdl:obligatedParty usdl:Consumer ] .
+
+
+:offering a usdl:ServiceOffering;
+   usdl:includes <#WarrantyManagementSolution>;
+   usdl:hasPricePlan :price_plan_1;
+   usdl:validFrom "2011-12-01"^^xsd:date;
+   usdl:validThrough "2012-12-31"^^xsd:date;
+   usdl:hasServiceLevelProfile :sl_profile_1.
+
+:price_plan_1 a price:PricePlan;
+   dcterms:title "Free"@en;
+   dcterms:description "Free for CR Market customers"@en.
+
+  
+                             
+
+
+   
+
+
+
+   
+

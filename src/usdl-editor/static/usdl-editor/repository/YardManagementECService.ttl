@@ -1,0 +1,375 @@
+    
+    <file:///home/d029752/Dropbox/Public/ServicePad/repository/YardManagementECService.n3>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#ServiceDescription> .
+    
+    <file:///home/d029752/Dropbox/Public/ServicePad/repository/YardManagementECService.n3>     <http://purl.org/dc/terms/contributor> _:L30C26 .
+    
+    <file:///home/d029752/Dropbox/Public/ServicePad/repository/YardManagementECService.n3>     <http://purl.org/dc/terms/created> "2011-09-29"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <file:///home/d029752/Dropbox/Public/ServicePad/repository/YardManagementECService.n3>     <http://purl.org/dc/terms/creator> <http://bizweb.sap.com/services/YardManagement#Torsten_Leidig> .
+    
+    <file:///home/d029752/Dropbox/Public/ServicePad/repository/YardManagementECService.n3>     <http://purl.org/dc/terms/description> "This description is an example of describing USDL services in RDF. These service descriptions are read by Web shops (stores) and marketplaces in order to present the business relevent information to the consumer." .
+    
+    <file:///home/d029752/Dropbox/Public/ServicePad/repository/YardManagementECService.n3>     <http://purl.org/dc/terms/title> "USDL service description for the Yard Management EC Service" .
+    
+    <file:///home/d029752/Dropbox/Public/ServicePad/repository/YardManagementECService.n3>     <http://www.w3.org/2000/01/rdf-schema#label> "Service description for Yard Management EC Service" .
+    
+    <file:///home/d029752/Dropbox/Public/ServicePad/repository/YardManagementECService.n3>     <http://www.w3.org/2002/07/owl#versionInfo> "0.1" .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://cms-wg.sti2.org/ns/minimal-service-model#Service> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Service> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://bizweb.sap.com/TR/blueprint#hasGenericBlueprint> <http://www.sap.com/bizweb/blueprints/1212345345> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://purl.org/dc/terms/created> "2011-03-03"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://purl.org/dc/terms/modified> "2011-03-03"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://purl.org/dc/terms/title> "Yard Management EC Service"@en .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#hasClassification> _:L41C31 .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#hasDocumentation> <https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#hasImplementation> <http://www.sap.com/bizweb/github/YardMgmt/1212345345.war> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#hasInteractionProtocol> <http://bizweb.sap.com/services/YardManagement#ip_1> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#hasLegalCondition> <http://bizweb.sap.com/services/YardManagement#termsAndConditions> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#hasNature> <http://www.w3.org/TR/usdl#Automated> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#hasProvider> <http://bizweb.sap.com/services/YardManagement#sample_business_owner> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#hasServiceModel> <http://bizweb.sap.com/services/solutionModel> .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#longDescription> "Long description text here ..."@en .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://www.w3.org/TR/usdl#shortDescription> "The service realizes access to data of the yard management application in an enterprise system utilizing Gateway"@en .
+    
+    <http://bizweb.sap.com/services/YardManagement#YardManagmentECService>     <http://xmlns.com/foaf/0.1/thumbnail> <http://deqkalvm272.qkal.sap.corp:1080/ServicePad/images/09_Icon_NewBrand.png> .
+    
+    <http://bizweb.sap.com/services/YardManagement#ip_1>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#InteractionProtocol> .
+    
+    <http://bizweb.sap.com/services/YardManagement#ip_1>     <http://purl.org/dc/terms/description> "Read and write dock appointments, time slots and driver information from the Enterprise Yard mgmt. solution"@en .
+    
+    <http://bizweb.sap.com/services/YardManagement#ip_1>     <http://purl.org/dc/terms/title> "Read and write dock appointments" .
+    
+    <http://bizweb.sap.com/services/YardManagement#ip_1>     <http://www.w3.org/TR/usdl#hasInteraction> _:L91C27 .
+    
+    <http://bizweb.sap.com/services/YardManagement#ip_1>     <http://www.w3.org/TR/usdl#hasInteraction> _:L110C16 .
+    
+    <http://bizweb.sap.com/services/YardManagement#ip_1>     <http://www.w3.org/TR/usdl#hasInteraction> _:L131C16 .
+    
+    <http://bizweb.sap.com/services/YardManagement#ip_1>     <http://www.w3.org/TR/usdl#hasInteraction> _:L137C16 .
+    
+    <http://bizweb.sap.com/services/YardManagement#ip_1>     <http://www.w3.org/TR/usdl#hasInteraction> _:L143C16 .
+    
+    <http://bizweb.sap.com/services/YardManagement#ip_1>     <http://www.w3.org/TR/usdl#hasTechnicalInterface> <http://bizweb.sap.com/services/YardManagement#SAPDataInterface_1> .
+    
+    <http://bizweb.sap.com/services/YardManagement#offering>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#ServiceOffering> .
+    
+    <http://bizweb.sap.com/services/YardManagement#offering>     <http://www.w3.org/TR/usdl#hasPricePlan> <http://bizweb.sap.com/services/YardManagement#price_plan_1> .
+    
+    <http://bizweb.sap.com/services/YardManagement#offering>     <http://www.w3.org/TR/usdl#hasServiceLevelProfile> <http://bizweb.sap.com/services/YardManagement#sl_profile_1> .
+    
+    <http://bizweb.sap.com/services/YardManagement#offering>     <http://www.w3.org/TR/usdl#includes> <http://bizweb.sap.com/services/YardManagement#YardManagmentECService> .
+    
+    <http://bizweb.sap.com/services/YardManagement#offering>     <http://www.w3.org/TR/usdl#validFrom> "2011-12-01"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/YardManagement#offering>     <http://www.w3.org/TR/usdl#validThrough> "2011-12-31"^^<http://www.w3.org/2001/XMLSchema#date> .
+    
+    <http://bizweb.sap.com/services/YardManagement#price_plan_1>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/price#PricePlan> .
+    
+    <http://bizweb.sap.com/services/YardManagement#price_plan_1>     <http://purl.org/dc/terms/description> "Our unbeatable one fits all price plan"@en .
+    
+    <http://bizweb.sap.com/services/YardManagement#price_plan_1>     <http://purl.org/dc/terms/title> "Standard Plan"@en .
+    
+    <http://bizweb.sap.com/services/YardManagement#price_plan_1>     <http://www.w3.org/TR/price#hasPriceCap> _:L171C22 .
+    
+    <http://bizweb.sap.com/services/YardManagement#price_plan_1>     <http://www.w3.org/TR/price#hasPriceComponent> _:L179C28 .
+    
+    <http://bizweb.sap.com/services/YardManagement#price_plan_1>     <http://www.w3.org/TR/price#hasPriceComponent> _:L185C31 .
+    
+    <http://bizweb.sap.com/services/YardManagement#price_plan_1>     <http://www.w3.org/TR/price#hasPriceFloor> _:L175C24 .
+    
+    <http://bizweb.sap.com/services/YardManagement#price_plan_1>     <http://www.w3.org/TR/price#hasTax> _:L192C28 .
+    
+    <http://bizweb.sap.com/services/YardManagement#sample_business_owner>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/goodrelations/v1#BusinessEntity> .
+    
+    <http://bizweb.sap.com/services/YardManagement#sample_business_owner>     <http://purl.org/dc/terms/description> "Goods flows and their accompanying data are interlinking our world to an increasing extent. Hamburger Hafen und Logistik AG (HHLA) is actively and far-sightedly shaping this process. With its efficient container terminals, high-performance transport systems and comprehensive logistics services, HHLA constitutes a complete network between the overseas port and the European hinterland. Logistics chains are therefore created that conserve the climate and promote development in the world economy." .
+    
+    <http://bizweb.sap.com/services/YardManagement#sample_business_owner>     <http://www.w3.org/2006/vcard/ns#adr> _:L79C17 .
+    
+    <http://bizweb.sap.com/services/YardManagement#sample_business_owner>     <http://www.w3.org/TR/usdl#legalForm> "AG" .
+    
+    <http://bizweb.sap.com/services/YardManagement#sample_business_owner>     <http://xmlns.com/foaf/0.1/homepage> <http://www.hafen-hamburg.de> .
+    
+    <http://bizweb.sap.com/services/YardManagement#sample_business_owner>     <http://xmlns.com/foaf/0.1/logo> <http://www.hhla.de/fileadmin/pic/pagetitle/hhla_logo.gif> .
+    
+    <http://bizweb.sap.com/services/YardManagement#sample_business_owner>     <http://xmlns.com/foaf/0.1/name> "Hamburg Hafen und Logistic AG" .
+    
+    <http://bizweb.sap.com/services/YardManagement#sl_profile_1>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#ServiceLevelProfile> .
+    
+    <http://bizweb.sap.com/services/YardManagement#sl_profile_1>     <http://www.w3.org/TR/usdl#hasServiceLevel> _:L153C28 .
+    
+    <http://bizweb.sap.com/services/YardManagement#sl_profile_1>     <http://www.w3.org/TR/usdl#hasServiceLevel> _:L156C31 .
+    
+    <http://bizweb.sap.com/services/YardManagement#termsAndConditions>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/legal#TermsAndConditions> .
+    
+    <http://bizweb.sap.com/services/YardManagement#termsAndConditions>     <http://purl.org/dc/terms/description> "Defines terms of use, liability, data safety and so on."@en .
+    
+    <http://bizweb.sap.com/services/YardManagement#termsAndConditions>     <http://purl.org/dc/terms/title> "Terms and Conditions"@en .
+    
+    <http://bizweb.sap.com/services/YardManagement#termsAndConditions>     <http://www.w3.org/TR/legal#hasClause> _:L61C24 .
+    
+    <http://www.sap.com/bizweb/github/YardMgmt/1212345345.war>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Artifact> .
+    
+    <http://www.sap.com/bizweb/github/YardMgmt/1212345345.war>     <http://purl.org/dc/terms/title> "Software package for the Yard Managment application" .
+    
+    <http://www.sap.com/bizweb/github/YardMgmt/1212345345.war>     <http://www.w3.org/TR/usdl#artifactType> <http://www.w3.org/TR/usdl#Software> .
+    
+    <https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1>     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Artifact> .
+    
+    <https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1>     <http://purl.org/dc/terms/title> "Description of the Yard Management application and services" .
+    
+    <https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1>     <http://www.w3.org/TR/usdl#artifactType> <http://www.w3.org/TR/usdl#Mixed> .
+    
+    _:L30C26     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/firstName> "Torsten" .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/lastName> "Leidig" .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/name> "Torsten Leidig" .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/phone> "+49 6227 7 52535" .
+    
+    _:L30C26     <http://xmlns.com/foaf/0.1/title> "Dr" .
+    
+    _:L41C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2004/02/skos/core#ConceptScheme> .
+    
+    _:L41C31     <http://www.w3.org/2000/01/rdf-schema#label> "Enterprise Solution" .
+    
+    _:L41C31     <http://www.w3.org/2004/02/skos/core#hasTopConcept> <http://bizweb.sap.com/TR/blueprint#SolutionType> .
+    
+    _:L61C24     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/legal#Clause> .
+    
+    _:L61C24     <http://www.w3.org/TR/legal#name> "Liablity" .
+    
+    _:L61C24     <http://www.w3.org/TR/legal#text> "HAMBURG HAFEN WILL NOT BE LIABLE FOR ANY DAMAGES IN EXCESS OF THE DECLARED VALUE OR US$100 OR THE AMOUNT SET BY THE MONTREAL OR WARSAW CONVENTIONS (AS AMENDED), WHICHEVER IS GREATER, FOR CARRIAGE OF A SHIPMENT ARISING FROM TRANSPORTATION SUBJECT TO THE TERMS AND CONDITIONS CONTAINED IN THE SERVICE GUIDE, WHETHER OR NOT HAMBURG HAFEN KNEW OR SHOULD HAVE KNOWN THAT SUCH DAMAGES MIGHT BE INCURRED."@en .
+    
+    _:L79C17     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2006/vcard/ns#Work> .
+    
+    _:L79C17     <http://www.w3.org/2006/vcard/ns#country-name> "Germany"@en .
+    
+    _:L79C17     <http://www.w3.org/2006/vcard/ns#email> "info@hafen-hamburg.com" .
+    
+    _:L79C17     <http://www.w3.org/2006/vcard/ns#locality> "Hamburg" .
+    
+    _:L79C17     <http://www.w3.org/2006/vcard/ns#postal-code> "20457 " .
+    
+    _:L79C17     <http://www.w3.org/2006/vcard/ns#street-address> "Bei St. Annen 1" .
+    
+    _:L79C17     <http://www.w3.org/2006/vcard/ns#tel> "030 999 8753" .
+    
+    _:L91C27     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Interaction> .
+    
+    _:L91C27     <http://purl.org/dc/terms/description> "Get all dock appointments for a specific dock and return a list of details for the dock appointment"@en .
+    
+    _:L91C27     <http://purl.org/dc/terms/title> "Get dock appointments"@en .
+    
+    _:L91C27     <http://www.w3.org/TR/usdl#hasInput> _:L95C32 .
+    
+    _:L91C27     <http://www.w3.org/TR/usdl#hasOutput> _:L97C33 .
+    
+    _:L91C27     <http://www.w3.org/TR/usdl#hasOutput> _:L99C32 .
+    
+    _:L91C27     <http://www.w3.org/TR/usdl#hasOutput> _:L101C32 .
+    
+    _:L91C27     <http://www.w3.org/TR/usdl#hasOutput> _:L103C32 .
+    
+    _:L91C27     <http://www.w3.org/TR/usdl#hasOutput> _:L105C32 .
+    
+    _:L91C27     <http://www.w3.org/TR/usdl#hasOutput> _:L107C32 .
+    
+    _:L95C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L95C32     <http://www.w3.org/2000/01/rdf-schema#label> "Dock ID"@en .
+    
+    _:L97C33     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L97C33     <http://www.w3.org/2000/01/rdf-schema#label> "Carrier ID"@en .
+    
+    _:L99C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L99C32     <http://www.w3.org/2000/01/rdf-schema#label> "Driver ID"@en .
+    
+    _:L101C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L101C32     <http://www.w3.org/2000/01/rdf-schema#label> "Dock address"@en .
+    
+    _:L103C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L103C32     <http://www.w3.org/2000/01/rdf-schema#label> "Dock telephone"@en .
+    
+    _:L105C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L105C32     <http://www.w3.org/2000/01/rdf-schema#label> "Start date"@en .
+    
+    _:L107C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L107C32     <http://www.w3.org/2000/01/rdf-schema#label> "End date"@en .
+    
+    _:L110C16     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Interaction> .
+    
+    _:L110C16     <http://purl.org/dc/terms/description> "Make a dock appointment given a list of details for the dock appointment"@en .
+    
+    _:L110C16     <http://purl.org/dc/terms/title> "Make dock appointment"@en .
+    
+    _:L110C16     <http://www.w3.org/TR/usdl#hasInput> _:L114C32 .
+    
+    _:L110C16     <http://www.w3.org/TR/usdl#hasInput> _:L116C32 .
+    
+    _:L110C16     <http://www.w3.org/TR/usdl#hasInput> _:L118C32 .
+    
+    _:L110C16     <http://www.w3.org/TR/usdl#hasInput> _:L120C32 .
+    
+    _:L110C16     <http://www.w3.org/TR/usdl#hasInput> _:L122C32 .
+    
+    _:L110C16     <http://www.w3.org/TR/usdl#hasInput> _:L124C32 .
+    
+    _:L110C16     <http://www.w3.org/TR/usdl#hasInput> _:L126C32 .
+    
+    _:L110C16     <http://www.w3.org/TR/usdl#hasOutput> _:L128C33 .
+    
+    _:L114C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L114C32     <http://www.w3.org/2000/01/rdf-schema#label> "Dock ID"@en .
+    
+    _:L116C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L116C32     <http://www.w3.org/2000/01/rdf-schema#label> "Carrier ID"@en .
+    
+    _:L118C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L118C32     <http://www.w3.org/2000/01/rdf-schema#label> "Driver ID"@en .
+    
+    _:L120C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L120C32     <http://www.w3.org/2000/01/rdf-schema#label> "Dock address"@en .
+    
+    _:L122C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L122C32     <http://www.w3.org/2000/01/rdf-schema#label> "Dock telephone"@en .
+    
+    _:L124C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L124C32     <http://www.w3.org/2000/01/rdf-schema#label> "Start date"@en .
+    
+    _:L126C32     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L126C32     <http://www.w3.org/2000/01/rdf-schema#label> "End date"@en .
+    
+    _:L128C33     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L128C33     <http://www.w3.org/2000/01/rdf-schema#label> "Status"@en .
+    
+    _:L131C16     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Interaction> .
+    
+    _:L131C16     <http://purl.org/dc/terms/description> "Get alist of free timeslots for a potential dock appointment"@en .
+    
+    _:L131C16     <http://purl.org/dc/terms/title> "Get time slots"@en .
+    
+    _:L131C16     <http://www.w3.org/TR/usdl#hasOutput> _:L134C33 .
+    
+    _:L134C33     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L134C33     <http://www.w3.org/2000/01/rdf-schema#label> "list of time slots"@en .
+    
+    _:L137C16     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Interaction> .
+    
+    _:L137C16     <http://purl.org/dc/terms/description> "Get the specific time of day blocks. Usually something like moring, noon, afternoon, ..."@en .
+    
+    _:L137C16     <http://purl.org/dc/terms/title> "Get time of days"@en .
+    
+    _:L137C16     <http://www.w3.org/TR/usdl#hasOutput> _:L140C33 .
+    
+    _:L140C33     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L140C33     <http://www.w3.org/2000/01/rdf-schema#label> "time of days"@en .
+    
+    _:L143C16     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Interaction> .
+    
+    _:L143C16     <http://purl.org/dc/terms/description> "Get all drivers registered to the system"@en .
+    
+    _:L143C16     <http://purl.org/dc/terms/title> "Get drivers"@en .
+    
+    _:L143C16     <http://www.w3.org/TR/usdl#hasOutput> _:L146C33 .
+    
+    _:L146C33     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#Parameter> .
+    
+    _:L146C33     <http://www.w3.org/2000/01/rdf-schema#label> "list of drivers"@en .
+    
+    _:L153C28     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#GuaranteedAction> .
+    
+    _:L153C28     <http://www.w3.org/TR/usdl#obligatedParty> <http://www.w3.org/TR/usdl#Provider> .
+    
+    _:L153C28     <http://www.w3.org/TR/usdl#serviceLevelExpression> "Mon-Wed:0900-1700;Thu:0900-1900;Fri:0900-1500" .
+    
+    _:L156C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/usdl#GuaranteedState> .
+    
+    _:L156C31     <http://www.w3.org/TR/usdl#obligatedParty> <http://www.w3.org/TR/usdl#Consumer> .
+    
+    _:L156C31     <http://www.w3.org/TR/usdl#serviceLevelExpression> "for businesses within the boundaries of the European Union" .
+    
+    _:L171C22     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/goodrelations/v1#PriceSpecification> .
+    
+    _:L171C22     <http://purl.org/goodrelations/v1#hasCurrency> "EUR" .
+    
+    _:L171C22     <http://purl.org/goodrelations/v1#hasCurrencyValue> "99.99"^^<http://www.w3.org/2001/XMLSchema#float> .
+    
+    _:L171C22     <http://purl.org/goodrelations/v1#unitOfMeasurement> "per/month" .
+    
+    _:L175C24     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/goodrelations/v1#PriceSpecification> .
+    
+    _:L175C24     <http://purl.org/goodrelations/v1#hasCurrency> "EUR" .
+    
+    _:L175C24     <http://purl.org/goodrelations/v1#hasValueFloat> "29.99"^^<http://www.w3.org/2001/XMLSchema#float> .
+    
+    _:L175C24     <http://purl.org/goodrelations/v1#unitOfMeasurement> "per/month" .
+    
+    _:L179C28     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/price#PriceComponent> .
+    
+    _:L179C28     <http://purl.org/dc/terms/description> "Initial fee for setup and arrangements." .
+    
+    _:L179C28     <http://purl.org/dc/terms/title> "Fixed component" .
+    
+    _:L179C28     <http://purl.org/goodrelations/v1#hasCurrency> "EUR" .
+    
+    _:L179C28     <http://purl.org/goodrelations/v1#hasCurrencyValue> "29.99"^^<http://www.w3.org/2001/XMLSchema#float> .
+    
+    _:L179C28     <http://purl.org/goodrelations/v1#unitOfMeasurement> "per user" .
+    
+    _:L185C31     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/price#PriceComponent> .
+    
+    _:L185C31     <http://purl.org/dc/terms/description> "Monthly fee to pay for the service." .
+    
+    _:L185C31     <http://purl.org/dc/terms/title> "Monthly rate" .
+    
+    _:L185C31     <http://purl.org/goodrelations/v1#hasCurrency> "EUR" .
+    
+    _:L185C31     <http://purl.org/goodrelations/v1#hasCurrencyValue> "9.99"^^<http://www.w3.org/2001/XMLSchema#float> .
+    
+    _:L185C31     <http://purl.org/goodrelations/v1#unitOfMeasurement> "per month per user" .
+    
+    _:L192C28     <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/TR/price#PriceComponent> .
+    
+    _:L192C28     <http://purl.org/dc/terms/description> "The Value Added Tax, or VAT, in the European Union is a general, broadly based consumption tax assessed on the value added to goods and services." .
+    
+    _:L192C28     <http://purl.org/dc/terms/title> "Value Added Tax" .
+    
+    _:L192C28     <http://purl.org/goodrelations/v1#hasValueFloat> "16.0"^^<http://www.w3.org/2001/XMLSchema#float> .
+    
+    _:L192C28     <http://purl.org/goodrelations/v1#unitOfMeasurement> "percent" .
+    

@@ -1,0 +1,357 @@
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc:         <http://purl.org/dc/elements/1.1/> .
+@prefix dtype:      <http://www.w3.org/2001/XMLSchema#> . 
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix :           <http://www.w3.org/2004/09/fresnel#>  .
+
+# -----------------------------------------------
+# About this document
+<http://www.w3.org/2004/09/fresnel-extended> a owl:Ontology ;
+    owl:imports      <http://www.w3.org/2004/09/fresnel> ;
+    rdfs:comment     "Extended Lens and Style Vocabulary"@en ;
+    dc:description   "Vocabulary for relating and grouping lenses and styles."@en ;
+    dc:date          "2005-03-09"^^dtype:date ;
+    dc:format        "RDF"@en ;
+    dc:creator        "Chris Bizer <chris@bizer.de>"^^dtype:string ;
+    dc:creator        "Ryan Lee <ryanlee@w3.org>"^^dtype:string ;
+    dc:creator        "Stefano Mazzocchi <stefanom@mit.edu>"^^dtype:string ;
+    dc:creator        "Emmanuel Pietriga <emmanuel.pietriga@inria.fr>"^^dtype:string ;
+    dc:identifier     <http://www.w3.org/2004/09/fresnel-extended#> ;
+    owl:versionInfo   "$Id: extended.owl.n3,v 1.4 2006/11/17 19:42:21 ryanlee Exp $"^^dtype:string
+    .
+   
+#@@@TODO:
+# - add containerStyle 
+# - resolve style/format discrepancies
+# - add in any redefinition needed for *Style / *Format properties
+
+# --------------------------------------------------------------   
+# Extended Lens Vocabulary 
+# --------------------------------------------------------------     
+# Contents:
+#     1. Lens Inheritance Vocabulary 
+#     2. Property Description Vocabulary
+#     3. Lens Relation Vocabulary
+
+# -----------------------------------------------
+# 1. Lens Inheritance Vocabulary 
+# -----------------------------------------------
+
+# @@@ things that could only take resources in core can now
+#     take literals - redefine?  forget the import?
+:Lens rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :extends;
+        owl:minCardinality "0"^^dtype:nonNegativeInteger ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :extends;
+        owl:maxCardinality "1"^^dtype:nonNegativeInteger
+    ] ;
+    # @@@ work on
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :use ;
+        owl:minCardinality "0"^^dtype:nonNegativeInteger ;
+    ] ;
+    # @@@ work on
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :moreDetailsFor ;
+        owl:minCardinality "0"^^dtype:nonNegativeInteger ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :moreDetailsFor ;
+        owl:allValuesFrom :Lens
+    ]
+    .
+
+#:extends a owl:ObjectProperty ;
+#    rdfs:label "extends"@en ;
+#    rdfs:comment "Extends allows you to model inheritance relation between lenses.  No multiple inheritance; browser detects and stops on loops."@en ;
+#    rdfs:domain :Lens ;
+#    rdfs:range :Lens
+#    .
+
+# @@@ can be used in a :PropertyList - redefine PropertyList?
+#:super a owl:Thing ;
+#    rdfs:label "Super"@en ;
+#    rdfs:comment "Ordered List of all properties which are defined by the super lens."@en
+#    .
+
+# -----------------------------------------------
+# 2. Property Description Vocabulary (additions to core)
+# -----------------------------------------------
+
+:PropertyDescription a owl:Class ;
+    rdfs:subClassOf rdfs:Resource ;
+    rdfs:label "Property Description"@en ;
+    rdfs:comment "More detailed description of the property, e.g. for specifing sublenses or merging properties."@en ;
+    # @@@ work on - rdf:List or :PropertyList...
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :alternateProperties ;
+        owl:minCardinality "0"^^dtype:nonNegativeInteger ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :alternateProperties ;
+        owl:maxCardinality "1"^^dtype:nonNegativeInteger ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :alternateProperties ;
+        owl:allValuesFrom rdf:List ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :mergeProperties ;
+        owl:minCardinality "0"^^dtype:nonNegativeInteger ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :mergeProperties ;
+        owl:maxCardinality "1"^^dtype:nonNegativeInteger ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :mergeProperties ;
+        owl:allValuesFrom rdf:List ;
+    ] ;
+    .
+
+# -----------------------------------------------
+# Alternate and Merged Properties
+# ----------------------------------------------- 
+
+# @@@ is the range an rdf:List or a :PropertyList?
+:alternateProperties a owl:ObjectProperty ;
+    rdfs:label "alternate properties"@en ;
+    rdfs:comment "Defines a sequence of alterntive properties that are used if a property is missing."@en ;
+    rdfs:domain :PropertyDescription ;
+    rdfs:range rdf:List
+    .
+
+:mergeProperties a owl:ObjectProperty ;
+    rdfs:label "merge properties"@en ;
+    rdfs:comment "The values of all properties in the fresnel:mergeProperties are displayed as one set of property values."@en ; 
+    rdfs:domain :PropertyDescription ;
+    rdfs:range rdf:List 
+    .
+
+# -----------------------------------------------    		
+# 3. Lens Relation Vocabulary
+# -----------------------------------------------
+
+# @@@ shouldn't this be a purpose?
+:moreDetailsFor	a owl:ObjectProperty ;
+    rdfs:label "more details for"@en ;
+    rdfs:comment "The lens provides more details about an instance than the nother lens.  Good for drill-down."@en ;
+    rdfs:domain :Lens ;
+    rdfs:range :Lens
+    .
+
+
+# --------------------------------------------------------------   
+# Extended Style Vocabulary 
+# --------------------------------------------------------------  
+# Contents:
+#     1. Class and Instance Styles
+#     2. Additional Style Description Properties
+#     3. Additional Property Value Styles for Media Types
+#     4. Style Purposes
+
+
+# -------------------------------------------------------------- 
+# 1. Class and Instance Styles
+# --------------------------------------------------------------
+
+# @@@ more work - redefine?
+:Format rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :displayAs ;
+        owl:minCardinality "0"^^dtype:nonNegativeInteger
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty :containerStyle ;
+        owl:minCardinality "0"^^dtype:nonNegativeInteger
+    ]
+    .
+
+:displayAs a rdf:Property ;
+    rdfs:label "displayAs"@en ;
+    rdfs:comment "Specifies how the class is displayed (e.g. image, video)."@en ;
+    rdfs:domain :Format ;
+    # rdfs:range :LabellingStyle or Literal 
+    .
+    
+:containerStyle a rdf:Property ;
+    rdfs:label "container style"@en ;
+    rdfs:comment ""@en ;
+    rdfs:domain :Format ;
+    .
+
+# -------------------------------------------------------------- 
+# 2. Additional Style Description Properties
+# -------------------------------------------------------------- 
+
+# @@@ more?  redefine?
+:StyleDescription rdfs:subClassOf [
+        a owl:Restriction ; 
+        owl:onProperty :contentReplace ;
+        owl:minCardinality "0"^^dtype:nonNegativeInteger ;
+    ] ;
+    rdfs:subClassOf [
+        a owl:Restriction ; 
+        owl:onProperty :contentReplace ;
+        owl:maxCardinality "1"^^dtype:nonNegativeInteger
+    ]
+    .
+
+:contentReplace a owl:DatatypeProperty ;
+    rdfs:label "content replace"@en ;
+    rdfs:comment "Replaces the content of the current box with the specified content."@en  ;
+    rdfs:domain :StyleDescription ;
+    rdfs:range dtype:string
+    .
+
+# @@@ these are datatype properties?
+:link a owl:DatatypeProperty ;
+    rdfs:label "link"@en ;
+    rdfs:comment "The :link pseudo-class applies to all links."@en  ;
+    rdfs:domain :StyleDescription ;
+    rdfs:range dtype:string
+    .
+
+:visited a owl:DatatypeProperty ;
+    rdfs:label "visited"@en ;
+    rdfs:comment "The :visited pseudo-class applies to all visited links."@en  ;
+    rdfs:domain :StyleDescription ;
+    rdfs:range dtype:string
+    . 
+
+:firstLetter a owl:DatatypeProperty ;
+    rdfs:label "first letter"@en ;
+    rdfs:comment "The :firstLetter pseudo-class allows you to style the first letter of a text."@en  ;
+    rdfs:domain :StyleDescription ;
+    rdfs:range dtype:string
+    .
+
+:active a owl:DatatypeProperty ;
+    rdfs:label "active"@en ;
+    rdfs:comment "The active pseudo-class applies while an element is being activated by the user. For example, between the times the user presses the mouse button and releases it."@en  ;
+    rdfs:domain :StyleDescription ;
+    rdfs:range dtype:string
+    . 
+
+:hover a owl:DatatypeProperty ;
+    rdfs:label "hover"@en ;
+    rdfs:comment "The :hover pseudo-class applies while the user designates an element (with some pointing device), but does not activate it."@en  ;
+    rdfs:domain :StyleDescription ;
+    rdfs:range dtype:string
+    .
+
+:focus a owl:DatatypeProperty ;
+    rdfs:label "focus"@en ;
+    rdfs:comment "The :focus pseudo-class applies while an element has the focus (accepts keyboard or mouse events, or other forms of input)."@en  ;
+    rdfs:domain :StyleDescription ;
+    rdfs:range dtype:string
+    .
+
+# @@@ needs work
+:labelOfParent a owl:Thing ;
+    rdfs:label "label of parent"@en ;
+    rdfs:comment "Displayes the label of the partent resource, if lenses are related using the sublens property.  fresnel:labelOfParent can be used as property value for fresnel:contentBefore, fresnel:contentAfter, fresnel:contentFirst, fresnel:contentLast.  This might be useful when rendering large graphs."@en
+    .
+
+# --------------------------------------------------------------   
+# 3. Additional Property Value Styles for Media Types
+# --------------------------------------------------------------  
+
+:video a :PropertyValueStyle ;
+    rdfs:label "video"@en ;
+    rdfs:comment "Retrieve the resource named by the property value and play it as an video clip."@en
+    .			
+
+:audio a :PropertyValueStyle ;
+    rdfs:label "audio"@en ;
+    rdfs:comment "Retrieve the resource named by the property value and play it as an audio clip."@en
+    .	
+
+:animation a :PropertyValueStyle ;
+    rdfs:label "animation"@en ;
+    rdfs:comment "Retrieve the resource named by the property value and display it as animated vector graphics or other animated format."@en
+    .			
+
+:text a :PropertyValueStyle ;
+    rdfs:label "animation"@en ;
+    rdfs:comment "Retrieve the resource named by the property value and display it as text format, such as PDF or MS word using an appropriate viewer."@en
+    .
+
+:textstream a :PropertyValueStyle ;
+    rdfs:label "animation"@en ;
+    rdfs:comment "Retrieve the resource named by the property value and display it as textstream using an appropriate viewer."@en
+    .			
+
+:html a :PropertyValueStyle ;
+    rdfs:label "animation"@en ;
+    rdfs:comment "Retrieve an HTML document and display its body element inside the rendered output document."@en
+    .
+
+# -------------------------------------------------------------- 
+# 4. Style Purposes
+# --------------------------------------------------------------
+
+:screen 	a :Purpose ;
+    rdfs:label "screen"@en ;
+    rdfs:comment "Intended primarily for color computer screens."@en 
+    .
+
+:projection a :Purpose ;
+    rdfs:label "Label Lens"@en ;
+    rdfs:comment "Intended for projected presentations, for example projectors or print to transparencies."@en 
+    .
+
+:print a :Purpose ;
+    rdfs:label "Label Lens"@en ;
+    rdfs:comment "Intended for paged, opaque material and for documents viewed on screen in print preview mode."@en 
+    .					
+
+
+:stylesheetLink a owl:ObjectProperty ;
+    rdfs:label "sylesheet link"@en ;
+    rdfs:comment "Reference to an external CSS stylesheet that works with the CSS classes or other instructions used in the group."@en ;
+    rdfs:domain :Group ;
+    rdfs:range rdfs:Resource
+    .
+
+# -----------------------------------------------
+# Datatypes
+# -----------------------------------------------  
+:fslSelector a rdfs:Datatype ;
+    rdfs:subClassOf rdfs:Literal ;
+    rdfs:isDefinedBy <http://www.w3.org/2004/09/fresnel> ;
+    rdfs:label "fslSelector" ;
+    rdfs:comment "Fresnel Selector Language (FSL) Selector datatype"@en .
+
+:sparqlSelector a rdfs:Datatype ;
+    rdfs:subClassOf rdfs:Literal ;
+    rdfs:isDefinedBy <http://www.w3.org/2004/09/fresnel> ;
+    rdfs:label "sparqlSelector" ;
+    rdfs:comment "SPARQL Selector datatype"@en .
+
+:stylingInstructions a rdfs:Datatype ;
+    rdfs:subClassOf rdfs:Literal ;
+    rdfs:isDefinedBy <http://www.w3.org/2004/09/fresnel> ;
+    rdfs:label "stylingInstructions" ;
+    rdfs:comment "Styling instructions (i.e., CSS styling instructions)"@en .    
+
+:styleClass a rdfs:Datatype ;
+    rdfs:subClassOf rdfs:Literal ;
+    rdfs:isDefinedBy <http://www.w3.org/2004/09/fresnel> ;
+    rdfs:label "styleClass" ;
+    rdfs:comment "Style class (i.e., HTML class names)"@en .

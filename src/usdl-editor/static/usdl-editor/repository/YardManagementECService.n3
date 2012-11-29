@@ -1,0 +1,208 @@
+@prefix :    <http://bizweb.sap.com/services/YardManagement#> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<>  rdf:type usdl:ServiceDescription ; # this document is a USDL service description
+    dcterms:title "USDL service description for the Yard Management EC Service";
+    dcterms:creator :Torsten_Leidig ;
+    rdfs:label "Service description for Yard Management EC Service" ;
+    dcterms:description "This description is an example of describing USDL services in RDF. These service descriptions are read by Web shops (stores) and marketplaces in order to present the business relevent information to the consumer." ;
+    owl:versionInfo "0.1";
+    dcterms:contributor  [
+       a foaf:Person ;
+       foaf:name "Torsten Leidig";
+       foaf:title "Dr";
+       foaf:firstName "Torsten";
+       foaf:phone "+49 6227 7 52535";
+       foaf:lastName "Leidig" ] ;  # Ha, I'm the author of this document!
+    dcterms:created "2011-09-29"^^xsd:date .
+
+:YardManagmentECService a usdl:Service, msm:Service;
+       usdl:hasNature usdl:Automated;
+       usdl:hasClassification [ a skos:ConceptScheme;
+  	                        skos:hasTopConcept blueprint:SolutionType ;
+                                rdfs:label "Enterprise Solution"];
+       usdl:hasServiceModel <http://bizweb.sap.com/services/solutionModel> ;
+       dcterms:modified "2011-03-03"^^xsd:date;
+       dcterms:created "2011-03-03"^^xsd:date;
+       dcterms:title "Yard Management EC Service"@en;
+       usdl:shortDescription "The service realizes access to data of the yard management application in an enterprise system utilizing Gateway"@en;
+       usdl:longDescription "Long description text here ..."@en;
+       foaf:thumbnail <http://deqkalvm272.qkal.sap.corp:1080/ServicePad/images/09_Icon_NewBrand.png>;
+       usdl:hasProvider :sample_business_owner;
+       usdl:hasInteractionProtocol :ip_1;
+       usdl:hasImplementation <http://www.sap.com/bizweb/github/YardMgmt/1212345345.war>;
+       blueprint:hasGenericBlueprint <http://www.sap.com/bizweb/blueprints/1212345345>;
+       usdl:hasDocumentation <https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1> ;
+       usdl:hasLegalCondition :termsAndConditions .
+
+:termsAndConditions a legal:TermsAndConditions;
+       dcterms:title "Terms and Conditions"@en;
+       dcterms:description "Defines terms of use, liability, data safety and so on."@en;
+       legal:hasClause [ a legal:Clause;
+                         legal:name "Liablity";
+                         legal:text "HAMBURG HAFEN WILL NOT BE LIABLE FOR ANY DAMAGES IN EXCESS OF THE DECLARED VALUE OR US$100 OR THE AMOUNT SET BY THE MONTREAL OR WARSAW CONVENTIONS (AS AMENDED), WHICHEVER IS GREATER, FOR CARRIAGE OF A SHIPMENT ARISING FROM TRANSPORTATION SUBJECT TO THE TERMS AND CONDITIONS CONTAINED IN THE SERVICE GUIDE, WHETHER OR NOT HAMBURG HAFEN KNEW OR SHOULD HAVE KNOWN THAT SUCH DAMAGES MIGHT BE INCURRED."@en ] .
+
+<https://wiki.wdf.sap.corp/wiki/display/suiteconsu/Project+1> a usdl:Artifact;
+      usdl:artifactType usdl:Mixed ; # or usdl-f:Other?
+      dcterms:title "Description of the Yard Management application and services" .
+
+<http://www.sap.com/bizweb/github/YardMgmt/1212345345.war>  a usdl:Artifact;
+      usdl:artifactType usdl:Software;
+      dcterms:title "Software package for the Yard Managment application" .
+
+:sample_business_owner a gr:BusinessEntity;
+      foaf:name "Hamburg Hafen und Logistic AG";
+      foaf:homepage <http://www.hafen-hamburg.de>;
+      foaf:logo <http://www.hhla.de/fileadmin/pic/pagetitle/hhla_logo.gif>;
+      usdl:legalForm "AG" ;
+      dcterms:description "Goods flows and their accompanying data are interlinking our world to an increasing extent. Hamburger Hafen und Logistik AG (HHLA) is actively and far-sightedly shaping this process. With its efficient container terminals, high-performance transport systems and comprehensive logistics services, HHLA constitutes a complete network between the overseas port and the European hinterland. Logistics chains are therefore created that conserve the climate and promote development in the world economy.";
+      vcard:adr [ a vcard:Work;
+                  vcard:tel "030 999 8753";
+                  vcard:email "info@hafen-hamburg.com";
+                  vcard:locality "Hamburg";
+                  vcard:street-address "Bei St. Annen 1";
+                  vcard:postal-code "20457 ";
+                  vcard:country-name "Germany"@en ] .
+
+:ip_1 a usdl:InteractionProtocol;
+      dcterms:title "Read and write dock appointments";
+      dcterms:description "Read and write dock appointments, time slots and driver information from the Enterprise Yard mgmt. solution"@en;
+      usdl:hasTechnicalInterface :SAPDataInterface_1 ;
+      usdl:hasInteraction [ 
+                 a usdl:Interaction;
+                 dcterms:title "Get dock appointments"@en ;
+                 dcterms:description "Get all dock appointments for a specific dock and return a list of details for the dock appointment"@en ;
+                 usdl:hasInput [ a usdl:Parameter;
+                                 rdfs:label "Dock ID"@en ] ;
+                 usdl:hasOutput [ a usdl:Parameter;
+                                 rdfs:label "Carrier ID"@en ],
+                               [ a usdl:Parameter;
+                                 rdfs:label "Driver ID"@en ],
+                               [ a usdl:Parameter;
+                                 rdfs:label "Dock address"@en ],
+                               [ a usdl:Parameter;
+                                 rdfs:label "Dock telephone"@en ],
+                               [ a usdl:Parameter;
+                                 rdfs:label "Start date"@en ],
+                               [ a usdl:Parameter;
+                                 rdfs:label "End date"@en ]
+               ] ,
+               [ 
+                 a usdl:Interaction;
+                 dcterms:title "Make dock appointment"@en ;
+                 dcterms:description "Make a dock appointment given a list of details for the dock appointment"@en ;
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "Dock ID"@en ] ; 
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "Carrier ID"@en ];
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "Driver ID"@en ];
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "Dock address"@en ];
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "Dock telephone"@en ];
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "Start date"@en ];
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "End date"@en ];
+                 usdl:hasOutput [ a usdl:Parameter;
+                           rdfs:label "Status"@en ]
+               ] ,
+               [ a usdl:Interaction;
+                 dcterms:title "Get time slots"@en ;
+                 dcterms:description "Get alist of free timeslots for a potential dock appointment"@en ;
+                 usdl:hasOutput [ a usdl:Parameter;
+                           rdfs:label "list of time slots"@en ] ] ,
+
+               [ a usdl:Interaction;
+                 dcterms:title "Get time of days"@en ;
+                 dcterms:description "Get the specific time of day blocks. Usually something like moring, noon, afternoon, ..."@en ;
+                 usdl:hasOutput [ a usdl:Parameter;
+                           rdfs:label "time of days"@en ] ] , 
+
+               [ a usdl:Interaction;
+                 dcterms:title "Get drivers"@en ;
+                 dcterms:description "Get all drivers registered to the system"@en ;
+                 usdl:hasOutput [ a usdl:Parameter;
+                           rdfs:label "list of drivers"@en ] ] . 
+
+
+# service level profile
+
+:sl_profile_1 a usdl:ServiceLevelProfile;
+      usdl:hasServiceLevel [ a usdl:GuaranteedAction;
+                                usdl:serviceLevelExpression "Mon-Wed:0900-1700;Thu:0900-1900;Fri:0900-1500";
+                                usdl:obligatedParty usdl:Provider ],
+                              [ a usdl:GuaranteedState;
+                                usdl:serviceLevelExpression "for businesses within the boundaries of the European Union" ;
+                                usdl:obligatedParty usdl:Consumer ] .
+
+
+:offering a usdl:ServiceOffering;
+   usdl:includes :YardManagmentECService;
+   usdl:hasPricePlan :price_plan_1;
+   usdl:validFrom "2011-12-01"^^xsd:date;
+   usdl:validThrough "2011-12-31"^^xsd:date;
+   usdl:hasServiceLevelProfile :sl_profile_1.
+
+:price_plan_1 a price:PricePlan; # could also call it a price model?
+   dcterms:title "Standard Plan"@en;
+   dcterms:description "Our unbeatable one fits all price plan"@en;
+   price:hasPriceCap [ a gr:PriceSpecification;
+                       gr:hasCurrency "EUR";
+                       gr:hasCurrencyValue "99.99"^^xsd:float;
+                       gr:unitOfMeasurement "per/month" ];
+   price:hasPriceFloor [ a gr:PriceSpecification;
+                         gr:hasCurrency "EUR";
+                         gr:hasValueFloat "29.99"^^xsd:float;
+                         gr:unitOfMeasurement "per/month" ];
+   price:hasPriceComponent [ a price:PriceComponent;
+                             dcterms:title "Fixed component";
+                             dcterms:description "Initial fee for setup and arrangements.";
+                             gr:hasCurrency "EUR";
+                             gr:hasCurrencyValue "29.99"^^xsd:float;
+                             gr:unitOfMeasurement "per user"
+                           ], [ a price:PriceComponent;
+                             dcterms:title "Monthly rate";
+                             dcterms:description "Monthly fee to pay for the service.";
+                             gr:hasCurrency "EUR";
+                             gr:hasCurrencyValue "9.99"^^xsd:float;
+                             gr:unitOfMeasurement "per month per user"
+                           ];
+   price:hasTax            [ a price:PriceComponent;
+                             dcterms:title "Value Added Tax";
+                             dcterms:description "The Value Added Tax, or VAT, in the European Union is a general, broadly based consumption tax assessed on the value added to goods and services.";
+                             gr:hasValueFloat "16.0"^^xsd:float;
+                             gr:unitOfMeasurement "percent"
+                           ].
+  
+                             
+
+
+   
+
+
+
+   
+

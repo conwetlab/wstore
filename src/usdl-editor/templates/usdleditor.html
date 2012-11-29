@@ -1,0 +1,2615 @@
+﻿<!DOCTYPE html>
+<html 
+      prefix="rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+              rdfs: http://www.w3.org/2000/01/rdf-schema#
+              snippet: http://www.snippet.org/2011/snippet#
+              msm: http://cms-wg.sti2.org/ns/minimal-service-model#
+              foaf: http://xmlns.com/foaf/0.1/
+              owl: http://www.w3.org/2002/07/owl#
+              dcterms: http://purl.org/dc/terms/
+              gr: http://purl.org/goodrelations/v1#
+              usdl: http://www.linked-usdl.org/ns/usdl-core#
+              legal: http://www.linked-usdl.org/ns/usdl-legal#
+              vcard: http://www.w3.org/2006/vcard/ns#
+              xsd: http://www.w3.org/2001/XMLSchema#"
+>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" />
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<title>USDL Deck</title>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="viewport" content="width=980" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="shortcut icon" href="{{ STATIC_URL }}usdl-editor/images/usdl-solo.ico" />
+<link rel="apple-touch-icon" href="{{ STATIC_URL }}usdl-editor/images/splash_about.png"/>
+<link rel="stylesheet" href="{{ STATIC_URL }}usdl-editor/jquery/css/smoothness/jquery-ui-1.8.6.custom.css" />
+<link rel="stylesheet" href="{{ STATIC_URL }}usdl-editor/css/jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" href="{{ STATIC_URL }}usdl-editor/css/jquery.jgrowl.css" type="text/css"/>
+<link rel="stylesheet" href="{{ STATIC_URL }}usdl-editor/css/ui.sa.css" />
+<link rel="stylesheet" href="{{ STATIC_URL }}usdl-editor/css/sapUiUx3.css" />
+<link rel="stylesheet" href="{{ STATIC_URL }}usdl-editor/css/infovis.css" />
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/jquery/js/jquery-1.6.2.min.js" ></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/jquery-ui-timepicker-addon.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/jquery.editable-1.3.3.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/jquery.livequery.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/jquery.clicknscroll.v1.0.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/jquery.sa.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/mime.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/slidedeck.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/jquery.jgrowl_minimized.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/Math.uuid.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/base64.js"></script>
+<!--script type="text/javascript" src="js/jit-yc.js"></script-->
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.json.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.uri.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.xmlns.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.curie.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.datatype.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.rdf.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.rdfa.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.rdf.json.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.rdf.xml.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/rdfquery/jquery.rdf.turtle.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}usdl-editor/js/usdl.editor.js"></script>
+</head>
+<body></body>
+<div class="snippet" typeof="snippet:Snippet" id="Manifest">
+    <h1 class="snippet_title" property="dcterms:title">Manifest</h1>
+    <div class="snippet_body" property="snippet:body">
+         <div class="lens"
+              data-query="?service rdf:type usdl:ServiceModel . (?service dcterms:title ?title)">
+              <ul id="menuServiceModels" class="mainMenu selectMenu">
+               <li data-view style="background-image: url({{ STATIC_URL }}usdl-editor/images/master.png);">
+                  <div data-show="literal" class="ui-button link" style="background: none;"
+                       data-attribute-name="data-parameter"
+                       data-attribute="service" data-persist="subject"
+                       data-content="title" placeholder="Enter title...">Enter title ...</div>
+		  <div class="ui-button delete"></div>
+               </li>
+	      </ul>
+         </div>
+         <div class="lens"
+              data-query="?service rdf:type usdl:Service . (?service dcterms:title ?title)">
+              <ul id="menuServices" class="mainMenu selectMenu"> 
+               <li data-view style="background-image: url({{ STATIC_URL }}usdl-editor/images/custom.png);">
+                  <div data-show="literal" class="ui-button link" style="background: none;"
+                       data-attribute-name="data-parameter"
+                       data-attribute="service" data-persist="subject"
+                       data-content="title" placeholder="Enter title...">Enter title ...</div>
+		  <div class="ui-button delete"></div>
+               </li>
+             </ul>
+         </div>
+           <ul class="mainMenu">
+              <li class="ui-button addObject"
+                  data-template="service.n3" 
+                  style="border-bottom: none;">Add service or model...</li>
+           </ul>
+    </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="core.templates.page.default">
+    <h1 class="snippet_title" property="dcterms:title">core.templates.page.default</h1>
+    <div class="snippet_body" property="snippet:body">
+           <span id="application">
+                     <span id="header">
+                        <span class="transclude" data-snippet="Header"></span>
+                     </span>
+                     <div id="workarea" class="ui-body">
+                        <div id='columnNavigation' class='snippet_column'>
+                           <div class="transclude" data-snippet="Manifest"></div>
+                        </div>
+                        <div id='columnStory' class='story snippetContainer snippet_column'>
+                           <div class="snippetContent"></div>
+                        </div>
+                     </div>
+                     <span id="footer">
+                        <span class="transclude" data-snippet="Footer"></span>
+                     </span>
+          </span>
+    </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Header">
+    <h1 class="snippet_title" property="dcterms:title">Header</h1>
+    <div class="snippet_body" property="snippet:body">
+<div class="sapUiUx3TIFacetBar">
+   <div id="tabs" class="sapUiUx3NavBar">
+      <ul class="sapUiUx3NavBarList" id="navigation-list">
+         <li><a class="sapUiUx3NavBarDummyItem sapUiUx3NavBarItem" id="__bar0-dummyItem">&nbsp;</a></li>
+	 <li><a class="sapUiUx3NavBarItem" data-target="About" data-subject="<>">About</a></li>
+         <li><a class="sapUiUx3NavBarItem" data-target="Service">General</a></li>
+         <li><a class="sapUiUx3NavBarItem" data-target="Properties">Properties</a></li>
+         <li><a class="sapUiUx3NavBarItem" data-target="InteractionProtocols">Interaction</a></li>
+         <li><a class="sapUiUx3NavBarItem" data-target="Offering" >Offering &amp; Pricing</a></li>
+         <li><a class="sapUiUx3NavBarItem" data-target="ServiceLevelProfile">SLA</a></li>
+         <li><a class="sapUiUx3NavBarItem" data-target="SecurityProfiles">Security</a></li>
+         <li><a class="sapUiUx3NavBarItem" data-target="Legal" >Terms &amp; Conditions</a></li>
+         <li><a class="sapUiUx3NavBarItem" data-target="Providers" >Provider</a></li>
+         <li><a class="sapUiUx3NavBarItem" data-target="Artefacts" >Artefacts</a></li>
+         <span class="sapUiUx3NavBarArrow" style="left: 104px;" id="__bar0-arrow"></span>
+      </ul>
+</div>
+      <a href="javascript:void(0)" class="sapUiUx3NavBarBack" role="presentation" id="__bar0-ofb">&lt;&lt;</a>
+      <a href="javascript:void(0)" class="sapUiUx3NavBarForward" role="presentation" id="__bar0-off">&gt;&gt;</a>
+   </nav>
+    </div>
+</div>  
+
+<div class="snippet" typeof="snippet:Snippet" id="Footer">
+    <h1 class="snippet_title" property="dcterms:title">Footer</h1>
+    <div class="snippet_body" property="snippet:body">
+      <div role="toolbar" class="sapUiUx3TIToolbar" tabindex="0">
+            <ul class="sapUiUx3TIGenericActions">
+               <li class="sapUiUx3TIItem"><a title="Settings" tabindex="-1" class="sapUiUx3TISettingsAction sapUiUx3TIAction" aria-disabled="false" role="button"></a></li>
+               <li class="sapUiUx3TIItem"><a title="Repository" tabindex="-1" class="link sapUiUx3TISearchAction sapUiUx3TIAction" aria-disabled="false" role="button" data-link-target="Repository" style="background-size:auto;"></a></li>
+               <li class="sapUiUx3TIItem"><a title="Publish" tabindex="-1" class="link sapUiUx3TIPublishAction sapUiUx3TIAction" aria-disabled="false" role="button" data-link-target="Publish" style="background-size:auto;"></a></li>
+            </ul>
+            <ul class="sapUiUx3TIThingActions">
+		    <!--li class="sapUiUx3TIItem"><a class="link" style="background:none;" tabindex="-1" data-link-target="Repository" >Repository</a></li-->
+            </ul>
+        </div>
+    </div>
+</div>  
+
+<div class="snippet" typeof="snippet:Snippet" id="core.templates.snippet.default">
+    <h1 class="snippet_title" property="dcterms:title">core.templates.snippet.default</h1>
+    <div class="snippet_body" property="snippet:body">
+                     <a class="command" style="float:right; cursor:pointer;" data-name="close_snippet">X</a>
+                     <h1>
+                       <span class='snippetView' data-field="title" data-format="text"></span>
+                     </h1>
+                     <span class='snippetView' data-field="text" data-format="html"
+                           data-class="snippet_body"></span>
+    </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="core.templates.snippet.transclude">
+    <h1 class="snippet_title" property="dcterms:title">core.templates.snippet.transclude</h1>
+    <div class="snippet_body" property="snippet:body">
+         <span class='snippetView' data-field="text" data-format="html"
+                data-class="snippet_body"></span>
+    </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="SolutionClassification">
+	<h1 class="snippet_title" property="dcterms:title">Solution Classification</h1>
+	<div class="snippet_body" property="snippet:body">
+            <span class="lens" 
+                   data-query="?o dcterms:subject ?classification. ?classification skos:inScheme blueprint:SolutionType. (?classification rdfs:label ?soltype)">
+                 <div class="selectEdit"
+                          options="Business Solution,Business Service,Mobile Application"
+                          data-property="rdfs:label" data-subject="classification"
+                          data-show="literal" data-content="soltype" data-view></div>
+            </span>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="BusinessAreaClassification">
+	<h1 class="snippet_title" property="dcterms:title">Business Area Classification</h1>
+	<div class="snippet_body" property="snippet:body">
+            <span class="lens" 
+                   data-query="?o dcterms:subject ?classification. ?classification skos:inScheme blueprint:BusinessArea. (?classification rdfs:label ?batype)">
+                 <div class="selectEdit"
+                          options="Services,Development,Manufacturing&Warehouse,Communication&Information Exchange,Marketing,Distribution,Supply Chain Managment,Sales"
+                          data-property="rdfs:label" data-subject="classification"
+                          data-show="literal" data-content="batype" data-view></div>
+            </span>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="IndustryClassification">
+	<h1 class="snippet_title" property="dcterms:title">Industry Classification</h1>
+	<div class="snippet_body" property="snippet:body">
+            <span class="lens" 
+                   data-query="?o dcterms:subject ?classification. ?classification skos:inScheme blueprint:Industry. (?classification rdfs:label ?intype)">
+                 <div class="selectEdit"
+                          options="Business services,Communication services,IT services,Construction and related engineering services,Distribution services,Educational services,Environmental services,Financial services,Healt-related and social services,Tourism and travel-related services,Recreational cultural and sporting services,Transport services,Other services"
+                          data-property="rdfs:label" data-subject="classification"
+                          data-show="literal" data-content="intype" data-view></div>
+            </span>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="SecurityGoalClassification">
+	<h1 class="snippet_title" property="dcterms:title">Security Goal Classification</h1>
+	<div class="snippet_body" property="snippet:body">
+            <span class="lens" 
+                   data-query="?o dcterms:subject ?classification. ?classification skos:inScheme sec:Goal. (?classification rdfs:label ?intype)">
+                 <div class="selectEdit"
+                          options="Accountability,Anonymity,Authentication,Authenticity,Authorization,Availability,Confidentiality,Correctness,Identification,Integrity,Non-Repudiation,Policy Compliance,Privacy,Trust"
+                          data-property="rdfs:label" data-subject="classification"
+                          data-show="literal" data-content="intype" data-view></div>
+            </span>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="SecurityMechanismClassification">
+	<h1 class="snippet_title" property="dcterms:title">Security Mechanism Classification</h1>
+	<div class="snippet_body" property="snippet:body">
+            <span class="lens" 
+                   data-query="?o dcterms:subject ?classification. ?classification skos:inScheme sec:SecurityMechanism. (?classification rdfs:label ?intype)">
+                 <div class="selectEdit"
+                          options="Access Control,Auditing,Biometric Data,Certificates,Certification,Certification Exchange,Checksum,Challenge,Cryptography,Digest,Filtering,Key Management,Load Balancing,Logging,Monitoring,Obfuscation,Obligation,Password Exchange,Pseudonyms,Recommendation,Replication,Secrecy,Shared Secret,Signature,Token,Usage Control"
+                          data-property="rdfs:label" data-subject="classification"
+                          data-show="literal" data-content="intype" data-view></div>
+            </span>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="SecurityTechnologyClassification">
+	<h1 class="snippet_title" property="dcterms:title">Security Technology Classification</h1>
+	<div class="snippet_body" property="snippet:body">
+            <span class="lens" 
+                   data-query="?o dcterms:subject ?classification. ?classification skos:inScheme sec:SecurityTechnology. (?classification rdfs:label ?intype)">
+                 <div class="selectEdit"
+                          options="AES,OpenId,OAuth,PPL,XACML"
+                          data-property="rdfs:label" data-subject="classification"
+                          data-show="literal" data-content="intype" data-view></div>
+            </span>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="LongDescription">
+	<h1 class="snippet_title" property="dcterms:title">Detailed Description</h1>
+	<div class="snippet_body" property="snippet:body">
+        <div class="snippet_content smallCard">
+             <div class="lens"
+                  data-query="?o dcterms:description ?description">
+                  <div style="height: 2em;"></div>
+                  <table class="propertyTable">
+                      <tr>
+                       <td class="valueCol top"><div class="editHtml" placeholder="Enter detailed description..."
+                           data-content="description" data-format="html" data-view
+                           data-show="literal" data-property="dcterms:description"
+                           style="min-height:15em;"></div></td>
+                      </tr>
+                  </table>
+                </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListParts">
+	<h1 class="snippet_title" property="dcterms:title">Parts</h1>
+	<div class="snippet_body" property="snippet:body">
+        <div class="snippet_content smallCard">
+             <div class="lens"
+                  data-query="?o usdl:hasPartMandatory ?part . ?part dcterms:title ?title">
+                   <h2>Mandatory Parts</h2>
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="part"
+                           data-link-target="Service" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addLink"
+                           data-template="service.n3" 
+                           data-property="usdl:hasPartMandatory" data-resource-type="usdl:Service,usdl:ServiceModel"
+                           data-link-target="Service">Add mandatory part ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+             <div class="lens"
+                  data-query="?o usdl:hasPartOptional ?part . ?part dcterms:title ?title">
+                   <h2>Optional Parts</h2>
+                   <table class="listTable">
+                    <tbod><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="part"
+                           data-link-target="Service" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addLink"
+                           data-template="service.n3" 
+                           data-property="usdl:hasPartOptional" data-resource-type="usdl:Service,usdl:ServiceModel"
+                           data-link-target="Service">Add optional part ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Resource">
+	<h1 class="snippet_title" property="dcterms:title">Resource</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+               <div class="swipe">
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="About">
+    <h1 class="snippet_title" property="dcterms:title">About this Description</h1>
+    <div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+		     data-query="?desc rdf:type usdl:ServiceDescription . (?desc dcterms:title ?title). (?desc dcterms:created ?created). (?desc dcterms:modified ?modified). (?desc dcterms:creator ?creator) . (?creator foaf:name ?name) . (?desc owl:imports ?voc)">
+               <div class="swipe">
+                  <table class="propertyTable">
+                      <tr>
+                        <td class="propertyCol top right">Base</td>
+                        <td class="valueCol top baseEdit" data-show="uri"
+                            data-view data-subject="desc" data-content="desc"
+                            placeholder="Enter base URL..."
+			    data-base="desc"></td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Title</td>
+                        <td class="valueCol top textEdit lens-label" data-show="literal"
+                            data-view data-subject="desc"
+                            placeholder="Enter title"
+			    data-content="title" data-property="dcterms:title"></td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Creator</td>
+                        <td class="valueCol top textEdit lens-label" data-show="literal"
+                            data-view data-subject="creator"
+                            placeholder="Enter creator"
+			    data-content="name" data-property="foaf:name"></td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Created</td>
+                        <td class="valueCol top"><input class="dateTimeEdit" data-view
+			    data-show="literal" data-attribute="created"
+			    data-attribute-name="value" value="" placeholder="Select date ..."
+			    data-subject="desc"
+                            data-property="dcterms:created" data-type="xsd:datetime"></td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Modified</td>
+                        <td class="valueCol top"><input class="dateTimeEdit" data-view
+			    data-show="literal" data-attribute="modified"
+			    data-attribute-name="value" value="" placeholder="Select date ..."
+			    data-subject="desc"
+                            data-property="dcterms:modified" data-type="xsd:datetime"></td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Imports</td>
+                        <td class="valueCol top uriEdit" data-show="uri"
+                            data-view data-subject="desc" data-content="voc"
+                            placeholder="Enter vocabulary URL..."
+                            data-property="owl:imports"
+			    data-base="desc"></td>
+                      </tr>
+                  </table>
+                </div>
+             </div>
+        </div>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="Service">
+    <h1 class="snippet_title" property="dcterms:title">General Description</h1>
+    <div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o rdf:type ?type . ?o dcterms:title ?title. (?o dcterms:created ?created). (?o dcterms:modified ?modified). ( ?o dcterms:abstract ?abstract ). (?o foaf:thumbnail ?thumbnail). (?o foaf:page ?page)">
+               <div class="swipe">
+                  <span class="transclude" data-snippet="Model"></span>
+                  <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Icon</td>
+                       <td class="valueCol top">
+                           <img class="iconEdit" data-show="uri" data-attribute="thumbnail" data-attribute-name="src" data-view
+                                alt="Thumbnail">
+                           <div class="hidden uriEdit" data-show="uri" data-view
+                            placeholder="Enter URL..."
+                            data-content="thumbnail" data-property="foaf:thumbnail"></div>
+                       </td>
+                    </tr>
+                      <tr>
+                        <td class="propertyCol top right">Title</td>
+                        <td class="valueCol top textEdit lens-label" data-show="literal"
+                            data-view
+                            data-defaults='{"title": "Title"}' placeholder="Enter title"
+                            data-content="title" data-property="dcterms:title"></td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Type</td>
+                        <td class="valueCol top" placeholder="Select type ...">
+                          <div class="selectEdit"
+                               options="Service,ServiceModel"
+                               data-property="rdf:type" data-prefix="http://www.linked-usdl.org/ns/usdl-core#" 
+                               data-show="uri-anchor" data-content="type" data-view></div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Created</td>
+                        <td class="valueCol top"><input class="dateTimeEdit" data-view
+                            data-show="literal" data-attribute="created" data-attribute-name="value" value="" placeholder="Select date ..."
+                            data-defaults='{}'
+                            data-property="dcterms:created" data-type="xsd:datetime"></td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Modified</td>
+                        <td class="valueCol top"><input class="dateTimeEdit" data-view
+                            data-show="literal" data-attribute="modified" data-attribute-name="value" value="" placeholder="Select date ..."
+                            data-defaults='{}'
+                            data-property="dcterms:modified" data-type="xsd:datetime"></td>
+                      </tr>
+                      <!--tr>
+                        <td class="propertyCol top right">Solution Type</td>
+                        <td class="valueCol top transclude" data-snippet="SolutionClassification" placeholder="Select solution type..."></td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Business Area</td>
+                        <td class="valueCol top transclude" data-snippet="BusinessAreaClassification"></td>
+                      </tr-->
+                      <tr>
+                        <td class="propertyCol top right">Industry</td>
+                        <td class="valueCol top transclude" data-snippet="IndustryClassification"></td>
+                      </tr>
+                      <tr>
+                       <td class="propertyCol top right">Abstract</td>
+                       <td class="valueCol top"><div class="editHtml"
+                           data-content="abstract" data-format="html" data-view
+                           data-defaults='{}'  placeholder="Enter short description ..."
+                           data-show="literal" data-property="dcterms:abstract"></div></td>
+                      </tr>
+                      <tr>
+                        <td class="propertyCol top right">Web page</td>
+                        <td class="valueCol top uriEdit" data-show="uri" data-view
+                            placeholder="Enter URL..." 
+                            data-content="page" data-property="foaf:page"></td>
+                      </tr>
+                      <tr>
+                        <td colspan="2" class="propertyCol top right link"
+                            data-attribute-name="data-parameter" data-attribute="subject" data-view
+                            data-show="literal"
+                            data-link-target="LongDescription">Detailed Description</td>
+                      </tr>
+                      <tr>
+                        <td colspan="2" class="propertyCol top right link" data-link-target="ListParts"
+                            data-attribute-name="data-parameter" data-attribute="subject" data-view
+                            data-show="literal"
+>Parts</td>
+                      </tr>
+                  </table>
+                </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Model">
+    <h1 class="snippet_title" property="dcterms:title">Model</h1>
+    <div class="snippet_body" property="snippet:body">
+             <div>
+               <div class="swipe">
+                  <table class="propertyTable">
+                      <tr>
+                        <td class="propertyCol top right">Model</td>
+                        <td class="top right" style="padding: 0px;">
+                          <table width="100%">
+                             <tbody class="lens"
+                                    data-query="?o usdl:hasServiceModel ?model . ?model dcterms:title ?mtitle">
+                               <tr data-view>
+                                 <td class="valueCol top link" data-show="literal" data-content="mtitle" 
+                                     data-attribute-name="data-parameter" data-attribute="model"
+                                     data-link-target="Service" data-lang="en"></td>
+                               </tr>
+                             </tbody>
+                             <tfoot>
+                               <tr>
+                                 <td class="propertyCol top addLink"  style="padding: 3px;"
+                                     data-template="service.n3"
+                                     data-resource-type="usdl:ServiceModel"
+                                     data-property="usdl:hasServiceModel"
+                                     >Add model ... </td>
+                               </tr>
+                             </tfoot>
+                          </table>
+                      </tr>
+                  </table>
+                </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Artefacts">
+	<h1 class="snippet_title" property="dcterms:title">Artefacts</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+                   <table class="listTable">
+                    <tbody class="lens"
+                           data-query="?o usdl:utilizedResource ?a. ?a rdf:type blueprint:Artefact. ?a dcterms:title ?title">
+                     <tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="a"
+                           data-link-target="Artefact">
+                       </td>
+                     </tr></tbody>
+                    <tfoot>
+                     <tr>
+                       <td class="propertyCol top addLink"
+                           data-template="artefact.n3"
+                           data-resource-type="blueprint:Artefact"
+                           data-property="usdl:utilizedResource"
+                           data-link-target="Artefact">Add artefact ... </td>
+                     </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="Providers">
+	<h1 class="snippet_title" property="dcterms:title">Providers</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+                   <table class="listTable">
+                    <tbody class="lens"
+                           data-query="?o usdl:hasProvider ?p. ?p foaf:name ?title">
+                     <tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="p"
+                           data-link-target="Provider">
+                       </td>
+                     </tr></tbody>
+                    <tfoot>
+                     <tr>
+                       <td class="propertyCol top addLink"
+                           data-template="provider.n3"
+                           data-resource-type="usdl:BusinessEntity"
+                           data-property="usdl:hasProvider"
+                           data-link-target="Provider">Add provider ... </td>
+                     </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Artefact">
+	<h1 class="snippet_title" property="dcterms:title">Artefact</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o dcterms:title ?title. (?o blueprint:location ?loc ). (?o dcterms:description ?description)"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter title ..." data-view
+                           data-content="title" data-property="dcterms:title"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Location</td>
+                       <td class="valueCol top uriEdit" data-show="uri"
+                           placeholder="Enter location..." data-view
+                           data-content="loc" data-property="blueprint:location"></td>
+                    </tr>
+                    <tr data-view>
+                     <td class="propertyCol top right">Description</td>
+                     <td class="valueCol top"><div class="editHtml"
+                         placeholder="Enter description ..." data-view
+                         data-content="description" data-format="html"
+                         data-show="literal" data-property="dcterms:description"></div></td>
+                    </tr>
+                   </table>
+               </div>
+              </div>
+        </div>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="Provider">
+	<h1 class="snippet_title" property="dcterms:title">Provider</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o foaf:name ?name. (?o foaf:homepage ?homepage ). (?o usdl:legalForm ?legal). (?o dcterms:description ?description). ?o vcard:adr ?adr. (?o foaf:logo ?logo)"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Logo</td>
+                       <td class="valueCol top">
+                           <img class="iconEdit" data-show="uri" data-attribute="logo"
+                                data-attribute-name="src" data-view alt="Thumbnail">
+                           <div class="hidden uriEdit" data-show="uri" data-view
+                            placeholder="Enter URL..."
+                            data-content="logo" data-property="foaf:logo"></div>
+                       </td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Name</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter name ..." data-view
+                           data-content="name" data-property="foaf:name"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Legal Form</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter legal form ..." data-view
+                           data-content="legal" data-property="usdl:legalForm"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Home page</td>
+                       <td class="valueCol top uriEdit" data-show="uri"
+                           placeholder="Enter home page..." data-view
+                           data-content="homepage" data-property="foaf:homepage"></td>
+                    </tr>
+                    <tr data-view>
+                     <td class="propertyCol top right">Description</td>
+                     <td class="valueCol top"><div class="editHtml"
+                         placeholder="Enter description ..." data-view
+                         data-content="description" data-format="html"
+                         data-show="literal" data-property="dcterms:description"></div></td>
+                    </tr>
+                   </table>
+                   <span class="transclude" data-snippet="Address" data-attribute="adr" data-view
+                         data-show="literal" data-attribute-name="data-parameter"></span>
+               </div>
+              </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Address">
+	<h1 class="snippet_title" property="dcterms:title">Address</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o vcard:tel ?tel. ( ?o vcard:email ?email ) . ?o vcard:locality ?locality. ?o vcard:street-address ?street. ?o vcard:postal-code ?zip. ?o vcard:country-name ?country. (?o dcterms:description ?description)"
+               >
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Street</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter street address ..."
+                           data-content="street" data-view data-property="vcard:street-address"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">City</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter city ..."
+                           data-content="locality" data-view data-property="vcard:locality"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Telephone</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter phone number ..."
+                           data-content="tel" data-view data-property="vcard:tel"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">E-Mail</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter e-mail address ..."
+                           data-content="email" data-view  data-property="vcard:email"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Postal Code</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter postal code"
+                           data-content="zip" data-view data-property="vcard:postal-code"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Country</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter country name ..."
+                           data-content="country" data-view data-property="vcard:country-name"></td>
+                    </tr>
+                    <tr data-view>
+                     <td class="propertyCol top right">Description</td>
+                     <td class="valueCol top"><div class="editHtml"
+                         data-content="description" data-format="html"
+                         placeholder="Enter description ..."
+                         data-show="literal" data-property="dcterms:description"></div></td>
+                    </tr>
+                   </table>
+              </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Properties">
+	<h1 class="snippet_title" property="dcterms:title">Properties</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content bigCard">
+                <table class="propertyTable">
+                <tbody class="lens"
+                       data-query="?o ?prop ?qv . ?prop rdfs:subPropertyOf gr:quantitativeProductOrServiceProperty . ?prop rdfs:label ?label">
+                <tr style="border-bottom: 1px solid;">
+                   <td class="propertyCol top"></td>
+                   <td class="valueCol top">
+                   <table width="100%" style="margin: 0; padding: 0;">
+                         <tr>
+                            <td class="top propertyCol" style="border: none;text-align:right;" width="25%">Value</td>
+                            <td class="top propertyCol" style="border: none;text-align:right;" width="25%">Minimum</td>
+                            <td class="top propertyCol" style="border: none;text-align:right;" width="25%">Maximum</td>
+                            <td class="top propertyCol" style="border: none;text-align:right;" width="25%">Unit</td>
+                    </tr>
+                   </table>
+                   </td>
+                 </tr>
+                     <tr data-view>
+                       <td class="propertyCol top" data-show="literal" data-content="label"></td>
+                       <td class="valueCol top transclude" 
+                           style="padding: 0.3em;"
+                           data-attribute="qv" data-attribute-name="data-parameter"
+                           data-show="literal" data-view
+                           data-snippet="QuantitativeValue" data-subject="qv"></td>
+                     </tr>
+                </tbody>
+                <tbody class="lens"
+                       data-query="?o ?prop ?qv . ?prop rdfs:subPropertyOf gr:qualitativeProductOrServiceProperty . ?prop rdfs:label ?label">
+                     <tr data-view>
+                       <td class="propertyCol top" data-show="literal" data-content="label"></td>
+                       <td class="valueCol top uriEdit" data-show="uri"
+                           placeholder="Choose value..."
+                           data-content="qv"></td>
+                     </tr>
+                </tbody>
+                    <tfoot>
+                     <tr>
+                       <td class="propertyCol top addProperty"
+                           data-template="quantitativevalue.n3"
+                           data-resource-type="gr:QuantitativeValue">Add property ... </td>
+                     </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="QuantitativeValue">
+	<h1 class="snippet_title" property="dcterms:title">Quantitative Value</h1>
+	<div class="snippet_body" property="snippet:body">
+                   <table class="lens" width="100%" style="margin: 0; padding: 0;"
+                          style="padding: 0;"
+                          data-query="?o rdf:type ?t . (?o gr:hasValue ?val) . (?o gr:hasMinValue ?minval) . (?o gr:hasMaxValue ?maxval) . (?o gr:hasUnitOfMeasurement ?unit)">
+                    <tr>
+                       <td class="valueCol top textEdit rightInput" data-show="literal" style="border: none; padding:0; text-align:right;"
+                           placeholder="?" width="25%"
+                           data-content="val" data-view data-property="gr:hasValue"></td>
+                       <td class="valueCol top textEdit rightInput" data-show="literal"
+                           placeholder="?" width="25%" style="border: none; padding:0; text-align:right;"
+                           data-content="minval" data-view data-property="gr:hasMinValue"></td>
+                       <td class="valueCol top textEdit rightInput" data-show="literal"
+                           placeholder="?" width="25%" style="border: none; padding:0; text-align:right;"
+                           data-content="maxval" data-view data-property="gr:hasMaxValue"></td>
+                       <td class="valueCol top textEdit rightInput" data-show="literal"
+                           placeholder="?" width="25%" style="border: none; padding:0; text-align:right;"
+                           data-content="unit" data-view data-property="gr:hasUnitOfMeasurement"></td>
+                    </tr>
+                   </table>
+        </div>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="InteractionProtocols">
+	<h1 class="snippet_title" property="dcterms:title">Interaction Protocols</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+                   <table class="listTable">
+                    <tbody class="lens"
+                           data-query="?o usdl:hasInteractionProtocol ?ip. ?ip dcterms:title ?title">
+                     <tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="ip"
+                           data-link-target="InteractionProtocol">
+                       </td>
+                     </tr></tbody>
+                    <tfoot>
+                     <tr>
+                       <td class="propertyCol top addLink"
+                           data-template="interactionprotocol.n3"
+                           data-resource-type="usdl:InteractionProtocol" data-property="usdl:hasInteractionProtocol"
+                           data-link-target="InteractionProtocol">Add interaction protocol ... </td>
+                     </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="InteractionProtocol">
+	<h1 class="snippet_title" property="dcterms:title">Interaction Protocol</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o dcterms:title ?title. ( ?o dcterms:description ?description ). ( ?o usdl:hasTechnicalInterface ?i)"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           data-content="title" data-view data-property="dcterms:title"
+                           placeholder="Enter title ..."></td>
+                    </tr>
+                      <tr>
+                       <td class="propertyCol top right">Description</td>
+                       <td class="valueCol top"><div class="editHtml"
+                           data-content="description" data-format="html" data-view
+                           data-show="literal" data-property="dcterms:description"
+                           placeholder="Enter description ..."></div></td>
+                      </tr>
+                    <tr>
+                       <td class="propertyCol top right">Technical Interface</td>
+                       <td class="valueCol top uriEdit" data-show="uri"
+                           placeholder="Enter URL ..." data-view
+                           data-content="i" data-property="usdl:hasTechnicalInterface"></td>
+                    </tr>
+                  </table>
+                <span class="transclude" data-snippet="ListInteractions"
+                      data-attribute="ip" data-view
+                      data-show="literal" data-attribute-name="data-parameter"></span>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListInteractions">
+	<h1 class="snippet_title" property="dcterms:title">ListInteractions</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o usdl:hasInteraction ?interaction. ?interaction dcterms:title ?title">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="interaction"
+                           data-link-target="Interaction" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="interaction.n3" 
+                           data-property="usdl:hasInteraction" data-resource-type="usdl:Interaction"
+                           data-link-target="Interaction">Add interaction ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="Interaction">
+	<h1 class="snippet_title" property="dcterms:title">Interaction</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens smallCard snippet_content"
+                  data-query="?o rdf:type usdl:Interaction. ?o dcterms:title ?title. (?o dcterms:description ?description) . (?o usdl:hasInterfaceOperation ?op)">
+                <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           data-content="title" data-view data-property="dcterms:title"
+                           placeholder="Enter title"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Description</td>
+                       <td class="valueCol top editHtml lens-label" data-show="literal"
+                           data-format="html" placeholder="Enter description..."
+                           data-content="description" data-view data-property="dcterms:description"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Interface Operation</td>
+                       <td class="valueCol top uriEdit" data-show="uri"
+                           placeholder="Enter URL ..." data-view
+                           data-content="op" data-property="usdl:hasInterfaceOperation"></td>
+                    </tr>
+                </table>
+                <h2>Input</h2>
+                <span class="transclude" data-snippet="ListInputs"></span>
+                <h2>Output</h2>
+                <span class="transclude" data-snippet="ListOutputs"></span>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListInputs">
+	<h1 class="snippet_title" property="dcterms:title">ListInputs</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o usdl:hasInput ?input. ?input rdfs:label ?label">
+                   <table class="propertyTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="label"
+                           data-attribute-name="data-parameter" data-attribute="input"
+                           data-link-target="Parameter">
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="parameter.n3" 
+                           data-property="usdl:hasInput" data-resource-type="usdl:Parameter"
+                           data-link-target="Parameter">Add input ... </td>
+                    </tr></tfoot>
+                   </table>
+               </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListOutputs">
+	<h1 class="snippet_title" property="dcterms:title">ListOutputs</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o usdl:hasOutput ?output. ?output rdfs:label ?label">
+                   <table class="propertyTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="label"
+                            data-property="rdfs:label"
+                            data-attribute-name="data-parameter" data-attribute="output"
+                            data-link-target="Parameter">
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="parameter.n3" 
+                           data-property="usdl:hasOutput" data-resource-type="usdl:Parameter"
+                           data-link-target="Parameter">Add output ... </td>
+                    </tr></tfoot>
+                   </table>
+              </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Parameter">
+	<h1 class="snippet_title" property="dcterms:title">Parameter</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o rdfs:label ?label . (?o dcterms:description ?description). (?o usdl:hasInterfaceElement ?elem)"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Name</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           data-content="label" data-view data-property="rdfs:label"
+                           placeholder="Enter name..."></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Description</td>
+                       <td class="valueCol top editHtml" data-show="literal"
+                           data-format="html" placeholder="Enter description..."
+                           data-content="description" data-view
+                           data-property="dcterms:description"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Interface Element</td>
+                       <td class="valueCol top uriEdit" data-show="uri"
+                           placeholder="Enter URL ..." data-view
+                           data-content="elem" data-property="usdl:hasInterfaceElement"></td>
+                    </tr>
+                   </table>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ServiceLevelProfile">
+	<h1 class="snippet_title" property="dcterms:title">Service Level Profiles</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+                   <table class="listTable">
+                    <tbody class="lens"
+                           data-query="?offering usdl:includes ?o . ?offering usdl:hasServiceLevelProfile ?slp. (?slp dcterms:title ?title)">
+                     <tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="slp"
+                           data-link-target="ServiceLevelProfileElement">
+                       </td>
+                     </tr></tbody>
+                    <tfoot>
+                     <tr>
+                       <td class="propertyCol top addObject"
+                           data-template="servicelevelprofile.n3"
+                           data-resource-type="usdl:ServiceLevelProfile" data-property="usdl:hasServiceLevelProfile"
+                           data-link-target="ServiceLevelProfileElement">Add service level profile ... </td>
+                     </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ServiceLevelProfiles">
+	<h1 class="snippet_title" property="dcterms:title">Service Level Profiles</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+                   <table class="listTable">
+                    <tbody class="lens"
+                           data-query="?o usdl:hasServiceLevelProfile ?slp. (?slp dcterms:title ?title)">
+                     <tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="slp"
+                           data-link-target="ServiceLevelProfileElement">
+                       </td>
+                     </tr></tbody>
+                    <tfoot>
+                     <tr>
+                       <td class="propertyCol top addLink"
+                           data-template="servicelevelprofile.n3"
+                           data-resource-type="usdl:ServiceLevelProfile" data-property="usdl:hasServiceLevelProfile"
+                           data-link-target="ServiceLevelProfileElement">Add service level profile ... </td>
+                     </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="ServiceLevelProfileElement">
+	<h1 class="snippet_title" property="dcterms:title">Service Level Profile</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o dcterms:title ?title"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           data-subject="offering" placeholder="Enter title..."
+                           data-content="title" data-view data-property="dcterms:title"></td>
+                    </tr>
+                   </table>
+                  <h2>Service Levels</h2>
+                  <span><span class="transclude" data-attribute-name="data-parameter"
+                         data-attribute="o" data-show="literal" data-view data-snippet="ListServiceLevels"></span></span>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ServiceLevel">
+	<h1 class="snippet_title" property="dcterms:title">Service Level</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o sla:serviceLevelExpression ?sle . (?o dcterms:title ?title). (?sle dcterms:description ?description)"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right" placeholder="Enter title...">Title</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter title ..."
+                           data-content="title" data-view data-property="dcterms:title"></td>
+                    </tr>
+                    <tr>
+
+                       <td class="propertyCol top right">Description</td>
+                       <td class="valueCol top"><div class="editHtml"
+                           data-content="description" data-format="html" data-view
+                           data-subject="sle" placeholder="Enter expression ..."
+                           data-show="literal" data-property="dcterms:description"></div></td>
+                    </tr>
+                   </table>
+                  <h2>Parameters</h2>
+                  <span><span class="transclude" data-snippet="ListVariables" data-attribute-name="data-parameter"
+                         data-attribute="sle" data-show="literal" data-view></span></span>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Variable">
+	<h1 class="snippet_title" property="dcterms:title">Parameter</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o rdfs:label ?label . ?o sla:hasDefault ?def. ?def gr:hasValue ?val. ?def gr:hasUnitOfMeasurement ?unit"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Label</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           data-content="label" data-view data-property="rdfs:label"
+                           placeholder="Enter label..."></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Value</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           data-subject="def" placeholder="Enter value ..."
+                           data-content="val" data-view data-property="gr:hasValue"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Unit</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           data-subject="def" placeholder="Enter unit of measurement..."
+                           data-content="unit" data-view data-property="gr:hasUnitOfMeasurement"></td>
+                    </tr>
+                   </table>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="QuantitativeProperty">
+	<h1 class="snippet_title" property="dcterms:title">Property</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o rdf:type ?t . ?t skos:prefLabel ?label . (?o gr:hasValue ?val) . (?o gr:hasMinValue ?minval) . (?o gr:hasMaxValue ?maxval) . (?o gr:hasUnitOfMeasurement ?unit)"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Label</td>
+                       <td class="valueCol top lens-label" data-show="literal"
+                           data-content="label" data-view data-property="rdfs:label"
+                           placeholder="Enter label..."></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Value</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter value ..."
+                           data-content="val" data-view data-property="gr:hasValue"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Min Value</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter value ..."
+                           data-content="minval" data-view data-property="gr:hasMinValue"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Max Value</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter value ..."
+                           data-content="maxval" data-view data-property="gr:hasMaxValue"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Unit</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter unit of measurement..."
+                           data-content="unit" data-view data-property="gr:hasUnitOfMeasurement"></td>
+                    </tr>
+                   </table>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListServiceLevels">
+	<h1 class="snippet_title" property="dcterms:title">List Service Levels</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o sla:hasServiceLevel ?sl. ?sl dcterms:title ?title">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="sl"
+                           data-link-target="ServiceLevel" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="servicelevel.n3" 
+                           data-property="sla:hasServiceLevel" data-resource-type="sla:ServiceLevel"
+                           data-link-target="ServiceLevel">Add service level ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListVariables">
+	<h1 class="snippet_title" property="dcterms:title">List Variables</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o sla:hasVariable ?slv. ?slv rdfs:label ?label">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="label"
+                           data-attribute-name="data-parameter" data-attribute="slv"
+                           data-link-target="Variable" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addLink"
+                           data-template="variable.n3"
+                           data-property="sla:hasVariable" data-resource-type="sla:Variable"
+                           data-link-target="Variable">Add variable ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListProperties">
+	<h1 class="snippet_title" property="dcterms:title">List Properties</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o gr:quantitativeProductOrServiceProperty ?slv . ?slv rdfs:label ?label">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="label"
+                           data-attribute-name="data-parameter" data-attribute="slv"
+                           data-link-target="QuantitativeProperty" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addLink"
+                           data-template="quantitativeproperty.n3"
+                           data-property="gr:quantitativeProductOrServiceProperty" data-resource-type="gr:QuantitativeValue"
+                           data-link-target="QuantitativeProperty">Add property ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="SecurityProfile">
+	<h1 class="snippet_title" property="dcterms:title">Security Profiles</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+                   <table class="listTable">
+                    <tbody class="lens"
+                           data-query="?offering usdl:includes ?o . ?offering usdl:hasSecurityProfile ?slp. (?slp dcterms:title ?title)">
+                     <tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="slp"
+                           data-link-target="SecurityProfileElement">
+                       </td>
+                     </tr></tbody>
+                    <tfoot>
+                     <tr>
+                       <td class="propertyCol top addObject"
+                           data-template="securityprofile.n3"
+                           data-resource-type="sec:SecurityProfile"
+                           data-property="usdl:hasSecurityProfile"
+                           data-link-target="SecurityProfileElement">Add security profile ... </td>
+                     </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="SecurityProfiles">
+	<h1 class="snippet_title" property="dcterms:title">Security Profiles</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+                   <table class="listTable">
+                    <tbody class="lens"
+                           data-query="?o usdl:hasSecurityProfile ?slp. (?slp dcterms:title ?title)">
+                     <tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="slp"
+                           data-link-target="SecurityProfileElement">
+                       </td>
+                     </tr></tbody>
+                    <tfoot>
+                     <tr>
+                       <td class="propertyCol top addLink"
+                           data-template="securityprofile.n3"
+                           data-resource-type="sec:SecurityProfile" data-property="usdl:hasSecurityProfile"
+                           data-link-target="SecurityProfileElement">Add security profile ... </td>
+                     </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="SecurityProfileElement">
+	<h1 class="snippet_title" property="dcterms:title">Security Profile</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o dcterms:title ?title"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           data-subject="offering" placeholder="Enter title..."
+                           data-content="title" data-view data-property="dcterms:title"></td>
+                    </tr>
+                   </table>
+                  <h2>Security Measures</h2>
+                  <span><span class="transclude" data-attribute-name="data-parameter"
+                         data-attribute="o" data-show="literal" data-view data-snippet="ListSecurityMeasures"></span></span>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListSecurityGoals">
+	<h1 class="snippet_title" property="dcterms:title">List Security Goals</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o sec:hasSecurityGoal ?sg. ?sg dcterms:title ?title">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="sg"
+                           data-link-target="SecurityGoal" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="securitygoal.n3" 
+                           data-property="sec:hasSecurityGoal" data-resource-type="sec:SecurityGoal"
+                           data-link-target="SecurityGoal">Add security goal ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListSecurityMeasures">
+	<h1 class="snippet_title" property="dcterms:title">List Security Measures</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o sec:hasSecurityMeasure ?sm. ?sm dcterms:title ?title">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="sm"
+                           data-link-target="SecurityMeasure" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="securitymeasure.n3" 
+                           data-property="sec:hasSecurityMeasure" data-resource-type="sec:SecurityMeasure"
+                           data-link-target="SecurityMeasure">Add security measure ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="SecurityMeasure">
+	<h1 class="snippet_title" property="dcterms:title">Security Measure</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o dcterms:title ?title. ?o dcterms:description ?description" >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right" placeholder="Enter title...">Title</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter title ..."
+                           data-content="title" data-view data-property="dcterms:title"></td>
+                    </tr>
+                    <tr>
+                        <td class="propertyCol top right">Goal</td>
+                        <td class="valueCol top transclude" data-snippet="SecurityGoalClassification"></td>
+                    </tr>
+                    <tr>
+                        <td class="propertyCol top right">Mechanism</td>
+                        <td class="valueCol top transclude" data-snippet="SecurityMechanismClassification"></td>
+                    </tr>
+                    <tr>
+                        <td class="propertyCol top right">Technology</td>
+                        <td class="valueCol top transclude" data-snippet="SecurityTechnologyClassification"></td>
+                     </tr>
+                    <tr>
+
+                       <td class="propertyCol top right">Description</td>
+                       <td class="valueCol top"><div class="editHtml"
+                           data-content="description" data-format="html" data-view
+                           placeholder="Enter description ..."
+                           data-show="literal" data-property="dcterms:description"></div></td>
+                    </tr>
+                   </table>
+                  <h2>Properties</h2>
+                  <span><span class="transclude" data-snippet="ListProperties" data-show="literal" data-view></span></span>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Legal">
+	<h1 class="snippet_title" property="dcterms:title">Legal</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o usdl:hasLegalCondition ?condition. ?condition dcterms:title ?title">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="condition"
+                           data-link-target="LegalCondition" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="legalcondition.n3" 
+                           data-property="usdl:hasLegalCondition" data-resource-type="legal:TermsAndConditions"
+                           data-link-target="LegalCondition">Add conditions ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="LegalCondition">
+	<h1 class="snippet_title" property="dcterms:title">Legal Condition</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="nippet_content lens smallCard"
+                  data-query="?o dcterms:title ?title. ?o dcterms:description ?description"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit" data-show="literal" placeholder="Enter title..."
+                           data-content="title" data-view data-property="dcterms:title"></td>
+                    </tr>
+                      <tr>
+                       <td class="propertyCol top right">Description</td>
+                       <td class="valueCol top"><div class="editHtml"  placeholder="Enter description..."
+                           data-content="description" data-format="html" data-view
+                           data-show="literal" data-property="dcterms:description"></div></td>
+                      </tr>
+                  </table>
+                  <h2>Clauses</h2>
+                  <span><span class="transclude" data-snippet="ListClauses"></span></span>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Clause">
+	<h1 class="snippet_title" property="dcterms:title">Clause</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o legal:name ?name. ?o legal:text ?text">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="valueCol top textEdit" data-show="literal" placeholder="Enter name..."
+                           data-content="name" data-view data-property="legal:name"></td>
+                    </tr>
+                    <tr>
+                     <td class="valueCol top"><div class="editHtml"
+                         data-content="text" data-format="html" placeholder="Enter paragraph..."
+                         data-show="literal" data-view data-property="legal:text"></div></td>
+                    </tr>
+                   </table>
+              </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListClauses">
+	<h1 class="snippet_title" property="dcterms:title">ListClauses</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o legal:hasClause ?clause. ?clause legal:name ?name">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="name"
+                           data-attribute-name="data-parameter" data-attribute="clause"
+                           data-link-target="Clause" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="clause.n3"
+                           data-property="legal:hasClause" data-resource-type="legal:Clause"
+                           data-link-target="Clause">Add clause ... </td>
+                    </tr></tfoot>
+                   </table>
+              </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Offering">
+	<h1 class="snippet_title" property="dcterms:title">Offerings</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?offering usdl:includes ?o . (?offering dcterms:title ?title)">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="offering"
+                           data-link-target="ServiceOffering">
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="offering.n3"
+                           data-resource-type="usdl:ServiceOffering" data-inverse-property="usdl:includes"
+                           data-link-target="ServiceOffering">Add offering ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="ServiceOffering">
+	<h1 class="snippet_title" property="dcterms:title">Service Offering</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="(?o dcterms:title ?title) . ?o usdl:validFrom ?from. ?o usdl:validThrough ?through. (?o foaf:page ?page)"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit lens-label" data-show="literal"
+                           placeholder="Enter title ..."
+                           data-content="title" data-view data-property="dcterms:title"></td>
+                    </tr>
+                    <tr>
+                        <td class="propertyCol top right">Valid from</td>
+                        <td class="valueCol top"><input class="dateTimeEdit" data-view
+                            data-show="literal" data-attribute="from" data-attribute-name="value" value=""
+                            data-property="usdl:validFrom"></td>
+                    </tr>
+                    <tr>
+                        <td class="propertyCol top right">Valid through</td>
+                        <td class="valueCol top"><input class="dateTimeEdit" data-view
+                            data-show="literal" data-attribute="through" data-attribute-name="value" value=""
+                            data-property="usdl:validThrough"></td>
+                    </tr>
+                    <tr>
+                        <td class="propertyCol top right">Web page</td>
+                        <td class="valueCol top uriEdit lens-label" data-show="uri" data-view
+                            placeholder="Enter URL..." data-defaults='{}'
+                            data-content="page" data-property="foaf:page"></td>
+                    </tr>
+                   </table>
+                  <h2>Items</h2>
+                  <span><span class="transclude" data-snippet="ListIncludedServices"
+                              data-attribute-name="data-parameter"
+                              data-attribute="subject" data-show="uri" data-view></span></span>
+                  <h2>Price Plans</h2>
+                  <span><span class="transclude" data-snippet="ListPricePlans" data-attribute-name="data-parameter"
+                         data-attribute="subject" data-show="uri" data-view></span></span>
+                  <h2>Service Level Profiles</h2>
+                  <span><span class="transclude" data-snippet="ServiceLevelProfiles" data-attribute-name="data-parameter"
+                         data-attribute="subject" data-show="uri" data-view></span></span>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListIncludedServices">
+	<h1 class="snippet_title" property="dcterms:title">ListIncludedServices</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o usdl:includes ?service. ?service dcterms:title ?title">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="service"
+                           data-link-target="Service" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addLink"
+                           data-template="service.n3" 
+                           data-property="usdl:includes" data-resource-type="usdl:Service"
+                           data-link-target="Service">Add item ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListPricePlans">
+	<h1 class="snippet_title" property="dcterms:title">ListPricePlans</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o usdl:hasPricePlan ?priceplan. ?priceplan dcterms:title ?title">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="priceplan"
+                           data-link-target="PricePlan" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="priceplan.n3" 
+                           data-property="usdl:hasPricePlan" data-resource-type="price:PricePlan"
+                           data-link-target="PricePlan">Add price plan ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="PricePlan">
+	<h1 class="snippet_title" property="dcterms:title">Price Plan</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o dcterms:title ?title. ?o dcterms:description ?description"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter title ..."
+                           data-content="title" data-view data-property="dcterms:title"></td>
+                    </tr>
+                      <tr>
+                       <td class="propertyCol top right">Description</td>
+                       <td class="valueCol top"><div class="editHtml"
+                           placeholder="Enter description ..."
+                           data-content="description" data-format="html" data-view
+                           data-show="literal" data-property="dcterms:description"></div></td>
+                      </tr>
+                   </table>
+                  <h2>Price Components</h2>
+                  <span><span class="transclude" data-snippet="ListPriceComponents" data-attribute-name="data-parameter"
+                         data-attribute="o" data-show="uri" data-view></span></span>
+                  <h2>Taxes</h2>
+                  <span><span class="transclude" data-snippet="ListTaxes" data-attribute-name="data-parameter"
+                         data-attribute="o" data-show="uri" data-view></span></span>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListPriceComponents">
+	<h1 class="snippet_title" property="dcterms:title">ListPriceComponents</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o price:hasPriceComponent ?component. ?component dcterms:title ?title">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="component"
+                           data-link-target="PriceComponent" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="pricecomponent.n3" 
+                           data-property="price:hasPriceComponent" data-resource-type="price:PriceComponent"
+                           data-link-target="PriceComponent">Add price component ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="PriceComponent">
+	<h1 class="snippet_title" property="dcterms:title">Price Component</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o dcterms:title ?title. ?o dcterms:description ?description. (?o gr:hasCurrency ?currency). (?o gr:hasCurrencyValue ?value) . (?o gr:hasUnitOfMeasurement ?unit)"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter title ..."
+                           data-content="title" data-view data-property="dcterms:title"></td>
+                    </tr>
+                      <tr>
+                       <td class="propertyCol top right">Description</td>
+                       <td class="valueCol top"><div class="editHtml"
+                           placeholder="Enter description ..."
+                           data-content="description" data-format="html" data-view
+                           data-show="literal" data-property="dcterms:decription"></div></td>
+                      </tr>
+                    <tr>
+                       <td class="propertyCol top right">Currency</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter currency ..."
+                           data-content="currency" data-view data-property="gr:hasCurrency"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Value</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter value ..."
+                           data-content="value" data-view data-property="gr:hasCurrencyValue"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Unit</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter unit of measurement ..."
+                           data-content="unit" data-view data-property="gr:hasUnitOfMeasurement"></td>
+                    </tr>
+                   </table>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="ListTaxes">
+	<h1 class="snippet_title" property="dcterms:title">ListTaxes</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="lens"
+                  data-query="?o price:hasTax ?tax. ?tax dcterms:title ?title">
+                   <table class="listTable">
+                    <tbody><tr data-view>
+                       <td class="valueCol top link" data-show="literal" data-content="title"
+                           data-attribute-name="data-parameter" data-attribute="tax"
+                           data-link-target="Tax" >
+                       </td>
+                    </tr></tbody>
+                    <tfoot><tr>
+                       <td class="propertyCol top addObject"
+                           data-template="tax.n3" 
+                           data-property="price:hasTax" data-resource-type="price:Tax"
+                           data-link-target="Tax">Add tax ... </td>
+                    </tr></tfoot>
+                   </table>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Tax">
+	<h1 class="snippet_title" property="dcterms:title">Tax</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content lens smallCard"
+                  data-query="?o dcterms:title ?title. (?o dcterms:description ?description). (?o gr:hasCurrency ?currency). (?o gr:hasValueFloat ?value) . (?o gr:hasUnitOfMeasurement ?unit)"
+               >
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="propertyCol top right">Title</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter title ..."
+                           data-content="title" data-view data-property="dcterms:title"></td>
+                    </tr>
+                      <tr>
+                       <td class="propertyCol top right">Description</td>
+                       <td class="valueCol top"><div class="editHtml"
+                           placeholder="Enter description ..."
+                           data-content="description" data-format="html" data-view
+                           data-show="literal" data-property="dcterms:description"></div></td>
+                      </tr>
+                    <tr>
+                       <td class="propertyCol top right">Currency</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter currency ..."
+                           data-content="currency" data-view data-property="gr:hasCurrency"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Value</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter value ..."
+                           data-content="value" data-view data-property="gr:hasValueFloat"></td>
+                    </tr>
+                    <tr>
+                       <td class="propertyCol top right">Unit</td>
+                       <td class="valueCol top textEdit" data-show="literal"
+                           placeholder="Enter unit of measurement ..."
+                           data-content="unit" data-view data-property="gr:hasUnitOfMeasurement"></td>
+                    </tr>
+                   </table>
+               </div>
+             </div>
+        </div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Publish">
+	<h1 class="snippet_title" property="dcterms:title">Publish</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+               <div class="swipe">
+                   <table class="propertyTable">
+                    <tr>
+                       <td class="valueCol top">Publishing your offerings to stores will make them visible and available for customers. On the basis of this information customers will order and buy the services. The offerings of this description will be published to multiple stores.<br><center><img class="activityIndicator noactivity" src="{{ STATIC_URL }}usdl-editor/images/pacman.gif"></center></td>
+                    </tr>
+                    <tr class="lens"
+                        data-query="?o rdf:type usdl:ServiceModel. ?o dcterms:subject ?classification. ?classification skos:inScheme blueprint:SolutionType. ?classification rdfs:label &quot;Business Solution&quot;"
+>
+                         <td class="propertyCol top right" data-view><center><button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only command" type="button" role="button"
+                             data-name="publish"
+                             data-parameter="enterprise">Publish to Enterprise Store</button></center></td>
+                    </tr>
+                    <tr class="lens"
+                        data-query="?o rdf:type usdl:Service. ?o dcterms:subject ?classification. ?classification skos:inScheme blueprint:SolutionType. ?classification rdfs:label &quot;Mobile Application&quot;"
+>
+                         <td class="propertyCol top right" data-view><center><button class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only command" type="button" role="button"
+                             data-name="publish"
+                             data-parameter="mobile">Publish to Mobile App Store</button></center></td>
+                    </tr>
+                    <tr>
+                       <td class="valueCol top"><img class="command ui-button ui-widget ui-corner-all" src="{{ STATIC_URL }}usdl-editor/images/rdf_w3c_icon.48.gif" role="button" data-name="rdf" data-format="rdf">&nbsp;<img class="command ui-button ui-widget ui-corner-all" src="{{ STATIC_URL }}usdl-editor/images/turtle_icon_32x35.jpg" role="button" data-name="rdf" data-format="ttl">&nbsp;<img class="command ui-button ui-widget ui-corner-all" src="{{ STATIC_URL }}usdl-editor/images/rdf_json_w3c_icon.48.gif" height="35" role="button" data-name="rdf" data-format="json"</td>
+                    </tr>
+                   </table>
+                 </div>
+               </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Repository">
+	<h1 class="snippet_title" property="dcterms:title">Repository</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+		  <div class="swipe">
+		     <h2>Collections</h2>
+                     <a href="https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&state=%2Fprofile&redirect_uri=https%3A%2F%2Ffiware01.sapvcm.com%2FMosaic%2Fcallback&response_type=token&client_id=843434478515-qq3o3kogv83d2jogkedje9o9neqlmkhs.apps.googleusercontent.com&approval_prompt=force" onload="javascript:alert('loaded')" target="_new">Login</a>
+		     <table class="listTable repositoryCollections" data-parameter="">
+		     <tbody>
+                       <tr data-view>
+                          <td class="valueCol top link" data-parameter="" data-link-target="Collection"></td>
+	               </tr>
+                     </tbody><tfoot>
+                       <tr>
+                         <td class="valueCol top addCollection">Add collection ...</td>
+	               </tr>
+	             </tfoot>
+	             </table>
+                  </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="Collection">
+	<h1 class="snippet_title" property="dcterms:title">Collection</h1>
+	<div class="snippet_body" property="snippet:body">
+             <div class="snippet_content smallCard">
+		  <div class="swipe">
+		     <h2>Resources</h2>
+		     <table class="listTable repositoryResources">
+		     <tbody>
+                       <tr data-view>
+                          <td class="valueCol top "></td>
+	               </tr>
+                     </tbody><tfoot>
+                       <tr>
+                         <td class="valueCol top addCollection">Add resource ...</td>
+	               </tr>
+	             </tfoot>
+                     </table>
+               </div>
+             </div>
+        </div>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="service_description.n3">
+	<h1 class="snippet_title" property="dcterms:title">service_description.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<> a usdl:ServiceDescription;
+      dcterms:title ""@en ;
+      dcterms:description ""@en;
+      dcterms:modified ""^^xsd:datetime;
+      dcterms:created ""^^xsd:datetime;
+      dcterms:creator [ a foaf:Person;
+                        foaf:name ""
+			] .
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="interaction.n3">
+	<h1 class="snippet_title" property="dcterms:title">interaction.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a usdl:Interaction;
+      dcterms:title ""@en ;
+      dcterms:description ""@en.
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="interactionprotocol.n3">
+	<h1 class="snippet_title" property="dcterms:title">interactionprotocol.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a usdl:InteractionProtocol;
+      dcterms:title "#name"@en ;
+      dcterms:description ""@en.
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="parameter.n3">
+	<h1 class="snippet_title" property="dcterms:title">parameter.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a usdl:Parameter;
+      rdfs:label ""@en;
+      dcterms:description ""@en.
+	</script>
+</div>
+ 
+<div class="snippet" typeof="snippet:Snippet" id="servicelevel.n3">
+	<h1 class="snippet_title" property="dcterms:title">servicelevel.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a sla:GuaranteedState;
+            dcterms:title ""@en;
+            sla:serviceLevelExpression [
+                a sla:ServiceLevelExpression;
+                dcterms:description ""@en;
+            ];
+            sla:obligatedParty usdl:Provider.
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="securitygoal.n3">
+	<h1 class="snippet_title" property="dcterms:title">securitygoal.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix sec:  <http://www.linked-usdl.org/ns/usdl-sec#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+<#subject> a sec:SecurityGoal;
+            dcterms:title ""@en;
+            dcterms:description ""@en;
+            dcterms:subject [ a skos:Concept;
+  	                            skos:inScheme sec:Goal ;
+                                    rdfs:label "Anonymity"].
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="securitymeasure.n3">
+	<h1 class="snippet_title" property="dcterms:title">securitymeasure.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix sec:  <http://www.linked-usdl.org/ns/usdl-sec#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+<#subject> a sec:SecurityMeasure;
+            dcterms:title ""@en;
+            dcterms:description ""@en;
+            dcterms:subject [ a skos:Concept;
+  	                            skos:inScheme sec:Goal ;
+                                    rdfs:label "Anonymity"] ;
+            dcterms:subject [ a skos:Concept;
+  	                            skos:inScheme sec:SecurityMechanism ;
+                                    rdfs:label "Access Control"];
+            dcterms:subject [ a skos:Concept;
+  	                            skos:inScheme sec:SecurityTechnology ;
+                                    rdfs:label "AES"].
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="variable.n3">
+	<h1 class="snippet_title" property="dcterms:title">variable.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a sla:Variable;
+             rdfs:label "#name";
+             sla:hasDefault [ a gr:QuantitativeValue;
+                                gr:hasValue "";
+                                gr:hasUnitOfMeasurement "" ] .
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="quantitativeproperty.n3">
+	<h1 class="snippet_title" property="dcterms:title">quantitativeproperty.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+<#subject> a gr:QuantitativeValue;
+       rdfs:label "#name";
+       gr:hasValue "";
+       gr:hasUnitOfMeasurement "" .
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="quantitativevalue.n3">
+	<h1 class="snippet_title" property="dcterms:title">quantitativevalue.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+<#subject> a gr:QuantitativeValue;
+       gr:hasValue "";
+       gr:hasMinValue "";
+       gr:hasMaxValue "";
+       gr:hasUnitOfMeasurement "" .
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="legalcondition.n3">
+	<h1 class="snippet_title" property="dcterms:title">legalcondition.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a legal:TermsAndConditions;
+             dcterms:title ""@en;
+             dcterms:description ""@en.
+	</script>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="clause.n3">
+	<h1 class="snippet_title" property="dcterms:title">clause.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a legal:Clause;
+             legal:name "";
+             legal:text ""@en.
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="offering.n3">
+	<h1 class="snippet_title" property="dcterms:title">offering.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a usdl:ServiceOffering;
+             dcterms:title ""@en;
+             dcterms:description ""@en;
+             usdl:validFrom "2011-12-01"^^xsd:datetime;
+             usdl:validThrough "2011-12-31"^^xsd:datetime.
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="priceplan.n3">
+	<h1 class="snippet_title" property="dcterms:title">priceplan.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a price:PricePlan;
+   dcterms:title ""@en;
+   dcterms:description ""@en.
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="pricecomponent.n3">
+	<h1 class="snippet_title" property="dcterms:title">pricecomponent.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a price:PriceComponent;
+   dcterms:title ""@en;
+   dcterms:description ""@en;
+   gr:hasCurrency "";
+   gr:hasCurrencyValue "0.0"^^xsd:float;
+   gr:hasUnitOfMeasurement "".
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="tax.n3">
+	<h1 class="snippet_title" property="dcterms:title">tax.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a price:PriceComponent;
+   dcterms:title ""@en;
+   dcterms:description ""@en;
+   gr:hasValueFloat "0.0"^^xsd:float;
+   gr:hasUnitOfMeasurement "percent".
+	</script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="servicemodel.n3">
+	<h1 class="snippet_title" property="dcterms:title">servicemodel.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a usdl:ServiceModel;
+       dcterms:subject [ a skos:Concept;
+  	                        skos:inScheme blueprint:SolutionType ;
+                                rdfs:label "Business Solution"],
+                              [ a skos:Concept;
+  	                        skos:inScheme blueprint:PlatformType ;
+                                rdfs:label "Android"],
+                              [ a skos:Concept;
+  	                        skos:inScheme blueprint:BusinessArea ;
+                                rdfs:label "Services"],
+                              [ a skos:Concept;
+  	                        skos:inScheme blueprint:Industry ;
+                                rdfs:label "Other services"];
+       dcterms:modified ""^^xsd:datetime;
+       dcterms:created ""^^xsd:datetime;
+       dcterms:title "#name"@en;
+       dcterms:abstract ""@en;
+       dcterms:description ""@en;
+       foaf:thumbnail <http://ddrsl001xb.drss.sap.corp:8888/bizwebportal/resources/assets/icons/05_Icon_UIDivision.png>;
+       foaf:depiction <http://ddrsl001xb.drss.sap.corp:8888/bizweb/icons/GBFlipper_AW.png> .
+        </script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="service.n3">
+	<h1 class="snippet_title" property="dcterms:title">service.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a usdl:Service;
+       dcterms:subject [ a skos:Concept;
+  	                        skos:inScheme blueprint:SolutionType ;
+                                rdfs:label "Business Solution"],
+                              [ a skos:Concept;
+  	                        skos:inScheme blueprint:PlatformType ;
+                                rdfs:label "Android"],
+                              [ a skos:Concept;
+  	                        skos:inScheme blueprint:BusinessArea ;
+                                rdfs:label "Services"],
+                              [ a skos:Concept;
+  	                        skos:inScheme blueprint:Industry ;
+                                rdfs:label "Other services"];
+       dcterms:modified ""^^xsd:datetime;
+       dcterms:created ""^^xsd:datetime;
+       dcterms:title "#name"@en;
+       dcterms:abstract ""@en;
+       dcterms:description ""@en;
+       foaf:thumbnail <http://ddrsl001xb.drss.sap.corp:8888/bizwebportal/resources/assets/icons/05_Icon_UIDivision.png>;
+       foaf:depiction <http://ddrsl001xb.drss.sap.corp:8888/bizweb/icons/GBFlipper_AW.png> .
+                          </script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="provider.n3">
+	<h1 class="snippet_title" property="dcterms:title">provider.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a gr:BusinessEntity;
+             foaf:name "#name";
+             foaf:logo <http://ddrsl001xb.drss.sap.corp:8888/bizweb/icons/03_Icon_50.png>;
+             foaf:homepage <>;
+             usdl:legalForm "" ;
+             dcterms:description ""@en;
+             vcard:adr [ a vcard:Work;
+                  dcterms:description ""@en;
+                  vcard:tel "";
+                  vcard:email "";
+                  vcard:locality "";
+                  vcard:street-address "";
+                  vcard:postal-code "";
+                  vcard:country-name "" ] .
+                          </script>
+</div>
+
+
+<div class="snippet" typeof="snippet:Snippet" id="servicelevelprofile.n3">
+	<h1 class="snippet_title" property="dcterms:title">servicelevelprofile.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a usdl:ServiceLevelProfile;
+      dcterms:title "#name"@en.
+        </script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="securityprofile.n3">
+	<h1 class="snippet_title" property="dcterms:title">securityprofile.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix sec:  <http://www.linked-usdl.org/ns/usdl-sec#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a sec:SecurityProfile;
+      dcterms:title "#name"@en.
+        </script>
+</div>
+
+<div class="snippet" typeof="snippet:Snippet" id="artefact.n3">
+	<h1 class="snippet_title" property="dcterms:title">artefact.n3</h1>
+	<script class="snippet_body" property="snippet:body" type="text/n3">
+@base <#baseurl> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.linked-usdl.org/ns/usdl-core#> .
+@prefix legal:  <http://www.linked-usdl.org/ns/usdl-legal#> .
+@prefix price:  <http://www.linked-usdl.org/ns/usdl-pricing#> .
+@prefix sla:  <http://www.linked-usdl.org/ns/usdl-sla#> .
+@prefix blueprint:  <http://bizweb.sap.com/TR/blueprint#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sawsdl:  <http://www.w3.org/ns/sawsdl#> .
+@prefix sarest: <http://www.knoesis.org/research/srl/standards/sa-rest/#> .
+@prefix wl: <http://www.wsmo.org/ns/wsmo-lite#> .
+@prefix http: <http://www.w3.org/2011/http#> .
+
+<#subject> a blueprint:Artefact;
+      dcterms:title "#name"@en;
+      dcterms:description ""@en;
+      blueprint:softwareType blueprint:PlatformApplication;
+      blueprint:location <where>;
+      blueprint:requires "Platform requirements".
+        </script>
+</div>
+
+</html>

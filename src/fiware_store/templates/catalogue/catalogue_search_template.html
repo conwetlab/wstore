@@ -1,0 +1,33 @@
+<div class="span2">
+    <form class="form form-vertical catalogue-elem">
+        <input type="text" />
+    </form>
+</div>
+<div class="span10">
+    <div class="tabbable catalogue-elem"> 
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#purchased-tab" data-toggle="tab">Purchased</a></li>
+            {% if 'provider' in roles %}
+            <li><a href="#provided-tab" data-toggle="tab">Provided</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Options<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li><a id="create-app" data-toggle="tab">Create application</a></li>
+                    <li><a id="register-res" data-toggle="tab">Register resource</a></li>
+                </ul>
+            </li>
+            {% endif %}
+       </ul>
+       <div class="tab-content">
+           <div class="tab-pane active" id="purchased-tab">
+               <p>Purchased services.</p>
+           </div>
+           {% if 'provider' in roles %}
+           <div class="tab-pane" id="provided-tab">
+               <p>Provided services</p>
+           </div>
+           {% endif %}
+       </div>
+    </div>
+</div>
+

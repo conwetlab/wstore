@@ -1,0 +1,227 @@
+<rdf:RDF xmlns="http://www.w3.org/TR/usdl#"
+    xmlns:dcterms="http://purl.org/dc/terms/"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:msm="http://cms-wg.sti2.org/ns/minimal-service-model#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:usdl="http://www.w3.org/TR/usdl#"
+    xmlns:vcard="http://www.w3.org/2006/vcard/ns#">
+
+    <Artifact rdf:about="http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2006:376:0036:0068:EN:PDF">
+        <dcterms:title>DIRECTIVE 2006/123/EC OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL on services in the internal market</dcterms:title>
+        <artifactType rdf:resource="http://www.w3.org/TR/usdl#Mixed"/>
+    </Artifact>
+
+    <ServiceDescription rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme">
+        <dcterms:contributor rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#Torsten_Leidig"/>
+        <dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-07-29</dcterms:created>
+        <dcterms:creator rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#Torsten_Leidig"/>
+        <dcterms:description>This description is an example of describing USDL services in RDF</dcterms:description>
+        <dcterms:title>Sample public service for business formation</dcterms:title>
+        <rdfs:label>Service description for Business Formation SME Service</rdfs:label>
+        <owl:versionInfo>0.3</owl:versionInfo>
+    </ServiceDescription>
+
+    <Service rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#ServiceSMEBusinessFormation">
+        <dcterms:description xml:lang="en">The Demonstrator Business Formation SME service provides an insight into how the Services Directive could meet its objective of supporting citizens of member states to register businesses in the SME category. Examples of SME include: newsagents, food and beverage licenses, small retail outlets, printers and transportation utilities.&#60;br&#62; The service is for demonstration purposes only and can only be used in the context of SAP Research projects. It has no commercial or formal business implications. No actual operations with agencies and systems of Member States takes place.&#60;br&#62; The service relates to a major goal of the Services Directive, which aims to break down barriers to cross-border trade in services between Member States, making it easier for service providers, particularly small and medium sized enterprises, to:&#60;ul&#62;&#60;li&#62; Set up business and offer services in other Member States; and&#60;/li&#62;&#60;li&#62; Provide services temporarily and/or at a distance in other Member States.&#60;/li&#62;&#60;/ul&#62; Specifically, it illustrates how citizens can register a business with all relevant agencies satisfying legislative acts related to the regulation of SME business formation.&#60;br&#62; The service in intended to be operated through self-service. However, operator assistance is also available where an operator initiates or performs the whole service on behalf on a citizen.&#60;br&#62;The service involves four phases of activity: determination of the business license type through a questionnaire, fulfillment of the different provisions required for granting the license type, payment and settlement plan, and settlement. Details of these can be found in Consumer Operations description.</dcterms:description>
+        <dcterms:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-03-03</dcterms:issued>
+        <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-03-03</dcterms:modified>
+        <dcterms:title xml:lang="en">Business Formation SME</dcterms:title>
+        <hasDocumentation rdf:resource="http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2006:376:0036:0068:EN:PDF"/>
+        <hasImplementation rdf:resource="http://www.sap.com/bizweb/blueprints/1212345345"/>
+        <hasInteractionProtocol rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#ip_1"/>
+        <hasNature rdf:resource="http://www.w3.org/TR/usdl#SemiAutomated"/>
+        <hasProvider rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#river_city_provider"/>
+        <hasServiceLevelProfile rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#sl_profile_1"/>
+        <hasServiceModel rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_model#"/>
+    </Service>
+
+    <foaf:Person rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#Torsten_Leidig">
+        <foaf:name>Torsten Leidig</foaf:name>
+        <foaf:phone>+49 6227 7 52535</foaf:phone>
+    </foaf:Person>
+
+    <foaf:Organization rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#economic_development_business_owner">
+        <vcard:adr rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/2006/vcard/ns#Work"/>
+            <vcard:country-name>USA</vcard:country-name>
+            <vcard:email>info@sme-rivercity.com</vcard:email>
+            <vcard:locality>River City</vcard:locality>
+            <vcard:postal-code>1212</vcard:postal-code>
+            <vcard:region>River City District, Southbank</vcard:region>
+            <vcard:street-address>105 Martin-Luther-King-Street, Floor 2, Room 3</vcard:street-address>
+            <vcard:tel>030 999 8753</vcard:tel>
+        </vcard:adr>
+        <legalForm>Public Administration</legalForm>
+        <foaf:homepage>http://www.sme-rivercity.com</foaf:homepage>
+        <foaf:name>Unit: Economic Innovation</foaf:name>
+    </foaf:Organization>
+
+    <Interaction rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#ia_5">
+        <dcterms:title xml:lang="en">Collect Payment and Settlement Data</dcterms:title>
+        <hasInput rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+            <rdfs:label xml:lang="en">Payment and Settlement Data</rdfs:label>
+        </hasInput>
+        <hasOnput rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+            <rdfs:label xml:lang="en">Payment and Settlement Configuration</rdfs:label>
+        </hasOnput>
+    </Interaction>
+
+    <Interaction rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#ia_6">
+        <dcterms:title>Generate Payment and Settlement Plan(s)</dcterms:title>
+        <hasOnput rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+            <rdfs:label>Payment and Settlement Plan(s)</rdfs:label>
+        </hasOnput>
+    </Interaction>
+
+    <Interaction rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#ia_7">
+        <dcterms:title xml:lang="en">Select Payment and Settlement Plan</dcterms:title>
+        <hasInput rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+            <rdfs:label xml:lang="en">Payment and Settlement Plan Reference</rdfs:label>
+        </hasInput>
+    </Interaction>
+
+    <Interaction rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#ia_8">
+        <dcterms:title xml:lang="en">Coordinate Payment and Settlement Plan</dcterms:title>
+        <hasOnput rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+            <rdfs:label xml:lang="en">Business License and other Settlement Artifacts</rdfs:label>
+        </hasOnput>
+    </Interaction>
+
+    <msm:Service rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#interface_1">
+        <dcterms:title>WS Interface</dcterms:title>
+        <hasOperation rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_1"/>
+        <hasOperation rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_3"/>
+        <hasOperation rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_4"/>
+    </msm:Service>
+
+    <Phase rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#ip_1">
+        <dcterms:title xml:lang="en">Assist with the preparation of a business license application</dcterms:title>
+        <hasInteraction rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Interaction"/>
+            <dcterms:title xml:lang="en">Business Formation Application Questionnaire</dcterms:title>
+            <hasInput rdf:parseType="Resource">
+                <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+                <rdfs:label xml:lang="en">General Application Data</rdfs:label>
+            </hasInput>
+            <hasInterfaceOperation rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_1"/>
+            <hasOnput rdf:parseType="Resource">
+                <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+                <rdfs:label xml:lang="en">Business Formation Application Questionnaire</rdfs:label>
+            </hasOnput>
+        </hasInteraction>
+        <hasInteraction rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Interaction"/>
+            <dcterms:title xml:lang="en">Identify License Types</dcterms:title>
+            <hasInterfaceOperation rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_2"/>
+            <hasOnput rdf:parseType="Resource">
+                <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+                <rdfs:label xml:lang="en">Pre-filled Application Forms</rdfs:label>
+            </hasOnput>
+        </hasInteraction>
+        <hasInteraction rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Interaction"/>
+            <dcterms:title xml:lang="en">Conduct License-specific questionnaire</dcterms:title>
+            <hasInput rdf:parseType="Resource">
+                <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+                <rdfs:label xml:lang="en">Supplementary Application Data and Documents</rdfs:label>
+            </hasInput>
+            <hasInterfaceOperation rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_3"/>
+            <hasOnput rdf:parseType="Resource">
+                <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+                <rdfs:label xml:lang="en">Business Formation Preparation Questionnaire</rdfs:label>
+            </hasOnput>
+        </hasInteraction>
+        <hasInteraction rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Interaction"/>
+            <dcterms:title xml:lang="en">Ready Application Forms</dcterms:title>
+            <hasInterfaceOperation rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_4"/>
+            <hasOnput rdf:parseType="Resource">
+                <rdf:type rdf:resource="http://www.w3.org/TR/usdl#Parameter"/>
+                <rdfs:label xml:lang="en">License Application Documents</rdfs:label>
+            </hasOnput>
+        </hasInteraction>
+        <hasTechnicalInterface rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#interface_1"/>
+    </Phase>
+
+    <Phase rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#ip_2">
+        <dcterms:title xml:lang="en">Generate a payment and settlement plan for a business license application</dcterms:title>
+        <hasInteraction rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#ia_5"/>
+        <hasInteraction rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#ia_6"/>
+        <hasInteraction rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#ia_7"/>
+    </Phase>
+
+    <Phase rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#ip_3">
+        <dcterms:title xml:lang="en">Coordinate a payment and settlement plan for a business license application</dcterms:title>
+        <hasInteraction rdf:resource="http://www.internet-of-services.com/services/usdl/business_formation_sme#ia_8"/>
+    </Phase>
+
+    <foaf:Organization rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#ministry_stakeholder">
+        <vcard:adr rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/2006/vcard/ns#Work"/>
+            <vcard:country-name>USA</vcard:country-name>
+            <vcard:email>postmaster@economics-rivercity.com</vcard:email>
+            <vcard:locality>River City</vcard:locality>
+            <vcard:postal-code>1234</vcard:postal-code>
+            <vcard:region>River City District, Southbank</vcard:region>
+            <vcard:street-address>Martin-Luther-King-Street 105</vcard:street-address>
+            <vcard:tel>030 999 373</vcard:tel>
+        </vcard:adr>
+        <legalForm>Public Administration</legalForm>
+        <foaf:homepage>http://www.economics-rivercity.com</foaf:homepage>
+        <foaf:name>Ministry of Economics</foaf:name>
+    </foaf:Organization>
+
+    <msm:Operation rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_1">
+        <rdfs:label xml:lang="en">IdentifyLicenses</rdfs:label>
+    </msm:Operation>
+
+    <msm:Operation rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_2">
+        <rdfs:label xml:lang="en">CompleteLicenseApplications</rdfs:label>
+    </msm:Operation>
+
+    <msm:Operation rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_3">
+        <rdfs:label xml:lang="en">GeneratePaymentAndSettlementPlan</rdfs:label>
+    </msm:Operation>
+
+    <msm:Operation rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#op_4">
+        <rdfs:label xml:lang="en">CoordinateSettlement</rdfs:label>
+    </msm:Operation>
+
+    <foaf:Organization rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#river_city_provider">
+        <dcterms:description>RiverCity provides its services for more than 20 years now.</dcterms:description>
+        <vcard:adr rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/2006/vcard/ns#Work"/>
+            <dcterms:description>Head office</dcterms:description>
+            <vcard:country-name>USA</vcard:country-name>
+            <vcard:email>info@rivercity-service-online.com</vcard:email>
+            <vcard:locality>River City</vcard:locality>
+            <vcard:postal-code>1212</vcard:postal-code>
+            <vcard:region>River City District, Westend</vcard:region>
+            <vcard:street-address>Pheasant Street 33</vcard:street-address>
+            <vcard:tel>+1 (0)30 123 4567</vcard:tel>
+        </vcard:adr>
+        <legalForm>Ltd. Co.</legalForm>
+        <foaf:homepage>http://www.rivercity-service-online.com</foaf:homepage>
+        <foaf:name>RiverCity Services Online</foaf:name>
+    </foaf:Organization>
+
+    <ServiceLevelProfile rdf:about="http://www.internet-of-services.com/services/usdl/business_formation_sme#sl_profile_1">
+        <hasServiceLevel rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#GuaranteedAction"/>
+            <obligatedParty rdf:resource="http://www.w3.org/TR/usdl#Provider"/>
+            <serviceLevelExpression>Mon-Wed:0900-1700;Thu:0900-1900;Fri:0900-1500</serviceLevelExpression>
+        </hasServiceLevel>
+        <hasServiceLevel rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.w3.org/TR/usdl#GuaranteedState"/>
+            <obligatedParty rdf:resource="http://www.w3.org/TR/usdl#Consumer"/>
+            <serviceLevelExpression>for businesses within the boundaries of USA and Canada</serviceLevelExpression>
+        </hasServiceLevel>
+    </ServiceLevelProfile>
+</rdf:RDF>

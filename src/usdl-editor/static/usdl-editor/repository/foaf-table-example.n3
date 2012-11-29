@@ -1,0 +1,110 @@
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> . 
+@prefix foaf:       <http://xmlns.com/foaf/0.1/> .
+@prefix ex:         <http://example.org/ex#> .
+@prefix dc:         <http://purl.org/dc/elements/1.1/> .
+@prefix dtype:      <http://www.w3.org/2001/XMLSchema#> .
+
+@prefix fresnel:    <http://www.w3.org/2004/09/fresnel#> .
+@prefix :           <http://example.org/foaftable#> .
+
+# -----------------------------------------------------
+# About this document
+# ------------------------------------------------------
+<> rdfs:comment     "Show how tables are realized using Fresnel."@en^^dtype:string ;
+   dc:date          "2005-03-24"^^dtype:date ;
+   dc:format        "RDF" ;
+   dc:author        "Chris Bizer <chris@bizer.de>" ;
+   dc:identifier    <> 
+   .
+  
+   
+# ------------------------------------------------------
+# FOAF Table Example
+# ------------------------------------------------------   
+#
+# This example shows how tables are realized with Fresnel
+# using:
+# - a lens and a sublens
+# - two seperate groups of styles
+
+
+# -----------------------------------------------
+# 1. Groups
+# -----------------------------------------------
+			                                                  
+:foafGroup rdf:type fresnel:Group ;
+            rdfs:label "General group for displaying FOAF data"@en .
+
+:tableGroup rdf:type fresnel:Group ;
+            rdfs:label "Group containing the table styling instructions."@en .
+             
+
+# -----------------------------------------------
+# 2. Person Lens and Friends Sublens
+# -----------------------------------------------
+
+:foafPersonDefaultLens rdf:type fresnel:Lens ;
+        fresnel:purpose fresnel:defaultLens ;
+	fresnel:classLensDomain foaf:Person ;
+	fresnel:group :foafGroup ;
+	fresnel:showProperties ( foaf:name 
+	                         foaf:surname 
+	                         foaf:depict 
+	                         [ rdf:type fresnel:PropertyDescription ; 
+	                           fresnel:property foaf:knows ;
+	                           fresnel:sublens :friendsLens ;
+	                           fresnel:use :tableGroup ] ) .
+
+:friendsLens rdf:type fresnel:Lens ;
+	fresnel:classLensDomain foaf:Person ;
+	fresnel:group :foafGroup ;
+	fresnel:group :tableGroup ;
+	fresnel:showProperties ( foaf:name 
+	                         foaf:surname 
+	                         foaf:email ) .
+
+
+# -----------------------------------------------
+# 3. Styles 
+# -----------------------------------------------
+
+# -----------------------------------------------
+# 3.1 Styles for both groups.
+# -----------------------------------------------
+
+:rootPropertyStyle	rdf:type fresnel:Format ;
+			fresnel:propertyFormatDomain fresnel:allProperties ; 
+			fresnel:labelStyle "font-color: black"^^fresnel:cssStylingInstructions ;
+			fresnel:valueStyle "font-color: black"^^fresnel:cssStylingInstructions ;
+			fresnel:group :defaultGroup ;
+			fresnel:group :tableGroup .
+
+# -----------------------------------------------
+# 3.2 Styles for the default group.
+# -----------------------------------------------
+
+:defaultGroup fresnel:containerStyle "background-color: white"^^fresnel:cssStylingInstructions . 
+
+:depictStyle rdf:type fresnel:Format ;
+			fresnel:propertyFormatDomain foaf:depict ;
+			fresnel:label fresnel:none ;
+			fresnel:value fresnel:image ;
+			fresnel:group :defaultGroup .			
+
+# -----------------------------------------------
+# 3.3 Styles for the table group.
+# -----------------------------------------------			
+
+:tableGroup fresnel:containerStyle "display: table"^^fresnel:cssStylingInstructions .
+
+:personStyle rdf:type fresnel:Format ;
+			fresnel:classFormatDomain foaf:Person ; 
+			fresnel:resourceStyle "display: table-row"^^fresnel:cssStylingInstructions ;
+			fresnel:group :tableGroup .
+			
+:tablePropertyStyle	rdf:type fresnel:Format ;
+			fresnel:propertyFormatDomain fresnel:allProperties ; 
+			fresnel:labelStyle "display: table-header-group"^^fresnel:cssStylingInstructions ;
+			fresnel:valueStyle "display: table-cell"^^fresnel:cssStylingInstructions ;
+			fresnel:group :tableGroup .

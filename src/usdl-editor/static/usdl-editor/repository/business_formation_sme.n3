@@ -1,0 +1,190 @@
+@prefix :        <http://www.internet-of-services.com/services/usdl/business_formation_sme#> .
+@prefix ctag:    <http://commontag.org/ns#> .
+@prefix dcterms:  <http://purl.org/dc/terms/> .
+@prefix dctypes:  <http://purl.org/dc/dcmitype/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix gr:      <http://purl.org/goodrelations/v1#> .
+@prefix msm:     <http://cms-wg.sti2.org/ns/minimal-service-model#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix time:    <http://www.w3.org/2006/time#> .
+@prefix usdl:  <http://www.w3.org/TR/usdl#> .
+@prefix vcard:   <http://www.w3.org/2006/vcard/ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+<>  rdf:type usdl:ServiceDescription ;
+    dcterms:title "Sample public service for business formation";
+    dcterms:creator :Torsten_Leidig ;
+    rdfs:label "Service description for Business Formation SME Service" ;
+    dcterms:description "This description is an example of describing USDL services in RDF" ;
+    owl:versionInfo "0.3";
+    dcterms:contributor :Torsten_Leidig ;
+    dcterms:created "2011-07-29"^^xsd:date .
+
+:Torsten_Leidig
+    rdf:type foaf:Person ;
+    foaf:name "Torsten Leidig";
+    foaf:phone "+49 6227 7 52535".
+
+:ServiceSMEBusinessFormation a usdl:Service;
+       usdl:hasNature usdl:SemiAutomated;
+       usdl:hasServiceModel <http://www.internet-of-services.com/services/usdl/business_formation_model#> ;
+       dcterms:modified "2011-03-03"^^xsd:date;
+       dcterms:issued "2011-03-03"^^xsd:date;
+       dcterms:title "Business Formation SME"@en;
+       dcterms:description "The Demonstrator Business Formation SME service provides an insight into how the Services Directive could meet its objective of supporting citizens of member states to register businesses in the SME category. Examples of SME include: newsagents, food and beverage licenses, small retail outlets, printers and transportation utilities.<br> The service is for demonstration purposes only and can only be used in the context of SAP Research projects. It has no commercial or formal business implications. No actual operations with agencies and systems of Member States takes place.<br> The service relates to a major goal of the Services Directive, which aims to break down barriers to cross-border trade in services between Member States, making it easier for service providers, particularly small and medium sized enterprises, to:<ul><li> Set up business and offer services in other Member States; and</li><li> Provide services temporarily and/or at a distance in other Member States.</li></ul> Specifically, it illustrates how citizens can register a business with all relevant agencies satisfying legislative acts related to the regulation of SME business formation.<br> The service in intended to be operated through self-service. However, operator assistance is also available where an operator initiates or performs the whole service on behalf on a citizen.<br>The service involves four phases of activity: determination of the business license type through a questionnaire, fulfillment of the different provisions required for granting the license type, payment and settlement plan, and settlement. Details of these can be found in Consumer Operations description."@en;
+       usdl:hasProvider :river_city_provider;
+# or
+#    usdl-serv:hasParticipant :rivercity_provider, :ministry_stakeholder, :economic_development_business_owner;
+#
+       usdl:hasInteractionProtocol :ip_1;
+       usdl:hasImplementation <http://www.sap.com/bizweb/blueprints/1212345345> ;
+       usdl:hasServiceLevelProfile :sl_profile_1 ;
+       usdl:hasDocumentation <http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2006:376:0036:0068:EN:PDF> .
+
+<http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2006:376:0036:0068:EN:PDF> a usdl:Artifact;
+      usdl:artifactType usdl:Mixed ; # or usdl-f:Other?
+      dcterms:title "DIRECTIVE 2006/123/EC OF THE EUROPEAN PARLIAMENT AND OF THE COUNCIL on services in the internal market" .
+
+# participants
+
+:river_city_provider a foaf:Organization;
+      foaf:name "RiverCity Services Online";
+      foaf:homepage "http://www.rivercity-service-online.com";
+      usdl:legalForm "Ltd. Co." ; # is there an ontology for legal forms? probably 
+      dcterms:description "RiverCity provides its services for more than 20 years now.";
+      vcard:adr [ a vcard:Work;
+                  vcard:tel "+1 (0)30 123 4567";
+                  vcard:email "info@rivercity-service-online.com";
+                  vcard:locality "River City";
+                  vcard:street-address "Pheasant Street 33";
+                  vcard:postal-code "1212";
+                  vcard:region "River City District, Westend";
+                  vcard:country-name "USA";
+                  dcterms:description "Head office" ] .
+
+:ministry_stakeholder a foaf:Organization;
+      foaf:name "Ministry of Economics";
+      foaf:homepage "http://www.economics-rivercity.com";
+      usdl:legalForm "Public Administration" ;
+      vcard:adr [ a vcard:Work;
+                  vcard:tel "030 999 373";
+                  vcard:email "postmaster@economics-rivercity.com";
+                  vcard:locality "River City";
+                  vcard:street-address "Martin-Luther-King-Street 105";
+                  vcard:postal-code "1234";
+                  vcard:region "River City District, Southbank";
+                  vcard:country-name "USA" ] .
+
+:economic_development_business_owner a foaf:Organization;
+      foaf:name "Unit: Economic Innovation";
+      foaf:homepage "http://www.sme-rivercity.com";
+      usdl:legalForm "Public Administration" ;
+      vcard:adr [ a vcard:Work;
+                  vcard:tel "030 999 8753";
+                  vcard:email "info@sme-rivercity.com";
+                  vcard:locality "River City";
+                  vcard:street-address "105 Martin-Luther-King-Street, Floor 2, Room 3";
+                  vcard:postal-code "1212";
+                  vcard:region "River City District, Southbank";
+                  vcard:country-name "USA" ] .
+
+:ip_1 a usdl:InteractionProtocol;
+      dcterms:title "Assist with the preparation of a business license application"@en;
+      usdl:hasTechnicalInterface :interface_1 ;
+      usdl:hasInteraction [ 
+                 a usdl:Interaction;
+                 usdl:hasInterfaceOperation :op_1 ;
+                 dcterms:title "Business Formation Application Questionnaire"@en ;
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "General Application Data"@en ] ;  # use rdfs:label or dcterms:title ?
+                 usdl:hasOutput [ a usdl:Parameter;
+                           rdfs:label "Business Formation Application Questionnaire"@en ] ] ,
+               [ a usdl:Interaction;
+                 usdl:hasInterfaceOperation :op_2 ;
+                 dcterms:title "Identify License Types"@en ;
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "General Application Data"@en ] ;  # use rdfs:label or dcterms:title ?
+                 usdl:hasOutput [ a usdl:Parameter;
+                           rdfs:label "Pre-filled Application Forms"@en ] ] ,
+               [ a usdl:Interaction;
+                 usdl:hasInterfaceOperation :op_3 ;
+                 dcterms:title "Conduct License-specific questionnaire"@en ;
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "Supplementary Application Data and Documents"@en ] ; 
+                 usdl:hasOutput [ a usdl:Parameter;
+                           rdfs:label "Business Formation Preparation Questionnaire"@en ] ] , 
+               [ a usdl:Interaction;
+                 usdl:hasInterfaceOperation :op_4 ;
+                 dcterms:title "Ready Application Forms"@en ;
+                 usdl:hasInput [ a usdl:Parameter;
+                           rdfs:label "General Application Data"@en ] ;  # use rdfs:label or dcterms:title ?
+                 usdl:hasOutput [ a usdl:Parameter;
+                           rdfs:label "License Application Documents"@en ] ] . 
+
+:ip_2 a usdl:InteractionProtocol;
+      dcterms:title "Generate a payment and settlement plan for a business license application"@en;
+      usdl:hasInteraction :ia_5, :ia_6, :ia_7 .
+
+:ia_5 a usdl:Interaction;
+      dcterms:title "Collect Payment and Settlement Data"@en ;
+      usdl:hasInput [ a usdl:Parameter;
+                      rdfs:label "Payment and Settlement Data"@en ] ;  # use rdfs:label or dcterms:title ?
+      usdl:hasOutput [ a usdl:Parameter;
+                      rdfs:label "Payment and Settlement Configuration"@en ] .
+
+:ia_6 a usdl:Interaction;
+      dcterms:title "Generate Payment and Settlement Plan(s)" ;
+      usdl:Output [ a usdl:Parameter;
+                      rdfs:label "Payment and Settlement Plan(s)" ] .
+
+:ia_7 a usdl:Interaction;
+      dcterms:title "Select Payment and Settlement Plan"@en ;
+      usdl:hasInput [ a usdl:Parameter;
+                      rdfs:label "Payment and Settlement Plan Reference"@en ] .
+
+:ip_3 a usdl:InteractionProtocol;
+      dcterms:title "Coordinate a payment and settlement plan for a business license application"@en;
+      usdl:hasInteraction :ia_8 .
+
+:ia_8 a usdl:Interaction;
+      dcterms:title "Coordinate Payment and Settlement Plan"@en ;
+      usdl:hasOutput [ a usdl:Parameter;
+                      rdfs:label "Business License and other Settlement Artifacts"@en ] .
+
+# Technical information:
+
+:interface_1 a msm:Service;
+      dcterms:title "WS Interface" ;
+      usdl:hasOperation :op_1, :op_1, :op_3, :op_4 .
+
+:op_1 a msm:Operation;
+      rdfs:label "IdentifyLicenses"@en .
+
+:op_2 a msm:Operation;
+      rdfs:label "CompleteLicenseApplications"@en .
+
+:op_3 a msm:Operation;
+      rdfs:label "GeneratePaymentAndSettlementPlan"@en .
+
+:op_4 a msm:Operation;
+      rdfs:label "CoordinateSettlement"@en .
+
+# service level profile
+
+:sl_profile_1 a usdl:ServiceLevelProfile;
+      usdl:hasServiceLevel [ a usdl:GuaranteedAction;
+                                usdl:serviceLevelExpression "Mon-Wed:0900-1700;Thu:0900-1900;Fri:0900-1500";
+                                usdl:obligatedParty usdl:Provider ],
+                              [ a usdl:GuaranteedState;
+                                usdl:serviceLevelExpression "for businesses within the boundaries of USA and Canada" ;
+                                usdl:obligatedParty usdl:Consumer ] .
+
+
+
+
+
+

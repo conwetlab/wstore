@@ -1,0 +1,16 @@
+{
+      "name": "Linked USDL Editor",
+      "version": "0.9",
+      "manifest_version": 2,
+      "description": "Linked USDL Editor",
+      "icons": { "24": "images/linked-usdl-24.png", "128": "images/linked-usdl-128.png" },
+      "app": {
+           "launch": {
+             "local_path": "index.html"
+           }
+      },
+      "permissions": [
+         "http://*/*",
+         "https://*/*"
+      ]
+}

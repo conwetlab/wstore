@@ -1,0 +1,66 @@
+<rdf:RDF xmlns="http://www.linked-usdl.org/ns/usdl-servicelevel#"
+    xmlns:dcterms="http://purl.org/dc/terms/"
+    xmlns:gr="http://purl.org/goodrelations/v1#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:sla="http://www.linked-usdl.org/ns/usdl-servicelevel#">
+
+    <Variable rdf:about="http://bizweb.sap.com/services/YardManagement/#ConsumerWorkloadThreshold">
+        <hasDefault rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://purl.org/goodrelations/v1#QuantitativeValue"/>
+            <gr:hasValue>100</gr:hasValue>
+            <gr:unitOfMeasurement>per minute</gr:unitOfMeasurement>
+        </hasDefault>
+        <rdf:label>ConsumerWorkloadThreshold</rdf:label>
+    </Variable>
+
+    <Variable rdf:about="http://bizweb.sap.com/services/YardManagement/#ConsumerWorkloadViolationProbability">
+        <hasDefault rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://purl.org/goodrelations/v1#QuantitativeValue"/>
+            <gr:hasValue>5</gr:hasValue>
+            <gr:unitOfMeasurement>percent</gr:unitOfMeasurement>
+        </hasDefault>
+        <rdf:label>ConsumerWorkloadViolationProbability</rdf:label>
+    </Variable>
+
+    <Variable rdf:about="http://bizweb.sap.com/services/YardManagement/#ResponseTimeThreshold">
+        <hasDefault rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://purl.org/goodrelations/v1#QuantitativeValue"/>
+            <gr:hasValue>500</gr:hasValue>
+            <gr:unitOfMeasurement>milli seconds</gr:unitOfMeasurement>
+        </hasDefault>
+        <rdf:label>ResponseTimeThreshold</rdf:label>
+    </Variable>
+
+    <Variable rdf:about="http://bizweb.sap.com/services/YardManagement/#ResponsivenessProbability">
+        <hasDefault rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://purl.org/goodrelations/v1#QuantitativeValue"/>
+            <gr:hasValue>95</gr:hasValue>
+            <gr:unitOfMeasurement>percent</gr:unitOfMeasurement>
+        </hasDefault>
+        <rdf:label>ResponsivenessProbability</rdf:label>
+    </Variable>
+
+    <ServiceLevelProfile rdf:about="http://bizweb.sap.com/services/YardManagement/#WarrantyManagement_ServiceLevelProfile">
+        <hasServiceLevel rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.linked-usdl.org/ns/usdl-servicelevel#GuaranteedState"/>
+            <obligatedParty rdf:resource="http://www.linked-usdl.org/ns/usdl-core#Provider"/>
+            <serviceLevelExpression rdf:parseType="Resource">
+                <rdf:type rdf:resource="http://www.linked-usdl.org/ns/usdl-servicelevel#ServiceLevelExpression"/>
+                <dcterms:description>For the given reporting period of one month, the probability of service responsiveness is[ResponsivenessProbability]. Reponsiveness means that the response time is less than [ResponsetimeThreshold] given that the consumer workload does not exceed [ConsumerWorkloadThreshold]. Responsiveness conditions are evaluated for single time slots of 1 minute. Probability of service responseness is the percentage of responsive minute slots.</dcterms:description>
+                <hasVariable rdf:resource="http://bizweb.sap.com/services/YardManagement/#ConsumerWorkloadThreshold"/>
+                <hasVariable rdf:resource="http://bizweb.sap.com/services/YardManagement/#ResponseTimeThreshold"/>
+                <hasVariable rdf:resource="http://bizweb.sap.com/services/YardManagement/#ResponsivenessProbability"/>
+            </serviceLevelExpression>
+        </hasServiceLevel>
+        <hasServiceLevel rdf:parseType="Resource">
+            <rdf:type rdf:resource="http://www.linked-usdl.org/ns/usdl-servicelevel#GuaranteedState"/>
+            <obligatedParty rdf:resource="http://www.linked-usdl.org/ns/usdl-core#Consumer"/>
+            <serviceLevelExpression rdf:parseType="Resource">
+                <rdf:type rdf:resource="http://www.linked-usdl.org/ns/usdl-servicelevel#ServiceLevelExpression"/>
+                <dcterms:description>For the given reporting period of one month, the probability of violating the workload obligation is [ConsumerWorkloadViolationProbability].  Violation means that the workload exceeds [ConsumerWorkloadThreshold]. Workload condition is evaluated for single time slots of 1 minute. Probability of workload violation is the percentage of violated minute slots.</dcterms:description>
+                <hasVariable rdf:resource="http://bizweb.sap.com/services/YardManagement/#ConsumerWorkloadThreshhold"/>
+                <hasVariable rdf:resource="http://bizweb.sap.com/services/YardManagement/#ConsumerWorkloadViolationProbability"/>
+            </serviceLevelExpression>
+        </hasServiceLevel>
+    </ServiceLevelProfile>
+</rdf:RDF>
