@@ -40,6 +40,10 @@ class ApplicationCollection(Resource):
                     json_data = json.loads(request.raw_post_data)
                     data['name'] = json_data['name']
                     data['version'] = json_data['version']
+
+                    if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
+                        return build_error_response(request, 400, 'Invalid version format')
+
                     data['related_images'] = []
 
                     # Create the directory for app media
@@ -73,8 +77,9 @@ class ApplicationCollection(Resource):
 
                     repository = Repository.objects.get(name=json_data['repository'])
                     repository_adaptor = RepositoryAdaptor(repository.host, 'storeApplicationCollection')
+                    offering_id = profile.organization + '__' + data['name'] + '__' + data['version']
 
-                    data['description_url'] = repository_adaptor.upload(data['name'], offering_description['content_type'], offering_description['data'])
+                    data['description_url'] = repository_adaptor.upload(offering_id, offering_description['content_type'], offering_description['data'])
 
                 except HTTPError, e:
                     return build_error_response(request, 502, 'Bad Gateway')
