@@ -12,7 +12,6 @@ urlpatterns = patterns('',
     url(r'^/?$', 'fiware_store.views.home', name='home'),
     url(r'^administration/?$', 'fiware_store.views.admin', name='admin'),
     url(r'^catalogue/?$', 'fiware_store.views.catalogue', name='catalogue'),
-    url(r'^test/?$', 'fiware_store.views.test', name='test'),
 
     # API
     url(r'^api/administration/marketplaces/?$', market_views.MarketplaceCollection(permitted_methods=('GET', 'POST'))),
