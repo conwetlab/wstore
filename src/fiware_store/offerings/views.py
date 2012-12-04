@@ -47,7 +47,8 @@ class ApplicationCollection(Resource):
                     data['related_images'] = []
 
                     # Create the directory for app media
-                    path = os.path.join(settings.MEDIA_ROOT, data['name'])
+                    dir_name = profile.organization + '__' + data['name'] + '__' + data['version']
+                    path = os.path.join(settings.MEDIA_ROOT, dir_name)
                     os.makedirs(path)
                     image = json_data['image']
 
