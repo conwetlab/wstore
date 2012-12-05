@@ -34,6 +34,11 @@
             });
             $('#register-res').click(showRegisterResourceForm);
         }
+
+        // Load data into the tabs on show
+        $('a[data-toggle="tab"]').on('shown', function (e) {
+            getUserOfferings(e.target) // activated tab
+        })
     };
 
     $(document).ready(paintCatalogue);

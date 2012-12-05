@@ -33,3 +33,55 @@
 .catalogue-elem {
     margin-top: 50px;
 }
+
+.menu-offering {
+    text-align: left;
+    border: 1px solid rgb(205, 206, 209);
+    border-radius: 6px;
+    width: 360px;
+    height: 320px;
+    padding-bottom: 17px;
+    padding-left: 17px;
+    padding-right: 17px;
+    position: relative;
+    display: inline-block;
+    margin-right: 20px;
+    margin-bottom: 15px;
+}
+
+.menu-offering:hover {
+    background-color: rgb(237, 237, 237);
+    border-color: rgba(82, 168, 236, 0.8);
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    transition: width 2s;
+    -moz-transition: width 2s; /* Firefox 4 */
+    -webkit-transition: width 2s; /* Safari and Chrome */ 
+}
+
+.menu-offering img {
+    width: 170px;
+    height: 80px;
+    background: white;
+    border-radius: 4px;
+    display: inline;
+}
+
+.menu-offering-row {
+    position: relative;
+    float:left;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+.offering-meta {
+    position: absolute;
+    top: 15px;
+    left: 250px;
+    width: 95px;
+}
+
+.offering-meta i{
+    font-size: 20px;
+}

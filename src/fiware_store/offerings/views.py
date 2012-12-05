@@ -3,10 +3,15 @@ import rdflib
 import re
 import base64
 import os
+import pymongo
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.http import HttpResponse
 
 from store_commons.resource import Resource
 from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
@@ -16,6 +21,7 @@ from fiware_store.models import Application
 from fiware_store.models import Resource as Store_resource
 from fiware_store.models import UserProfile
 from fiware_store.models import Repository
+from store_commons.utils.usdlParser import USDLParser
 
 
 class ApplicationCollection(Resource):
@@ -106,6 +112,37 @@ class ApplicationCollection(Resource):
             pass
 
         return build_error_response(request, 201, 'Created')
+
+    @method_decorator(login_required)
+    def read(self, request):
+
+        # TODO support for xml requests
+        # Read the query string in order to know the filter and the page
+        filter_ = request.GET.get('filter', 'all')
+
+        if filter_ == 'provider':
+            if	request.GET.get('state') == 'uploaded':
+
+                # Get all the offerings owned by the provider using raw mongodb access
+                connection = MongoClient()
+                db = connection.fiwarestore_db
+                # Get provider id
+                user = User.objects.get(username=request.user)
+                offerings = db.fiware_store_application
+                prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'})
+
+                result = []
+                # TODO pagination
+                for offer in prov_offerings:
+                    of = offer
+                    of['owner_admin_user_id'] = user.username
+                    of['_id'] = str(offer['_id'])
+                    parser = USDLParser(json.dumps(offer['offering_description']), 'application/json')
+                    of['offering_description'] = parser.parse()
+                    result.append(of)
+
+                mime_type = 'application/JSON; charset=UTF-8'
+                return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
 
 
 class ApplicationEntry(Resource):
