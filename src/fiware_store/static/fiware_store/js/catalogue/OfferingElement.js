@@ -4,7 +4,7 @@
 	OfferingElement = function OfferingElement (offeringData) {
 	    this.name = offeringData.name;
             this.organization = offeringData.owner_organization;
-            this.provider = offeringData.owner_admin_user;
+            this.provider = offeringData.owner_admin_user_id;
             this.version = offeringData.version;
             this.logo = offeringData.image_url;
             this.state = offeringData.state;
@@ -14,6 +14,8 @@
             this.tags = offeringData.tags;
             this.screenshots = offeringData.related_images;
             this.shortDescription = offeringData.offering_description.shortDescription;
+            this.updated = offeringData.offering_description.lastModified;
+            this.created = offeringData.offering_description.created;
             this.description = offeringData.offering_description.longDescription;
             this.legal = offeringData.offering_description.legal;
             this.sla = offeringData.offering_description.sla;
@@ -67,6 +69,14 @@
 
         OfferingElement.prototype.getShortDescription = function getShortDescription () {
             return this.shortDescription;
+        };
+
+        OfferingElement.prototype.getUpdated = function getUpdated () {
+            return this.updated;
+        };
+
+        OfferingElement.prototype.getCreated = function getCreated () {
+            return this.created;
         };
 
         OfferingElement.prototype.getDescription = function getDescription () {
