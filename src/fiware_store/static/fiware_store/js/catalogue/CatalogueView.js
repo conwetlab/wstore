@@ -19,8 +19,6 @@
     var showRegisterResourceForm = function showRegisterResourceForm() {
         // Creates the modal
         MessageManager.showMessage('Register new resource', '');
-
-        // Creates the form        // Inserts the form into the modal
     };
 
     var paintCatalogue = function paintCatalogue() {

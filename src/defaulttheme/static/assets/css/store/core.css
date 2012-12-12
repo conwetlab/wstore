@@ -85,3 +85,37 @@
 .offering-meta i{
     font-size: 20px;
 }
+
+.details-title {
+    font-size: 30px;
+    margin-left: 30px;
+}
+.main-info {
+    width: 75%;
+    background-color: rgb(246, 246, 244);
+    border-color: rgb(205, 206, 209);
+}
+
+.main-info img {
+    width: 170px;
+    height: 80px;
+    margin: 10px;
+    border: 1px solid rgb(205, 206, 209);
+    border-radius: 4px;
+}
+
+.main-info i {
+    font-size: 20px;
+    margin: -4px;
+}
+
+.details-icons {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.details-button {
+    position: relative;
+    left: 29%;
+    margin-top: 10px;
+}

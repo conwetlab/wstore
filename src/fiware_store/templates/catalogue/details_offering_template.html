@@ -1,0 +1,51 @@
+
+<div>
+    <div class="row">
+        <h2 class="details-title">${name}</h2>
+    </div>
+    <div class="row">
+        <div class="span2">
+            <ul class="thumbnails">
+                <li class="thumbnail main-info">
+                    <img src="${logo}" />
+                    <div class="details-icons">
+                        <i class="icon-star-empty"></i>
+                        <i class="icon-star-empty"></i>
+                        <i class="icon-star-empty"></i>
+                        <i class="icon-star-empty"></i>
+                        <i class="icon-star-empty"></i>
+                    </div>
+                    <input type="button" class="btn btn-blue details-button" value="Publish" />
+                    <div class="details-icons">
+                        <i class="icon-book"></i>
+                        <i class="icon-home"></i>
+                    </div>
+                    <p><b>Organization: </b>${organization}</p>
+                    <p><b>Owner: </b>${owner}</p>
+                    <p><b>Version: </b>${version}</p>
+                    <p><b>Last Update: </b>${updated}</p>
+                </li>
+            </ul>
+        </div>
+        <div class="span10">
+          <div class="tabbable">
+             <ul class="nav nav-tabs">
+               <li class="active"><a href="#main-tab" data-toggle="tab">Main Info</a></li>
+               <li><a href="#legal-tab" data-toggle="tab">Legal</a></li>
+               <li><a href="#pricing-tab" data-toggle="tab">Pricing</a></li>
+               <li><a href="#sla-tab" data-toggle="tab">Service level agreement</a></li>
+             </ul>
+            <div class="tab-content">
+            <div class="tab-pane active" id="main-tab">
+            </div>
+            <div class="tab-pane" id="legal-tab">
+            </div>
+            <div class="tab-pane" id="pricing-tab">
+            </div>
+            <div class="tab-pane" id="sla-tab">
+            </div>
+            </div>
+          </div>
+        </div>
+    </div>
+</div>

@@ -39,7 +39,9 @@
                 'state': offering_elem.getState(),
                 'rating': offering_elem.getRating(),
                 'description': offering_elem.getShortDescription()
-            }).appendTo(target.hash);
-        };
-    }
+            }).appendTo(target.hash).click(function () {
+                paintOfferingDetails(offering_elem);
+            });
+        }
+    };
 })();
