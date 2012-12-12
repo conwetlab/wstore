@@ -34,6 +34,9 @@
     margin-top: 50px;
 }
 
+.tab-content {
+    padding: 5px;
+}
 .menu-offering {
     text-align: left;
     border: 1px solid rgb(205, 206, 209);
@@ -47,6 +50,9 @@
     display: inline-block;
     margin-right: 20px;
     margin-bottom: 15px;
+    transition: border linear 0.2s, box-shadow linear 0.2s, background linear 0.2s;
+    -moz-transition: border linear 0.2s, box-shadow linear 0.2s, background linear 0.2s; /* Firefox 4 */
+    -webkit-transition: border linear 0.2s, box-shadow linear 0.2s, background linear 0.2s; /* Safari and Chrome */
 }
 
 .menu-offering:hover {
@@ -55,9 +61,6 @@
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
     -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-    transition: width 2s;
-    -moz-transition: width 2s; /* Firefox 4 */
-    -webkit-transition: width 2s; /* Safari and Chrome */ 
 }
 
 .menu-offering img {
