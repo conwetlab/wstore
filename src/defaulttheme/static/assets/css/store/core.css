@@ -112,6 +112,10 @@
     margin: -4px;
 }
 
+#screenshots-car {
+    width: 40%;
+}
+
 .details-icons {
     text-align: center;
     margin-top: 10px;
