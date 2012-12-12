@@ -119,3 +119,8 @@
     left: 29%;
     margin-top: 10px;
 }
+
+#back {
+    position: absolute;
+    right: 20px;
+}

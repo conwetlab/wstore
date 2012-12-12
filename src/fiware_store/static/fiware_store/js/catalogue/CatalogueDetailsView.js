@@ -56,6 +56,11 @@
         $('a[href="#sla-tab"]').on('shown', function (e) {
             paintSla(offeringElement.getSla());
         })
+
+        $('#back').click(function (e) {
+            $('#catalogue-container').empty();
+            paintCatalogue();
+        });
     };
 
     var paintLegalClauses = function paintLegalClauses (clauses, dom) {

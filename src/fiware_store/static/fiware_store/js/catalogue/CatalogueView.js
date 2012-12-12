@@ -21,7 +21,7 @@
         MessageManager.showMessage('Register new resource', '');
     };
 
-    var paintCatalogue = function paintCatalogue() {
+    paintCatalogue = function paintCatalogue() {
         // Get the catalogue template
         $.template('catalogueTemplate', $('#catalogue_search_template'));
         $.tmpl('catalogueTemplate', {}).appendTo('#catalogue-container');
