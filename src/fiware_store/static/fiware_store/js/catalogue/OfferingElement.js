@@ -23,6 +23,10 @@
             // Add the usdl information
         }
 
+        OfferingElement.prototype.getId = function getId () {
+            return this.organization + '__' + this.name + '__' + this.version;
+        };
+
         OfferingElement.prototype.getName = function getName () {
             return this.name;
         };
