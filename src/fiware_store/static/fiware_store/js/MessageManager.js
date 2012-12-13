@@ -36,4 +36,22 @@
         });
     };
 
+    MessageManager.showYesNoWindow = function showYesNoWindow (msg, handler) {
+        $('#message-container').empty();
+        $.template('yesNoWindowTemplate', $('#yes_no_window_template'));
+        $.tmpl('yesNoWindowTemplate', {
+            'msg': msg
+        }).appendTo('#message-container');
+
+        $('#btn-yes').click(handler);
+        $('#btn-no').click(function  () {
+            $('#message').modal('hide');
+        });
+
+        $('#message').modal('show');
+        $('#message').on('hidden', function() {
+            $('#message-container').empty();
+        })
+    }
+
 })();
