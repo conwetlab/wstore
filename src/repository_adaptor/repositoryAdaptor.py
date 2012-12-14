@@ -16,11 +16,15 @@ class RepositoryAdaptor():
         self._repository_url = repository_url
         self._collection = collection
 
+        if not self._repository_url.endswith('/'):
+            self._repository_url += '/'
+
         if not self._collection.endswith('/'):
             self._collection += '/'
 
     def upload(self, name, content_type, data):
 
+        name = name.replace(' ', '')
         url = urljoin(self._repository_url, self._collection)
         url = urljoin(url, name)
         opener = urllib2.build_opener()
@@ -30,14 +34,16 @@ class RepositoryAdaptor():
 
         response = opener.open(request)
 
-        if response.code != 200:
+        if not (response.code > 199 and response.code < 300):
             raise HTTPError(response.url, response.code, response.msg, None, None)
 
         return url
 
     def download(self, name, content_type):
 
-        url = urljoin(self._repository_url, self._collection, name)
+        name = name.replace(' ', '')
+        url = urljoin(self._repository_url, self._collection)
+        url = urljoin(url, name)
         opener = urllib2.build_opener()
 
         headers = {'Accept': content_type}
@@ -45,7 +51,21 @@ class RepositoryAdaptor():
 
         response = opener.open(request)
 
-        if response.code != 200:
+        if not (response.code > 199 and response.code < 300):
             raise HTTPError(response.url, response.code, response.msg, None, None)
 
         return response.read()
+
+    def delete(self, name):
+
+        name = name.replace(' ', '')
+        url = urljoin(self._repository_url, self._collection)
+        url = urljoin(url, name)
+        opener = urllib2.build_opener()
+
+        request = MethodRequest('DELETE', url)
+
+        response = opener.open(request)
+
+        if not (response.code > 199 and response.code < 300):
+            raise HTTPError(response.url, response.code, response.msg, None, None)
