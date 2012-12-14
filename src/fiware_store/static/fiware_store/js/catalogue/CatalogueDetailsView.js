@@ -5,8 +5,7 @@
     var slaLoaded;
 
     paintOfferingDetails = function paintOfferingDetails (offeringElement) {
-         var screen;
-
+        var screen;
 
         legalLoaded = false;
         pricingLoaded = false;
