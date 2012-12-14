@@ -14,7 +14,8 @@
     // Contains endpoints that depend os variables
     var contextEndpoints = {
         'MARKET_ENTRY': '/api/administration/marketplaces/${name}',
-        'REPOSITORY_ENTRY': '/api/administration/repositories/${name}'
+        'REPOSITORY_ENTRY': '/api/administration/repositories/${name}',
+        'APPLICATION_ENTRY': '/api/offerings/applications/${organization}/${name}/${version}'
     }
 
     /**

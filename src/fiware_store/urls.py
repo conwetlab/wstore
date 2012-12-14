@@ -19,4 +19,5 @@ urlpatterns = patterns('',
     url(r'^api/administration/marketplaces/(?P<market>[\w -]+)/?$', market_views.MarketplaceEntry(permitted_methods=('GET', 'PUT', 'DELETE'))),
     url(r'^api/administration/repositories/(?P<repository>[\w -]+)/?$', rep_views.RepositoryEntry(permitted_methods=('GET', 'PUT', 'DELETE'))),
     url(r'^api/offerings/applications/?$', offering_views.ApplicationCollection(permitted_methods=('GET', 'POST'))),
+    url(r'^api/offerings/applications/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/?$', offering_views.ApplicationEntry(permitted_methods=('GET', 'PUT', 'DELETE'))),
 )
