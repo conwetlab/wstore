@@ -63,7 +63,7 @@ class ApplicationCollection(Resource):
                     dec = base64.b64decode(image['data'])
                     f.write(dec)
 
-                    data['image_url'] = settings.MEDIA_URL + data['name'] + '/' + image['name']
+                    data['image_url'] = settings.MEDIA_URL + dir_name + '/' + image['name']
                     # Save screen shots
                     if 'related_images' in json_data:
                         for image in json_data['related_images']:
@@ -73,7 +73,7 @@ class ApplicationCollection(Resource):
                             dec = base64.b64decode(image['data'])
                             f.write(dec)
 
-                            data['related_images'].append(settings.MEDIA_URL + data['name'] + '/' + image['name'])
+                            data['related_images'].append(settings.MEDIA_URL + dir_name + '/' + image['name'])
 
                     # Save USDL document
 
