@@ -61,6 +61,48 @@
             $('#catalogue-container').empty();
             paintCatalogue();
         });
+
+        // Set advanced operations
+        if(USERNAME == offeringElement.getProvider()) {
+            $('<input></input>').attr('type', 'button').attr('value', 'Delete offering').addClass('btn btn-danger btn-advanced').appendTo('#advanced-op').click(function() {
+                var msg = "Are you sure that you want to delete the offering";
+                MessageManager.showYesNoWindow(msg, function() {
+                    deleteOffering(offeringElement);
+                });
+            });
+        }
+        $('<input></input>').attr('type', 'button').attr('value', 'Download service model').addClass('btn').appendTo('#advanced-op').click(function() {
+            getServiceModel(offeringElement);
+        });
+    };
+
+    var deleteOffering = function deleteOffering (offeringElement) {
+        var csrfToken = $.cookie('csrftoken');
+        $.ajax({
+            headers: {
+                'X-CSRFToken': csrfToken,
+            },
+            type: "DELETE",
+            url: EndpointManager.getEndpoint('APPLICATION_ENTRY', {
+            'organization': offeringElement.getOrganization(),
+            'name': offeringElement.getName(),
+            'version': offeringElement.getVersion()
+            }),
+            dataType: 'json',
+            success: function (response) {
+                MessageManager.showMessage('Deleted', 'The application has been deleted');
+                $('#catalogue-container').empty();
+                paintCatalogue();
+            },
+            error: function (xhr) {
+                var msg = 'Error: the server responds with code ' + xhr.status;
+                MessageManager.showMessage('Error', msg);
+            }
+        });
+    };
+
+    var getServiceModel = function getServiceModel (offeringElement) {
+        window.open(offeringElement.getOfferingDescriptionURL());
     };
 
     var paintLegalClauses = function paintLegalClauses (clauses, dom) {

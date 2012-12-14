@@ -3,7 +3,7 @@
 
     var screenShots = [];
     var usdl;
-    var logo=[];    
+    var logo = [];
 
     var handleImageFileSelection = function handleImageFileSelection(evnt, type) {
         var files = evnt.target.files;

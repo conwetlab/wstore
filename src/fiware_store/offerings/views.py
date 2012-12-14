@@ -6,6 +6,7 @@ import os
 import pymongo
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from urlparse import urlparse, urljoin
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -161,6 +162,46 @@ class ApplicationEntry(Resource):
         if not offering.is_owner(request.user):
             return build_error_response(request, 401, 'Unauthorized')
 
+    @method_decorator(login_required)
+    def delete(self, request, organization, name, version):
+        import ipdb;ipdb.set_trace()
+        # If the offering has been purchased it is not deleted
+        # it is marked as deleted in order to allow customers that
+        # have puerchased the offering to intall it if needed
+        offering = Application.objects.get(name=name, owner_organization=organization, version=version)
+        if request.user != offering.owner_admin_user:
+            build_error_response(request, 401, 'Unauthorized')
+
+        if offering.state == 'uploaded':
+            #delete the usdl description from the repository
+            parsed_url = urlparse(offering.description_url)
+            path = parsed_url.path
+            host = parsed_url.scheme + '://' + parsed_url.netloc
+            path = path.split('/')
+            host += '/' + path[1] + '/' + path[2]
+            collection = path[3]
+
+            #repository_adaptor = RepositoryAdaptor(host, collection)
+            #repository_adaptor.delete(path[4])
+
+            if offering.related_images or offering.resources:
+                # If the offering has media files delete them
+                dir_name = organization + '__' + name + '__' + version
+                path = os.path.join(settings.MEDIA_ROOT, dir_name)
+                files = os.listdir(path)
+
+                for f in files:
+                    file_path = os.path.join(path, f)
+                    os.remove(file_path)
+
+                os.rmdir(path)
+
+            offering.delete()
+        else:
+            offering.state = 'deleted'
+            offering.save()
+
+        return build_error_response(request, 204, 'No content')
 
 class ResourceCollection(Resource):
 
