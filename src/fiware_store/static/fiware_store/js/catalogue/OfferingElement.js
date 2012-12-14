@@ -14,7 +14,7 @@
             this.tags = offeringData.tags;
             this.screenshots = offeringData.related_images;
             this.shortDescription = offeringData.offering_description.shortDescription;
-            this.updated = offeringData.offering_description.lastModified;
+            this.updated = offeringData.offering_description.modified;
             this.created = offeringData.offering_description.created;
             this.description = offeringData.offering_description.longDescription;
             this.offeringDescriptionURL = offeringData.description_url;
