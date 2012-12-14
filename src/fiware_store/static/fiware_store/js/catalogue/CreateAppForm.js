@@ -118,7 +118,10 @@
     };
 
     showCreateAppForm = function showCreateAppForm(repositories) {
-        var i, repLength=repositories.length;
+        var i, repLength = repositories.length;
+
+        screenShots = [];
+        logo = [];
 
         if (repLength == 0) {
             var msg = 'No repositories registered';
