@@ -17,6 +17,7 @@
             this.updated = offeringData.offering_description.lastModified;
             this.created = offeringData.offering_description.created;
             this.description = offeringData.offering_description.longDescription;
+            this.offeringDescriptionURL = offeringData.description_url;
             this.legal = offeringData.offering_description.legal;
             this.sla = offeringData.offering_description.sla;
             this.pricing = offeringData.offering_description.pricing;
@@ -85,6 +86,10 @@
 
         OfferingElement.prototype.getDescription = function getDescription () {
             return this.description;
+        };
+
+        OfferingElement.prototype.getOfferingDescriptionURL = function getOfferingDescriptionURL () {
+            return this.offeringDescriptionURL;
         };
 
         OfferingElement.prototype.getLegal = function getLegal () {
