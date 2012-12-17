@@ -16,11 +16,6 @@
         });
     };
 
-    var showRegisterResourceForm = function showRegisterResourceForm() {
-        // Creates the modal
-        MessageManager.showMessage('Register new resource', '');
-    };
-
     paintCatalogue = function paintCatalogue() {
         // Get the catalogue template
         $.template('catalogueTemplate', $('#catalogue_search_template'));

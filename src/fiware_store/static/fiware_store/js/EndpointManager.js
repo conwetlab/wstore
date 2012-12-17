@@ -7,7 +7,7 @@
     var staticEndpoints = {
         'MARKET_COLLECTION': '/api/administration/marketplaces',
         'REPOSITORY_COLLECTION': '/api/administration/repositories',
-        'RESOUCE_COLLECTION': '/api/offerings/resources',
+        'RESOURCE_COLLECTION': '/api/offerings/resources',
         'APPLICATION_COLLECTION': '/api/offerings/applications'
     };
 

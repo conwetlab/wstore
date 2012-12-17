@@ -136,3 +136,7 @@
 .btn-advanced {
     margin-right: 10px;
 }
+
+.modal-body i {
+    font-size: 20px;
+}

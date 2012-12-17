@@ -164,7 +164,6 @@ class ApplicationEntry(Resource):
 
     @method_decorator(login_required)
     def delete(self, request, organization, name, version):
-        import ipdb;ipdb.set_trace()
         # If the offering has been purchased it is not deleted
         # it is marked as deleted in order to allow customers that
         # have puerchased the offering to intall it if needed
@@ -209,7 +208,6 @@ class ResourceCollection(Resource):
     @method_decorator(login_required)
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
-
         user = request.user
         profile = UserProfile.objects.get(user=user)
         content_type = get_content_type(request)[0]
@@ -223,29 +221,31 @@ class ResourceCollection(Resource):
                     resource_data = {
                         'name': data['name'],
                         'version': data['version'],
-                        'resource_type': data['type'],
+                        'type': 'download',
                         'description': data['description'],
-                        'image': data['image'],
-                        'related_elements': data['related_elements'],
-                        'repository': data['repository'],
                     }
+                    if 'content' in data:
+                        resource = data['content']
+
+                        #decode the content and save the media file
+                        file_name = user.username + '__' + data['name'] + '__' + data['version'] + '__' + resource['name']
+                        path = os.path.join(settings.MEDIA_ROOT, 'resources')
+                        file_path = os.path.join(path, file_name)
+                        f = open(file_path, "wb")
+                        dec = base64.b64decode(resource['data'])
+                        f.write(dec)
+                        resource_data['content_path'] = file_path
+                        resource_data['link'] = ''
+
+                    elif 'link' in data:
+                        # Add the download link
+                        resource_data['link'] = data['link']
+                        resource_data['content_path'] = ''
+
                 except:
                     return build_error_response(request, 400, 'Invalid JSON content')
             else:  # TODO parse xml request
                 pass
-
-            rep = Repository.objects.get(name=resource_data['repository'])
-            host = rep.host
-
-            repository_adaptor = RepositoryAdaptor(host, 'storeResourceCollection')
-
-            elem_dir = []
-            # Uploads the different elements of the resource to the repository
-            for element in resource_data['related_elements']:
-                try:
-                    elem_dir.append(repository_adaptor.upload(element.name, element.content_type, element.data))
-                except:
-                    return build_error_response(request, 502, 'Bad gateway')
 
             Store_resource.objects.create(
                 name=resource_data['name'],
@@ -253,11 +253,13 @@ class ResourceCollection(Resource):
                 version=resource_data['version'],
                 resource_type=resource_data['type'],
                 description=resource_data['description'],
-                # image
-                related_elements=elem_dir,
+                download_link=resource_data['link'],
+                resource_path=resource_data['content_path']
             )
         else:
             pass
+
+        return build_error_response(request, 201, 'Created')
 
 
 class ResourceEntry(Resource):

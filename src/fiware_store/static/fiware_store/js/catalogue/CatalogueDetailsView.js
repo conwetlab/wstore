@@ -70,9 +70,18 @@
                 });
             });
         }
-        $('<input></input>').attr('type', 'button').attr('value', 'Download service model').addClass('btn').appendTo('#advanced-op').click(function() {
+        $('<input></input>').attr('type', 'button').attr('value', 'Download service model').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
             getServiceModel(offeringElement);
         });
+
+        if(USERNAME == offeringElement.getProvider() && offeringElement.getState() == 'uploaded') {
+            $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
+                bindResources(offeringElement);
+            });
+        }
+    };
+
+    var bindResources = function bindResources (offeringElement) {
     };
 
     var deleteOffering = function deleteOffering (offeringElement) {

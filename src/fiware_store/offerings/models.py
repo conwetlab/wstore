@@ -36,14 +36,15 @@ class Application(models.Model):
 # access backend components
 class Resource(models.Model):
     name = models.CharField(max_length=50)
-    provider = models.ForeignKey(User)
     version = models.CharField(max_length=20)
+    provider = models.ForeignKey(User)
     resource_type = models.CharField(max_length=50)
+    # Organization
     description = models.TextField()
     state = models.CharField(max_length=50)
-    image_url = models.CharField(max_length=100)
-    related_elements = ListField()
-    application = models.ForeignKey(Application)
+    download_link = models.CharField(max_length=200)
+    resource_path = models.CharField(max_length=100)
+    offerings = ListField()
 
     class Meta:
         app_label = 'fiware_store'
