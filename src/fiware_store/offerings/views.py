@@ -131,16 +131,25 @@ class ApplicationCollection(Resource):
                 user = User.objects.get(username=request.user)
                 offerings = db.fiware_store_application
                 prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'})
-
                 result = []
                 # TODO pagination
                 for offer in prov_offerings:
-                    of = offer
-                    of['owner_admin_user_id'] = user.username
-                    of['_id'] = str(offer['_id'])
+                    offer['owner_admin_user_id'] = user.username
+                    offer['_id'] = str(offer['_id'])
                     parser = USDLParser(json.dumps(offer['offering_description']), 'application/json')
-                    of['offering_description'] = parser.parse()
-                    result.append(of)
+                    offer['offering_description'] = parser.parse()
+                    resource_content = []
+
+                    for resource in offer['resources']:
+                        res = Store_resource.objects.get(id=resource)
+                        resource_content.append({
+                            'name': res.name,
+                            'version': res.version,
+                            'description': res.description
+                        })
+                    offer['resources'] = resource_content
+
+                    result.append(offer)
 
                 mime_type = 'application/JSON; charset=UTF-8'
                 return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
@@ -150,17 +159,56 @@ class ApplicationEntry(Resource):
 
     @method_decorator(login_required)
     @supported_request_mime_types(('application/json', 'application/xml'))
-    def update(self, request, offering, organization, version):
-
+    def update(self, request, organization, name, version):
         # Obtains the offering
         offering = None
+        content_type = get_content_type(request)[0]
         try:
-            offering = Application.objects.get(name=offering, owner_organization=organization, version=version)
+            offering = Application.objects.get(name=name, owner_organization=organization, version=version)
         except:
             return build_error_response(request, 404, 'Not found')
 
         if not offering.is_owner(request.user):
             return build_error_response(request, 401, 'Unauthorized')
+
+        if content_type == 'application/json':
+
+            try:
+                data = json.loads(request.raw_post_data)
+                added_resources = []
+                offering_resources = []
+                for of_res in offering.resources:
+                    offering_resources.append(of_res)
+
+                for res in data:
+                    resource = Store_resource.objects.get(name=res['name'], version=res['version'], provider=request.user)
+
+                    if not ObjectId(resource.pk) in offering_resources:
+                        added_resources.append(resource.pk)
+                    else:
+                        offering_resources.remove(ObjectId(resource.pk))
+
+                # added_resources contains the resources to be added to the offering
+                # and offering_resources the resurces to be deleted from the offering
+
+                for add_res in added_resources:
+                    resource = Store_resource.objects.get(pk=add_res)
+                    resource.offerings.append(offering.pk)
+                    resource.save()
+                    offering.resources.append(ObjectId(add_res))
+
+                for del_res in offering_resources:
+                    resource = Store_resource.objects.get(pk=del_res)
+                    resource.offerings.remove(offering.pk)
+                    resource.save()
+                    offering.resources.remove(del_res)
+
+                offering.save()
+
+            except:
+                return build_error_response(request, 400, 'Invalid json content')
+
+        return build_error_response(request, 201, 'Created')
 
     @method_decorator(login_required)
     def delete(self, request, organization, name, version):
@@ -261,6 +309,22 @@ class ResourceCollection(Resource):
 
         return build_error_response(request, 201, 'Created')
 
+    @method_decorator(login_required)
+    def read(self, request):
+        profile = UserProfile.objects.get(user=request.user)
+        response = []
+        if 'provider' in profile.roles:
+
+            resouces = Store_resource.objects.filter(provider=request.user)
+
+            for res in resouces:
+                response.append({
+                    'name': res.name,
+                    'version': res.version,
+                    'description': res.description
+                })
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
 class ResourceEntry(Resource):
     pass

@@ -44,7 +44,7 @@ class Resource(models.Model):
     state = models.CharField(max_length=50)
     download_link = models.CharField(max_length=200)
     resource_path = models.CharField(max_length=100)
-    offerings = ListField()
+    offerings = ListField(models.ForeignKey(Application))
 
     class Meta:
         app_label = 'fiware_store'

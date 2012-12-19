@@ -3,6 +3,7 @@
     var legalLoaded;
     var pricingLoaded;
     var slaLoaded;
+    var resLoaded;
 
     paintOfferingDetails = function paintOfferingDetails (offeringElement) {
         var screen;
@@ -10,6 +11,7 @@
         legalLoaded = false;
         pricingLoaded = false;
         slaLoaded = false;
+        resLoaded = false;
         // Create the details view
 
         // Clean the container
@@ -46,15 +48,19 @@
         // Set listeners
         $('a[href="#legal-tab"]').on('shown', function (e) {
             paintLegal(offeringElement.getLegal());
-        })
+        });
 
         $('a[href="#pricing-tab"]').on('shown', function (e) {
             paintPricing(offeringElement.getPricing());
-        })
+        });
 
         $('a[href="#sla-tab"]').on('shown', function (e) {
             paintSla(offeringElement.getSla());
-        })
+        });
+
+        $('a[href="#res-tab"]').on('shown', function (e) {
+            paintResources(offeringElement.getResources());
+        });
 
         $('#back').click(function (e) {
             $('#catalogue-container').empty();
@@ -76,12 +82,10 @@
 
         if(USERNAME == offeringElement.getProvider() && offeringElement.getState() == 'uploaded') {
             $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
-                bindResources(offeringElement);
+                resLoaded = false;
+                bindResourcesForm(offeringElement);
             });
         }
-    };
-
-    var bindResources = function bindResources (offeringElement) {
     };
 
     var deleteOffering = function deleteOffering (offeringElement) {
@@ -251,6 +255,34 @@
                 };
             } else {
                 $('<p></p>').text('No service level agreement has been defined').appendTo('#sla-tab');
+            }
+        }
+    };
+
+    var paintResources = function paintResources (resources) {
+        if(!resLoaded) {
+            resLoaded = true;
+            $('<h2></h2>').text('Offering resources').appendTo('#res-tab');
+            if (resources.length > 0) {
+            for (var i = 0; i < resources.length; i++) {
+                var cont = $('<div></div>');
+                var p;
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Name: </b>');
+                p.append(resources[i].name);
+
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Version: </b>');
+                p.append(resources[i].version);
+
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Description: </b>');
+                p.append(resources[i].description);
+
+                cont.appendTo('#res-tab');
+            }
+            } else {
+                $('<p></p>').text('The offering has no resources').appendTo('#res-tab');
             }
         }
     };
