@@ -26,35 +26,35 @@
                     <h1>Fi-ware</h1>
                     <h2>Store</h2>
                 </div>
-                <div class="span3 float-right">
-                    <ul class="nav nav-pills">
-                        <li class="active">
-                            <a href="#">Home</a>
-                        </li>
-                        <li>
-                            <a href="/catalogue">Catalogue</a>
-                        </li>
-                        {% if user.is_staff %}
-                            <li><a href="/administration">Administration</a></li>
-                        {% endif %}
-                        <div class="btn btn-success float-right dropdown">
-                            <div href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                <i class="icon-user icon-white"></i>
-                                {{ user.username }}
-                                <b class="caret"></b>
-                            </div>
-                            <ul class="dropdown-menu">
-                                <li><a href="/logout">Logout</a></li>
-                            </ul>
-                        </div>
-                    </ul>
-                </div>
+                <ul class="nav nav-pills main-menu">
+                    <li class="active">
+                        <a href="#">Home</a>
+                    </li>
+                    <li>
+                        <a href="/catalogue">Catalogue</a>
+                    </li>
+                    {% if user.is_staff %}
+                        <li><a href="/administration">Administration</a></li>
+                    {% endif %}
+                </ul>
+               <div class="btn btn-success float-right dropdown">
+                   <div href="#" class="dropdown-toggle" data-toggle="dropdown">
+                       <i class="icon-user icon-white"></i>
+                       {{ user.username }}
+                       <b class="caret"></b>
+                   </div>
+                   <ul class="dropdown-menu">
+                       <li><a href="/logout">Logout</a></li>
+                   </ul>
+               </div>
             </div>
             <div class="row-fluid title_wrapper">
                 Home
             </div>
         </div>
         <div class="container-fluid">
+            <div id="main-container">
+            </div>
         </div>
     </body>
 </html>

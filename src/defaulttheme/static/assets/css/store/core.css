@@ -30,6 +30,11 @@
     margin-top: 100px;
 }
 
+.main-menu {
+    position: absolute;
+    left: 70%;
+}
+
 .catalogue-elem {
     margin-top: 50px;
 }

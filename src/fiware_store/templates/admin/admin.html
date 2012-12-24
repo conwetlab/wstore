@@ -39,25 +39,23 @@
                     <h1>Fi-ware</h1>
                     <h2>Store</h2>
                 </div>
-                <div class="span3 float-right">
-                    <ul class="nav nav-pills">
-                        <li ><a href="/">Home</a>
-                        </li>
-                        <li ><a href="/catalogue">Catalogue</a>
-                        </li>
-                        <li class="active">
-                            <a href="#">Administration</a>
-                        </li>
-                        <div class="btn btn-success float-right dropdown">
-                            <div href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                <i class="icon-user icon-white"></i>
-                                {{ user.username }}
-                                <b class="caret"></b>
-                            </div>
-                            <ul class="dropdown-menu">
-                                <li><a href="/logout">Logout</a></li>
-                            </ul>
-                        </div>
+                <ul class="nav nav-pills main-menu">
+                    <li ><a href="/">Home</a>
+                    </li>
+                    <li ><a href="/catalogue">Catalogue</a>
+                    </li>
+                    <li class="active">
+                        <a href="#">Administration</a>
+                    </li>
+                </ul>
+                <div class="btn btn-success float-right dropdown">
+                    <div href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="icon-user icon-white"></i>
+                        {{ user.username }}
+                        <b class="caret"></b>
+                    </div>
+                    <ul class="dropdown-menu">
+                        <li><a href="/logout">Logout</a></li>
                     </ul>
                 </div>
             </div>
