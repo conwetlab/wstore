@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from djangotoolbox.fields import ListField, DictField
 
+from fiware_store.models import Marketplace
+
 
 # An application is an offering composed by some
 # backend comopents and some resources
@@ -15,6 +17,7 @@ class Application(models.Model):
     version = models.CharField(max_length=20)
     state = models.CharField(max_length=50)
     description_url = models.CharField(max_length=200)
+    marketplaces = ListField(models.ForeignKey(Marketplace))
     resources = ListField()
     rating = models.FloatField(default=0)
     comments = ListField()
