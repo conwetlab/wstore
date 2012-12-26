@@ -8,8 +8,6 @@ from django.views.static import serve
 
 from store_commons.utils.http import build_error_response
 from fiware_store.models import UserProfile
-import base64
-import json
 
 
 @login_required
