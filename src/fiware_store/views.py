@@ -32,11 +32,15 @@ def catalogue(request):
 
 @login_required
 def serve_media(request, path, name):
-
     if request.method != 'GET':
         return HttpResponseNotAllowed(('GET',))
 
     dir_path = os.path.join(settings.MEDIA_ROOT, path)
+
+    # Protect the resources from not authoirized downloads
+    if dir_path.endswith('resources'):
+        return build_error_response(request, 404, 'Not found')
+
     local_path = os.path.join(dir_path, name)
 
     if not os.path.isfile(local_path):
