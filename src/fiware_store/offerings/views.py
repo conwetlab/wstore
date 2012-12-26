@@ -228,8 +228,8 @@ class ApplicationEntry(Resource):
             host += '/' + path[1] + '/' + path[2]
             collection = path[3]
 
-            #repository_adaptor = RepositoryAdaptor(host, collection)
-            #repository_adaptor.delete(path[4])
+            repository_adaptor = RepositoryAdaptor(host, collection)
+            repository_adaptor.delete(path[4])
 
             if offering.related_images or offering.resources:
                 # If the offering has media files delete them
