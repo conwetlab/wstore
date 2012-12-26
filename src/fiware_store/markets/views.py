@@ -59,7 +59,7 @@ class MarketplaceCollection(Resource):
         marketadaptor = MarketAdaptor(host)
         store_info = {
             'store_name': store_name,
-            'store_uri': 'http://' + get_current_site(request).domain,
+            'store_uri': get_current_site(request).domain,
         }
         try:
             marketadaptor.add_store(store_info)

@@ -29,10 +29,10 @@
             $.template('elemTemplate', $('#element_template'));
             $.tmpl('elemTemplate', elementInfo).appendTo('#table-list');
             $('#back').click(paintElementTable);
-            $('.icon-plus').click(function () {
+            $('.add').click(function () {
                 paintForm(endpoint, title);
             });
-            $('.icon-trash').click(function (event) {
+            $('.delete').click(function (event) {
                 var clicked_elem = event.target;
                 makeRemoveRequest(clicked_elem, endpoint, title)
             });
