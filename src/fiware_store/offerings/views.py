@@ -19,6 +19,7 @@ from store_commons.utils.http import build_error_response, get_content_type, sup
 from repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from market_adaptor.marketadaptor import MarketAdaptor
 from fiware_store.models import Application
+from fiware_store.models import Marketplace
 from fiware_store.models import Resource as Store_resource
 from fiware_store.models import UserProfile
 from fiware_store.models import Repository
@@ -175,40 +176,59 @@ class ApplicationEntry(Resource):
 
             try:
                 data = json.loads(request.raw_post_data)
-                added_resources = []
-                offering_resources = []
-                for of_res in offering.resources:
-                    offering_resources.append(of_res)
+                # Publish request
+                if 'type' in data and data['type'] == 'publish':
 
-                for res in data:
-                    resource = Store_resource.objects.get(name=res['name'], version=res['version'], provider=request.user)
+                    for market in data['markets']:
 
-                    if not ObjectId(resource.pk) in offering_resources:
-                        added_resources.append(resource.pk)
-                    else:
-                        offering_resources.remove(ObjectId(resource.pk))
+                        m = Marketplace.objects.get(name=market)
+                        market_adaptor = MarketAdaptor(m.host)
+                        info = {
+                            'name': offering.name,
+                            'url': offering.description_url
+                        }
+                        market_adaptor.add_service(settings.STORE_NAME, info)
+                        offering.marketplaces.append(m.pk)
 
-                # added_resources contains the resources to be added to the offering
-                # and offering_resources the resurces to be deleted from the offering
+                    offering.state = 'published'
+                    offering.save()
 
-                for add_res in added_resources:
-                    resource = Store_resource.objects.get(pk=add_res)
-                    resource.offerings.append(offering.pk)
-                    resource.save()
-                    offering.resources.append(ObjectId(add_res))
+                else:
 
-                for del_res in offering_resources:
-                    resource = Store_resource.objects.get(pk=del_res)
-                    resource.offerings.remove(offering.pk)
-                    resource.save()
-                    offering.resources.remove(del_res)
+                    added_resources = []
+                    offering_resources = []
+                    for of_res in offering.resources:
+                        offering_resources.append(of_res)
 
-                offering.save()
+                    for res in data:
+                        resource = Store_resource.objects.get(name=res['name'], version=res['version'], provider=request.user)
+
+                        if not ObjectId(resource.pk) in offering_resources:
+                            added_resources.append(resource.pk)
+                        else:
+                            offering_resources.remove(ObjectId(resource.pk))
+
+                    # added_resources contains the resources to be added to the offering
+                    # and offering_resources the resurces to be deleted from the offering
+
+                    for add_res in added_resources:
+                        resource = Store_resource.objects.get(pk=add_res)
+                        resource.offerings.append(offering.pk)
+                        resource.save()
+                        offering.resources.append(ObjectId(add_res))
+
+                    for del_res in offering_resources:
+                        resource = Store_resource.objects.get(pk=del_res)
+                        resource.offerings.remove(offering.pk)
+                        resource.save()
+                        offering.resources.remove(del_res)
+
+                    offering.save()
 
             except:
                 return build_error_response(request, 400, 'Invalid json content')
 
-        return build_error_response(request, 201, 'Created')
+        return build_error_response(request, 200, 'Ok')
 
     @method_decorator(login_required)
     def delete(self, request, organization, name, version):
@@ -245,6 +265,7 @@ class ApplicationEntry(Resource):
 
             offering.delete()
         else:
+            # Delete the offering from marketplaces
             offering.state = 'deleted'
             offering.save()
 

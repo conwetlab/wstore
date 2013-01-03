@@ -6,7 +6,7 @@
     var resLoaded;
 
     paintOfferingDetails = function paintOfferingDetails (offeringElement) {
-        var screen;
+        var screen, action;
 
         legalLoaded = false;
         pricingLoaded = false;
@@ -18,6 +18,16 @@
         $('#catalogue-container').empty();
 
         // Load the main template
+        if (offeringElement.getState() == 'uploaded') {
+            action = 'Publish';
+        } else if (offeringElement.getState() == 'published') {
+            if (USERNAME == offeringElement.getProvider()) {
+                action = 'Delete';
+            } else {
+                action = 'Purchase';
+            }
+        }
+
         $.template('detailsTemplate', $('#details_offering_template'));
         $.tmpl('detailsTemplate', {
             'name': offeringElement.getName(),
@@ -25,7 +35,8 @@
             'organization': offeringElement.getOrganization(),
             'owner': offeringElement.getProvider(),
             'version': offeringElement.getVersion(),
-            'updated': offeringElement.getUpdated()
+            'updated': offeringElement.getUpdated(),
+            'action': action
         }).appendTo('#catalogue-container');
 
         // Load the main info template
@@ -85,6 +96,19 @@
                 resLoaded = false;
                 bindResourcesForm(offeringElement);
             });
+        }
+
+        // Set the main operation
+        $('#main-action').click(mainAction.bind(this, action, offeringElement));
+    };
+
+    var mainAction = function mainAction (action, offeringElement) {
+        if (action == 'Publish') {
+            publishOffering(offeringElement);
+        } else if (action == 'Purchase'){
+            purchaseOffering(offeringElement);
+        } else if (action == 'Delete') {
+            deleteOffering(offeringElement);
         }
     };
 
