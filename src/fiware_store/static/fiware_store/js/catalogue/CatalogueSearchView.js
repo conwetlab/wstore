@@ -6,7 +6,7 @@
         var filter;
 
         if (target.hash == '#provided-tab') {
-            filter = '?filter=provider&state=uploaded'; // TODO take into account published offerings
+            filter = '?filter=provider&state=all';
         } else if (target.hash == '#purchased-tab'){
             filter = '?filter=organization&state=purchased';
         }

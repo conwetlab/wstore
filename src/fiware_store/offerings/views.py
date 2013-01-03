@@ -117,43 +117,50 @@ class ApplicationCollection(Resource):
 
     @method_decorator(login_required)
     def read(self, request):
-
         # TODO support for xml requests
         # Read the query string in order to know the filter and the page
         filter_ = request.GET.get('filter', 'all')
 
         if filter_ == 'provider':
+
+            # Get all the offerings owned by the provider using raw mongodb access
+            connection = MongoClient()
+            db = connection.fiwarestore_db
+            # Get provider id
+            user = User.objects.get(username=request.user)
+            offerings = db.fiware_store_application
+
             if	request.GET.get('state') == 'uploaded':
-
-                # Get all the offerings owned by the provider using raw mongodb access
-                connection = MongoClient()
-                db = connection.fiwarestore_db
-                # Get provider id
-                user = User.objects.get(username=request.user)
-                offerings = db.fiware_store_application
                 prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'})
-                result = []
-                # TODO pagination
-                for offer in prov_offerings:
-                    offer['owner_admin_user_id'] = user.username
-                    offer['_id'] = str(offer['_id'])
-                    parser = USDLParser(json.dumps(offer['offering_description']), 'application/json')
-                    offer['offering_description'] = parser.parse()
-                    resource_content = []
+            elif request.GET.get('state') == 'all':
+                prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id)})
 
-                    for resource in offer['resources']:
-                        res = Store_resource.objects.get(id=resource)
-                        resource_content.append({
-                            'name': res.name,
-                            'version': res.version,
-                            'description': res.description
-                        })
-                    offer['resources'] = resource_content
+            result = []
+            # TODO pagination
+            for offer in prov_offerings:
+                offer['owner_admin_user_id'] = user.username
+                offer['_id'] = str(offer['_id'])
+                parser = USDLParser(json.dumps(offer['offering_description']), 'application/json')
+                offer['offering_description'] = parser.parse()
+                resource_content = []
 
-                    result.append(offer)
+                for resource in offer['resources']:
+                    res = Store_resource.objects.get(id=resource)
+                    resource_content.append({
+                        'name': res.name,
+                        'version': res.version,
+                        'description': res.description
+                    })
+                offer['resources'] = resource_content
 
-                mime_type = 'application/JSON; charset=UTF-8'
-                return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
+                # Use to avoid the serialization error with marketplaces id
+                if 'marketplaces' in offer:
+                    del(offer['marketplaces'])
+
+                result.append(offer)
+
+            mime_type = 'application/JSON; charset=UTF-8'
+            return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
 
 
 class ApplicationEntry(Resource):
