@@ -8,7 +8,7 @@ from fiware_store.models import Marketplace
 
 # An application is an offering composed by some
 # backend comopents and some resources
-class Application(models.Model):
+class Offering(models.Model):
     name = models.CharField(max_length=50)
     owner_organization = models.CharField(max_length=50)
     owner_admin_user = models.ForeignKey(User)
@@ -47,7 +47,7 @@ class Resource(models.Model):
     state = models.CharField(max_length=50)
     download_link = models.CharField(max_length=200)
     resource_path = models.CharField(max_length=100)
-    offerings = ListField(models.ForeignKey(Application))
+    offerings = ListField(models.ForeignKey(Offering))
 
     class Meta:
         app_label = 'fiware_store'

@@ -119,14 +119,14 @@
                 'X-CSRFToken': csrfToken,
             },
             type: "DELETE",
-            url: EndpointManager.getEndpoint('APPLICATION_ENTRY', {
+            url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
             'organization': offeringElement.getOrganization(),
             'name': offeringElement.getName(),
             'version': offeringElement.getVersion()
             }),
             dataType: 'json',
             success: function (response) {
-                MessageManager.showMessage('Deleted', 'The application has been deleted');
+                MessageManager.showMessage('Deleted', 'The offering has been deleted');
                 $('#catalogue-container').empty();
                 paintCatalogue();
             },

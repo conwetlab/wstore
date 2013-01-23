@@ -33,7 +33,7 @@
                 'X-CSRFToken': csrfToken,
             },
             type: "PUT",
-            url: EndpointManager.getEndpoint('APPLICATION_ENTRY', {
+            url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
                 'organization': offeringElem.getOrganization(),
                 'name': offeringElem.getName(),
                 'version': offeringElem.getVersion()

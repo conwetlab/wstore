@@ -13,7 +13,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User)
     organization = models.CharField(max_length=50)  # an user could belong to more than one organization FIXME
     roles = ListField()
-    applications_purchased = ListField()
+    offerings_purchased = ListField()
 
 
 def create_user_profile(sender, instance, created, **kwargs):

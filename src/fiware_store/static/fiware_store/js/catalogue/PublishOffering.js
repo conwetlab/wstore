@@ -18,7 +18,7 @@
                 'X-CSRFToken': csrfToken,
             },  
             type: "PUT",
-            url: EndpointManager.getEndpoint('APPLICATION_ENTRY', {
+            url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
                 'organization': offeringElement.getOrganization(),
                 'name': offeringElement.getName(),
                 'version': offeringElement.getVersion()
@@ -27,7 +27,7 @@
             contentType: 'application/json',
             data: JSON.stringify(request),
             success: function (response) {
-                MessageManager.showMessage('Published', 'The application has been published');
+                MessageManager.showMessage('Published', 'The offering has been published');
                 $('#catalogue-container').empty();
                 paintCatalogue();
             },

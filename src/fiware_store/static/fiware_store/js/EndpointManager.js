@@ -7,15 +7,15 @@
     var staticEndpoints = {
         'MARKET_COLLECTION': '/api/administration/marketplaces',
         'REPOSITORY_COLLECTION': '/api/administration/repositories',
-        'RESOURCE_COLLECTION': '/api/offerings/resources',
-        'APPLICATION_COLLECTION': '/api/offerings/applications'
+        'RESOURCE_COLLECTION': '/api/offering/resources',
+        'OFFERING_COLLECTION': '/api/offering/offerings'
     };
 
     // Contains endpoints that depend os variables
     var contextEndpoints = {
         'MARKET_ENTRY': '/api/administration/marketplaces/${name}',
         'REPOSITORY_ENTRY': '/api/administration/repositories/${name}',
-        'APPLICATION_ENTRY': '/api/offerings/applications/${organization}/${name}/${version}'
+        'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}'
     }
 
     /**

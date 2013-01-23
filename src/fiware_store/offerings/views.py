@@ -18,7 +18,7 @@ from store_commons.resource import Resource
 from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
 from repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from market_adaptor.marketadaptor import MarketAdaptor
-from fiware_store.models import Application
+from fiware_store.models import Offering
 from fiware_store.models import Marketplace
 from fiware_store.models import Resource as Store_resource
 from fiware_store.models import UserProfile
@@ -26,7 +26,7 @@ from fiware_store.models import Repository
 from store_commons.utils.usdlParser import USDLParser
 
 
-class ApplicationCollection(Resource):
+class OfferingCollection(Resource):
 
     # Creates a new offering asociated with the user
     # that is create a new application model
@@ -85,7 +85,7 @@ class ApplicationCollection(Resource):
                     data['offering_description'] = graph.serialize(format='json-ld')
 
                     repository = Repository.objects.get(name=json_data['repository'])
-                    repository_adaptor = RepositoryAdaptor(repository.host, 'storeApplicationCollection')
+                    repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
                     offering_id = profile.organization + '__' + data['name'] + '__' + data['version']
 
                     data['description_url'] = repository_adaptor.upload(offering_id, offering_description['content_type'], offering_description['data'])
@@ -97,7 +97,7 @@ class ApplicationCollection(Resource):
             else:
                 pass  # TODO xml parsed
 
-            Application.objects.create(
+            Offering.objects.create(
                 name=data['name'],
                 owner_organization=profile.organization,
                 owner_admin_user=user,
@@ -163,7 +163,7 @@ class ApplicationCollection(Resource):
             return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
 
 
-class ApplicationEntry(Resource):
+class OfferingEntry(Resource):
 
     @method_decorator(login_required)
     @supported_request_mime_types(('application/json', 'application/xml'))
@@ -172,7 +172,7 @@ class ApplicationEntry(Resource):
         offering = None
         content_type = get_content_type(request)[0]
         try:
-            offering = Application.objects.get(name=name, owner_organization=organization, version=version)
+            offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
         except:
             return build_error_response(request, 404, 'Not found')
 
@@ -242,7 +242,7 @@ class ApplicationEntry(Resource):
         # If the offering has been purchased it is not deleted
         # it is marked as deleted in order to allow customers that
         # have puerchased the offering to intall it if needed
-        offering = Application.objects.get(name=name, owner_organization=organization, version=version)
+        offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
         if request.user != offering.owner_admin_user:
             build_error_response(request, 401, 'Unauthorized')
 

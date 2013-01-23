@@ -100,12 +100,12 @@
                     'X-CSRFToken': csrfToken,
                 },
                 type: "POST",
-                url: EndpointManager.getEndpoint('APPLICATION_COLLECTION'),
+                url: EndpointManager.getEndpoint('OFFERING_COLLECTION'),
                 dataType: 'json',
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
-                    MessageManager.showMessage('Created', 'The application has been created')
+                    MessageManager.showMessage('Created', 'The offering has been created')
                 },
                 error: function (xhr) {
                     var msg = 'Error: the server responds with code ' + xhr.status;
@@ -129,7 +129,7 @@
             return
         }
         // Creates the modal
-        MessageManager.showMessage('Create new application', '');
+        MessageManager.showMessage('Create new offering', '');
 
         // Creates the form
         $.template('formTemplate', $('#create_app_form_template'));

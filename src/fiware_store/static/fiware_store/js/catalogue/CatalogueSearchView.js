@@ -12,7 +12,7 @@
         }
         $.ajax({
             type: "GET",
-            url: EndpointManager.getEndpoint('APPLICATION_COLLECTION') + filter,
+            url: EndpointManager.getEndpoint('OFFERING_COLLECTION') + filter,
             dataType: 'json',
             success: function(response) {
                 paintProvidedOfferings(target, response);
