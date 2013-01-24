@@ -15,7 +15,9 @@
     var contextEndpoints = {
         'MARKET_ENTRY': '/api/administration/marketplaces/${name}',
         'REPOSITORY_ENTRY': '/api/administration/repositories/${name}',
-        'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}'
+        'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}',
+        'PUBLISH_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/publish',
+        'BIND_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/bind'
     }
 
     /**

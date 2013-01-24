@@ -3,12 +3,11 @@
     var makePublishRequest = function makePublishRequest(offeringElement, markets) {
         var request = {};
 
-        request.type = 'publish';
-        request.markets = [];
+        request.marketplaces = [];
 
         for (var i = 0; i < markets.length; i++) {
             if($('#' + markets[i].name).prop('checked')) {
-                request.markets.push(markets[i].name);
+                request.marketplaces.push(markets[i].name);
             }
         };
 
@@ -17,8 +16,8 @@
             headers: {
                 'X-CSRFToken': csrfToken,
             },  
-            type: "PUT",
-            url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
+            type: "POST",
+            url: EndpointManager.getEndpoint('PUBLISH_ENTRY', {
                 'organization': offeringElement.getOrganization(),
                 'name': offeringElement.getName(),
                 'version': offeringElement.getVersion()

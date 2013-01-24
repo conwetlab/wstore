@@ -32,8 +32,8 @@
             headers: {
                 'X-CSRFToken': csrfToken,
             },
-            type: "PUT",
-            url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
+            type: "POST",
+            url: EndpointManager.getEndpoint('BIND_ENTRY', {
                 'organization': offeringElem.getOrganization(),
                 'name': offeringElem.getName(),
                 'version': offeringElem.getVersion()
