@@ -26,7 +26,7 @@ from urlparse import urljoin, urlparse
 from lxml import etree
 
 from store_commons.utils.method_request import MethodRequest
-
+from store_commons.utils.fix_url import url_fix
 
 class MarketAdaptor(object):
 
@@ -101,8 +101,11 @@ class MarketAdaptor(object):
         opener = urllib2.build_opener()
         session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
         headers = {'content-type': 'application/xml', 'Cookie': session_cookie}
+        url = urljoin(self._marketplace_uri, "registration/store/" + store)
 
-        request = MethodRequest("DELETE", urljoin(self._marketplace_uri, "registration/store/" + store), '', headers)
+        url = url_fix(url)
+
+        request = MethodRequest("DELETE", url, '', headers)
 
         try:
             response = opener.open(request)
@@ -129,9 +132,12 @@ class MarketAdaptor(object):
         params = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="' + service_info['name'] + '" ><url>' + service_info['url'] + '</url></resource>'
         session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
         headers = {'content-type': 'application/xml', 'Cookie': session_cookie}
+        url = urljoin(self._marketplace_uri, "offering/store/" + store + "/offering")
+
+        url = url_fix(url)
 
         opener = urllib2.build_opener()
-        request = MethodRequest("PUT", urljoin(self._marketplace_uri, "offering/store/" + store + "/offering"), params, headers)
+        request = MethodRequest("PUT", url, params, headers)
         try:
             response = opener.open(request)
         except HTTPError, e:
@@ -160,8 +166,11 @@ class MarketAdaptor(object):
         opener = urllib2.build_opener()
         session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
         headers = {'Cookie': session_cookie}
+        url = urljoin(self._marketplace_uri, "offering/store/" + store + "/offering/" + service)
 
-        request = MethodRequest("DELETE", urljoin(self._marketplace_uri, "offering/store/" + store + "/offering/" + service), '', headers)
+        url = url_fix(url)
+
+        request = MethodRequest("DELETE", url, '', headers)
 
         try:
             response = opener.open(request)
