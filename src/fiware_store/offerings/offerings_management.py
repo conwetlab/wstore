@@ -22,7 +22,7 @@ from store_commons.utils.usdlParser import USDLParser
 def get_provider_offerings(provider, filter_='all'):
      # Get all the offerings owned by the provider using raw mongodb access
     connection = MongoClient()
-    db = connection.fiwarestore_db
+    db = connection[settings.DATABASES['default']['NAME']]
     offerings = db.fiware_store_offering
 
     if  filter_ == 'uploaded':
