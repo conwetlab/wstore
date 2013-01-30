@@ -7,6 +7,8 @@
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap-responsive.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/docs.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/font-awesome.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/js/google-code-prettify/prettify.css" />
 
         <link href="http://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
@@ -14,33 +16,37 @@
         <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
     </head>
     <body>
-       <div class="row">
-           <div class="span9">
-               <form class="form-horizontal" method="post" action="{% url 'django.contrib.auth.views.login' %}" >
-                   <legend>Login</legend>
-                   <div class="control-group">
-                       {% if form.errors %}
-                       <div class="alert alert-error">
-                           <strong>Error</strong> The name and password didn't match.
-                       </div>
-                       {% endif %}
-                       {% csrf_token %}
-                       <label class="control-label" for="id_username">User name</label>
-                       <div class="controls">
-                           <input type="text" name="username" id="id_username" placeholder="Username" />
-                       </div>
-                   </div>
-                   <div class="control-group">
-                       <label class="control-label" for="id_password">Password</label>
-                       <div class="controls">
-                           <input type="password" name="password" id="id_password" placeholder="Password" />
-                       </div>
-                   </div>
-                   <div class="control-group">
-                       <div class="controls">
-                           <button type="submit" class="btn btn-blue">Login</button>
-                       </div>
-                   </div>
+        <div class="row" id="login-header">
+            <div class="span1">
+                <img src="{{ STATIC_URL }}/assets/img/logo.png" />
+            </div>
+            <div class="span2 store_title">
+                <h1>Fi-ware</h1>
+                <h2>W-Store</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="span9">
+                <form class="form-horizontal" method="post" action="{% url 'django.contrib.auth.views.login' %}" >
+                    <div id="login-form">
+                        <div class="control-group">
+                            {% if form.errors %}
+                            <div class="alert alert-error">
+                                <strong>Error</strong> The name and password didn't match.
+                            </div>
+                            {% endif %}
+                            {% csrf_token %}
+                            <div class="input-prepend">
+                                <span class="add-on"><i class="icon-user"></i></span>
+                                <input type="text" name="username" id="id_username" placeholder="Username" />
+                            </div>
+                        </div>
+                        <div class="input-prepend">
+                            <span class="add-on"><i class="icon-key"></i></span>
+                            <input type="password" name="password" id="id_password" placeholder="Password" />
+                        </div>
+                        <button type="submit" class="btn btn-blue">Login</button>
+                    </div>
                    <input type="hidden" name="next" value="{{ next }}" />
                </form>
            </div>

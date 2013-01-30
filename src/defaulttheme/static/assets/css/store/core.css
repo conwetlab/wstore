@@ -1,3 +1,23 @@
+#login-header {
+    position: absolute;
+    left: 40%;
+    top: 120px;
+}
+
+#login-form {
+    border: solid 1px rgb(190, 190, 190);
+    padding: 20px;
+    border-radius: 6px;
+    width: 325px;
+    background-color: rgb(250, 250, 260);
+    position: absolute;
+    left: 40%;
+    top: 220px;
+}
+
+#id_username {
+    width: 285px;
+}
 
 .title_wrapper {
     font-family: "Open Sans";
