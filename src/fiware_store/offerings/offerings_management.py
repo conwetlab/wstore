@@ -76,8 +76,11 @@ def create_offering(provider, profile, json_data):
 
     data['related_images'] = []
 
+    # Get organization
+    organization = profile.organization
+
     # Create the directory for app media
-    dir_name = profile.organization + '__' + data['name'] + '__' + data['version']
+    dir_name = organization.name + '__' + data['name'] + '__' + data['version']
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
     os.makedirs(path)
     image = json_data['image']
@@ -108,13 +111,13 @@ def create_offering(provider, profile, json_data):
 
     repository = Repository.objects.get(name=json_data['repository'])
     repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
-    offering_id = profile.organization + '__' + data['name'] + '__' + data['version']
+    offering_id = organization.name + '__' + data['name'] + '__' + data['version']
 
     data['description_url'] = repository_adaptor.upload(offering_id, offering_description['content_type'], offering_description['data'])
 
     Offering.objects.create(
         name=data['name'],
-        owner_organization=profile.organization,
+        owner_organization=organization.name,
         owner_admin_user=provider,
         version=data['version'],
         state='uploaded',
