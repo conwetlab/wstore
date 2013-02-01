@@ -11,6 +11,7 @@ from fiware_store.models import UserProfile
 from fiware_store.models import Offering
 from fiware_store.models import Marketplace
 from fiware_store.models import Resource
+from fiware_store.models import Organization
 
 
 class FakeRepositoryAdaptor():
@@ -120,7 +121,8 @@ class OfferingCreationTestCase(TestCase):
         }
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
-        profile.organization = 'test_organization'
+        org = Organization.objects.get(name='test_organization')
+        profile.organization = org
         profile.save()
 
         offerings_management.create_offering(user, profile, data)
@@ -169,7 +171,8 @@ class OfferingCreationTestCase(TestCase):
         }
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
-        profile.organization = 'test_organization'
+        org = Organization.objects.get(name='test_organization')
+        profile.organization = org
         profile.save()
 
         offerings_management.create_offering(user, profile, data)
@@ -208,7 +211,8 @@ class OfferingCreationTestCase(TestCase):
         }
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
-        profile.organization = 'test_organization'
+        org = Organization.objects.get(name='test_organization')
+        profile.organization = org
         profile.save()
         try:
             offerings_management.create_offering(user, profile, data)
@@ -239,7 +243,8 @@ class OfferingCreationTestCase(TestCase):
         }
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
-        profile.organization = 'test_organization'
+        org = Organization.objects.get(name='test_organization')
+        profile.organization = org
         profile.save()
         try:
             offerings_management.create_offering(user, profile, data)
@@ -268,7 +273,8 @@ class OfferingCreationTestCase(TestCase):
         }
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
-        profile.organization = 'test_organization'
+        org = Organization.objects.get(name='test_organization')
+        profile.organization = org
         profile.save()
         try:
             offerings_management.create_offering(user, profile, data)

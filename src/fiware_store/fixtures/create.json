@@ -18,17 +18,25 @@
     {
         "pk": "51000aba8e05ac2115f022ff",
         "model": "fiware_store.Repository",
-        "fields": { 
+        "fields": {
             "name": "test_repository",
             "host": "http://testrepository/"
         }
     },
     {
+        "pk": "51000aba8e05ac2135f122ff",
+        "model": "fiware_store.Organization",
+        "fields": {
+            "name": "test_organization",
+            "offerings_purchased": []
+        }
+    },
+    {
         "pk": "51000aba8e05ac2115f122ff",
         "model": "fiware_store.UserProfile",
-        "fields": { 
+        "fields": {
             "user": "51000aba8e05ac2115f022f9",
-            "organization": "test_organization",
+            "organization": "51000aba8e05ac2135f122ff",
             "roles": ["customer", "provider"]
         }
     }

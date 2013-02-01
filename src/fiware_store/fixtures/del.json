@@ -96,8 +96,16 @@
         "model": "fiware_store.UserProfile",
         "fields": { 
             "user": "51000aba8e05ac2115f022f9",
-            "organization": "test_organization",
+            "organization": "51000aba8e05ac2115f123ff",
             "roles": ["customer", "provider"]
+        }
+    },
+    {
+        "pk": "51000aba8e05ac2115f123ff",
+        "model": "fiware_store.Organization",
+        "fields": { 
+            "name": "test_organization",
+            "offerings_purchased": []
         }
     }
 ]
