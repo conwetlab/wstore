@@ -10,7 +10,7 @@ from store_commons.resource import Resource
 from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
 from fiware_store.models import Offering
 from fiware_store.models import UserProfile
-from fiware_store.offerings.offerings_management import create_offering, get_provider_offerings, delete_offering, publish_offering, bind_resources
+from fiware_store.offerings.offerings_management import create_offering, get_offerings, delete_offering, publish_offering, bind_resources
 from fiware_store.offerings.resources_management import register_resource, get_provider_resources
 
 
@@ -49,14 +49,18 @@ class OfferingCollection(Resource):
     def read(self, request):
         # TODO support for xml requests
         # Read the query string in order to know the filter and the page
-        filter_ = request.GET.get('filter', 'all')
+        filter_ = request.GET.get('filter', 'published')
 
         if filter_ == 'provider':
             # Get provider id
             user = User.objects.get(username=request.user)
-            result = get_provider_offerings(user, request.GET.get('state'))
-            mime_type = 'application/JSON; charset=UTF-8'
-            return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
+            result = get_offerings(user, request.GET.get('state'))
+
+        elif filter_ == 'published':
+            result = get_offerings()
+
+        mime_type = 'application/JSON; charset=UTF-8'
+        return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
 
 
 class OfferingEntry(Resource):

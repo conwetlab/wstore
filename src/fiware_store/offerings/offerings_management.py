@@ -8,6 +8,7 @@ from bson.objectid import ObjectId
 from urlparse import urlparse
 
 from django.conf import settings
+from django.contrib.auth.models import User
 
 from repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from market_adaptor.marketadaptor import MarketAdaptor
@@ -19,21 +20,27 @@ from store_commons.utils.usdlParser import USDLParser
 
 
 # Gets all the offerings from an user provider  
-def get_provider_offerings(provider, filter_='all'):
+def get_offerings(provider=None, filter_='published'):
      # Get all the offerings owned by the provider using raw mongodb access
     connection = MongoClient()
     db = connection[settings.DATABASES['default']['NAME']]
     offerings = db.fiware_store_offering
 
-    if  filter_ == 'uploaded':
-        prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id), 'state': 'uploaded'})
-    elif filter_ == 'all':
-        prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id)})
+    if provider != None:
+        if  filter_ == 'uploaded':
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id), 'state': 'uploaded'})
+        elif filter_ == 'all':
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id)})
+        elif  filter_ == 'published':
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id), 'state': 'published'})
+    else:
+        if  filter_ == 'published':
+            prov_offerings = offerings.find({'state': 'published'})
 
     result = []
     # TODO pagination
     for offer in prov_offerings:
-        offer['owner_admin_user_id'] = provider.username
+        offer['owner_admin_user_id'] = User.objects.get(pk=offer['owner_admin_user_id']).username
         offer['_id'] = str(offer['_id'])
         parser = USDLParser(json.dumps(offer['offering_description']), 'application/json')
         offer['offering_description'] = parser.parse()
