@@ -292,7 +292,7 @@ class OfferingRetrievingTestCase(TestCase):
     def test_get_all_provider_offerings(self):
         #import ipdb;ipdb.set_trace()
         user = User.objects.get(username='test_user')
-        offerings = offerings_management.get_provider_offerings(user, 'all')
+        offerings = offerings_management.get_offerings(user, 'all')
         self.assertEqual(len(offerings), 3)
 
         # Check published offering
@@ -311,7 +311,7 @@ class OfferingRetrievingTestCase(TestCase):
 
     def test_get_provider_uploaded_offerings(self):
         user = User.objects.get(username='test_user')
-        offerings = offerings_management.get_provider_offerings(user, 'uploaded')
+        offerings = offerings_management.get_offerings(user, 'uploaded')
         self.assertEqual(len(offerings), 2)
 
         self.assertEqual(offerings[0]['name'], 'test_offering1')
