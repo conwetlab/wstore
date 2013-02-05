@@ -23,7 +23,7 @@ def register_resource(provider, data):
         f = open(file_path, "wb")
         dec = base64.b64decode(resource['data'])
         f.write(dec)
-        resource_data['content_path'] = file_path
+        resource_data['content_path'] = settings.MEDIA_URL + 'resources/' + file_name
         resource_data['link'] = ''
         
     elif 'link' in data:
