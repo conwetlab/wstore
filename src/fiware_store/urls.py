@@ -5,6 +5,7 @@ from fiware_store import views
 from fiware_store.markets import views as market_views
 from fiware_store.repositories import views as rep_views
 from fiware_store.offerings import views as offering_views
+from fiware_store.contracting import views as contracting_views
 
 urlpatterns = patterns('',
 
@@ -23,4 +24,5 @@ urlpatterns = patterns('',
     url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/publish?$', offering_views.PublishEntry(permitted_methods=('POST',))),
     url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/bind?$', offering_views.BindEntry(permitted_methods=('POST',))),
     url(r'^api/offering/resources/?$', offering_views.ResourceCollection(permitted_methods=('GET', 'POST'))),
+    url(r'^api/contracting/?$', contracting_views.PurchaseCollection(permitted_methods=('POST',))),
 )
