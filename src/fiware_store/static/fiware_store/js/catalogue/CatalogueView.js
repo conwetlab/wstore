@@ -30,8 +30,11 @@
 
         // Load data into the tabs on show
         $('a[data-toggle="tab"]').on('shown', function (e) {
-            getUserOfferings(e.target) // activated tab
+            getUserOfferings(e.target.hash) // activated tab
         })
+
+        // Load initial data
+        getUserOfferings('#purchased-tab');
     };
 
     $(document).ready(paintCatalogue);

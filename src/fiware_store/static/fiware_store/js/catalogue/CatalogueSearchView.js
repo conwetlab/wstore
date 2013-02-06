@@ -5,10 +5,10 @@
 
         var filter;
 
-        if (target.hash == '#provided-tab') {
+        if (target == '#provided-tab') {
             filter = '?filter=provider&state=all';
-        } else if (target.hash == '#purchased-tab'){
-            filter = '?filter=organization&state=purchased';
+        } else if (target == '#purchased-tab'){
+            filter = '?filter=purchased';
         }
         $.ajax({
             type: "GET",
@@ -27,7 +27,7 @@
 
     paintProvidedOfferings = function paintProvidedOfferings (target, data) {
 
-        $(target.hash).empty();
+        $(target).empty();
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
 
@@ -39,7 +39,7 @@
                 'state': offering_elem.getState(),
                 'rating': offering_elem.getRating(),
                 'description': offering_elem.getShortDescription()
-            }).appendTo(target.hash).click(paintOfferingDetails.bind(this, offering_elem));
+            }).appendTo(target).click(paintOfferingDetails.bind(this, offering_elem));
         }
     };
 })();
