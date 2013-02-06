@@ -16,8 +16,25 @@ from fiware_store.models import Resource
 from fiware_store.models import Repository
 from fiware_store.models import Offering
 from fiware_store.models import Marketplace
+from fiware_store.models import UserProfile
 from store_commons.utils.usdlParser import USDLParser
 
+
+def _get_purchased_offerings(user, db):
+    # Get the user profile purchased offerings
+    user_profile = db.fiware_store_userprofile.find_one({'user_id': ObjectId(user.pk)})
+    result = []
+
+    for offer in user_profile['offerings_purchased']:
+        result.append(db.fiware_store_offering.find_one({'_id': ObjectId(offer)}))
+
+    # Get the user organization purchased offerings
+    organization = db.fiware_store_organization.find_one({'_id': user_profile['organization_id']})
+
+    for offer in organization['offerings_purchased']:
+        result.append(db.fiware_store_offering.find_one({'_id': ObjectId(offer)}))
+
+    return result
 
 # Gets all the offerings from an user provider  
 def get_offerings(provider=None, filter_='published'):
@@ -31,8 +48,11 @@ def get_offerings(provider=None, filter_='published'):
             prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id), 'state': 'uploaded'})
         elif filter_ == 'all':
             prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id)})
-        elif  filter_ == 'published':
+        elif  filter_ == 'published': # TODO check the purchased offerings
             prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id), 'state': 'published'})
+        elif filter_ == 'purchased':
+            prov_offerings = _get_purchased_offerings(provider, db)
+
     else:
         if  filter_ == 'published':
             prov_offerings = offerings.find({'state': 'published'})

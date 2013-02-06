@@ -47,17 +47,21 @@ class OfferingCollection(Resource):
 
     @method_decorator(login_required)
     def read(self, request):
+
         # TODO support for xml requests
         # Read the query string in order to know the filter and the page
         filter_ = request.GET.get('filter', 'published')
+        user = User.objects.get(username=request.user)
 
         if filter_ == 'provider':
             # Get provider id
-            user = User.objects.get(username=request.user)
             result = get_offerings(user, request.GET.get('state'))
 
         elif filter_ == 'published':
             result = get_offerings()
+
+        elif filter_ == 'purchased':
+            result = get_offerings(user, 'purchased')
 
         mime_type = 'application/JSON; charset=UTF-8'
         return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
