@@ -6,7 +6,7 @@
     var slaLoaded;
     var resLoaded;
 
-    paintOfferingDetails = function paintOfferingDetails (offeringElement) {
+    paintOfferingDetails = function paintOfferingDetails (offeringElement, backAction, container) {
         var screen, action;
 
         offElem = offeringElement;
@@ -17,7 +17,7 @@
         // Create the details view
 
         // Clean the container
-        $('#catalogue-container').empty();
+        $(container).empty();
 
         // Load the main template
         if (offeringElement.getState() == 'uploaded') {
@@ -41,7 +41,7 @@
             'version': offeringElement.getVersion(),
             'updated': offeringElement.getUpdated(),
             'action': action
-        }).appendTo('#catalogue-container');
+        }).appendTo(container);
 
         // Load the main info template
         $.template('mainInfoTemplate', $('#main_info_offering_template'));
@@ -78,8 +78,8 @@
         });
 
         $('#back').click(function (e) {
-            $('#catalogue-container').empty();
-            paintCatalogue();
+            $(container).empty();
+            backAction();
         });
 
         // Set advanced operations
@@ -87,7 +87,7 @@
             $('<input></input>').attr('type', 'button').attr('value', 'Delete offering').addClass('btn btn-danger btn-advanced').appendTo('#advanced-op').click(function() {
                 var msg = "Are you sure that you want to delete the offering";
                 MessageManager.showYesNoWindow(msg, function() {
-                    deleteOffering(offeringElement);
+                    deleteOffering(offeringElement, backAction, container);
                 });
             });
         }
@@ -103,22 +103,22 @@
         }
 
         // Set the main operation
-        $('#main-action').click(mainAction.bind(this, action, offeringElement));
+        $('#main-action').click(mainAction.bind(this, action, offeringElement, backAction, container));
     };
 
-    var mainAction = function mainAction (action, offeringElement) {
+    var mainAction = function mainAction (action, offeringElement, backAction, container) {
         if (action == 'Publish') {
             publishOffering(offeringElement);
         } else if (action == 'Purchase'){
             purchaseOffering(offeringElement);
         } else if (action == 'Delete') {
-            deleteOffering(offeringElement);
+            deleteOffering(offeringElement, backAction, container);
         } else if (action == 'Download') {
             downloadElements(offeringElement);
         }
     };
 
-    var deleteOffering = function deleteOffering (offeringElement) {
+    var deleteOffering = function deleteOffering (offeringElement, backAction, container) {
         var csrfToken = $.cookie('csrftoken');
         $.ajax({
             headers: {
@@ -133,8 +133,8 @@
             dataType: 'json',
             success: function (response) {
                 MessageManager.showMessage('Deleted', 'The offering has been deleted');
-                $('#catalogue-container').empty();
-                paintCatalogue();
+                $(container).empty();
+                backAction();
             },
             error: function (xhr) {
                 var msg = 'Error: the server responds with code ' + xhr.status;

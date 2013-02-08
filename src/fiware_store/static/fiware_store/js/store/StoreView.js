@@ -29,13 +29,13 @@
                 'state': offering_elem.getState(),
                 'rating': offering_elem.getRating(),
                 'description': offering_elem.getShortDescription()
-            }).appendTo('#store-container').click(paintOfferingDetails.bind(this, offering_elem));
+            }).appendTo('#store-container').click(paintOfferingDetails.bind(this, offering_elem, paintHomePage, '#home-container'));
         }
     }
 
-    var paintHomePage = function paintHomePage () {
+    paintHomePage = function paintHomePage () {
         $.template('homePageTemplate', $('#home_page_template'));
-        $.tmpl('homePageTemplate',  {}).appendTo('#catalogue-container');
+        $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
 
         getOfferings();
     };

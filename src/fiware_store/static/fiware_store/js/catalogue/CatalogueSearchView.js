@@ -39,7 +39,7 @@
                 'state': offering_elem.getState(),
                 'rating': offering_elem.getRating(),
                 'description': offering_elem.getShortDescription()
-            }).appendTo(target).click(paintOfferingDetails.bind(this, offering_elem));
+            }).appendTo(target).click(paintOfferingDetails.bind(this, offering_elem, paintCatalogue, '#catalogue-container'));
         }
     };
 })();
