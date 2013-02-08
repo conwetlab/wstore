@@ -16,6 +16,8 @@ from fiware_store.models import Resource
 from fiware_store.models import Repository
 from fiware_store.models import Offering
 from fiware_store.models import Marketplace
+from fiware_store.models import Purchase
+from fiware_store.models import Organization
 from store_commons.utils.usdlParser import USDLParser
 
 
@@ -25,17 +27,28 @@ def _get_purchased_offerings(user, db):
     result = []
 
     for offer in user_profile['offerings_purchased']:
-        result.append(db.fiware_store_offering.find_one({'_id': ObjectId(offer)}))
+        offer_info = db.fiware_store_offering.find_one({'_id': ObjectId(offer)})
+        offer_info['state'] = 'purchased'
+        offering = Offering.objects.get(pk=offer)
+        purchase = Purchase.objects.get(offering=offering, customer=user)
+        offer_info['bill'] = purchase.bill
+        result.append(offer_info)
 
     # Get the user organization purchased offerings
     organization = db.fiware_store_organization.find_one({'_id': user_profile['organization_id']})
 
     for offer in organization['offerings_purchased']:
-        result.append(db.fiware_store_offering.find_one({'_id': ObjectId(offer)}))
+        offer_info = db.fiware_store_offering.find_one({'_id': ObjectId(offer)})
+        offer_info['state'] = 'purchased'
+        offering = Offering.objects.get(pk=offer)
+        purchase = Purchase.objects.get(offering=offering, owner_organization=organization['name'])
+        offer_info['bill'] = purchase.bill
+        result.append(offer_info)
 
     return result
 
-# Gets all the offerings from an user provider  
+
+# Gets a set of offering depending on filter value
 def get_offerings(provider=None, filter_='published'):
      # Get all the offerings owned by the provider using raw mongodb access
     connection = MongoClient()
@@ -47,7 +60,7 @@ def get_offerings(provider=None, filter_='published'):
             prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id), 'state': 'uploaded'})
         elif filter_ == 'all':
             prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id)})
-        elif  filter_ == 'published': # TODO check the purchased offerings
+        elif  filter_ == 'published':  # TODO check the purchased offerings
             prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id), 'state': 'published'})
         elif filter_ == 'purchased':
             prov_offerings = _get_purchased_offerings(provider, db)
@@ -67,11 +80,17 @@ def get_offerings(provider=None, filter_='published'):
 
         for resource in offer['resources']:
             res = Resource.objects.get(id=resource)
-            resource_content.append({
+            res_info = {
                 'name': res.name,
                 'version': res.version,
                 'description': res.description
-            })
+            }
+
+            if offer['state'] == 'purchased':
+                if res.resource_type == 'download':
+                    res_info['link'] = res.resource_path
+
+            resource_content.append(res_info)
         offer['resources'] = resource_content
 
         # Use to avoid the serialization error with marketplaces id
@@ -126,7 +145,7 @@ def create_offering(provider, profile, json_data):
     data['version'] = json_data['version']
 
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
-        raise Exception('Invalid version format') 
+        raise Exception('Invalid version format')
 
     data['related_images'] = []
 
@@ -184,6 +203,7 @@ def create_offering(provider, profile, json_data):
         offering_description=json.loads(data['offering_description'])
     )
 
+
 def publish_offering(offering, data):
 
     for market in data['marketplaces']:
@@ -202,6 +222,7 @@ def publish_offering(offering, data):
 
     offering.state = 'published'
     offering.save()
+
 
 def delete_offering(offering):
     # If the offering has been purchased it is not deleted
@@ -244,6 +265,7 @@ def delete_offering(offering):
 
         offering.state = 'deleted'
         offering.save()
+
 
 def bind_resources(offering, data, provider):
 

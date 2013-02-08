@@ -21,6 +21,11 @@
             this.legal = offeringData.offering_description.legal;
             this.sla = offeringData.offering_description.sla;
             this.pricing = offeringData.offering_description.pricing;
+            this.bill = '';
+
+            if (this.state == 'purchased') {
+                this.bill = offeringData.bill;
+            }
             // Add the usdl information
         }
 
@@ -102,5 +107,9 @@
 
         OfferingElement.prototype.getPricing = function getPricing () {
             return this.pricing;
+        };
+
+        OfferingElement.prototype.getBillPath = function getBillPath () {
+            return this.bill;
         };
 })();

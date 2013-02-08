@@ -28,6 +28,8 @@
             } else {
                 action = 'Purchase';
             }
+        } else if (offeringElement.getState() == 'purchased') {
+            action = 'Download';
         }
 
         $.template('detailsTemplate', $('#details_offering_template'));
@@ -111,6 +113,8 @@
             purchaseOffering(offeringElement);
         } else if (action == 'Delete') {
             deleteOffering(offeringElement);
+        } else if (action == 'Download') {
+            downloadElements(offeringElement);
         }
     };
 
