@@ -10,7 +10,7 @@ from store_commons.resource import Resource
 from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
 from fiware_store.models import Offering
 from fiware_store.models import UserProfile
-from fiware_store.offerings.offerings_management import create_offering, get_offerings, delete_offering, publish_offering, bind_resources
+from fiware_store.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering, publish_offering, bind_resources
 from fiware_store.offerings.resources_management import register_resource, get_provider_resources
 
 
@@ -68,6 +68,14 @@ class OfferingCollection(Resource):
 
 
 class OfferingEntry(Resource):
+
+    @method_decorator(login_required)
+    def read(self, request, organization, name, version):
+
+        offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
+        result = get_offering_info(offering)
+
+        return HttpResponse(json.dumps(result), status=200, mimetype='application/json; charset=UTF-8')
 
     @method_decorator(login_required)
     @supported_request_mime_types(('application/json', 'application/xml'))

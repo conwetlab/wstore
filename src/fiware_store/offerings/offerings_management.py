@@ -16,7 +16,6 @@ from fiware_store.models import Resource
 from fiware_store.models import Repository
 from fiware_store.models import Offering
 from fiware_store.models import Marketplace
-from fiware_store.models import UserProfile
 from store_commons.utils.usdlParser import USDLParser
 
 
@@ -83,7 +82,42 @@ def get_offerings(provider=None, filter_='published'):
 
     return result
 
-# Creates a new offering including the media files and 
+
+def get_offering_info(offering):
+
+    # Load offering data
+    result = {
+        'name': offering.name,
+        'owner_organization': offering.owner_organization,
+        'owner_admin_user_id': offering.owner_admin_user.username,
+        'version': offering.version,
+        'state': offering.state,
+        'description_url': offering.description_url,
+        'rating': offering.rating,
+        'comments': offering.comments,
+        'tags': offering.tags,
+        'image_url': offering.image_url,
+        'related_images': offering.related_images,
+        'resources': []
+    }
+
+    # Load resources
+    for res in offering.resources:
+        resource = Resource.objects.get(pk=res)
+        result['resources'].append({
+            'name': resource.name,
+            'version': resource.version,
+            'description': resource.description
+        })
+
+    # Load offering description
+    parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
+    result['offering_description'] = parser.parse()
+
+    return result
+
+
+# Creates a new offering including the media files and
 # the repository uploads
 def create_offering(provider, profile, json_data):
 
