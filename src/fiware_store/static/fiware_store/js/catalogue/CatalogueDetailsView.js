@@ -288,27 +288,26 @@
             resLoaded = true;
             $('<h2></h2>').text('Offering resources').appendTo('#res-tab');
             if (resources.length > 0) {
-            for (var i = 0; i < resources.length; i++) {
-                var cont = $('<div></div>');
-                var p;
-                p = $('<p></p>').appendTo(cont);
-                p.append('<b>Name: </b>');
-                p.append(resources[i].name);
+                for (var i = 0; i < resources.length; i++) {
+                    var cont = $('<div></div>');
+                    var p;
+                    p = $('<p></p>').appendTo(cont);
+                    p.append('<b>Name: </b>');
+                    p.append(resources[i].name);
 
-                p = $('<p></p>').appendTo(cont);
-                p.append('<b>Version: </b>');
-                p.append(resources[i].version);
+                    p = $('<p></p>').appendTo(cont);
+                    p.append('<b>Version: </b>');
+                    p.append(resources[i].version);
 
-                p = $('<p></p>').appendTo(cont);
-                p.append('<b>Description: </b>');
-                p.append(resources[i].description);
+                    p = $('<p></p>').appendTo(cont);
+                    p.append('<b>Description: </b>');
+                    p.append(resources[i].description);
 
-                cont.appendTo('#res-tab');
-            }
+                    cont.appendTo('#res-tab');
+                }
             } else {
                 $('<p></p>').text('The offering has no resources').appendTo('#res-tab');
             }
         }
     };
-
 })();
