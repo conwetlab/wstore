@@ -12,9 +12,35 @@
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
 
         <link href="http://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
+        <script type="text/javascript">
+            USERNAME = "{{ user.username }}";
+            // USERROLES = {{ roles }};
+        </script>
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.8.2.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script> 
         <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/store/PurchaseForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/catalogue/CatalogueDetailsView.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/catalogue/OfferingElement.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/EndpointManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/MessageManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}fiware_store/js/store/StoreView.js"></script>
+
+        <script type="text/x-jquery-tmpl" id="modal_template">{% include "modal_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="yes_no_window_template">{% include "yes_no_window_template.html" %}</script>
+
+        <script type="text/x-jquery-tmpl" id="mini_offering_template">{% include "catalogue/mini_offering_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="home_page_template">{% include "store/home_page_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="details_offering_template">{% include "catalogue/details_offering_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="main_info_offering_template">{% include "catalogue/main_info_offering_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="legal_template">{% include "catalogue/legal_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="legal_clauses_template">{% include "catalogue/legal_clauses_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="pricing_template">{% include "catalogue/pricing_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="pricing_element_template">{% include "catalogue/pricing_element_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="sla_template">{% include "catalogue/sla_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="sla_expresion_template">{% include "catalogue/sla_expresion_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="sla_variable_template">{% include "catalogue/sla_variable_template.html" %}</script>
     </head>
     <body>
         <div class="container-fluid">
@@ -53,7 +79,10 @@
             </div>
         </div>
         <div class="container-fluid">
-            <div id="main-container">
+            <div class="row-fluid" id="message-container">
+            </div>
+            <!-- TODO change container id-->
+            <div class="row-fluid" id="catalogue-container">
             </div>
         </div>
     </body>

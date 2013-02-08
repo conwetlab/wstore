@@ -8,7 +8,8 @@
         'MARKET_COLLECTION': '/api/administration/marketplaces',
         'REPOSITORY_COLLECTION': '/api/administration/repositories',
         'RESOURCE_COLLECTION': '/api/offering/resources',
-        'OFFERING_COLLECTION': '/api/offering/offerings'
+        'OFFERING_COLLECTION': '/api/offering/offerings',
+        'PURCHASE_COLLECTION': '/api/contracting'
     };
 
     // Contains endpoints that depend os variables
