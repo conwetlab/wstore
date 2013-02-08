@@ -1,6 +1,8 @@
 
 (function () {
 
+    var currentTab;
+
     var getRepositories = function getRepositories(callback) {
         $.ajax({
             type: "GET",
@@ -30,11 +32,17 @@
 
         // Load data into the tabs on show
         $('a[data-toggle="tab"]').on('shown', function (e) {
-            getUserOfferings(e.target.hash) // activated tab
+            currentTab = e.target.hash;
+            getUserOfferings(e.target.hash); // activated tab
         })
 
         // Load initial data
+        currentTab = '#purchased-tab';
         getUserOfferings('#purchased-tab');
+    };
+
+    getCurrentTab = function getCurrentTab () {
+        return currentTab;
     };
 
     $(document).ready(paintCatalogue);

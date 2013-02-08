@@ -43,6 +43,7 @@
             data: JSON.stringify(resSelected),
             success: function (response) {
                 MessageManager.showMessage('Binded', 'The resources have been binded');
+                updateResources();
             },
             error: function (xhr) {
                 var msg = 'Error: the server responds with code ' + xhr.status;

@@ -1,5 +1,6 @@
 (function  () {
 
+    var offElem;
     var legalLoaded;
     var pricingLoaded;
     var slaLoaded;
@@ -8,6 +9,7 @@
     paintOfferingDetails = function paintOfferingDetails (offeringElement) {
         var screen, action;
 
+        offElem = offeringElement;
         legalLoaded = false;
         pricingLoaded = false;
         slaLoaded = false;
@@ -310,4 +312,24 @@
             }
         }
     };
+
+    updateResources = function updateResources () {
+        $.ajax({
+            type: "GET",
+            url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
+                'organization': offElem.getOrganization(),
+                'name': offElem.getName(),
+                'version': offElem.getVersion()
+            }),
+            dataType: 'json',
+            success: function (response) {
+                resLoaded = false;
+                $('#res-tab').empty();
+                paintResources(response.resources);
+            },
+            error: function (xhr) {
+            }
+        });
+    };
+
 })();

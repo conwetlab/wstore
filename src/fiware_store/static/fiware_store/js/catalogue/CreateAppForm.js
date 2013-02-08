@@ -106,6 +106,9 @@
                 data: JSON.stringify(request),
                 success: function (response) {
                     MessageManager.showMessage('Created', 'The offering has been created')
+                    if (getCurrentTab() == '#provided-tab') {
+                        getUserOfferings('#provided-tab');
+                    }
                 },
                 error: function (xhr) {
                     var msg = 'Error: the server responds with code ' + xhr.status;
