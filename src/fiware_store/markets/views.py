@@ -1,17 +1,14 @@
 import json
 from lxml import etree
-from urllib2 import HTTPError
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.sites.models import get_current_site
-from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse
 
 from store_commons.resource import Resource
 from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
-from fiware_store.models import Marketplace
-from market_adaptor.marketadaptor import MarketAdaptor
+from fiware_store.markets.markets_management import get_marketplaces, register_on_market, unregister_from_market
 
 
 class MarketplaceCollection(Resource):
@@ -23,11 +20,9 @@ class MarketplaceCollection(Resource):
     @method_decorator(login_required)
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
-
         if not request.user.is_staff:  # Only an admin could register the store in a marketplace
             return build_error_response(request, 401, 'Unautorized')
 
-        store_name = settings.STORE_NAME
         content_type = get_content_type(request)[0]
 
         name = None
@@ -53,21 +48,17 @@ class MarketplaceCollection(Resource):
                 msg = "Request body is not a valid XML data"
                 return build_error_response(request, 400, msg)
 
-        if host[-1] != '/':
-            host += '/'
-
-        marketadaptor = MarketAdaptor(host)
-        store_info = {
-            'store_name': store_name,
-            'store_uri': get_current_site(request).domain,
-        }
         try:
-            marketadaptor.add_store(store_info)
-        except HTTPError, e:
-            return build_error_response(request, 502, 'Bad gateway')
+            register_on_market(name, host, get_current_site(request).domain)
+        except Exception, e:
+            if e.message == 'Bad Gateway':
+                code = 502
+                msg = e.message
+            else:
+                code = 400
+                msg = 'Bad request'
 
-        # Only if the store has been registered, the marketplace resource is created
-        Marketplace.objects.create(name=name, host=host)
+            return build_error_response(request, code, msg)
 
         return build_error_response(request, 201, 'Created')
 
@@ -76,31 +67,23 @@ class MarketplaceCollection(Resource):
 
         # Read Accept header to know the response mime type, JSON by default
         accept = request.META.get('ACCEPT', '')
-        marketplaces = Marketplace.objects.all()
         response = None
         mime_type = None
 
+        result = get_marketplaces()
         if accept == '' or accept.find('application/JSON') > -1:
-            response = []
-
-            for market in marketplaces:
-                response.append({
-                    'name': market.name,
-                    'host': market.host
-                })
-
-            response = json.dumps(response)
+            response = json.dumps(result)
             mime_type = 'application/JSON; charset=UTF-8'
 
         elif accept.find('application/xml') > -1:
             root_elem = etree.Element('Marketplaces')
 
-            for market in marketplaces:
+            for market in result:
                 market_elem = etree.SubElement(root_elem, 'Marketplace')
                 name_elem = etree.SubElement(market_elem, 'Name')
-                name_elem.text = market.name
+                name_elem.text = market['name']
                 host_elem = etree.SubElement(market_elem, 'Host')
-                host_elem.text = market.host
+                host_elem.text = market['host']
 
             response = etree.tounicode(root_elem)
             mime_type = 'application/xml; charset=UTF-8'
@@ -127,22 +110,20 @@ class MarketplaceEntry(Resource):
         if not request.user.is_staff:
             return build_error_response(request, 401, 'Unathorized')
 
-        marketplace = None
         try:
-            marketplace = Marketplace.objects.get(name=market)
-        except:
-            return build_error_response(request, 404, 'Not found')
+            unregister_from_market(market)
+        except Exception, e:
+            if e.message == 'Bad Gateway':
+                code = 502
+                msg = e.message
+            else:
+                if e.message == 'Not found':
+                    code = 404
+                    msg = e.message
+                else:
+                    code = 400
+                    msg = 'Bad request'
 
-        host = marketplace.host
-        if host[-1] != '/':
-            host += '/'
+            return build_error_response(request, code, msg)
 
-        marketadaptor = MarketAdaptor(host)
-
-        try:
-            marketadaptor.delete_store(settings.STORE_NAME)
-        except HTTPError, e:
-            return build_error_response(request, 502, 'Bad gateway')
-
-        marketplace.delete()
         return build_error_response(request, 204, 'No content')
