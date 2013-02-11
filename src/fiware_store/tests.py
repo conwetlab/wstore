@@ -287,7 +287,7 @@ class OfferingCreationTestCase(TestCase):
 
 class OfferingRetrievingTestCase(TestCase):
 
-    fixtures = ['get.json']
+    fixtures = ['get_prov.json']
 
     @classmethod
     def setUpClass(cls):
@@ -296,9 +296,8 @@ class OfferingRetrievingTestCase(TestCase):
         super(OfferingRetrievingTestCase, cls).setUpClass()
 
     def test_get_all_provider_offerings(self):
-        #import ipdb;ipdb.set_trace()
         user = User.objects.get(username='test_user')
-        offerings = offerings_management.get_offerings(user, 'all')
+        offerings = offerings_management.get_offerings(user, 'all', owned=True)
         self.assertEqual(len(offerings), 3)
 
         # Check published offering
@@ -317,7 +316,7 @@ class OfferingRetrievingTestCase(TestCase):
 
     def test_get_provider_uploaded_offerings(self):
         user = User.objects.get(username='test_user')
-        offerings = offerings_management.get_offerings(user, 'uploaded')
+        offerings = offerings_management.get_offerings(user, 'uploaded', owned=True)
         self.assertEqual(len(offerings), 2)
 
         self.assertEqual(offerings[0]['name'], 'test_offering1')
@@ -333,6 +332,79 @@ class OfferingRetrievingTestCase(TestCase):
         self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
         self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
         self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+
+
+class PurchasedOfferingRetrievingTestCase(TestCase):
+
+    fixtures = ['get_purch.json']
+
+    @classmethod
+    def setUpClass(cls):
+        # Create database connection and load initial data
+        offerings_management.USDLParser = FakeUsdlParser
+        super(PurchasedOfferingRetrievingTestCase, cls).setUpClass()
+
+    def test_get_customer_purchased_offerings(self):
+        user = User.objects.get(username='test_user2')
+        profile = UserProfile.objects.get(user=user)
+        profile.offerings_purchased = ['61000aba8e05ac2115f022f9']
+        org = Organization.objects.create(name='test_organization1')
+        org.offerings_purchased = ['61000aba8e05ac2115f022ff', '61000aba8e05ac2115f022f9']
+        org.save()
+        profile.organization = org
+        profile.save()
+
+        offerings = offerings_management.get_offerings(user, 'purchased', owned=True)
+
+        self.assertEqual(len(offerings), 2)
+        self.assertEqual(offerings[0]['name'], 'test_offering1')
+        self.assertEqual(offerings[0]['version'], '1.0')
+        self.assertEqual(offerings[0]['state'], 'purchased')
+        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
+        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
+        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
+        self.assertEqual(offerings[0]['bill'], '/media/bills/61005aba8e05ac2115f022f0.pdf')
+
+        self.assertEqual(offerings[1]['name'], 'test_offering2')
+        self.assertEqual(offerings[1]['version'], '1.1')
+        self.assertEqual(offerings[1]['state'], 'purchased')
+        self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
+        self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
+        self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+        self.assertEqual(offerings[1]['bill'], '/media/bills/61006aba8e05ac2115f022f0.pdf')
+
+    def test_get_published_offerings(self):
+        user = User.objects.get(username='test_user2')
+        profile = UserProfile.objects.get(user=user)
+        profile.offerings_purchased = ['61000aba8e05ac2115f022f9']
+        org = Organization.objects.create(name='test_organization1')
+        org.offerings_purchased = ['61000aba8e05ac2115f022ff', '61000aba8e05ac2115f022f9']
+        org.save()
+        profile.organization = org
+        profile.save()
+
+        offerings = offerings_management.get_offerings(user)
+        self.assertEqual(len(offerings), 3)
+        self.assertEqual(offerings[0]['name'], 'test_offering1')
+        self.assertEqual(offerings[0]['version'], '1.0')
+        self.assertEqual(offerings[0]['state'], 'purchased')
+        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
+        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
+        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
+
+        self.assertEqual(offerings[1]['name'], 'test_offering2')
+        self.assertEqual(offerings[1]['version'], '1.1')
+        self.assertEqual(offerings[1]['state'], 'purchased')
+        self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
+        self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
+        self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+
+        self.assertEqual(offerings[2]['name'], 'test_offering3')
+        self.assertEqual(offerings[2]['version'], '1.0')
+        self.assertEqual(offerings[2]['state'], 'published')
+        self.assertEqual(offerings[2]['owner_organization'], 'test_organization')
+        self.assertEqual(offerings[2]['owner_admin_user_id'], 'test_user')
+        self.assertEqual(offerings[2]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
 
 
 class OfferingPublicationTestCase(TestCase):
