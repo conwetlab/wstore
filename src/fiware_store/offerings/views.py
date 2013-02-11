@@ -55,13 +55,13 @@ class OfferingCollection(Resource):
 
         if filter_ == 'provider':
             # Get provider id
-            result = get_offerings(user, request.GET.get('state'))
+            result = get_offerings(user, request.GET.get('state'), owned=True)
 
         elif filter_ == 'published':
-            result = get_offerings()
+            result = get_offerings(user)
 
         elif filter_ == 'purchased':
-            result = get_offerings(user, 'purchased')
+            result = get_offerings(user, 'purchased', owned=True)
 
         mime_type = 'application/JSON; charset=UTF-8'
         return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)

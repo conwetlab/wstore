@@ -18,6 +18,7 @@ from fiware_store.models import Offering
 from fiware_store.models import Marketplace
 from fiware_store.models import Purchase
 from fiware_store.models import Organization
+from fiware_store.models import UserProfile
 from store_commons.utils.usdlParser import USDLParser
 
 
@@ -38,36 +39,58 @@ def _get_purchased_offerings(user, db):
     organization = db.fiware_store_organization.find_one({'_id': user_profile['organization_id']})
 
     for offer in organization['offerings_purchased']:
-        offer_info = db.fiware_store_offering.find_one({'_id': ObjectId(offer)})
-        offer_info['state'] = 'purchased'
-        offering = Offering.objects.get(pk=offer)
-        purchase = Purchase.objects.get(offering=offering, owner_organization=organization['name'])
-        offer_info['bill'] = purchase.bill
-        result.append(offer_info)
+        if not offer in user_profile['offerings_purchased']:
+            offer_info = db.fiware_store_offering.find_one({'_id': ObjectId(offer)})
+            offer_info['state'] = 'purchased'
+            offering = Offering.objects.get(pk=offer)
+            purchase = Purchase.objects.get(offering=offering, owner_organization=organization['name'])
+            offer_info['bill'] = purchase.bill
+            result.append(offer_info)
 
     return result
 
 
-# Gets a set of offering depending on filter value
-def get_offerings(provider=None, filter_='published'):
+# Gets a set of offerings depending on filter value
+def get_offerings(user, filter_='published', owned=False):
      # Get all the offerings owned by the provider using raw mongodb access
     connection = MongoClient()
     db = connection[settings.DATABASES['default']['NAME']]
     offerings = db.fiware_store_offering
 
-    if provider != None:
+    if owned:
         if  filter_ == 'uploaded':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id), 'state': 'uploaded'})
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'})
         elif filter_ == 'all':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id)})
-        elif  filter_ == 'published':  # TODO check the purchased offerings
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(provider.id), 'state': 'published'})
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id)})
+        elif  filter_ == 'published':
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'published'})
         elif filter_ == 'purchased':
-            prov_offerings = _get_purchased_offerings(provider, db)
+            prov_offerings = _get_purchased_offerings(user, db)
 
     else:
         if  filter_ == 'published':
             prov_offerings = offerings.find({'state': 'published'})
+            # Set state to purchased in case the user has purchased the offering
+
+            profile = UserProfile.objects.get(user=user)
+            org = profile.organization
+            aux_list = []
+            for offer in prov_offerings:
+                if str(offer['_id']) in profile.offerings_purchased:
+                    offer['state'] = 'purchased'
+                    offering = Offering.objects.get(pk=str(offer['_id']))
+                    purchase = Purchase.objects.get(offering=offering, customer=user)
+                    offer['bill'] = purchase.bill
+                else:
+                    if str(offer['_id']) in org.offerings_purchased:
+                        offer['state'] = 'purchased'
+                        offering = Offering.objects.get(pk=str(offer['_id']))
+                        purchase = Purchase.objects.get(offering=offering, owner_organization=org.name)
+                        offer['bill'] = purchase.bill
+
+                aux_list.append(offer)
+
+            prov_offerings = aux_list
 
     result = []
     # TODO pagination
