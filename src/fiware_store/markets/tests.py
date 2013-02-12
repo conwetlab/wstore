@@ -60,10 +60,12 @@ class RegisteringOnMarketplaceTestCase(TestCase):
         error = False
         try:
             markets_management.register_on_market('test_market1', 'http://testmarket.com', 'http://currentsite.com')
-        except:
+        except Exception, e:
             error = True
+            msg = e.message
 
         self.assertTrue(error)
+        self.assertEquals(msg, 'Marketplace name already in use')
 
 
 class MarketPlacesRetievingTestCase(TestCase):
