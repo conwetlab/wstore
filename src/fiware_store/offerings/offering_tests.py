@@ -316,12 +316,16 @@ class OfferingCreationTestCase(TestCase):
         profile.save()
 
         error = False
+        msg = None
+
         try:
             offerings_management.create_offering(user, profile, data)
-        except:
+        except Exception, e:
             error = True
+            msg = e.message
 
         self.assertTrue(error)
+        self.assertEqual(msg, 'The offering already exists')
 
 
 class OfferingRetrievingTestCase(TestCase):
