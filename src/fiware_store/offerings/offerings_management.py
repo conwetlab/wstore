@@ -175,6 +175,17 @@ def create_offering(provider, profile, json_data):
     # Get organization
     organization = profile.organization
 
+    # Check if the offering already exists
+    existing = True
+
+    try:
+        Offering.objects.get(name=data['name'], owner_organization=organization.name, version=data['version'])
+    except:
+        existing = False
+
+    if existing:
+        raise Exception('The offering already exists')
+
     # Create the directory for app media
     dir_name = organization.name + '__' + data['name'] + '__' + data['version']
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
