@@ -56,7 +56,6 @@ class OfferingCreationTestCase(TestCase):
     _db = None
     _image = None
     _usdl = None
-    _dir = False
     fixtures = ['create.json']
 
     @classmethod
@@ -85,8 +84,8 @@ class OfferingCreationTestCase(TestCase):
         pass
 
     def tearDown(self):
-        if self._dir:
-            # Remove media files
+        # Remove media files
+        try:
             dir_name = 'test_organization__test_offering__1.0'
             path = os.path.join(settings.MEDIA_ROOT, dir_name)
             files = os.listdir(path)
@@ -96,10 +95,20 @@ class OfferingCreationTestCase(TestCase):
                 os.remove(file_path)
 
             os.rmdir(path)
+            dir_name = 'test_organization__test_offering_fail__1.0'
+            path = os.path.join(settings.MEDIA_ROOT, dir_name)
+            files = os.listdir(path)
+
+            for f in files:
+                file_path = os.path.join(path, f)
+                os.remove(file_path)
+
+            os.rmdir(path)
+        except:
+            pass
 
         # Remove offering collection
         self._db.fiware_store_offering.drop()
-        self._dir = False
 
     def test_create_basic_offering(self):
         """
@@ -126,8 +135,7 @@ class OfferingCreationTestCase(TestCase):
         profile.save()
 
         offerings_management.create_offering(user, profile, data)
-        self._dir = True
-        content = self._db.fiware_store_offering.find_one()
+        content = self._db.fiware_store_offering.find_one({"name": "test_offering"})
 
         self.assertEqual(content['name'], 'test_offering')
         self.assertEqual(content['version'], '1.0')
@@ -176,8 +184,7 @@ class OfferingCreationTestCase(TestCase):
         profile.save()
 
         offerings_management.create_offering(user, profile, data)
-        self._dir = True
-        content = self._db.fiware_store_offering.find_one()
+        content = self._db.fiware_store_offering.find_one({"name": "test_offering"})
 
         self.assertEqual(content['name'], 'test_offering')
         self.assertEqual(content['version'], '1.0')
@@ -214,6 +221,7 @@ class OfferingCreationTestCase(TestCase):
         org = Organization.objects.get(name='test_organization')
         profile.organization = org
         profile.save()
+        error = False
         try:
             offerings_management.create_offering(user, profile, data)
         except Exception, e:
@@ -246,6 +254,7 @@ class OfferingCreationTestCase(TestCase):
         org = Organization.objects.get(name='test_organization')
         profile.organization = org
         profile.save()
+        error = False
         try:
             offerings_management.create_offering(user, profile, data)
         except Exception:
@@ -276,11 +285,41 @@ class OfferingCreationTestCase(TestCase):
         org = Organization.objects.get(name='test_organization')
         profile.organization = org
         profile.save()
+        error = False
         try:
             offerings_management.create_offering(user, profile, data)
         except:
             error = True
-            self._dir = True
+
+        self.assertTrue(error)
+
+    def test_create_offering_already_existing(self):
+
+        data = {
+            'name': 'test_offering_fail',
+            'version': '1.0',
+            'repository': 'test_repository',
+            'image': {
+                'name': 'test_image.png',
+                'data': self._image,
+            },
+            'related_images': [],
+            'offering_description': {
+                'content_type': 'application/rdf+xml',
+                'data': self._usdl
+            }
+        }
+        user = User.objects.get(username='test_user')
+        profile = UserProfile.objects.get(user=user)
+        org = Organization.objects.get(name='test_organization')
+        profile.organization = org
+        profile.save()
+
+        error = False
+        try:
+            offerings_management.create_offering(user, profile, data)
+        except:
+            error = True
 
         self.assertTrue(error)
 
@@ -447,6 +486,7 @@ class OfferingPublicationTestCase(TestCase):
             'marketplaces': ['test_marketplace']
         }
         offering = Offering.objects.get(name='test_offering1')
+        error = False
         try:
             offerings_management.publish_offering(offering, data)
         except:
@@ -474,6 +514,7 @@ class OfferingPublicationTestCase(TestCase):
             'marketpla': ['test_market']
         }
         offering = Offering.objects.get(name='test_offering1')
+        error = False
         try:
             offerings_management.publish_offering(offering, data)
         except:
@@ -486,6 +527,7 @@ class OfferingPublicationTestCase(TestCase):
             'marketplaces': ['test_market']
         }
         offering = Offering.objects.get(name='test_offering2')
+        error = False
         try:
             offerings_management.publish_offering(offering, data)
         except Exception, e:
@@ -556,6 +598,7 @@ class OfferingBindingTestCase(TestCase):
         }]
         offering = Offering.objects.get(name='test_offering1')
         provider = User.objects.get(username='test_user')
+        error = False
         try:
             offerings_management.bind_resources(offering, data, provider)
         except:
@@ -578,6 +621,7 @@ class OfferingDeletionTestCase(TestCase):
     def test_delete_uploaded_offering(self):
         offering = Offering.objects.get(name='test_offering')
         offerings_management.delete_offering(offering)
+        error = False
         try:
             offering = Offering.objects.get(name='test_offering')
         except:

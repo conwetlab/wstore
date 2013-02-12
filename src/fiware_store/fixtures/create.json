@@ -39,5 +39,25 @@
             "organization": "51000aba8e05ac2135f122ff",
             "roles": ["customer", "provider"]
         }
+    },
+    {
+        "pk": "61000aba8e05ac2115f022f9",
+        "model": "fiware_store.Offering",
+        "fields": {
+            "name": "test_offering_fail",
+            "owner_admin_user": "51000aba8e05ac2115f022f9",
+            "version": "1.0",
+            "state": "uploaded",
+            "marketplaces": [],
+            "rating": "0",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
+            "owner_organization": "test_organization",
+            "offering_description": {}
+        }
     }
 ]
