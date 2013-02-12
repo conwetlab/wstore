@@ -50,6 +50,17 @@ class RepositoryCollection(Resource):
                 msg = "Request body is not valid XML data"
                 return build_error_response(request, 400, msg)
 
+        # Check if the repository name is in use
+        existing = True
+
+        try:
+            Repository.objects.get(name=name)
+        except:
+            existing = False
+
+        if existing:
+            return build_error_response(request, 400, 'The repository name is in use')
+
         Repository.objects.create(name=name, host=host)
 
         return build_error_response(request, 201, 'Created')  # TODO use a generic method
