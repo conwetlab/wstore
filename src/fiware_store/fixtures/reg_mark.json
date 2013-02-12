@@ -1,0 +1,26 @@
+[
+    {
+        "pk": "51000aba8e05ac2115f022f9",
+        "model": "auth.user",
+        "fields": {
+            "username": "test_user",
+            "first_name": "",
+            "last_name": "",
+            "email": "admin@c.com",
+            "password": "sha1$5AphFrMHRX5o$bd3394cfeb25266a67d88683d24ae0c7b0647bd8",
+            "is_staff": false,
+            "is_active": true,
+            "is_superuser": false,
+            "last_login": "2011-10-10 11:27:12",
+            "date_joined": "2011-10-10 11:27:12"
+        }
+    },
+    {
+        "pk": "61001bba8e05ac2115f022f9",
+        "model": "fiware_store.Marketplace",
+        "fields": {
+            "name": "test_market1",
+            "host": "http://examplemarketplace1.com/"
+        }
+    }
+]
