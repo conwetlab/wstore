@@ -23,6 +23,17 @@ def get_marketplaces():
 
 def register_on_market(name, host, site):
 
+    # Check that the market name is not in use
+    existing = True
+
+    try:
+        Marketplace.objects.get(name=name)
+    except:
+        existing = False
+
+    if existing:
+        raise Exception('Marketplace name already in use')
+
     store_name = settings.STORE_NAME
 
     if host[-1] != '/':
