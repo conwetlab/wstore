@@ -1,16 +1,14 @@
 import json
 from lxml import etree
-from urllib2 import HTTPError
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
-from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse
 
 from store_commons.resource import Resource
 from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
-from fiware_store.models import Repository
+from fiware_store.repositories.repositories_management import register_repository, unregister_repository, get_repositories
 
 
 class RepositoryCollection(Resource):
@@ -50,18 +48,10 @@ class RepositoryCollection(Resource):
                 msg = "Request body is not valid XML data"
                 return build_error_response(request, 400, msg)
 
-        # Check if the repository name is in use
-        existing = True
-
         try:
-            Repository.objects.get(name=name)
-        except:
-            existing = False
-
-        if existing:
-            return build_error_response(request, 400, 'The repository name is in use')
-
-        Repository.objects.create(name=name, host=host)
+            register_repository(name, host)
+        except Exception, e:
+            return build_error_response(request, 400, e.message)
 
         return build_error_response(request, 201, 'Created')  # TODO use a generic method
 
@@ -70,20 +60,12 @@ class RepositoryCollection(Resource):
 
         # Read Accept header to know the response mime type, JSON by default
         accept = request.META.get('ACCEPT', '')
-        repositories = Repository.objects.all()
         response = None
         mime_type = None
+        repositories = get_repositories()
 
         if accept == '' or accept.find('application/JSON') > -1:
-            response = []
-
-            for rep in repositories:
-                response.append({
-                    'name': rep.name,
-                    'host': rep.host
-                })
-
-            response = json.dumps(response)
+            response = json.dumps(repositories)
             mime_type = 'application/JSON; charset=UTF-8'
 
         elif accept.find('application/xml') > -1:
@@ -92,9 +74,9 @@ class RepositoryCollection(Resource):
             for rep in repositories:
                 rep_elem = etree.SubElement(root_elem, 'Repository')
                 name_elem = etree.SubElement(rep_elem, 'Name')
-                name_elem.text = rep.name
+                name_elem.text = rep['name']
                 host_elem = etree.SubElement(rep_elem, 'Host')
-                host_elem.text = rep.host
+                host_elem.text = rep['host']
 
             response = etree.tounicode(root_elem)
             mime_type = 'application/xml; charset=UTF-8'
@@ -113,11 +95,14 @@ class RepositoryEntry(Resource):
         if not request.user.is_staff:
             return build_error_response(request, 401, 'Unathorized')
 
-        rep = None
         try:
-            rep = Repository.objects.get(name=repository)
-        except:
-            return build_error_response(request, 404, 'Not found')
+            unregister_repository(repository)
+        except Exception, e:
+            if e.message == 'Not found':
+                code = 404
+            else:
+                code = 400
 
-        rep.delete()
+            return build_error_response(request, code, e.message)
+
         return build_error_response(request, 204, 'No content')
