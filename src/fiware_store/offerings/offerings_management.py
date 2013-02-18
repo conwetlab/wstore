@@ -17,7 +17,6 @@ from fiware_store.models import Repository
 from fiware_store.models import Offering
 from fiware_store.models import Marketplace
 from fiware_store.models import Purchase
-from fiware_store.models import Organization
 from fiware_store.models import UserProfile
 from store_commons.utils.usdlParser import USDLParser
 
@@ -123,6 +122,27 @@ def get_offerings(user, filter_='published', owned=False):
         result.append(offer)
 
     return result
+
+
+def count_offerings(user, filter_='published', owned=False):
+
+    if owned:
+        if  filter_ == 'uploaded':
+            count = Offering.objects.filter(owner_admin_user=user, state='uploaded').count()
+        elif filter_ == 'all':
+            count = Offering.objects.filter(owner_admin_user=user).count()
+        elif  filter_ == 'published':
+            count = Offering.objects.filter(owner_admin_user=user, state='published').count()
+        elif filter_ == 'purchased':
+            user_profile = UserProfile.objects.get(user=user)
+            count = len(user_profile.offerings_purchased)
+            count += len(user_profile.organization.offerings_purchased)
+
+    else:
+        if  filter_ == 'published':
+            count = Offering.objects.filter(state='published').count()
+
+    return {'number': count}
 
 
 def get_offering_info(offering):

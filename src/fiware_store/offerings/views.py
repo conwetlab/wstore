@@ -10,7 +10,7 @@ from store_commons.resource import Resource
 from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
 from fiware_store.models import Offering
 from fiware_store.models import UserProfile
-from fiware_store.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering, publish_offering, bind_resources
+from fiware_store.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering, publish_offering, bind_resources, count_offerings
 from fiware_store.offerings.resources_management import register_resource, get_provider_resources
 
 
@@ -52,16 +52,28 @@ class OfferingCollection(Resource):
         # Read the query string in order to know the filter and the page
         filter_ = request.GET.get('filter', 'published')
         user = User.objects.get(username=request.user)
+        action = request.GET.get('action', 'none')
 
-        if filter_ == 'provider':
-            # Get provider id
-            result = get_offerings(user, request.GET.get('state'), owned=True)
+        if action != 'count':
+            if filter_ == 'provider':
+                # Get provider id
+                result = get_offerings(user, request.GET.get('state'), owned=True)
 
-        elif filter_ == 'published':
-            result = get_offerings(user)
+            elif filter_ == 'published':
+                result = get_offerings(user)
 
-        elif filter_ == 'purchased':
-            result = get_offerings(user, 'purchased', owned=True)
+            elif filter_ == 'purchased':
+                result = get_offerings(user, 'purchased', owned=True)
+        else:
+            if filter_ == 'provider':
+                # Get provider id
+                result = count_offerings(user, request.GET.get('state'), owned=True)
+
+            elif filter_ == 'published':
+                result = count_offerings(user)
+
+            elif filter_ == 'purchased':
+                result = count_offerings(user, 'purchased', owned=True)
 
         mime_type = 'application/JSON; charset=UTF-8'
         return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
