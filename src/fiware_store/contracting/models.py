@@ -1,6 +1,7 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from djangotoolbox.fields import DictField
 
 from fiware_store.models import Offering
 
@@ -15,7 +16,7 @@ class Purchase(models.Model):
     offering = models.ForeignKey(Offering)
     state = models.CharField(max_length=50)
     bill = models.CharField(max_length=200)
-    tax_address = models.TextField()
+    tax_address = DictField()
 
     class Meta:
         app_label = 'fiware_store'

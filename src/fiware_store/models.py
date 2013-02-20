@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from djangotoolbox.fields import ListField
+from djangotoolbox.fields import DictField
 
 from fiware_store.markets.models import *
 from fiware_store.repositories.models import *
@@ -22,7 +23,7 @@ class UserProfile(models.Model):
     roles = ListField()
     offerings_purchased = ListField()
     offerings_provided = ListField()
-    tax_address = models.TextField()
+    tax_address = DictField()
     complete_name = models.CharField(max_length=100)
 
 

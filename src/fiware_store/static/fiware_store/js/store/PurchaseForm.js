@@ -1,8 +1,12 @@
 
 (function(){
 
+    var displayed = false;
+
     var makePurchaseRequest = function makePurchaseRequest(offeringElement) {
         var csrfToken = $.cookie('csrftoken');
+        var street, postal, city, country;
+
         var request = {
             'offering': {
                 'organization': offeringElement.getOrganization(),
@@ -12,8 +16,19 @@
             'organization_owned': $('#owned').prop('checked')
         }
 
-        if ($('#tax_addr').val() != '') {
-            request.tax_address = $('#tax_addr').val();
+        if ($('#tax_addr').prop('checked')) {
+
+            street = $('#street').val();
+            postal = $('#postal').val();
+            city = $('#city').val();
+            country = $('#country').val();
+
+            request.tax_address = {
+                'street': street,
+                'postal': postal,
+                'city': city,
+                'country': country
+            }
         }
 
         $.ajax({
@@ -45,17 +60,27 @@
     };
 
     purchaseOffering = function purchaseOffering(offeringElement) {
-        var formContent = $('<div></div>');
 
         MessageManager.showMessage('Purchase offering', '');
 
-        $('<label></label>').attr('for', 'tax_addr').text('Tax address').appendTo(formContent);
-        $('<input></input>').attr('type', 'text').attr('id', 'tax_addr').attr('placeholder', 'Tax address').appendTo(formContent);
+        $('<label></label>').attr('for', 'owned').text('Provide a different tax address').appendTo('.modal-body');
+        $('<input></input>').attr('type', 'checkbox').attr('value', 'tax_addr').attr('id', 'tax_addr').appendTo('.modal-body');
+        $('<div></div>').attr('id', 'addr_cont').appendTo('.modal-body');
 
-        $('<label></label>').attr('for', 'owned').text('Make the offering available to the whole organization').appendTo(formContent);
-        $('<input></input>').attr('type', 'checkbox').attr('value', 'owned').attr('id', 'owned').appendTo(formContent);
+        $('#tax_addr').change(function () {
+            if(displayed) {
+                $('#addr_cont').empty();
+                displayed = false;
+            } else {
+                $.template('purchaseTemplate', $('#purchase_form_template'))
+                $.tmpl('purchaseTemplate', {}).appendTo('#addr_cont')
+                displayed = true;
+            }
+        });
 
-        formContent.appendTo('.modal-body');
+        $('<label></label>').attr('for', 'owned').text('Make the offering available to the whole organization').appendTo('.modal-body');
+        $('<input></input>').attr('type', 'checkbox').attr('value', 'owned').attr('id', 'owned').appendTo('.modal-body');
+
         // Set listeners
         $('.modal-footer > .btn').click(function() {
             makePurchaseRequest(offeringElement);

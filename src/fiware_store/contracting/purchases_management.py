@@ -1,4 +1,5 @@
 import os
+import json
 import subprocess
 from datetime import datetime
 
@@ -12,8 +13,9 @@ from fiware_store.models import Resource
 
 def generate_bill(purchase):
     # Get the bill template
-    #import ipdb;ipdb.set_trace()
     bill_template = loader.get_template('contracting/bill_template.html')
+
+    tax = purchase.tax_address
 
     # Render the bill template
     offering = purchase.offering
@@ -38,10 +40,10 @@ def generate_bill(purchase):
         'date': date,
         'organization': customer_profile.organization.name,
         'customer': customer_profile.complete_name,
-        'address': purchase.tax_address,
-        'postal': '28041',
-        'city': 'Madrid',
-        'country': 'Spain',
+        'address': tax.get('street'),
+        'postal': tax.get('postal'),
+        'city': tax.get('city'),
+        'country': tax.get('country'),
         'parts': [],
         'taxes': [],
         'subtotal': '0 Euros',
