@@ -54,19 +54,33 @@ class OfferingCollection(Resource):
         user = User.objects.get(username=request.user)
         action = request.GET.get('action', 'none')
 
+        pagination = {
+            'skip': request.GET.get('start', None),
+            'limit': request.GET.get('limit', None)
+        }
+
         if action != 'count':
-            if filter_ == 'provider':
-                # Get provider id
-                result = get_offerings(user, request.GET.get('state'), owned=True)
+            if pagination['skip'] and pagination['limit']:
+                if filter_ == 'provider':
+                    result = get_offerings(user, request.GET.get('state'), owned=True, pagination=pagination)
 
-            elif filter_ == 'published':
-                result = get_offerings(user)
+                elif filter_ == 'published':
+                    result = get_offerings(user, pagination=pagination)
 
-            elif filter_ == 'purchased':
-                result = get_offerings(user, 'purchased', owned=True)
+                elif filter_ == 'purchased':
+                    result = get_offerings(user, 'purchased', owned=True, pagination=pagination)
+            else:
+                if filter_ == 'provider':
+                    result = get_offerings(user, request.GET.get('state'), owned=True)
+
+                elif filter_ == 'published':
+                    result = get_offerings(user)
+
+                elif filter_ == 'purchased':
+                    result = get_offerings(user, 'purchased', owned=True)
+
         else:
             if filter_ == 'provider':
-                # Get provider id
                 result = count_offerings(user, request.GET.get('state'), owned=True)
 
             elif filter_ == 'published':

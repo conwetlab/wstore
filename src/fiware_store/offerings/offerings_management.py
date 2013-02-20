@@ -21,41 +21,56 @@ from fiware_store.models import UserProfile
 from store_commons.utils.usdlParser import USDLParser
 
 
-def _get_purchased_offerings(user, db):
+def _get_purchased_offerings(user, db, pagination=None):
+
     # Get the user profile purchased offerings
     user_profile = db.fiware_store_userprofile.find_one({'user_id': ObjectId(user.pk)})
+    # Get the user organization purchased offerings
+    organization = db.fiware_store_organization.find_one({'_id': user_profile['organization_id']})
     result = []
 
-    for offer in user_profile['offerings_purchased']:
+    # Load user and organization purchased offerings
+    user_purchased = user_profile['offerings_purchased']
+
+    # Remove user offerings from organization offerings
+    for offer in organization['offerings_purchased']:
+        if not offer in user_purchased:
+            user_purchased.append(offer)
+
+    # If pagination has been defined take the offerings corresponding to the page
+    if pagination:
+        skip = int(pagination['skip']) - 1
+        limit = int(pagination['limit'])
+
+        if skip < len(user_purchased):
+            user_purchased = user_purchased[skip:(skip + limit)]
+
+    # Load user offerings  to the result
+    for offer in user_purchased:
         offer_info = db.fiware_store_offering.find_one({'_id': ObjectId(offer)})
         offer_info['state'] = 'purchased'
         offering = Offering.objects.get(pk=offer)
-        purchase = Purchase.objects.get(offering=offering, customer=user)
+        try:
+            purchase = Purchase.objects.get(offering=offering, customer=user)
+        except:
+            purchase = Purchase.objects.get(offering=offering, owner_organization=organization['name'])
         offer_info['bill'] = purchase.bill
         result.append(offer_info)
-
-    # Get the user organization purchased offerings
-    organization = db.fiware_store_organization.find_one({'_id': user_profile['organization_id']})
-
-    for offer in organization['offerings_purchased']:
-        if not offer in user_profile['offerings_purchased']:
-            offer_info = db.fiware_store_offering.find_one({'_id': ObjectId(offer)})
-            offer_info['state'] = 'purchased'
-            offering = Offering.objects.get(pk=offer)
-            purchase = Purchase.objects.get(offering=offering, owner_organization=organization['name'])
-            offer_info['bill'] = purchase.bill
-            result.append(offer_info)
 
     return result
 
 
 # Gets a set of offerings depending on filter value
-def get_offerings(user, filter_='published', owned=False):
-     # Get all the offerings owned by the provider using raw mongodb access
+def get_offerings(user, filter_='published', owned=False, pagination=None):
+
+    if pagination and (not int(pagination['skip']) > 0 or not int(pagination['limit']) > 0):
+        raise Exception('Invalid pagination limits')
+
+    # Get all the offerings owned by the provider using raw mongodb access
     connection = MongoClient()
     db = connection[settings.DATABASES['default']['NAME']]
     offerings = db.fiware_store_offering
-
+    # Pagination: define the first element and the number of elements
     if owned:
         if  filter_ == 'uploaded':
             prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'})
@@ -64,7 +79,11 @@ def get_offerings(user, filter_='published', owned=False):
         elif  filter_ == 'published':
             prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'published'})
         elif filter_ == 'purchased':
-            prov_offerings = _get_purchased_offerings(user, db)
+            if pagination:
+                prov_offerings = _get_purchased_offerings(user, db, pagination)
+                pagination = None
+            else:
+                prov_offerings = _get_purchased_offerings(user, db)
 
     else:
         if  filter_ == 'published':
@@ -92,7 +111,10 @@ def get_offerings(user, filter_='published', owned=False):
             prov_offerings = aux_list
 
     result = []
-    # TODO pagination
+
+    if pagination:
+        prov_offerings = prov_offerings.skip(int(pagination['skip']) - 1).limit(int(pagination['limit']))
+
     for offer in prov_offerings:
         offer['owner_admin_user_id'] = User.objects.get(pk=offer['owner_admin_user_id']).username
         offer['_id'] = str(offer['_id'])
