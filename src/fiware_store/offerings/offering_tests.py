@@ -450,6 +450,148 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         self.assertEqual(offerings[2]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
 
 
+class OfferingPaginationTestCase(TestCase):
+
+    fixtures = ['get_off_pag.json']
+
+    @classmethod
+    def setUpClass(cls):
+        # Create database connection and load initial data
+        offerings_management.USDLParser = FakeUsdlParser
+        super(OfferingPaginationTestCase, cls).setUpClass()
+
+    def test_basic_retrieving_pagination(self):
+        pagination = {
+            'skip': '1',
+            'limit': '3'
+        }
+
+        user = User.objects.get(username='test_user')
+        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
+
+        self.assertEqual(len(offerings), 3)
+
+        self.assertEqual(offerings[0]['name'], 'test_offering1')
+        self.assertEqual(offerings[1]['name'], 'test_offering2')
+        self.assertEqual(offerings[2]['name'], 'test_offering3')
+
+        pagination = {
+            'skip': '4',
+            'limit': '5'
+        }
+
+        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
+
+        self.assertEqual(len(offerings), 5)
+
+        self.assertEqual(offerings[0]['name'], 'test_offering4')
+        self.assertEqual(offerings[1]['name'], 'test_offering5')
+        self.assertEqual(offerings[2]['name'], 'test_offering6')
+        self.assertEqual(offerings[3]['name'], 'test_offering7')
+        self.assertEqual(offerings[4]['name'], 'test_offering8')
+
+    def test_retrieving_pagination_half_page(self):
+        pagination = {
+            'skip': '8',
+            'limit': '10'
+        }
+
+        user = User.objects.get(username='test_user')
+        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
+
+        self.assertEqual(len(offerings), 3)
+
+        self.assertEqual(offerings[0]['name'], 'test_offering8')
+        self.assertEqual(offerings[1]['name'], 'test_offering9')
+        self.assertEqual(offerings[2]['name'], 'test_offering10')
+
+    def test_retrieving_pagination_invalid_limit(self):
+        pagination = {
+            'skip': '1',
+            'limit': '-2'
+        }
+
+        user = User.objects.get(username='test_user')
+
+        error = False
+        msg = None
+
+        try:
+            offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
+        except Exception, e:
+            error = True
+            msg = e.message
+
+        self.assertTrue(error)
+        self.assertEqual(msg, 'Invalid pagination limits')
+
+    def test_retrieving_pagination_invalid_start(self):
+        pagination = {
+            'skip': '-4',
+            'limit': '2'
+        }
+
+        user = User.objects.get(username='test_user')
+
+        error = False
+        msg = None
+
+        try:
+            offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
+        except Exception, e:
+            error = True
+            msg = e.message
+
+        self.assertTrue(error)
+        self.assertEqual(msg, 'Invalid pagination limits')
+
+
+class PurchasedOfferingPaginationTestCase(TestCase):
+
+    fixtures = ['get_purch_off_pag.json']
+
+    @classmethod
+    def setUpClass(cls):
+        # Create database connection and load initial data
+        offerings_management.USDLParser = FakeUsdlParser
+        super(PurchasedOfferingPaginationTestCase, cls).setUpClass()
+
+    def test_basic_retrieving_pagination_purchased(self):
+
+        pagination = {
+            'skip': '1',
+            'limit': '2'
+        }
+        user = User.objects.get(username='test_user')
+        profile = UserProfile.objects.get(user=user)
+        profile.offerings_purchased = ['61000aba8e05ac2115f022f9', '71000aba8e05ac2115f022ff', '81000aba8e05ac2115f022f0']
+        org = Organization.objects.create(name='test_organization1')
+        org.offerings_purchased = ['91000aba8e05ac2115f022f0', '61100aba8e05ac2115f022f0']
+        org.save()
+        profile.organization = org
+        profile.save()
+
+        offerings = offerings_management.get_offerings(user, filter_='purchased', owned=True, pagination=pagination)
+
+        self.assertEqual(len(offerings), 2)
+
+        self.assertEqual(offerings[0]['name'], 'test_offering1')
+        self.assertEqual(offerings[1]['name'], 'test_offering2')
+
+        pagination = {
+            'skip': '3',
+            'limit': '5'
+        }
+
+        offerings = offerings_management.get_offerings(user, filter_='purchased', owned=True, pagination=pagination)
+
+        self.assertEqual(len(offerings), 3)
+
+        self.assertEqual(offerings[0]['name'], 'test_offering3')
+        self.assertEqual(offerings[1]['name'], 'test_offering4')
+        self.assertEqual(offerings[2]['name'], 'test_offering5')
+
+
 class OfferingPublicationTestCase(TestCase):
 
     fixtures = ['pub.json']
