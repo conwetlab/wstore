@@ -51,7 +51,13 @@ def register_on_market(name, host, site):
     except HTTPError:
         raise Exception('Bad Gateway')
 
-    Marketplace.objects.create(name=name, host=host)
+    try:
+        Marketplace.objects.create(name=name, host=host)
+    except Exception, e:
+        # If the marketplace model creation fails it is necesary to unregister the store
+        # in order to avoid an inconsistent state
+        marketadaptor.delete_store(store_name)
+        raise e
 
 
 def unregister_from_market(market):
