@@ -1,5 +1,4 @@
 import os
-import json
 import subprocess
 from datetime import datetime
 
@@ -82,6 +81,9 @@ def create_purchase(user, offering, org_owned=False, tax_address=None):
         raise Exception("This offering can't be purchased")
 
     profile = UserProfile.objects.get(user=user)
+
+    if offering.pk in profile.offerings_purchased or offering.pk in profile.organization.offerings_purchased:
+        raise Exception('The offering has been already purchased')
 
     #Get the effective tax address
     if tax_address == None:
