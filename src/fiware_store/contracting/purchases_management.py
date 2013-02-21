@@ -95,7 +95,8 @@ def create_purchase(user, offering, org_owned=False, tax_address=None):
     if org_owned == True:
         organization = profile.organization
         org = organization.name
-        organization.purchased_offerings.append(offering.pk)
+        organization.offerings_purchased.append(offering.pk)
+        organization.save()
 
     # Create the purchase
     purchase = Purchase.objects.create(
