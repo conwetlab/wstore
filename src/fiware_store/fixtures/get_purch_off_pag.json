@@ -166,7 +166,12 @@
             "offering": "61000aba8e05ac2115f022f9",
             "state": "paid",
             "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
-            "tax_address": "test street"
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
         }
     },
     {
@@ -181,7 +186,12 @@
             "offering": "71000aba8e05ac2115f022ff",
             "state": "paid",
             "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
-            "tax_address": "test street"
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
         }
     },
     {
@@ -196,7 +206,12 @@
             "offering": "81000aba8e05ac2115f022f0",
             "state": "paid",
             "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
-            "tax_address": "test street"
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
         }
     },
     {
@@ -211,7 +226,12 @@
             "offering": "91000aba8e05ac2115f022f0",
             "state": "paid",
             "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
-            "tax_address": "test street"
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
         }
     },
     {
@@ -226,7 +246,12 @@
             "offering": "61100aba8e05ac2115f022f0",
             "state": "paid",
             "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
-            "tax_address": "test street"
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
         }
     }
 ]
