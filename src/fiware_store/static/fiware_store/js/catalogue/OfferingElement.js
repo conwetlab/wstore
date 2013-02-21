@@ -112,4 +112,8 @@
         OfferingElement.prototype.getBillPath = function getBillPath () {
             return this.bill;
         };
+
+        OfferingElement.prototype.setState = function setState (state) {
+            this.state = state;
+        }
 })();

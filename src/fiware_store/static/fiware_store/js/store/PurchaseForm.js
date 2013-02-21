@@ -41,8 +41,11 @@
             contentType: 'application/json',
             data: JSON.stringify(request),
             success: function (response) {
-            //Download resources
+                //Download resources
                 downloadResources(response);
+                //Refresh offering details view
+                offeringElement.setState('purchased');
+                refreshDetailsView(offeringElement);
             },
             error: function (xhr) {
                 var msg = 'Error: the server responds with code ' + xhr.status;

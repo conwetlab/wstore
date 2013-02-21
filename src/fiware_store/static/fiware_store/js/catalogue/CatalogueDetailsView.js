@@ -1,6 +1,8 @@
 (function  () {
 
     var offElem;
+    var backAct;
+    var detContainer;
     var legalLoaded;
     var pricingLoaded;
     var slaLoaded;
@@ -10,6 +12,8 @@
         var screen, action;
 
         offElem = offeringElement;
+        backAct = backAction;
+        detContainer = container;
         legalLoaded = false;
         pricingLoaded = false;
         slaLoaded = false;
@@ -103,18 +107,18 @@
         }
 
         // Set the main operation
-        $('#main-action').click(mainAction.bind(this, action, offeringElement, backAction, container));
+        $('#main-action').click(mainAction.bind(this, action));
     };
 
-    var mainAction = function mainAction (action, offeringElement, backAction, container) {
+    var mainAction = function mainAction (action) {
         if (action == 'Publish') {
-            publishOffering(offeringElement);
+            publishOffering(offElem);
         } else if (action == 'Purchase'){
-            purchaseOffering(offeringElement);
+            purchaseOffering(offElem);
         } else if (action == 'Delete') {
-            deleteOffering(offeringElement, backAction, container);
+            deleteOffering(offElem, backAct, detContainer);
         } else if (action == 'Download') {
-            downloadElements(offeringElement);
+            downloadElements(offElem);
         }
     };
 
@@ -336,4 +340,7 @@
         });
     };
 
+    refreshDetailsView = function refreshDetailsView (offeringElement) {
+        paintOfferingDetails(offeringElement, backAct, detContainer);
+    };
 })();
