@@ -182,9 +182,9 @@ class PublishEntry(Resource):
                 data = json.loads(request.raw_post_data)
                 publish_offering(offering, data)
             except HTTPError:
-                build_error_response(request, 502, 'Bad gateway')
-            except:
-                build_error_response(request, 400, 'Invalid JSON content')
+                return build_error_response(request, 502, 'Bad gateway')
+            except Exception, e:
+                return build_error_response(request, 400, e.message)
 
         return build_error_response(request, 200, 'OK')
 
