@@ -28,7 +28,8 @@
             success: function (response) {
                 MessageManager.showMessage('Published', 'The offering has been published');
                 $('#catalogue-container').empty();
-                paintCatalogue();
+                offeringElement.setState('published');
+                refreshDetailsView(offeringElement);
             },
             error: function (xhr) {
                 var msg = 'Error: the server responds with code ' + xhr.status;
