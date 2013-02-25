@@ -116,7 +116,10 @@
         } else if (action == 'Purchase'){
             purchaseOffering(offElem);
         } else if (action == 'Delete') {
-            deleteOffering(offElem, backAct, detContainer);
+            var msg = "Are you sure that you want to delete the offering";
+            MessageManager.showYesNoWindow(msg, function() {
+                deleteOffering(offElem, backAct, detContainer);
+            });
         } else if (action == 'Download') {
             downloadElements(offElem);
         }
