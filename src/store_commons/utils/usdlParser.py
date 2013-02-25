@@ -19,8 +19,6 @@
 
 
 import rdflib
-import urllib2
-from urllib2 import HTTPError
 
 from django.utils.translation import ugettext as _
 
@@ -50,16 +48,11 @@ GEO = rdflib.Namespace('http://www.w3.org/2003/01/geo/wgs84_pos#')
 class USDLParser(object):
 
     _usdl_document = None
-    _info = None
     _graph = None
-    _service_list = None
-    _service_number = None
+    _offering_uri = None
 
     def __init__(self, usdl_document, mime_type):
         self._usdl_document = usdl_document
-        self._info = {}
-        self._service_list = []
-        self._service_number = 0
         self._graph = rdflib.Graph()
 
         #Check rdf format
@@ -73,13 +66,14 @@ class USDLParser(object):
             msg = _('Error the document has not a valid rdf format')
             raise Exception(msg)
 
+        offerings_number = 0
         # take all the services in the document
-        for ser in self._graph.subjects(RDF['type'], USDL['Service']):
-            self._service_list.append(ser)
-            self._service_number = self._service_number + 1
+        for off in self._graph.subjects(RDF['type'], USDL['ServiceOffering']):
+            self._offering_uri = off
+            offerings_number = offerings_number + 1
 
-        if self._service_number == 0:
-            msg = _('Error the document is not a valid usdl document')
+        if offerings_number != 1:
+            msg = _('No service offering has been defined')
             raise Exception(msg)
 
     def _get_field(self, namespace, element, predicate, id_=False):
@@ -101,30 +95,31 @@ class USDLParser(object):
     def _parse_basic_info(self, service_uri):
 
         count = 0
+        result = {}
 
         for t in self._graph.predicate_objects(service_uri):
             count = count + 1
 
         if count < 3:
-            self._info['part_ref'] = True
+            result['part_ref'] = True
             return
 
-        self._info['part_ref'] = False
+        result['part_ref'] = False
         vendor = self._get_field(USDL, service_uri, 'hasProvider', id_=True)[0]
-        self._info['vendor'] = self._get_field(FOAF, vendor, 'name')[0]
+        result['vendor'] = self._get_field(FOAF, vendor, 'name')[0]
 
         # provider vCard
         vcard = self._get_field(VCARD, vendor, 'adr', id_=True)[0]
 
         if vcard != '':
-            self._info['vcard'] = {
+            result['vcard'] = {
                 'BEGIN': [{
                     'properties': {},
                     'value':'VCARD',
                 }],
                 'FN': [{
                     'properties': {},
-                    'value': self._info['vendor']
+                    'value': result['vendor']
                 }],
                 'ADR': [{
                     'properties': {},
@@ -144,30 +139,32 @@ class USDLParser(object):
                 }]
             }
 
-        self._info['name'] = self._get_field(DCTERMS, service_uri, 'title')[0]
+        result['name'] = self._get_field(DCTERMS, service_uri, 'title')[0]
 
-        artefact = self._get_field(USDL, service_uri, 'utilizedResource', id_=True)[0]
         version = self._get_field(USDL, service_uri, 'versionInfo')[0]
         service_parts = self._get_field(USDL, service_uri, 'hasPartMandatory', id_=True)
 
         if len(service_parts) > 0:
-            self._info['parts'] = []
+            result['parts'] = []
             for part in service_parts:
                 part_info = {}
                 part_info['name'] = self._get_field(DCTERMS, part, 'title')[0]
                 part_info['uri'] = unicode(part)
-                self._info['parts'].append(part_info)
+                result['parts'].append(part_info)
 
-        self._info['shortDescription'] = self._get_field(DCTERMS, service_uri, 'abstract')[0]
-        self._info['longDescription'] = self._get_field(DCTERMS, service_uri, 'description')[0]
-        self._info['created'] = self._get_field(DCTERMS, service_uri, 'created')[0]
-        self._info['modified'] = self._get_field(DCTERMS, service_uri, 'modified')[0]
-        self._info['uriImage'] = self._get_field(FOAF, service_uri, 'depiction')[0]
-        self._info['version'] = version
-        self._info['page'] = self._get_field(FOAF, service_uri, 'page')[0]
+        result['short_description'] = self._get_field(DCTERMS, service_uri, 'abstract')[0]
+        result['long_description'] = self._get_field(DCTERMS, service_uri, 'description')[0]
+        result['created'] = self._get_field(DCTERMS, service_uri, 'created')[0]
+        result['modified'] = self._get_field(DCTERMS, service_uri, 'modified')[0]
+        result['uriImage'] = self._get_field(FOAF, service_uri, 'depiction')[0]
+        result['version'] = version
+        result['page'] = self._get_field(FOAF, service_uri, 'page')[0]
+
+        return result
 
     def _parse_legal_info(self, service_uri):
-        self._info['legal'] = []
+
+        result = []
         legal_conditions = self._get_field(USDL, service_uri, 'hasLegalCondition', id_=True)
 
         # If legal doest not exist the method does nothing
@@ -189,13 +186,16 @@ class USDLParser(object):
                 clause['text'] = self._get_field(LEGAL, c, 'text')[0]
                 legal_condition['clauses'].append(clause)
 
-            self._info['legal'].append(legal_condition)
+            result.append(legal_condition)
+
+        return result
 
     def _parse_sla_info(self, service_uri):
-        self._info['sla'] = []
+
+        result = []
         service_level_profile = self._get_field(USDL, service_uri, 'hasServiceLevelProfile', id_=True)[0]
 
-        #If sla does not exist the mothod does nothing
+        #If sla does not exist the method does nothing
         if service_level_profile != '':
             service_levels = self._get_field(SLA, service_level_profile, 'hasServiceLevel', id_=True)
 
@@ -260,97 +260,95 @@ class USDLParser(object):
 
                     service_level['slaExpresions'].append(expresion)
 
-                self._info['sla'].append(service_level)
+                result.append(service_level)
 
-    def _parse_pricing_info(self, service_uri):
-        self._info['pricing'] = []
-        current_pricing = None
+        return result
 
-        for ofering in self._graph.subjects(RDF['type'], USDL['ServiceOffering']):
-            found = False
+    def _parse_pricing_info(self):
 
-            for included_service in self._get_field(USDL, ofering, 'includes', id_=True):
-                if included_service == service_uri:
-                    current_pricing = ofering
-                    found = True
-                    break
-            if found:
-                break
+        result = {}
 
-        if current_pricing:
+        # Parse offering info
 
-            price_plans = self._get_field(USDL, current_pricing, 'hasPricePlan', id_=True)
+        result['title'] = self._get_field(DCTERMS, self._offering_uri, 'title')[0]
+        result['description'] = self._get_field(DCTERMS, self._offering_uri, 'description')[0]
+        result['valid_from'] = self._get_field(USDL, self._offering_uri, 'validFrom')[0]
+        result['valid_through'] = self._get_field(USDL, self._offering_uri, 'validThrough')[0]
 
-            for price in price_plans:
-                price_plan = {}
-                price_plan['label'] = self._get_field(DCTERMS, price, 'title')[0]
-                price_plan['description'] = self._get_field(DCTERMS, price, 'description')[0]
+        # Parse price plans info
+        price_plans = self._get_field(USDL, self._offering_uri, 'hasPricePlan', id_=True)
 
-                # TODO add price components and taxes, is necesary to create an usdl document
-                # using the available tool in order to see real property names used in pricing
+        result['price_plans'] = []
 
-                price_components = self._get_field(PRICE, price, 'hasPriceComponent', id_=True)
+        for price in price_plans:
+            price_plan = {}
+            price_plan['title'] = self._get_field(DCTERMS, price, 'title')[0]
+            price_plan['description'] = self._get_field(DCTERMS, price, 'description')[0]
 
-                if len(price_components) > 1 or price_components[0] != '':
-                    price_plan['priceComponents'] = []
+            price_components = self._get_field(PRICE, price, 'hasPriceComponent', id_=True)
 
-                    for pc in price_components:
-                        price_component = {
-                            'title': self._get_field(DCTERMS, pc, 'title')[0],
-                            'description': self._get_field(DCTERMS, pc, 'description')[0],
-                            'currency': self._get_field(GR, pc, 'hasCurrency')[0],
-                        }
-                        value = self._get_field(GR, pc, 'hasCurrencyValue')
+            if len(price_components) > 1 or price_components[0] != '':
+                price_plan['price_components'] = []
 
-                        if not value:
-                            price_component['value'] = self._get_field(GR, pc, 'hasValueFloat')[0]
-                        else:
-                            price_component['value'] = value[0]
+                for pc in price_components:
+                    price_component = {
+                        'title': self._get_field(DCTERMS, pc, 'title')[0],
+                        'description': self._get_field(DCTERMS, pc, 'description')[0],
+                        'currency': self._get_field(GR, pc, 'hasCurrency')[0],
+                    }
+                    value = self._get_field(GR, pc, 'hasCurrencyValue')
 
-                        price_component['unit'] = self._get_field(GR, pc, 'hasUnitOfMeasurement')[0]
-                        price_plan['priceComponents'].append(price_component)
+                    if not value:
+                        price_component['value'] = self._get_field(GR, pc, 'hasValueFloat')[0]
+                    else:
+                        price_component['value'] = value[0]
 
-                taxes = self._get_field(PRICE, price, 'hasTax', id_=True)
+                    price_component['unit'] = self._get_field(GR, pc, 'hasUnitOfMeasurement')[0]
+                    price_plan['price_components'].append(price_component)
 
-                if len(taxes) > 1 or taxes[0] != '':
-                    price_plan['taxes'] = []
+            taxes = self._get_field(PRICE, price, 'hasTax', id_=True)
 
-                    for pc in taxes:
-                        tax = {
-                            'title': self._get_field(DCTERMS, pc, 'title')[0],
-                            'description': self._get_field(DCTERMS, pc, 'description')[0],
-                            'currency': self._get_field(GR, pc, 'hasCurrency')[0],
-                        }
-                        value = self._get_field(GR, pc, 'hasCurrencyValue')
+            if len(taxes) > 1 or taxes[0] != '':
+                price_plan['taxes'] = []
 
-                        if not value:
-                            tax['value'] = value[0]
-                        else:
-                            tax['value'] = self._get_field(GR, pc, 'hasValueFloat')[0]
+                for pc in taxes:
+                    tax = {
+                        'title': self._get_field(DCTERMS, pc, 'title')[0],
+                        'description': self._get_field(DCTERMS, pc, 'description')[0],
+                        'currency': self._get_field(GR, pc, 'hasCurrency')[0],
+                    }
+                    value = self._get_field(GR, pc, 'hasCurrencyValue')
 
-                        tax['unit'] = self._get_field(GR, pc, 'hasUnitOfMeasurement')[0]
-                        price_plan['taxes'].append(tax)
+                    if not value:
+                        tax['value'] = value[0]
+                    else:
+                        tax['value'] = self._get_field(GR, pc, 'hasValueFloat')[0]
 
-                self._info['pricing'].append(price_plan)
+                    tax['unit'] = self._get_field(GR, pc, 'hasUnitOfMeasurement')[0]
+                    price_plan['taxes'].append(tax)
+
+            result['price_plans'].append(price_plan)
+
+        return result
 
     def parse(self):
 
-        result = []
-        for service_uri in self._service_list:
-            self._parse_basic_info(service_uri)
-            if not self._info['part_ref']:
-                self._parse_legal_info(service_uri)
-                self._parse_sla_info(service_uri)
-                self._parse_pricing_info(service_uri)
-                del(self._info['part_ref'])
+        result = {}
+        result['pricing'] = self._parse_pricing_info()
+        result['services_included'] = []
 
-                if self._service_number > 1:
-                    result.append(self._info)
-                    self._info = {}
-            else:
-                self._info = {}
+        for service_uri in self._get_field(USDL, self._offering_uri, 'includes', id_=True):
 
-        if self._service_number == 1:
-            return self._info
-        else:
-            return result
+            if service_uri != '':
+                basic_info = self._parse_basic_info(service_uri)
+                if not basic_info['part_ref']:
+                    basic_info['legal'] = self._parse_legal_info(service_uri)
+                    basic_info['sla'] = self._parse_sla_info(service_uri)
+                    del(basic_info['part_ref'])
+
+                result['services_included'].append(basic_info)
+
+        if not len(result['services_included']) > 0:
+            raise Exception('No services included')
+
+        return result
