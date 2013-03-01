@@ -169,7 +169,7 @@ class USDLParser(object):
 
         # If legal doest not exist the method does nothing
         if len(legal_conditions) == 1 and legal_conditions[0] == '':
-            return
+            return []
 
         for legal in legal_conditions:
             legal_condition = {
