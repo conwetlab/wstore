@@ -264,6 +264,53 @@ class USDLParser(object):
 
         return result
 
+    def _parse_interaction_protocols(self, service_uri):
+
+        result = []
+        # Get the interaction protocols that define the service functionality
+        interaction_protocols = self._get_field(USDL, service_uri, 'hasInteractionProtocol', id_=True)
+
+        for itp in interaction_protocols:
+            protocol_info = {
+                'title': self._get_field(DCTERMS, itp, 'title')[0],
+                'description': self._get_field(DCTERMS, itp, 'description')[0],
+                'technical_interface': self._get_field(USDL, itp, 'hasTechnicalInterface')[0],
+                'interactions': []
+            }
+
+            interactions = self._get_field(USDL, itp, 'hasInteraction', id_=True)
+
+            for inte in interactions:
+                interaction_info = {
+                    'title': self._get_field(DCTERMS, inte, 'title')[0],
+                    'description': self._get_field(DCTERMS, inte, 'description')[0],
+                    'interface_operation': self._get_field(USDL, inte, 'hasInterfaceOperation')[0],
+                    'inputs': [],
+                    'outputs': []
+                }
+
+                for input_ in self._get_field(USDL, inte, 'hasInput', id_=True):
+                    input_info = {
+                        'label': self._get_field(RDFS, input_, 'label')[0],
+                        'description': self._get_field(DCTERMS, input_, 'description')[0],
+                        'interface_element': self._get_field(USDL, input_, 'hasInterfaceElement')[0]
+                    }
+                    interaction_info['inputs'].append(input_info)
+
+                for output in self._get_field(USDL, inte, 'hasOutput', id_=True):
+                    output_info = {
+                        'label': self._get_field(RDFS, output, 'label')[0],
+                        'description': self._get_field(DCTERMS, output, 'description')[0],
+                        'interface_element': self._get_field(USDL, output, 'hasInterfaceElement')[0]
+                    }
+                    interaction_info['outputs'].append(output_info)
+
+                protocol_info['interactions'].append(interaction_info)
+
+            result.append(protocol_info)
+
+        return result
+
     def _parse_pricing_info(self):
 
         result = {}
@@ -344,6 +391,7 @@ class USDLParser(object):
                 if not basic_info['part_ref']:
                     basic_info['legal'] = self._parse_legal_info(service_uri)
                     basic_info['sla'] = self._parse_sla_info(service_uri)
+                    basic_info['interactions'] = self._parse_interaction_protocols(service_uri)
                     del(basic_info['part_ref'])
 
                 result['services_included'].append(basic_info)
