@@ -255,7 +255,14 @@ def create_offering(provider, profile, json_data):
 
     offering_description = json_data['offering_description']
     graph = rdflib.Graph()
-    graph.parse(data=offering_description['data'], format=offering_description['content_type'])
+    rdf_format = offering_description['content_type']
+
+    if rdf_format == 'text/turtle' or rdf_format == 'text/plain':
+        rdf_format = 'n3'
+    elif rdf_format == 'application/json':
+        rdf_format = 'json-ld'
+
+    graph.parse(data=offering_description['data'], format=rdf_format)
     data['offering_description'] = graph.serialize(format='json-ld')
 
     repository = Repository.objects.get(name=json_data['repository'])
