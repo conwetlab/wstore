@@ -13,13 +13,17 @@
             this.comments = offeringData.comments;
             this.tags = offeringData.tags;
             this.screenshots = offeringData.related_images;
-            this.shortDescription = offeringData.offering_description.shortDescription;
-            this.updated = offeringData.offering_description.modified;
-            this.created = offeringData.offering_description.created;
-            this.description = offeringData.offering_description.longDescription;
+
+            this.servicesOffered = offeringData.offering_description.services_included;
+
+            this.shortDescription = this.servicesOffered[0].short_description;
+            this.updated = this.servicesOffered[0].modified;
+            this.created = this.servicesOffered[0].created;
+            this.description = this.servicesOffered[0].long_description;
             this.offeringDescriptionURL = offeringData.description_url;
-            this.legal = offeringData.offering_description.legal;
-            this.sla = offeringData.offering_description.sla;
+            this.legal = this.servicesOffered[0].legal;
+            this.sla = this.servicesOffered[0].sla;
+            this.interactions = this.servicesOffered[0].interactions;
             this.pricing = offeringData.offering_description.pricing;
             this.bill = '';
 
@@ -103,6 +107,10 @@
 
         OfferingElement.prototype.getSla = function getSla () {
             return this.sla;
+        };
+
+        OfferingElement.prototype.getInteractions = function getInteractions () {
+            return this.interactions;
         };
 
         OfferingElement.prototype.getPricing = function getPricing () {
