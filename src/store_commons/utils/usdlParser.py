@@ -270,6 +270,9 @@ class USDLParser(object):
         # Get the interaction protocols that define the service functionality
         interaction_protocols = self._get_field(USDL, service_uri, 'hasInteractionProtocol', id_=True)
 
+        if len(interaction_protocols) == 1 and interaction_protocols[0] == '':
+            return []
+
         for itp in interaction_protocols:
             protocol_info = {
                 'title': self._get_field(DCTERMS, itp, 'title')[0],
