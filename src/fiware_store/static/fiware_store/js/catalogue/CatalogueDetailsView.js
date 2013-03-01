@@ -6,6 +6,7 @@
     var legalLoaded;
     var pricingLoaded;
     var slaLoaded;
+    var interLoaded;
     var resLoaded;
 
     paintOfferingDetails = function paintOfferingDetails (offeringElement, backAction, container) {
@@ -17,6 +18,7 @@
         legalLoaded = false;
         pricingLoaded = false;
         slaLoaded = false;
+        interLoaded = false;
         resLoaded = false;
         // Create the details view
 
@@ -65,6 +67,10 @@
         };
 
         // Set listeners
+        $('a[href="#int-tab"]').on('shown', function (e) {
+            paintInteractionProtocols(offeringElement.getInteractions());
+        });
+
         $('a[href="#legal-tab"]').on('shown', function (e) {
             paintLegal(offeringElement.getLegal());
         });
@@ -285,13 +291,73 @@
                         'description': sla[i].description,
                         'obligated': sla[i].obligatedParty.substring(sla[i].obligatedParty.indexOf('#') + 1)
                     });
-                    dom.appendTo('sla-tab');
+                    dom.appendTo('#sla-tab');
                     if('slaExpresions' in sla[i]){
                         paintSlaExpresions(sla[i].slaExpresions, dom.find('.expresions'));
                     }
                 };
             } else {
                 $('<p></p>').text('No service level agreement has been defined').appendTo('#sla-tab');
+            }
+        }
+    };
+
+    var paintInteractionParams = function paintInteractionParams (params, domElem, title) {
+        $('<h4></h4>').text(title).appendTo(domElem);
+        $.template('intParamTemplate', $('#int_param_template'));
+
+        for (var i = 0; i < params.length; i++) {
+            $.tmpl('intParamTemplate', {
+                'label': params[i].label,
+                'description': params[i].description,
+                'interface_element': params[i].interface_element
+            }).appendTo(domElem);
+        }
+    };
+
+    var paintInteractions = function paintInteractions (interactions, domElem) {
+        $('<h3></h3>').text('Interactions').appendTo(domElem);
+        $.template('interactTemplate', $('#int_template'));
+
+        for (var i = 0; i < interactions.length; i++) {
+            var inter = $.tmpl('interactTemplate', {
+                'title': interactions[i].title,
+                'description': interactions[i].description,
+                'interface_operation': interactions[i].interface_operation
+            });
+            inter.appendTo(domElem);
+            if ('inputs' in interactions[i] && interactions[i].inputs.length > 0) {
+                paintInteractionParams(interactions[i].inputs, inter.find('.inputs'), 'Inputs');
+            }
+
+            if ('outputs' in interactions[i] && interactions[i].outputs.length > 0) {
+                paintInteractionParams(interactions[i].outputs, inter.find('.outputs'), 'Outputs');
+            }
+        }
+    };
+
+    var paintInteractionProtocols = function paintInteractionProtocols (interactions) {
+        if(!interLoaded) {
+            interLoaded = true;
+            $('<h2></h2>').text('Interaction protocols information').appendTo('#int-tab');
+
+            if(interactions.length > 0) {
+                $.template('intProtTemplate', $('#int_prot_template'));
+
+                for (var i = 0; i < interactions.length; i++) {
+                    var prot = $.tmpl('intProtTemplate', {
+                        'title': interactions[i].title,
+                        'description': interactions[i].description,
+                        'technical_interface': interactions[i].technical_interface
+                    });
+                    prot.appendTo('#int-tab');
+
+                    if ('interactions' in interactions[i] && interactions[i].interactions.length > 0) {
+                        paintInteractions(interactions[i].interactions, prot.find('.interactions'));
+                    }
+                }
+            } else {
+                $('<p></p>').text('No interaction protocols have been defined').appendTo('#int-tab');
             }
         }
     };
