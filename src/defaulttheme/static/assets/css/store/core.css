@@ -1,7 +1,8 @@
 #login-header {
     position: absolute;
-    left: 40%;
+    left: 50%;
     top: 120px;
+    margin-left: -165px;
 }
 
 #login-form {
@@ -11,12 +12,17 @@
     width: 325px;
     background-color: rgb(250, 250, 260);
     position: absolute;
-    left: 40%;
+    left: 50%;
+    margin-left: -162px;
     top: 220px;
 }
 
 #id_username {
     width: 285px;
+}
+
+#logo {
+    width: 100px;
 }
 
 .title_wrapper {
@@ -39,7 +45,9 @@
 }
 
 .store_title {
-    margin-left: 10px !important;
+    position: relative;
+    left: 110px;
+    top: -80px;
 }
 
 .float-right {
