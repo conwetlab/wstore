@@ -1,10 +1,10 @@
 from django.contrib.auth import logout as django_logout
-from django.shortcuts import render
+from django.http import HttpResponseRedirect
 
 class Http403(Exception):
     pass
 
-def logout(request, template='registration/logout.html'):
+def logout(request):
 
     django_logout(request)
-    return render(request, template)
+    return HttpResponseRedirect('/login?next=/')
