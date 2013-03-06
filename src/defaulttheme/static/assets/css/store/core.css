@@ -76,6 +76,17 @@
 .tab-content {
     padding: 5px;
 }
+
+.catalogue-form {
+    width: 200px;
+}
+
+.offerings-container {
+    position: absolute;
+    top: 200px;
+    left: 250px;
+}
+
 .menu-offering {
     text-align: left;
     border: 1px solid rgb(205, 206, 209);
