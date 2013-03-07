@@ -11,7 +11,8 @@
                 callback(response);
             },
             error: function (xhr) {
-                var msg = 'Error: the server responds with code ' + xhr.status;
+                var resp = xhr.responseText;
+                var msg = JSON.parse(resp).message;
                 MessageManager.showMessage('Error', msg);
             }
         });
@@ -46,7 +47,8 @@
                 updateResources();
             },
             error: function (xhr) {
-                var msg = 'Error: the server responds with code ' + xhr.status;
+                var resp = xhr.responseText;
+                var msg = JSON.parse(resp).message;
                 MessageManager.showMessage('Error', msg);
             }
         });
