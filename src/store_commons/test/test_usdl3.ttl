@@ -1,0 +1,111 @@
+@prefix foaf: <http://xmlns.com/foaf/0.1/> . 
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . 
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . 
+@prefix msm: <http://cms-wg.sti2.org/ns/minimal-service-model#> . 
+@prefix owl: <http://www.w3.org/2002/07/owl#> . 
+@prefix dcterms: <http://purl.org/dc/terms/> . 
+@prefix usdl: <http://www.linked-usdl.org/ns/usdl-core#> . 
+@prefix legal: <http://www.linked-usdl.org/ns/usdl-legal#> . 
+@prefix price: <http://www.linked-usdl.org/ns/usdl-pricing#> . 
+@prefix sla: <http://www.linked-usdl.org/ns/usdl-sla#> . 
+@prefix sec: <http://www.linked-usdl.org/ns/usdl-sec#> . 
+@prefix blueprint: <http://bizweb.sap.com/TR/blueprint#> . 
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> . 
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+@prefix ctag: <http://commontag.org/ns#> . 
+@prefix org: <http://www.w3.org/ns/org#> . 
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> . 
+@prefix time: <http://www.w3.org/2006/time#> . 
+@prefix gr: <http://purl.org/goodrelations/v1#> . 
+@prefix doap: <http://usefulinc.com/ns/doap#> . 
+
+<http://localhost:8000/usdleditor> 
+  a usdl:ServiceDescription ; 
+  dcterms:title ""@en ; 
+  dcterms:description ""@en ; 
+  dcterms:modified ""^^xsd:datetime ; 
+  dcterms:created ""^^xsd:datetime ; 
+  dcterms:creator _:b1ec . 
+
+_:b1ec 
+  a foaf:Person ; 
+  foaf:name "" . 
+
+<http://localhost:8000/usdleditor#VrW0LRmCV3rtTCBbF> 
+  a usdl:Service ; 
+  dcterms:subject _:b1ed , 
+    _:b1ee , 
+    _:b1ef , 
+    _:b1f0 ; 
+  dcterms:modified ""^^xsd:datetime ; 
+  dcterms:created ""^^xsd:datetime ; 
+  foaf:thumbnail <http://ddrsl001xb.drss.sap.corp:8888/bizwebportal/resources/assets/icons/05_Icon_UIDivision.png> ; 
+  foaf:depiction <http://ddrsl001xb.drss.sap.corp:8888/bizweb/icons/GBFlipper_AW.png> ; 
+  dcterms:title "Example service 1"@en ; 
+  usdl:versionInfo "1.0" ;
+  dcterms:abstract "Short description 1"@en ; 
+  dcterms:description "Long description 1"@en . 
+
+_:b1ed 
+  a skos:Concept ; 
+  skos:inScheme blueprint:SolutionType ; 
+  rdfs:label "Business Solution" . 
+
+_:b1ee 
+  a skos:Concept ; 
+  skos:inScheme blueprint:PlatformType ; 
+  rdfs:label "Android" . 
+
+_:b1ef 
+  a skos:Concept ; 
+  skos:inScheme blueprint:BusinessArea ; 
+  rdfs:label "Services" . 
+
+_:b1f0 
+  a skos:Concept ; 
+  skos:inScheme blueprint:Industry ; 
+  rdfs:label "Other services" . 
+
+<http://localhost:8000/usdleditor#kMBktAyvupjdu0za5> 
+  a usdl:Service ; 
+  dcterms:subject _:b1f1 , 
+    _:b1f2 , 
+    _:b1f3 , 
+    _:b1f4 ; 
+  dcterms:modified ""^^xsd:datetime ; 
+  dcterms:created ""^^xsd:datetime ; 
+  foaf:thumbnail <http://ddrsl001xb.drss.sap.corp:8888/bizwebportal/resources/assets/icons/05_Icon_UIDivision.png> ; 
+  foaf:depiction <http://ddrsl001xb.drss.sap.corp:8888/bizweb/icons/GBFlipper_AW.png> ; 
+  dcterms:title "Example service 2"@en ; 
+  usdl:versionInfo "1.0" ;
+  dcterms:abstract "Short description 2"@en ; 
+  dcterms:description "Long description 2"@en . 
+
+_:b1f1 
+  a skos:Concept ; 
+  skos:inScheme blueprint:SolutionType ; 
+  rdfs:label "Business Solution" . 
+
+_:b1f2 
+  a skos:Concept ; 
+  skos:inScheme blueprint:PlatformType ; 
+  rdfs:label "Android" . 
+
+_:b1f3 
+  a skos:Concept ; 
+  skos:inScheme blueprint:BusinessArea ; 
+  rdfs:label "Services" . 
+
+_:b1f4 
+  a skos:Concept ; 
+  skos:inScheme blueprint:Industry ; 
+  rdfs:label "Other services" . 
+
+<http://localhost:8000/usdleditor#qzytUCpB4qB4Z9hwh> 
+  a usdl:ServiceOffering ; 
+  dcterms:description ""@en ; 
+  usdl:validFrom "2011-12-01"^^xsd:datetime ; 
+  usdl:validThrough "2011-12-31"^^xsd:datetime ; 
+  usdl:includes <http://localhost:8000/usdleditor#kMBktAyvupjdu0za5> ,
+     <http://localhost:8000/usdleditor#VrW0LRmCV3rtTCBbF> ;
+  dcterms:title "test offering"@en .
