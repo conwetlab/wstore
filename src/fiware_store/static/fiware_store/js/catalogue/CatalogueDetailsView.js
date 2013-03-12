@@ -197,7 +197,7 @@
     };
 
     var paintPriceElement = function paintPriceElement (priceElem, dom, type) {
-        if (priceElem > 0) {
+        if (priceElem.length > 0) {
             title = null;
             if (type == 'taxes') {
                 title = 'Taxes';
@@ -212,26 +212,28 @@
 
     var paintPricing = function paintPricing (pricing) {
         if (!pricingLoaded) {
+            var price_plans = pricing.price_plans;
+
             pricingLoaded = true;
 
             $('<h2></h2>').text('Pricing Infomation').appendTo('#pricing-tab');
 
-            if (pricing.length > 0){
+            if (price_plans.length > 0){
                 $.template('pricingTemplate', $('#pricing_template'));
 
-                for (var i = 0; i < pricing.length; i++) {
+                for (var i = 0; i < price_plans.length; i++) {
                     var dom;
                     dom = $.tmpl('pricingTemplate', {
-                        'title': pricing[i].title,
-                        'description': pricing[i].description
+                        'title': price_plans[i].title,
+                        'description': price_plans[i].description
                     });
                     dom.appendTo('#pricing-tab');
-                    if ('priceComponents' in pricing[i]) {
-                        paintPriceElement(pricing[i].priceComponents, dom.find('.price-components'), 'components');
+                    if ('price_components' in price_plans[i]) {
+                        paintPriceElement(price_plans[i].price_components, dom.find('.price-components'), 'components');
                     }
 
-                    if ('taxes' in pricing[i]) {
-                        paintPriceElement(pricing[i].taxes, dom.find('.taxes'), 'taxes');
+                    if ('taxes' in price_plans[i]) {
+                        paintPriceElement(price_plans[i].taxes, dom.find('.taxes'), 'taxes');
                     }
                 }
             } else {
