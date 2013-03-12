@@ -82,7 +82,7 @@ def serve_media(request, path, name):
 
     if dir_path.endswith('bills'):
         user_profile = UserProfile.objects.get(user=request.user)
-        purchase = Purchase.objects.get(ref=name[:-4])
+        purchase = Purchase.objects.get(ref=name[:-15])
 
         if purchase.organization_owned:
             user_org = user_profile.organization
