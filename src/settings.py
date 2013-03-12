@@ -148,6 +148,7 @@ INSTALLED_APPS = (
     'repository_adaptor',
     'defaulttheme',
     'usdl-editor',
+    'charging_engine',
 )
 
 # A sample logging configuration. The only tangible logging

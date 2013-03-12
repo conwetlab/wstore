@@ -44,9 +44,15 @@ def create_purchase(user, offering, org_owned=False, tax_address=None):
         state='paid',
         tax_address=tax
     )
+    # Load ref
+    purchase.ref = purchase.pk
+    purchase.save()
 
     # Add the offering to the user profile
     profile.offerings_purchased.append(offering.pk)
     profile.save()
+
+    charging_engine = ChargingEngine(purchase)
+    charging_engine.resolve_charging(new_purchase=True)
 
     return purchase
