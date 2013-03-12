@@ -393,7 +393,8 @@
         }
     };
 
-    updateResources = function updateResources () {
+
+    refreshAndUpdateDetailsView = function refreshAndUpdateDetailsView () {
         $.ajax({
             type: "GET",
             url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
@@ -403,9 +404,8 @@
             }),
             dataType: 'json',
             success: function (response) {
-                resLoaded = false;
-                $('#res-tab').empty();
-                paintResources(response.resources);
+                var newElem = new OfferingElement(response)
+                paintOfferingDetails(newElem, backAct, detContainer);
             },
             error: function (xhr) {
             }

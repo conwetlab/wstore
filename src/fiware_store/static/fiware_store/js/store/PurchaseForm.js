@@ -45,7 +45,7 @@
                 downloadResources(response);
                 //Refresh offering details view
                 offeringElement.setState('purchased');
-                refreshDetailsView(offeringElement);
+                refreshAndUpdateDetailsView();
             },
             error: function (xhr) {
                 var resp = xhr.responseText;

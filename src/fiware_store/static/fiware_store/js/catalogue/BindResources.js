@@ -44,7 +44,7 @@
             data: JSON.stringify(resSelected),
             success: function (response) {
                 MessageManager.showMessage('Binded', 'The resources have been binded');
-                updateResources();
+                refreshAndUpdateDetailsView();
             },
             error: function (xhr) {
                 var resp = xhr.responseText;
