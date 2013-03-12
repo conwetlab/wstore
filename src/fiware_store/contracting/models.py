@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from djangotoolbox.fields import DictField
+from djangotoolbox.fields import ListField
 
 from fiware_store.models import Offering
 
@@ -15,7 +16,7 @@ class Purchase(models.Model):
     date = models.DateTimeField()
     offering = models.ForeignKey(Offering)
     state = models.CharField(max_length=50)
-    bill = models.CharField(max_length=200)
+    bill = ListField()
     tax_address = DictField()
 
     class Meta:
