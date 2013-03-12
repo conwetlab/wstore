@@ -7,7 +7,7 @@ from django.http import HttpResponse
 
 from store_commons.resource import Resource
 from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
-from fiware_store.contracting.purchases_management import create_purchase, generate_bill
+from fiware_store.contracting.purchases_management import create_purchase
 from fiware_store.models import Offering
 from fiware_store.models import Resource as store_resource
 
@@ -37,7 +37,6 @@ class PurchaseCollection(Resource):
                 else:
                     purchase = create_purchase(user, offering, data['organization_owned'])
 
-                generate_bill(purchase)
             except:
                 build_error_response(request, 400, 'Invalid json content')
 
