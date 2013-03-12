@@ -50,32 +50,25 @@
                                 Name
                             </th>
                             <th>
+                                Charged unit
+                            </th>
+                            <th>
                                 Value
-                            </th>
-                            <th>
-                                Unit
-                            </th>
-                            <th>
-                                Currency
                             </th>
                         <tr>
                     </thead>
                     <tbody>
                         {% for n, v, u, c in parts %}
                         <tr>
-                            <th>
+                            <td>
                                 {{ n }}
-                            </th>
-                            <th>
-                                {{ v }}
-                            </th>
-                            <th>
+                            </td>
+                            <td>
                                 {{ u }}
-                            </th>
-                            <th>
-                                {{ c }}
-                            </th>
-                            
+                            </td>
+                            <td>
+                                {{ v }} {{ c }}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -101,18 +94,18 @@
                     <tbody>
                         {% for n, v, u, c in taxes %}
                         <tr>
-                            <th>
+                            <td>
                                 {{ n }}
-                            </th>
-                            <th>
+                            </td>
+                            <td>
                                 {{ v }}
-                            </th>
-                            <th>
+                            </td>
+                            <td>
                                 {{ u }}
-                            </th>
-                            <th>
+                            </td>
+                            <td>
                                 {{ c }}
-                            </th>
+                            </td>
                             
                         </tr>
                         {% endfor %}
@@ -133,12 +126,12 @@
                     <tbody>
                         {% for n, d in resources %}
                         <tr>
-                            <th>
+                            <td>
                                {{ n }}
-                            </th>
-                            <th>
+                            </td>
+                            <td>
                                {{ d }}
-                            </th>
+                            </td>
                         <tr>
                         {% endfor %}
                     </tbody>
@@ -159,15 +152,15 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <th>
-                                {{ subtotal }}
-                            </th>
-                            <th>
+                            <td>
+                                {{ subtotal }} {{ cur }}
+                            </td>
+                            <td>
                                 {{ tax }}
-                            </th>
-                            <th>
-                                {{ total }}
-                            </th>
+                            </td>
+                            <td>
+                                {{ total }} {{ cur }}
+                            </td>
                         <tr>
                     </tbody>
                 </table>
