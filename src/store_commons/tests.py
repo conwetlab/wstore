@@ -87,12 +87,17 @@ class UsdlParserTestCase(TestCase):
         self.assertEqual(len(legal), 1)
         self.assertEqual(legal[0]['label'], 'example legal')
         self.assertEqual(legal[0]['description'], 'example legal description')
+
         self.assertEqual(len(legal[0]['clauses']), 2)
 
-        self.assertEqual(legal[0]['clauses'][0]['name'], 'example clause 1')
-        self.assertEqual(legal[0]['clauses'][0]['text'], 'example text 1')
-        self.assertEqual(legal[0]['clauses'][1]['name'], 'example clause 2')
-        self.assertEqual(legal[0]['clauses'][1]['text'], 'example text 2')
+        for clause in legal[0]['clauses']:
+
+            if clause['name'] == 'example clause 1':
+                self.assertEqual(clause['name'], 'example clause 1')
+                self.assertEqual(clause['text'], 'example text 1')
+            else:
+                self.assertEqual(clause['name'], 'example clause 2')
+                self.assertEqual(clause['text'], 'example text 2')
 
         sla = parsed_info['services_included'][0]['sla']
         self.assertEqual(len(sla), 1)
