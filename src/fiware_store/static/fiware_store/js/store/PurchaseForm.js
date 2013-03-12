@@ -60,7 +60,7 @@
         for (var i = 0; i < resources.length; i++) {
             window.open(resources[i]);
         }
-        window.open(data.bill);
+        window.open(data.bill[0]);
     };
 
     purchaseOffering = function purchaseOffering(offeringElement) {

@@ -25,7 +25,7 @@
             this.sla = this.servicesOffered[0].sla;
             this.interactions = this.servicesOffered[0].interactions;
             this.pricing = offeringData.offering_description.pricing;
-            this.bill = '';
+            this.bill = [];
 
             if (this.state == 'purchased') {
                 this.bill = offeringData.bill;
