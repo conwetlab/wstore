@@ -133,34 +133,38 @@ class ChargingEngine:
         parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
         parsed_usdl = parser.parse()
 
+        usdl_pricing = {}
         # Only a price plan is supported in this version
-        usdl_pricing = parsed_usdl['pricing']['price_plans'][0]
+        if len(parsed_usdl['pricing']['price_plans']) > 0:
+            usdl_pricing = parsed_usdl['pricing']['price_plans'][0]
+
         price_model = {}
 
-        for comp in usdl_pricing['price_components']:
+        if 'price_components' in usdl_pricing:
+            for comp in usdl_pricing['price_components']:
 
-            try:
-                unit = Unit.objects.get(name=comp['unit'])
-            except:
-                raise(Exception, 'Unsupported unit in price plan model')
+                try:
+                    unit = Unit.objects.get(name=comp['unit'])
+                except:
+                    raise(Exception, 'Unsupported unit in price plan model')
 
-            if unit.defined_model == 'single payment':
-                if not 'single_payment' in price_model:
-                    price_model['single_payment'] = []
+                if unit.defined_model == 'single payment':
+                    if not 'single_payment' in price_model:
+                        price_model['single_payment'] = []
 
-                price_model['single_payment'].append(comp)
+                    price_model['single_payment'].append(comp)
 
-            elif unit.defined_model == 'subscription':
-                if not 'subscription' in price_model:
-                    price_model['subscription'] = []
+                elif unit.defined_model == 'subscription':
+                    if not 'subscription' in price_model:
+                        price_model['subscription'] = []
 
-                price_model['subscription'].append(comp)
+                    price_model['subscription'].append(comp)
 
-            elif unit.defined_model == 'pay per use':
-                if not 'pay_per_use' in price_model:
-                    price_model['pay_per_use'] = []
+                elif unit.defined_model == 'pay per use':
+                    if not 'pay_per_use' in price_model:
+                        price_model['pay_per_use'] = []
 
-                price_model['pay_per_use'].append(comp)
+                    price_model['pay_per_use'].append(comp)
 
         # Create the contract entry
         Contract.objects.create(
@@ -189,6 +193,7 @@ class ChargingEngine:
                 charge = True
                 related_model['subscription'] = self._price_model['subscription']
 
+            price = 0
             if charge:
                 # Call the price resolver
                 price = resolve_price(related_model)
@@ -198,8 +203,9 @@ class ChargingEngine:
         #         Create the CDR
         #         Send the CDR to the RSS
 
-                # Generate the invoice
-                self._generate_invoice(price, related_model, 'initial')
+            # Generate the invoice
+            self._generate_invoice(price, related_model, 'initial')
+
         # If not new purchase get the price model from the contract entry
         # Check if there is a CDR is order to determine if it is a pay per use
         # charge or a Suscription renovation
