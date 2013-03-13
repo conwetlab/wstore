@@ -97,9 +97,9 @@ class OfferingEntry(Resource):
 
     @method_decorator(login_required)
     def read(self, request, organization, name, version):
-
+        user = request.user
         offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
-        result = get_offering_info(offering)
+        result = get_offering_info(offering, user)
 
         return HttpResponse(json.dumps(result), status=200, mimetype='application/json; charset=UTF-8')
 

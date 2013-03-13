@@ -167,7 +167,19 @@ def count_offerings(user, filter_='published', owned=False):
     return {'number': count}
 
 
-def get_offering_info(offering):
+def get_offering_info(offering, user):
+
+    user_profile = UserProfile.objects.get(user=user)
+
+    # Check if the user has purchased the offering
+    state = offering.state
+
+    if offering.pk in user_profile.offerings_purchased:
+        state = 'purchased'
+        purchase = Purchase.objects.get(offering=offering, customer=user)
+    elif offering.pk in user_profile.organization.offerings_purchased:
+        state = 'purchased'
+        purchase = Purchase.objects.get(offering=offering, owner_organization=user_profile.organization.name)
 
     # Load offering data
     result = {
@@ -175,7 +187,7 @@ def get_offering_info(offering):
         'owner_organization': offering.owner_organization,
         'owner_admin_user_id': offering.owner_admin_user.username,
         'version': offering.version,
-        'state': offering.state,
+        'state': state,
         'description_url': offering.description_url,
         'rating': offering.rating,
         'comments': offering.comments,
@@ -184,6 +196,9 @@ def get_offering_info(offering):
         'related_images': offering.related_images,
         'resources': []
     }
+
+    if state == 'purchased':
+        result['bill'] = purchase.bill
 
     # Load resources
     for res in offering.resources:
