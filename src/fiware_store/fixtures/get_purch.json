@@ -125,7 +125,7 @@
             "date": "2013-02-05 17:06:46",
             "offering": "61000aba8e05ac2115f022f9",
             "state": "paid",
-            "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
+            "bill": ["/media/bills/61005aba8e05ac2115f022f0.pdf"],
             "tax_address": {
                 "street": "test street",
                 "postal": "20000",
@@ -145,7 +145,7 @@
             "date": "2013-02-05 17:06:46",
             "offering": "61000aba8e05ac2115f022ff",
             "state": "paid",
-            "bill": "/media/bills/61006aba8e05ac2115f022f0.pdf",
+            "bill": ["/media/bills/61006aba8e05ac2115f022f0.pdf"],
             "tax_address": {
                 "street": "test street",
                 "postal": "20000",

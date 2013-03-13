@@ -8,6 +8,15 @@ from fiware_store.models import Purchase
 from fiware_store.models import UserProfile
 
 
+class FakeChargingEngine:
+
+    def __init__(self, purchase):
+        pass
+
+    def resolve_charging(self, new_purchase):
+        pass
+
+
 def fake_generate_bill():
     pass
 
@@ -19,6 +28,7 @@ class PurchasesCreationTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         purchases_management.generate_bill = fake_generate_bill
+        purchases_management.ChargingEngine = FakeChargingEngine
         super(PurchasesCreationTestCase, cls).setUpClass()
 
     def test_basic_purchase_creation(self):

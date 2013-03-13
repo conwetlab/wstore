@@ -406,7 +406,8 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
         self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
         self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
-        self.assertEqual(offerings[0]['bill'], '/media/bills/61005aba8e05ac2115f022f0.pdf')
+        self.assertEqual(len(offerings[0]['bill']), 1)
+        self.assertEqual(offerings[0]['bill'][0], '/media/bills/61005aba8e05ac2115f022f0.pdf')
 
         self.assertEqual(offerings[1]['name'], 'test_offering2')
         self.assertEqual(offerings[1]['version'], '1.1')
@@ -414,7 +415,8 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
         self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
         self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
-        self.assertEqual(offerings[1]['bill'], '/media/bills/61006aba8e05ac2115f022f0.pdf')
+        self.assertEqual(len(offerings[1]['bill']), 1)
+        self.assertEqual(offerings[1]['bill'][0], '/media/bills/61006aba8e05ac2115f022f0.pdf')
 
     def test_get_published_offerings(self):
         user = User.objects.get(username='test_user2')
