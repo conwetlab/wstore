@@ -48,7 +48,12 @@ class PurchaseCollection(Resource):
             r = store_resource.objects.get(pk=res)
 
             if r.resource_type == 'download':
-                response['resources'].append(r.resource_path)
+                # Check if the resource has been uploaded to the store or is
+                # in an external applications server
+                if r.resource_path != '':
+                    response['resources'].append(r.resource_path)
+                elif r.download_link != '':
+                    response['resources'].append(r.download_link)
 
         # Load bill URL
         response['bill'] = purchase.bill

@@ -132,7 +132,10 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
 
             if offer['state'] == 'purchased':
                 if res.resource_type == 'download':
-                    res_info['link'] = res.resource_path
+                    if res.resource_path != '':
+                        res_info['link'] = res.resource_path
+                    elif res.download_link != '':
+                        res_info['link'] = res.download_link
 
             resource_content.append(res_info)
         offer['resources'] = resource_content
@@ -203,11 +206,19 @@ def get_offering_info(offering, user):
     # Load resources
     for res in offering.resources:
         resource = Resource.objects.get(pk=res)
-        result['resources'].append({
+        res_info = {
             'name': resource.name,
             'version': resource.version,
             'description': resource.description
-        })
+        }
+
+        if state == 'purchased' and resource.resource_type == 'download':
+            if resource.resource_path != '':
+                res_info['link'] = resource.resource_path
+            elif resource.download_link != '':
+                res_info['link'] = resource.download_link
+
+        result['resources'].append(res_info)
 
     # Load offering description
     parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
