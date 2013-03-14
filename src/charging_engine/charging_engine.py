@@ -81,7 +81,15 @@ class ChargingEngine:
             r = Resource.objects.get(pk=str(res))
             resources.append((r.name, r.description))
 
-        date = str(self._purchase.contract.last_charge).split(' ')[0]
+        last_charge = self._purchase.contract.last_charge
+
+        if last_charge == None:
+            # If last charge is None means that it is the invoice generation
+            # associated with a free offering
+            date = str(datetime.now()).split(' ')[0]
+        else:
+            date = str(last_charge).split(' ')[0]
+
         # Load pricing info into the context
         context = {
             'BASEDIR': settings.BASEDIR,
