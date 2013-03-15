@@ -107,7 +107,7 @@
                 success: function (response) {
                     MessageManager.showMessage('Created', 'The offering has been created')
                     if (getCurrentTab() == '#provided-tab') {
-                        getUserOfferings('#provided-tab');
+                        getUserOfferings('#provided-tab', paintProvidedOfferings, false);
                     }
                 },
                 error: function (xhr) {
