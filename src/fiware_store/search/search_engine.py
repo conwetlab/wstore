@@ -68,6 +68,9 @@ class SearchEngine():
 
     def full_text_search(self, user, text, state=None):
 
+        if not os.path.exists(self._index_path) or os.listdir(self._index_path) == []:
+            raise Exception('The index not exist')
+
         # Get the index reader
         lucene.initVM()
         index = SimpleFSDirectory(File(self._index_path))
