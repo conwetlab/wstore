@@ -61,7 +61,7 @@ class OfferingCollection(Resource):
 
         if action != 'count':
             if pagination['skip'] and pagination['limit']:
-                if filter_ == 'provider':
+                if filter_ == 'provided':
                     result = get_offerings(user, request.GET.get('state'), owned=True, pagination=pagination)
 
                 elif filter_ == 'published':
@@ -70,7 +70,7 @@ class OfferingCollection(Resource):
                 elif filter_ == 'purchased':
                     result = get_offerings(user, 'purchased', owned=True, pagination=pagination)
             else:
-                if filter_ == 'provider':
+                if filter_ == 'provided':
                     result = get_offerings(user, request.GET.get('state'), owned=True)
 
                 elif filter_ == 'published':
@@ -80,7 +80,7 @@ class OfferingCollection(Resource):
                     result = get_offerings(user, 'purchased', owned=True)
 
         else:
-            if filter_ == 'provider':
+            if filter_ == 'provided':
                 result = count_offerings(user, request.GET.get('state'), owned=True)
 
             elif filter_ == 'published':

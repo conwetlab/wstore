@@ -10,7 +10,7 @@
         offeringsPage = $('#number-offerings').val();
 
         if (target == '#provided-tab') {
-            filter = '?filter=provider&state=all';
+            filter = '?filter=provided&state=all';
         } else if (target == '#purchased-tab'){
             filter = '?filter=purchased';
         }
