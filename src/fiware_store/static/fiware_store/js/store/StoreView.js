@@ -1,6 +1,26 @@
 
 (function () {
 
+    var searchOfferings = function searchOfferings () {
+        var text = $('#text-search').val();
+
+        if (text != '') {
+            $.ajax({
+                type: "GET",
+                url: EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': text}),
+                dataType: 'json',
+                success: function(response) {
+                    paintOfferings(response);
+                },
+                error: function(xhr) {
+                    var resp = xhr.responseText;
+                    var msg = JSON.parse(resp).message;
+                    MessageManager.showMessage('Error', msg);
+                }
+            });
+        }
+    };
+
     var getOfferings = function getOfferings() {
          $.ajax({
             type: "GET",
@@ -15,10 +35,12 @@
                 MessageManager.showMessage('Error', msg);
             }
 
-        })
+        });
     }
 
     var paintOfferings = function paintOfferings(data) {
+        $('#store-container').empty();
+
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
             var labelClass = "label";
@@ -48,6 +70,8 @@
         $.template('homePageTemplate', $('#home_page_template'));
         $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
 
+        // Set search listeners
+        $('#search').click(searchOfferings);
         getOfferings();
     };
 
