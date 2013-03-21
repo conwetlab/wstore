@@ -5,7 +5,6 @@ import rdflib
 from lucene import SimpleFSDirectory, File, Document, Field, \
 StandardAnalyzer, IndexWriter, Version, IndexSearcher, QueryParser
 
-from fiware_store.offerings.offerings_management import get_offering_info
 from fiware_store.models import Offering
 
 
@@ -84,6 +83,8 @@ class SearchEngine():
         total_hits = lucene_searcher.search(query, max_number)
 
         result = []
+        # The get_offering_info method is imported inside this method in order to avoid a cross-reference import error
+        from fiware_store.offerings.offerings_management import get_offering_info
 
         for hit in total_hits.scoreDocs:
             doc = lucene_searcher.doc(hit.doc)

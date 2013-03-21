@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 
 from repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from market_adaptor.marketadaptor import MarketAdaptor
+from fiware_store.search.search_engine import SearchEngine
 from fiware_store.models import Resource
 from fiware_store.models import Repository
 from fiware_store.models import Offering
@@ -297,7 +298,7 @@ def create_offering(provider, profile, json_data):
 
     data['description_url'] = repository_adaptor.upload(offering_id, offering_description['content_type'], offering_description['data'])
 
-    Offering.objects.create(
+    offering = Offering.objects.create(
         name=data['name'],
         owner_organization=organization.name,
         owner_admin_user=provider,
@@ -311,6 +312,14 @@ def create_offering(provider, profile, json_data):
         related_images=data['related_images'],
         offering_description=json.loads(data['offering_description'])
     )
+
+    # Load offering document to the search index
+    index_path = os.path.join(settings.BASEDIR, 'fiware_store')
+    index_path = os.path.join(index_path, 'search')
+    index_path = os.path.join(index_path, 'indexes')
+
+    search_engine = SearchEngine(index_path)
+    search_engine.create_index(offering)
 
 
 def publish_offering(offering, data):
