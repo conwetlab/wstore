@@ -51,6 +51,15 @@ class FakeUsdlParser():
         return {}
 
 
+class FakeSearchEngine():
+
+    def __init__(self, path):
+        pass
+
+    def create_index(self, offering):
+        pass
+
+
 class OfferingCreationTestCase(TestCase):
 
     _db = None
@@ -66,6 +75,7 @@ class OfferingCreationTestCase(TestCase):
 
         # Capture repository calls
         offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
+        offerings_management.SearchEngine = FakeSearchEngine
         # loads test image
         path = os.path.join(settings.BASEDIR, 'fiware_store/test/')
         f = open(os.path.join(path, 'test_image.png'), 'rb')
