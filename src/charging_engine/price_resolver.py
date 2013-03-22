@@ -15,6 +15,7 @@ def resolve_price(pricing_model, sdr=None):
             price = price + float(payment['value'])
 
     if 'subscription' in pricing_model:
-        price = price + float(payment['value'])
+        for payment in pricing_model['subscription']:
+            price = price + float(payment['value'])
 
     return price

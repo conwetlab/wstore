@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import json
+import time
 import subprocess
 from datetime import datetime
 
@@ -183,7 +184,27 @@ class ChargingEngine:
         )
         self._price_model = price_model
 
-    def resolve_charging(self, new_purchase=False):
+    def _calculate_renovation_date(self, unit):
+
+        renovation_date = None
+
+        now = datetime.now()
+        # Transform now date into seconds
+        now = time.mktime(now.timetuple())
+
+        if unit.lower() == 'per week':
+            renovation_date = now + 604800  # 7 days
+        elif unit.lower() == 'per month':
+            renovation_date = now + 2592000  # 30 days
+        elif unit.lower() == 'per year':
+            renovation_date = now + 31536000  # 365 days
+        else:
+            raise Exception('Invalid unit')
+
+        renovation_date = datetime.fromtimestamp(renovation_date)
+        return renovation_date
+
+    def resolve_charging(self, new_purchase=False, sdr=None):
 
         # Check if there is a new purchase
         if new_purchase:
@@ -208,17 +229,61 @@ class ChargingEngine:
                 # Make the charge
                 self._charge_client(price, 'initial charge')
 
-        #         Create the CDR
-        #         Send the CDR to the RSS
+            # If subscription parts has been charged update renovation dates
+            if 'subscription' in related_model:
+                updated_subscriptions = []
+
+                for subs in self._price_model['subscription']:
+                    up_sub = subs
+                    # Calculate renovation date
+                    up_sub['renovation_date'] = self._calculate_renovation_date(subs['unit'])
+                    updated_subscriptions.append(subs)
+
+                self._price_model['subscription'] = updated_subscriptions
+
+                # Update price model in contract
+                self._purchase.contract.pricing_model = self._price_model
+                self._purchase.contract.save()
+
+            # Create the CDR
+            # Send the CDR to the RSS
 
             # Generate the invoice
             self._generate_invoice(price, related_model, 'initial')
 
-        # If not new purchase get the price model from the contract entry
-        # Check if there is a CDR is order to determine if it is a pay per use
-        # charge or a Suscription renovation
-        # Call the price resolver
-        # Charge the client ??? Open issue: SDR periodicity
-        # Generate the CDR
-        # Sends the CDR to RSS
-        # If charged generate the invoice
+        else:
+            self._price_model = self._purchase.contract.pricing_model
+
+            # If not SDR received means that the call is a renovation
+            if sdr == None:
+                # Determine the price parts to renovate
+                if not 'subscription' in self._price_model:
+                    raise Exception('No subscriptions to renovate')
+
+                related_model = {
+                    'subscription': []
+                }
+
+                now = datetime.now()
+                updated_subscriptions = []
+
+                for s in self._price_model['subscription']:
+                    up_subs = s
+                    renovation_date = s['renovation_date']
+                    renovation_date = datetime.strptime(renovation_date, '%Y-%m-%d %H:%M:%S')
+
+                    if renovation_date < now:
+                        related_model['subscription'].append(s)
+                        up_subs['renovation_date'] = self._calculate_renovation_date(s['unit'])
+
+                    updated_subscriptions.append(up_subs)
+
+                price = resolve_price(related_model)
+                self._charge_client(price, 'Renovation')
+
+                self._price_model['suscription'] = updated_subscriptions
+                self._purchase.contract.pricing_model = self._price_model
+                self._purchase.contract.save()
+
+                # Update the charged parts renovation dates
+                self._generate_invoice(price, related_model, 'Renovation')
