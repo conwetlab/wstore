@@ -1,0 +1,260 @@
+[
+    {
+        "pk": "51000aba8e05ac2115f022f9",
+        "model": "auth.user",
+        "fields": {
+            "username": "test_user",
+            "first_name": "",
+            "last_name": "",
+            "email": "admin@c.com",
+            "password": "sha1$5AphFrMHRX5o$bd3394cfeb25266a67d88683d24ae0c7b0647bd8",
+            "is_staff": false,
+            "is_active": true,
+            "is_superuser": false,
+            "last_login": "2011-10-10 11:27:12",
+            "date_joined": "2011-10-10 11:27:12"
+        }
+    },
+    {
+        "pk": "51070aba8e05cc2115f022f9",
+        "model": "auth.user",
+        "fields": {
+            "username": "test_user2",
+            "first_name": "",
+            "last_name": "",
+            "email": "admin@c.com",
+            "password": "sha1$5AphFrMHRX5o$bd3394cfeb25266a67d88683d24ae0c7b0647bd8",
+            "is_staff": false,
+            "is_active": true,
+            "is_superuser": false,
+            "last_login": "2011-10-10 11:27:12",
+            "date_joined": "2011-10-10 11:27:12"
+        }
+    },
+    {
+        "pk": "51004aba8e08ac21150022f9",
+        "model": "charging_engine.Unit",
+        "fields": {
+            "name": "single payment",
+            "defined_model": "single payment"
+        }
+    },
+    {
+        "pk": "51004aca8e08dc21150022f9",
+        "model": "charging_engine.Unit",
+        "fields": {
+            "name": "per month",
+            "defined_model": "subscription"
+        }
+    },
+    {
+        "pk": "510045ba8e04ac21151022f9",
+        "model": "charging_engine.Unit",
+        "fields": {
+            "name": "per week",
+            "defined_model": "subscription"
+        }
+    },
+    {
+        "pk": "61000aba8e05ac2115f022f9",
+        "model": "fiware_store.Offering",
+        "fields": {
+            "name": "test_offering1",
+            "owner_admin_user": "51000aba8e05ac2115f022f9",
+            "version": "1.0",
+            "state": "published",
+            "marketplaces": [],
+            "rating": "0",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": ["61000bba8e05ac2116f022f9"],
+            "owner_organization": "test_organization",
+            "offering_description": {}
+        }
+    },
+    {
+        "pk": "61000bba8e05ac2116f022f9",
+        "model": "fiware_store.Resource",
+        "fields": {
+            "name": "test_resource",
+            "version": "1.0",
+            "provider": "51000aba8e05ac2115f022f9",
+            "resource_type": "download",
+            "description": "Example resource",
+            "state": "uploaded",
+            "download_link": "",
+            "resource_path": "/media/resources/test_user__test_resource__1.0",
+            "offerings": ["61000aba8e05ac2115f022f0"]
+        }
+    },
+    {
+        "pk": "61004aba5e05acc115f022f0",
+        "model": "fiware_store.Purchase",
+        "fields": {
+            "ref": "61005aba8e05ac2115f022f0",
+            "customer": "51070aba8e05cc2115f022f9",
+            "organization_owned": true,
+            "owner_organization": "test_organization1",
+            "date": "2013-02-05 17:06:46",
+            "offering": "61000aba8e05ac2115f022f9",
+            "state": "paid",
+            "bill": [],
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
+        }
+    },
+    {
+        "pk": "61005a1a8205ac3115111111",
+        "model": "fiware_store.Purchase",
+        "fields": {
+            "ref": "61005aba8e05ac2115f022f0",
+            "customer": "51070aba8e05cc2115f022f9",
+            "organization_owned": true,
+            "owner_organization": "test_organization1",
+            "date": "2013-02-05 17:06:46",
+            "offering": "61000aba8e05ac2115f022f9",
+            "state": "paid",
+            "bill": [],
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
+        }
+    },
+    {
+        "pk": "61005aba8e06ac2015f022f0",
+        "model": "fiware_store.Purchase",
+        "fields": {
+            "ref": "61005aba8e05ac2115f022f0",
+            "customer": "51070aba8e05cc2115f022f9",
+            "organization_owned": true,
+            "owner_organization": "test_organization1",
+            "date": "2013-02-05 17:06:46",
+            "offering": "61000aba8e05ac2115f022f9",
+            "state": "paid",
+            "bill": [],
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
+        }
+    },
+    {
+        "pk": "61015a1a1e06ac2015f122f0",
+        "model": "fiware_store.Purchase",
+        "fields": {
+            "ref": "61005aba8e05ac2115f022f0",
+            "customer": "51070aba8e05cc2115f022f9",
+            "organization_owned": true,
+            "owner_organization": "test_organization1",
+            "date": "2013-02-05 17:06:46",
+            "offering": "61000aba8e05ac2115f022f9",
+            "state": "paid",
+            "bill": [],
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
+        }
+    },
+    {
+        "pk": "61000b3a8805ac21161020f9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61005a1a8205ac3115111111"
+        }
+    },
+    {
+        "pk": "6100023a8825ac22162020f9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "2020-04-01 00:00:00"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61005aba8e06ac2015f022f0"
+        }
+    },
+    {
+        "pk": "6100023a7825a622562020f9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "single_payment": [{
+                    "title": "price component 1",
+                    "unit": "single_payment",
+                    "currency": "euros",
+                    "value": "5"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 5,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61015a1a1e06ac2015f122f0"
+        }
+    },
+    {
+        "pk": "91000aba8e06ac2115f022f0",
+        "model": "fiware_store.Organization",
+        "fields": {
+            "name": "test_organization",
+            "offerings_purchased": []
+        }
+    }
+]

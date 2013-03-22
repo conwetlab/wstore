@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import json
 import rdflib
+from datetime import datetime
 
 from django.test import TestCase
 from django.conf import settings
@@ -12,6 +13,14 @@ from charging_engine.charging_engine import ChargingEngine
 from fiware_store.models import Purchase
 from fiware_store.models import UserProfile
 from fiware_store.models import Organization
+
+
+def fake_renovation_date(unit):
+
+    if unit == 'per month':
+        return datetime(2013, 04, 01, 00, 00, 00)
+    elif unit == 'per week':
+        return datetime(2013, 03, 20, 00, 00, 00)
 
 
 class SinglePaymentChargingTestCase(TestCase):
@@ -166,3 +175,213 @@ class SinglePaymentChargingTestCase(TestCase):
             elif pay['title'] == 'Price component 3':
                 self.assertEqual(pay['title'], 'Price component 3')
                 self.assertEqual(pay['value'], '7')
+
+
+class SubscriptionChargingTestCase(TestCase):
+
+    fixtures = ['subscription.json']
+
+    _to_delete = []
+
+    def setUp(self):
+        self._to_delete = []
+
+    def tearDown(self):
+
+        for f in self._to_delete:
+            fil = os.path.join(settings.BASEDIR, f[1:])
+            os.remove(fil)
+
+        self._to_delete = []
+
+    def test_basic_subscription_charging(self):
+
+        # Load model
+        model = os.path.join(settings.BASEDIR, 'charging_engine')
+        model = os.path.join(model, 'test')
+        model = os.path.join(model, 'basic_subs.ttl')
+        f = open(model, 'rb')
+        graph = rdflib.Graph()
+        graph.parse(data=f.read(), format='n3')
+        f.close()
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = UserProfile.objects.get(user=user)
+
+        tax_address = {
+            "street": "test street",
+            "postal": "20000",
+            "city": "test city",
+            "country": "test country"
+        }
+
+        profile.tax_address = tax_address
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        offering = purchase.offering
+        json_model = graph.serialize(format='json-ld')
+
+        offering.offering_description = json.loads(json_model)
+        offering.save()
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        charging_engine = ChargingEngine(purchase)
+        charging_engine._calculate_renovation_date = fake_renovation_date
+
+        charging_engine.resolve_charging(new_purchase=True)
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.charges), 1)
+        self.assertEqual(contract.charges[0]['cost'], 10)
+        self.assertEqual(contract.charges[0]['currency'], 'euros')
+        self.assertEqual(contract.charges[0]['concept'], 'initial charge')
+
+        pricing_model = contract.pricing_model
+
+        self.assertTrue('subscription' in pricing_model)
+        self.assertFalse('single_payment' in pricing_model)
+        self.assertFalse('pay_per_use' in pricing_model)
+
+        for sub in pricing_model['subscription']:
+            if sub['title'] == 'Price component 1':
+                self.assertEqual(sub['value'], '5')
+                self.assertEqual(sub['unit'], 'per month')
+                self.assertEqual(str(sub['renovation_date']), '2013-04-01 00:00:00')
+            else:
+                self.assertEqual(sub['title'], 'Price component 2')
+                self.assertEqual(sub['value'], '5')
+                self.assertEqual(sub['unit'], 'per week')
+                self.assertEqual(str(sub['renovation_date']), '2013-03-20 00:00:00')
+
+    def test_basic_renovation_charging(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = UserProfile.objects.get(user=user)
+
+        tax_address = {
+            "street": "test street",
+            "postal": "20000",
+            "city": "test city",
+            "country": "test country"
+        }
+
+        profile.tax_address = tax_address
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
+        charging_engine = ChargingEngine(purchase)
+        charging_engine._calculate_renovation_date = fake_renovation_date
+
+        charging_engine.resolve_charging()
+        purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.charges), 2)
+        self.assertEqual(contract.charges[0]['cost'], 10)
+        self.assertEqual(contract.charges[0]['currency'], 'euros')
+        self.assertEqual(contract.charges[0]['concept'], 'initial')
+        self.assertEqual(contract.charges[1]['cost'], 10)
+        self.assertEqual(contract.charges[1]['currency'], 'euros')
+        self.assertEqual(contract.charges[1]['concept'], 'Renovation')
+
+        pricing_model = contract.pricing_model
+
+        self.assertTrue('subscription' in pricing_model)
+        self.assertFalse('single_payment' in pricing_model)
+        self.assertFalse('pay_per_use' in pricing_model)
+
+        for sub in pricing_model['subscription']:
+            if sub['title'] == 'price component 1':
+                self.assertEqual(sub['value'], '5')
+                self.assertEqual(sub['unit'], 'per month')
+                self.assertEqual(str(sub['renovation_date']), '2013-04-01 00:00:00')
+            else:
+                self.assertEqual(sub['title'], 'price component 2')
+                self.assertEqual(sub['value'], '5')
+                self.assertEqual(sub['unit'], 'per week')
+                self.assertEqual(str(sub['renovation_date']), '2013-03-20 00:00:00')
+
+    def test_partial_renovation(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = UserProfile.objects.get(user=user)
+
+        tax_address = {
+            "street": "test street",
+            "postal": "20000",
+            "city": "test city",
+            "country": "test country"
+        }
+
+        profile.tax_address = tax_address
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
+        charging_engine = ChargingEngine(purchase)
+        charging_engine._calculate_renovation_date = fake_renovation_date
+
+        charging_engine.resolve_charging()
+        purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.charges), 2)
+        self.assertEqual(contract.charges[0]['cost'], 10)
+        self.assertEqual(contract.charges[0]['currency'], 'euros')
+        self.assertEqual(contract.charges[0]['concept'], 'initial')
+        self.assertEqual(contract.charges[1]['cost'], 5)
+        self.assertEqual(contract.charges[1]['currency'], 'euros')
+        self.assertEqual(contract.charges[1]['concept'], 'Renovation')
+
+        pricing_model = contract.pricing_model
+
+        self.assertTrue('subscription' in pricing_model)
+        self.assertFalse('single_payment' in pricing_model)
+        self.assertFalse('pay_per_use' in pricing_model)
+
+        for s in pricing_model['subscription']:
+            if s['title'] == 'price component 1':
+                self.assertEqual(s['value'], '5')
+                self.assertEqual(s['unit'], 'per month')
+                self.assertEqual(str(s['renovation_date']), '2013-04-01 00:00:00')
+            else:
+                self.assertEqual(s['value'], '5')
+                self.assertEqual(s['unit'], 'per week')
+                self.assertEqual(str(s['renovation_date']), '2020-04-01 00:00:00')
+
+    def test_renovation_no_subscription(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = UserProfile.objects.get(user=user)
+
+        tax_address = {
+            "street": "test street",
+            "postal": "20000",
+            "city": "test city",
+            "country": "test country"
+        }
+
+        profile.tax_address = tax_address
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk="61015a1a1e06ac2015f122f0")
+        charging_engine = ChargingEngine(purchase)
+
+        error = False
+        try:
+            charging_engine.resolve_charging()
+        except Exception, e:
+            error = True
+            msg = e.message
+
+        self.assertTrue(error)
+        self.assertEqual(msg, 'No subscriptions to renovate')
