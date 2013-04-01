@@ -1,14 +1,8 @@
-import os
-import subprocess
 from datetime import datetime
 
-from django.conf import settings
-from django.template import loader, Context
-
-from charging_engine.charging_engine import ChargingEngine
+from fiware_store.charging_engine.charging_engine import ChargingEngine
 from fiware_store.models import Purchase
 from fiware_store.models import UserProfile
-from fiware_store.models import Resource
 
 
 def create_purchase(user, offering, org_owned=False, tax_address=None):

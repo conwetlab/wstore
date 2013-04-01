@@ -5,8 +5,8 @@ from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 
 
-from store_commons.resource import Resource
-from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
+from fiware_store.store_commons.resource import Resource
+from fiware_store.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
 from fiware_store.contracting.purchases_management import create_purchase
 from fiware_store.models import Offering
 from fiware_store.models import Resource as store_resource
@@ -41,7 +41,7 @@ class PurchaseCollection(Resource):
                 build_error_response(request, 400, 'Invalid json content')
 
         response = {}
-        # Load dowload resources URL
+        # Load download resources URL
         response['resources'] = []
 
         for res in offering.resources:

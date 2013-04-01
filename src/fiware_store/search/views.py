@@ -6,8 +6,8 @@ from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from django.conf import settings
 
-from store_commons.utils.http import build_error_response
-from store_commons.resource import Resource
+from fiware_store.store_commons.utils.http import build_error_response
+from fiware_store.store_commons.resource import Resource
 from fiware_store.search.search_engine import SearchEngine
 
 

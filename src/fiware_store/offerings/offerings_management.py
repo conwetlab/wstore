@@ -10,8 +10,8 @@ from urlparse import urlparse
 from django.conf import settings
 from django.contrib.auth.models import User
 
-from repository_adaptor.repositoryAdaptor import RepositoryAdaptor
-from market_adaptor.marketadaptor import MarketAdaptor
+from fiware_store.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
+from fiware_store.market_adaptor.marketadaptor import MarketAdaptor
 from fiware_store.search.search_engine import SearchEngine
 from fiware_store.models import Resource
 from fiware_store.models import Repository
@@ -19,7 +19,7 @@ from fiware_store.models import Offering
 from fiware_store.models import Marketplace
 from fiware_store.models import Purchase
 from fiware_store.models import UserProfile
-from store_commons.utils.usdlParser import USDLParser
+from fiware_store.store_commons.utils.usdlParser import USDLParser
 
 
 def _get_purchased_offerings(user, db, pagination=None):

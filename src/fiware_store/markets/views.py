@@ -6,8 +6,8 @@ from django.utils.decorators import method_decorator
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 
-from store_commons.resource import Resource
-from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
+from fiware_store.store_commons.resource import Resource
+from fiware_store.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
 from fiware_store.markets.markets_management import get_marketplaces, register_on_market, unregister_from_market
 
 

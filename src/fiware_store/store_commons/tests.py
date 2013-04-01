@@ -1,14 +1,14 @@
 
 from django.test import TestCase
 
-from store_commons.utils.usdlParser import USDLParser
+from fiware_store.store_commons.utils.usdlParser import USDLParser
 
 
 class UsdlParserTestCase(TestCase):
 
     def test_basic_parse(self):
 
-        f = open('./store_commons/test/basic_usdl.ttl', 'rb')
+        f = open('./fiware_store/store_commons/test/basic_usdl.ttl', 'rb')
 
         parser = USDLParser(f.read(), 'text/turtle')
         f.close()
@@ -23,7 +23,7 @@ class UsdlParserTestCase(TestCase):
         self.assertEqual(parsed_info['services_included'][0]['version'], '1.0')
 
     def test_parse_complete_offering(self):
-        f = open('./store_commons/test/test_usdl1.ttl', 'rb')
+        f = open('./fiware_store/store_commons/test/test_usdl1.ttl', 'rb')
 
         parser = USDLParser(f.read(), 'text/turtle')
         f.close()
@@ -69,7 +69,7 @@ class UsdlParserTestCase(TestCase):
 
     def test_parse_complete_service(self):
 
-        f = open('./store_commons/test/test_usdl2.ttl', 'rb')
+        f = open('./fiware_store/store_commons/test/test_usdl2.ttl', 'rb')
 
         parser = USDLParser(f.read(), 'text/turtle')
         f.close()
@@ -112,7 +112,7 @@ class UsdlParserTestCase(TestCase):
 
     def test_parse_some_services(self):
 
-        f = open('./store_commons/test/test_usdl3.ttl', 'rb')
+        f = open('./fiware_store/store_commons/test/test_usdl3.ttl', 'rb')
 
         parser = USDLParser(f.read(), 'text/turtle')
         f.close()
@@ -136,7 +136,7 @@ class UsdlParserTestCase(TestCase):
 
     def test_parse_interaction_protocols(self):
 
-        f = open('./store_commons/test/test_usdl4.ttl', 'rb')
+        f = open('./fiware_store/store_commons/test/test_usdl4.ttl', 'rb')
 
         parser = USDLParser(f.read(), 'text/turtle')
         f.close()
@@ -179,7 +179,7 @@ class UsdlParserTestCase(TestCase):
 
     def test_parse_invalid_format(self):
 
-        f = open('./store_commons/test/basic_usdl.ttl', 'rb')
+        f = open('./fiware_store/store_commons/test/basic_usdl.ttl', 'rb')
 
         error = False
         msg = None
@@ -195,7 +195,7 @@ class UsdlParserTestCase(TestCase):
 
     def test_parse_no_offering(self):
 
-        f = open('./store_commons/test/error_usdl1.ttl', 'rb')
+        f = open('./fiware_store/store_commons/test/error_usdl1.ttl', 'rb')
 
         error = False
         msg = None
@@ -211,7 +211,7 @@ class UsdlParserTestCase(TestCase):
 
     def test_parse_no_services(self):
 
-        f = open('./store_commons/test/error_usdl2.ttl', 'rb')
+        f = open('./fiware_store/store_commons/test/error_usdl2.ttl', 'rb')
 
         parser = USDLParser(f.read(), 'text/turtle')
         f.close()

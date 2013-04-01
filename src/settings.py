@@ -143,12 +143,9 @@ INSTALLED_APPS = (
     'django_mongodb_engine',
     'djangotoolbox',
     'fiware_store',
-    'store_commons',
-    'market_adaptor',
-    'repository_adaptor',
-    'defaulttheme',
+    'fiware_store.defaulttheme',
+    'fiware_store.charging_engine',
     'usdl-editor',
-    'charging_engine',
 )
 
 # A sample logging configuration. The only tangible logging

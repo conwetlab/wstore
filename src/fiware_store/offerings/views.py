@@ -6,8 +6,8 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 
-from store_commons.resource import Resource
-from store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
+from fiware_store.store_commons.resource import Resource
+from fiware_store.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
 from fiware_store.models import Offering
 from fiware_store.models import UserProfile
 from fiware_store.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering, publish_offering, bind_resources, count_offerings

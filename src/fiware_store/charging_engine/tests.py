@@ -9,7 +9,7 @@ from django.test import TestCase
 from django.conf import settings
 from django.contrib.auth.models import User
 
-from charging_engine.charging_engine import ChargingEngine
+from fiware_store.charging_engine.charging_engine import ChargingEngine
 from fiware_store.models import Purchase
 from fiware_store.models import UserProfile
 from fiware_store.models import Organization
@@ -40,10 +40,11 @@ class SinglePaymentChargingTestCase(TestCase):
 
         self._to_delete = []
 
-    def test_basic_charging_single_payment(self):
+    def test_basic_charging_single_payment(self):  
 
         # Load model
-        model = os.path.join(settings.BASEDIR, 'charging_engine')
+        model = os.path.join(settings.BASEDIR, 'fiware_store')
+        model = os.path.join(model, 'charging_engine')
         model = os.path.join(model, 'test')
         model = os.path.join(model, 'basic_price.ttl')
         f = open(model, 'rb')
@@ -105,7 +106,8 @@ class SinglePaymentChargingTestCase(TestCase):
 
     def test_charging_single_payment_parts(self):
         # Load model
-        model = os.path.join(settings.BASEDIR, 'charging_engine')
+        model = os.path.join(settings.BASEDIR, 'fiware_store')
+        model = os.path.join(model, 'charging_engine')
         model = os.path.join(model, 'test')
         model = os.path.join(model, 'complex_sin_price.ttl')
         f = open(model, 'rb')
@@ -197,7 +199,8 @@ class SubscriptionChargingTestCase(TestCase):
     def test_basic_subscription_charging(self):
 
         # Load model
-        model = os.path.join(settings.BASEDIR, 'charging_engine')
+        model = os.path.join(settings.BASEDIR, 'fiware_store')
+        model = os.path.join(model, 'charging_engine')
         model = os.path.join(model, 'test')
         model = os.path.join(model, 'basic_subs.ttl')
         f = open(model, 'rb')

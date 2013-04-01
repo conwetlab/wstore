@@ -4,7 +4,7 @@ from urllib2 import HTTPError
 from django.conf import settings
 
 from fiware_store.models import Marketplace
-from market_adaptor.marketadaptor import MarketAdaptor
+from fiware_store.market_adaptor.marketadaptor import MarketAdaptor
 
 
 def get_marketplaces():

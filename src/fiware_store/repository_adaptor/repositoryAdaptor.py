@@ -1,10 +1,9 @@
 
 import urllib2
 from urllib2 import HTTPError
-from urllib import urlencode
-from urlparse import urljoin, urlparse
+from urlparse import urljoin
 
-from store_commons.utils.method_request import MethodRequest
+from fiware_store.store_commons.utils.method_request import MethodRequest
 
 
 class RepositoryAdaptor():

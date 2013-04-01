@@ -32,7 +32,7 @@
 
 from django.http import Http404, HttpResponseNotAllowed, HttpResponseForbidden
 
-from store_commons.authentication import Http403
+from fiware_store.store_commons.authentication import Http403
 
 
 class HttpMethodNotAllowed(Exception):

@@ -26,8 +26,8 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
 
-from store_commons.utils.error_response import get_json_error_response, get_xml_error
-from store_commons.utils import mimeparser
+from fiware_store.store_commons.utils.error_response import get_json_error_response, get_xml_error
+from fiware_store.store_commons.utils import mimeparser
 
 ERROR_FORMATTERS = {
     'application/json; charset=utf-8': get_json_error_response,

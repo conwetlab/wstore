@@ -11,10 +11,10 @@ from django.template import loader, Context
 
 from fiware_store.models import Resource
 from fiware_store.models import UserProfile
-from charging_engine.models import Contract
-from charging_engine.models import Unit
-from charging_engine.price_resolver import resolve_price
-from store_commons.utils.usdlParser import USDLParser
+from fiware_store.charging_engine.models import Contract
+from fiware_store.charging_engine.models import Unit
+from fiware_store.charging_engine.price_resolver import resolve_price
+from fiware_store.store_commons.utils.usdlParser import USDLParser
 
 
 class ChargingEngine:
