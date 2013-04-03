@@ -175,6 +175,35 @@
         }
     },
     {
+        "pk": "6100013a8a05aa2116a020f9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61005aba8e05ac2116f022f0"
+        }
+    },
+    {
         "pk": "61005aba8e05ac2116f022f1",
         "model": "fiware_store.Purchase",
         "fields": {
@@ -192,6 +221,35 @@
                 "city": "test city",
                 "country": "test country"
             }
+        }
+    },
+    {
+        "pk": "b1000b3a8a0baa211ba020b9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61005aba8e05ac2116f022f1"
         }
     },
     {
@@ -215,6 +273,35 @@
         }
     },
     {
+        "pk": "b1c00b3aca0baa2c1ba02cb9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61005aba8e05ac2116f022f2"
+        }
+    },
+    {
         "pk": "61005aba8e05ac2116f022f3",
         "model": "fiware_store.Purchase",
         "fields": {
@@ -235,6 +322,35 @@
         }
     },
     {
+        "pk": "d1c00bdaca0bad2c1bad2cb9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61005aba8e05ac2116f022f3"
+        }
+    },
+    {
         "pk": "61005aba8e05ac2116f022f4",
         "model": "fiware_store.Purchase",
         "fields": {
@@ -252,6 +368,35 @@
                 "city": "test city",
                 "country": "test country"
             }
+        }
+    },
+    {
+        "pk": "a1c0abdaca0badac1badacb9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61005aba8e05ac2116f022f4"
         }
     }
 ]

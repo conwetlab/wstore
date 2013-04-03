@@ -19,7 +19,13 @@ class FakeUSDLParser():
         pass
 
     def parse(self):
-        return {}
+        return {
+            'pricing': {
+                'price_plans': [{
+                    'price_components': []
+                }]
+            }
+        }
 
 
 class IndexCreationTestCase(TestCase):

@@ -48,7 +48,13 @@ class FakeUsdlParser():
         pass
 
     def parse(self):
-        return {}
+        return {
+            'pricing': {
+                'price_plans': [{
+                    'price_components':[]
+                }]
+            }
+        }
 
 
 class FakeSearchEngine():
@@ -418,6 +424,11 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
         self.assertEqual(len(offerings[0]['bill']), 1)
         self.assertEqual(offerings[0]['bill'][0], '/media/bills/61005aba8e05ac2115f022f0.pdf')
+        components = offerings[0]['offering_description']['pricing']['price_plans'][0]['price_components']
+        self.assertEqual(components[0]['title'],'price component 1')
+        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
+        self.assertEqual(components[1]['title'],'price component 2')
+        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
 
         self.assertEqual(offerings[1]['name'], 'test_offering2')
         self.assertEqual(offerings[1]['version'], '1.1')
@@ -427,6 +438,11 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
         self.assertEqual(len(offerings[1]['bill']), 1)
         self.assertEqual(offerings[1]['bill'][0], '/media/bills/61006aba8e05ac2115f022f0.pdf')
+        components = offerings[1]['offering_description']['pricing']['price_plans'][0]['price_components']
+        self.assertEqual(components[0]['title'],'price component 1')
+        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
+        self.assertEqual(components[1]['title'],'price component 2')
+        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
 
     def test_get_published_offerings(self):
         user = User.objects.get(username='test_user2')
@@ -446,6 +462,11 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
         self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
         self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
+        components = offerings[0]['offering_description']['pricing']['price_plans'][0]['price_components']
+        self.assertEqual(components[0]['title'],'price component 1')
+        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
+        self.assertEqual(components[1]['title'],'price component 2')
+        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
 
         self.assertEqual(offerings[1]['name'], 'test_offering2')
         self.assertEqual(offerings[1]['version'], '1.1')
@@ -453,6 +474,11 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
         self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
         self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+        components = offerings[1]['offering_description']['pricing']['price_plans'][0]['price_components']
+        self.assertEqual(components[0]['title'],'price component 1')
+        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
+        self.assertEqual(components[1]['title'],'price component 2')
+        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
 
         self.assertEqual(offerings[2]['name'], 'test_offering3')
         self.assertEqual(offerings[2]['version'], '1.0')

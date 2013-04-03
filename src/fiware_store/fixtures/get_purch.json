@@ -135,6 +135,35 @@
         }
     },
     {
+        "pk": "a1a00b3a8a05ac21161020f9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61005aba8e05ac2115f022f0"
+        }
+    },
+    {
         "pk": "61006aba8e05ac2115f022f0",
         "model": "fiware_store.Purchase",
         "fields": {
@@ -152,6 +181,35 @@
                 "city": "test city",
                 "country": "test country"
             }
+        }
+    },
+    {
+        "pk": "abab0b3aba05acb1161020b9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61006aba8e05ac2115f022f0"
         }
     }
 ]
