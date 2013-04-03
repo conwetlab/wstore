@@ -26,5 +26,6 @@ urlpatterns = patterns('',
     url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/bind?$', offering_views.BindEntry(permitted_methods=('POST',))),
     url(r'^api/offering/resources/?$', offering_views.ResourceCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/contracting/?$', contracting_views.PurchaseCollection(permitted_methods=('POST',))),
+    url(r'^api/contracting/(?P<reference>[\w]+)/?$', contracting_views.PurchaseEntry(permitted_methods=('GET', 'PUT'))),
     url(r'^api/search/(?P<text>[\w -]+)/?$', search_views.SearchEntry(permitted_methods=('GET',))),
 )

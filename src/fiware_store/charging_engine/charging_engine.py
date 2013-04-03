@@ -270,7 +270,6 @@ class ChargingEngine:
                 for s in self._price_model['subscription']:
                     up_subs = s
                     renovation_date = s['renovation_date']
-                    renovation_date = datetime.strptime(renovation_date, '%Y-%m-%d %H:%M:%S')
 
                     if renovation_date < now:
                         related_model['subscription'].append(s)

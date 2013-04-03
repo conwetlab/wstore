@@ -8,7 +8,9 @@ from django.http import HttpResponse
 from fiware_store.store_commons.resource import Resource
 from fiware_store.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
 from fiware_store.contracting.purchases_management import create_purchase
+from fiware_store.charging_engine.charging_engine import ChargingEngine
 from fiware_store.models import Offering
+from fiware_store.models import Purchase
 from fiware_store.models import Resource as store_resource
 
 
@@ -64,6 +66,14 @@ class PurchaseCollection(Resource):
 class PurchaseEntry(Resource):
 
     @method_decorator(login_required)
-    @supported_request_mime_types(('application/json', 'application/xml'))
-    def update(self, request, purchase_id):
+    def read(self, request):
         pass
+
+    @method_decorator(login_required)
+    def update(self, request, reference):
+
+        purchase = Purchase.objects.get(ref=reference)
+        charging_engine = ChargingEngine(purchase)
+        charging_engine.resolve_charging()
+
+        return build_error_response(request, 200, 'OK')

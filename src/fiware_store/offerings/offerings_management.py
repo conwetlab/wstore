@@ -253,7 +253,11 @@ def get_offering_info(offering, user):
 
         if 'subscription' in pricing_model:
             result['offering_description']['pricing']['price_plans'][0]['price_components'] = []
-            result['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['subscription'])
+            # Cast renovation date to string in order to avoid serialization problems
+
+            for subs in pricing_model['subscription']:
+                subs['renovation_date'] = str(subs['renovation_date'])
+                result['offering_description']['pricing']['price_plans'][0]['price_components'].append(subs)
 
             if 'single_payment' in pricing_model:
                 result['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['single_payment'])
