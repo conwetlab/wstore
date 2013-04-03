@@ -114,6 +114,76 @@
 
         // Set the main operation
         $('#main-action').click(mainAction.bind(this, action));
+
+        //Check renovations
+        checkRenovations(offeringElement.getPricing());
+    };
+
+    var makeRenovationRequest = function makeRenovationRequest() {
+        $('#message-container').empty();
+        var csrfToken = $.cookie('csrftoken');
+        var ref = offElem.bill[0].split('_')[0];
+
+        ref = ref.split('/')[3];
+
+        $.ajax({
+            headers: {
+                'X-CSRFToken': csrfToken,
+            },
+            type: "PUT",
+            url: EndpointManager.getEndpoint('PURCHASE_ENTRY', {
+                'ref': ref
+            }),
+            dataType: 'json',
+            success: function (response) {
+                MessageManager.showMessage('Renovated', 'Subscriptions has been renovated');
+                refreshAndUpdateDetailsView();
+            },
+            error: function (xhr) {
+                var resp = xhr.responseText;
+                var msg = JSON.parse(resp).message;
+                MessageManager.showMessage('Error', msg);
+            }
+        });
+    };
+
+    var checkRenovations = function checkRenovations(pricing) {
+        var price_plans = pricing.price_plans;
+        if (price_plans.length > 0) {
+            var outDated = [];
+            var toRenovate = false;
+            // Check if there are renovation dates
+            for (var i = 0; i < price_plans.length; i++) {
+                var price_components = price_plans[i].price_components;
+
+                for (var j = 0; j < price_components.length; j++) {
+                    // Check if there are out of date subscriptions
+                    if ('renovation_date' in price_components[j]) {
+                        var currentDate = new Date();
+                        var renDate = new Date(price_components[j].renovation_date);
+
+                        if (renDate.getTime() < currentDate.getTime()) {
+                            if (!toRenovate) {
+                                toRenovate = true;
+                            }
+                            outDated.push(price_components[j]);
+                        }
+                    }
+                }
+            }
+            // If out of date subscriptions show renovation window
+            if (toRenovate) {
+                var msg = 'The following subscriptions are out of date:';
+                MessageManager.showYesNoWindow(msg, makeRenovationRequest);
+                for (var i = 0; i < outDated.length; i++) {
+                    var p = $('<p></p>');
+                    $('<b></b>').text(outDated[i].title).appendTo(p);
+                    p.appendTo('.modal-body');
+                    $('<p></p>').text('Price: ' + outDated[i].value + ' ' + outDated[i].currency + ' ' + outDated[i].unit).appendTo('.modal-body');
+                }
+                $('<p></p>').text('Do you want to renovate them?').appendTo('.modal-body');
+            }
+        }
     };
 
     var mainAction = function mainAction (action) {
