@@ -89,32 +89,14 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
     else:
         if  filter_ == 'published':
             prov_offerings = offerings.find({'state': 'published'})
-            # Set state to purchased in case the user has purchased the offering
-
-            profile = UserProfile.objects.get(user=user)
-            org = profile.organization
-            aux_list = []
-            for offer in prov_offerings:
-                if str(offer['_id']) in profile.offerings_purchased:
-                    offer['state'] = 'purchased'
-                    offering = Offering.objects.get(pk=str(offer['_id']))
-                    purchase = Purchase.objects.get(offering=offering, customer=user)
-                    offer['bill'] = purchase.bill
-                else:
-                    if str(offer['_id']) in org.offerings_purchased:
-                        offer['state'] = 'purchased'
-                        offering = Offering.objects.get(pk=str(offer['_id']))
-                        purchase = Purchase.objects.get(offering=offering, owner_organization=org.name)
-                        offer['bill'] = purchase.bill
-
-                aux_list.append(offer)
-
-            prov_offerings = aux_list
 
     result = []
 
     if pagination:
         prov_offerings = prov_offerings.skip(int(pagination['skip']) - 1).limit(int(pagination['limit']))
+
+    profile = UserProfile.objects.get(user=user)
+    org = profile.organization
 
     for offer in prov_offerings:
         offer['owner_admin_user_id'] = User.objects.get(pk=offer['owner_admin_user_id']).username
@@ -122,6 +104,44 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
         parser = USDLParser(json.dumps(offer['offering_description']), 'application/json')
         offer['offering_description'] = parser.parse()
         resource_content = []
+
+        purchase = None
+        # If filter is published change state and add bill to the purchased offerings
+        if (not owned and filter_ == 'published') or filter_ == 'purchased':
+            found = False
+
+            if str(offer['_id']) in profile.offerings_purchased:
+                offering = Offering.objects.get(pk=str(offer['_id']))
+                purchase = Purchase.objects.get(offering=offering, customer=user)
+                found = True
+
+            elif str(offer['_id']) in org.offerings_purchased:
+                offering = Offering.objects.get(pk=str(offer['_id']))
+                purchase = Purchase.objects.get(offering=offering, owner_organization=org.name)
+                found = True
+
+            if found and filter_ == 'published':
+                offer['bill'] = purchase.bill
+                offer['state'] = 'purchased'
+
+        # If the offering has been purchased and contains pricing components based on
+        # subscriptions the parsed pricing model is replace with the pricing model of the
+        # contract
+        if purchase != None and ('subscription' in purchase.contract.pricing_model):
+            pricing_model = purchase.contract.pricing_model
+            offer['offering_description']['pricing']['price_plans'][0]['price_components'] = []
+
+            # Cast renovation date to string in order to avoid serialization problems
+
+            for subs in pricing_model['subscription']:
+                subs['renovation_date'] = str(subs['renovation_date'])
+                offer['offering_description']['pricing']['price_plans'][0]['price_components'].append(subs)
+
+            if 'single_payment' in pricing_model:
+                offer['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['single_payment'])
+
+            if 'pay_per_use' in pricing_model:
+                offer['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['pay_per_use'])
 
         for resource in offer['resources']:
             res = Resource.objects.get(id=resource)
@@ -201,9 +221,6 @@ def get_offering_info(offering, user):
         'resources': []
     }
 
-    if state == 'purchased':
-        result['bill'] = purchase.bill
-
     # Load resources
     for res in offering.resources:
         resource = Resource.objects.get(pk=res)
@@ -224,6 +241,25 @@ def get_offering_info(offering, user):
     # Load offering description
     parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
     result['offering_description'] = parser.parse()
+
+    if state == 'purchased':
+        result['bill'] = purchase.bill
+
+        # If the offering has been purchased the parsed pricing model is replaced
+        # With the pricing model of the contract in order to included the extra info
+        # needed such as renovation dates etc.
+
+        pricing_model = purchase.contract.pricing_model
+
+        if 'subscription' in pricing_model:
+            result['offering_description']['pricing']['price_plans'][0]['price_components'] = []
+            result['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['subscription'])
+
+            if 'single_payment' in pricing_model:
+                result['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['single_payment'])
+
+            if 'pay_per_use' in pricing_model:
+                result['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['pay_per_use'])
 
     return result
 
