@@ -198,6 +198,8 @@
 
     var paintPriceElement = function paintPriceElement (priceElem, dom, type) {
         if (priceElem.length > 0) {
+            var priceTempl;
+
             title = null;
             if (type == 'taxes') {
                 title = 'Taxes';
@@ -205,8 +207,16 @@
                 title = 'Price components';
             }
             $('<h4></h4>').text(title).appendTo(dom);
-            $.template('priceElementTemplate', $('#pricing_element_template'));
-            $.tmpl('priceElementTemplate', priceElem).appendTo(dom);
+
+            for (var i = 0; i < priceElem.length; i++) {
+                $.template('priceElementTemplate', $('#pricing_element_template'));
+                priceTempl = $.tmpl('priceElementTemplate', priceElem[i]);
+
+                if(priceElem[i].renovation_date) {
+                    $('<p></p>').text(priceElem[i].renovation_date).appendTo(priceTempl);
+                }
+                priceTempl.appendTo(dom)	
+            }
         }
     };
 

@@ -12,7 +12,7 @@
         'PURCHASE_COLLECTION': '/api/contracting'
     };
 
-    // Contains endpoints that depend os variables
+    // Contains endpoints that depend on variables
     var contextEndpoints = {
         'MARKET_ENTRY': '/api/administration/marketplaces/${name}',
         'REPOSITORY_ENTRY': '/api/administration/repositories/${name}',
