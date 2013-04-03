@@ -145,6 +145,7 @@ INSTALLED_APPS = (
     'fiware_store',
     'fiware_store.defaulttheme',
     'fiware_store.charging_engine',
+    'fiware_store.store_commons',
     'usdl-editor',
 )
 
