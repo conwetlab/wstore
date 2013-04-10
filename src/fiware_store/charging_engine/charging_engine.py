@@ -5,6 +5,7 @@ import json
 import time
 import subprocess
 from datetime import datetime
+from paypalpy import paypal
 
 from django.conf import settings
 from django.template import loader, Context
@@ -22,12 +23,85 @@ class ChargingEngine:
     _sdr = None
     _price_model = None
     _purchase = None
+    _payment_method = None
+    _credit_card_info = None
 
-    def __init__(self, purchase, sdr=None):
+    def __init__(self, purchase, payment_method=None, credit_card=None, sdr=None):
         self._purchase = purchase
+        if payment_method != None:
+
+            if payment_method != 'paypal':
+                if payment_method != 'credit_card':
+                    raise Exception('Invalid payment method')
+                else:
+                    if credit_card == None:
+                        raise Exception('No credit card provided')
+                    self._credit_card_info = credit_card
+
+            self._payment_method = payment_method
 
     def _charge_client(self, price, concept):
-        # Call payment gateway: TODO Fakepal
+
+        # Call payment gateway (paypal)
+        # Configure paypal credentials
+        paypal.SKIP_AMT_VALIDATION = True
+        pp = paypal.PayPal(settings.PAYPAL_USER, settings.PAYPAL_PASSWD, settings.PAYPAL_SIGNATURE, settings.PAYPAL_URL)
+
+        country_code = None
+        # Get country code
+        for cc in paypal.COUNTRY_CODES:
+            if cc[1].lower() == self._purchase.tax_address['country'].lower():
+                country_code = cc[0]
+                break
+
+        if country_code == None:
+            raise Exception('Country not recognized')
+
+        price = str(price)
+
+        if price.find('.') != -1:
+            splited_price = price.split('.')
+
+            if len(splited_price[1]) > 2:
+                price = splited_price[0] + '.' + splited_price[1][:2]
+            elif len(splited_price[1]) < 2:
+                price = price + '0'
+
+        if self._payment_method == 'credit_card':
+            try:
+                resp = pp.DoDirectPayment(
+                    paymentaction='Sale',
+                    ipaddress='192.168.1.1',
+                    creditcardtype=self._credit_card_info['type'],
+                    acct=self._credit_card_info['number'],
+                    expdate=paypal.ShortDate(int(self._credit_card_info['expire_year']), int(self._credit_card_info['expire_month'])),
+                    cvv2=self._credit_card_info['cvv2'],
+                    firstname=self._purchase.customer.first_name,
+                    lastname=self._purchase.customer.last_name,
+                    street=self._purchase.tax_address['street'],
+                    state='mad',
+                    city=self._purchase.tax_address['city'],
+                    countrycode=country_code,
+                    zip=self._purchase.tax_address['postal'],
+                    amt=price,
+                    currencycode='EUR'
+                )
+            except Exception, e:
+                raise Exception('Error while creating payment: ' + e.value)
+
+            self.update_contract(price, concept)
+
+        elif self._payment_method == 'paypal':
+            # Set express checkout
+            pass
+        else:
+            raise Exception('Invalid payment method')
+
+    def update_contract(self, price, concept):
+        # Update purchase state
+        if self._purchase.state == 'pending':
+            self._purchase.state = 'paid'
+
         # Update contract
         contract = self._purchase.contract
         contract.charges.append({

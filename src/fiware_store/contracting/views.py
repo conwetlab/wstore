@@ -28,6 +28,8 @@ class PurchaseCollection(Resource):
 
             try:
                 data = json.loads(request.raw_post_data)
+                payment_info = {}
+
                 if isinstance(data['offering'], dict):
                     id_ = data['offering']
                     offering = Offering.objects.get(owner_organization=id_['organization'], name=id_['name'], version=id_['version'])
@@ -35,10 +37,14 @@ class PurchaseCollection(Resource):
                     offering = Offering.objects.get(description_url=data['offering'])
 
                 if 'tax_address' in data:
-                    purchase = create_purchase(user, offering, data['organization_owned'], data['tax_address'])
-                else:
-                    purchase = create_purchase(user, offering, data['organization_owned'])
+                    payment_info['tax_address'] = data['tax_address']
 
+                payment_info['payment_method'] = data['payment']['method']
+
+                if 'credit_card' in data['payment']:
+                    payment_info['credit_card'] = data['payment']['credit_card']
+
+                purchase = create_purchase(user, offering, data['organization_owned'], payment_info)
             except:
                 build_error_response(request, 400, 'Invalid json content')
 
@@ -70,10 +76,21 @@ class PurchaseEntry(Resource):
         pass
 
     @method_decorator(login_required)
+    @supported_request_mime_types(('application/json',))
     def update(self, request, reference):
 
         purchase = Purchase.objects.get(ref=reference)
-        charging_engine = ChargingEngine(purchase)
-        charging_engine.resolve_charging()
+
+        data = json.loads(request.raw_post_data)
+
+        try:
+            if data['method'] == 'paypal':
+                charging_engine = ChargingEngine(purchase, payment_method='paypal')
+            elif data['method'] == 'credit_card':
+                charging_engine = ChargingEngine(purchase, payment_method='credit_card', credit_card=data['credit_card'])
+
+            charging_engine.resolve_charging()
+        except:
+            build_error_response(request, 400, 'Invalid JSON content')
 
         return build_error_response(request, 200, 'OK')

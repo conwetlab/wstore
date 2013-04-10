@@ -25,6 +25,7 @@ class UserProfile(models.Model):
     offerings_provided = ListField()
     tax_address = DictField()
     complete_name = models.CharField(max_length=100)
+    payment_info = DictField()
 
 
 def create_user_profile(sender, instance, created, **kwargs):
