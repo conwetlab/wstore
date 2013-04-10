@@ -1,33 +1,18 @@
 
 (function(){
-
-    var taxAddr, orgOwned;
-
-    var makePurchaseRequest = function makePurchaseRequest(offeringElement) {
+    var makeRenovationRequest = function makeRenovationRequest(offElem) {
+        var request, error = false;
         var csrfToken = $.cookie('csrftoken');
-        var error = false;
+        var ref = offElem.bill[0].split('_')[0];
 
-        // Load the offering info
-        var request = {
-            'offering': {
-                'organization': offeringElement.getOrganization(),
-                'name': offeringElement.getName(),
-                'version': offeringElement.getVersion()
-            },
-            'organization_owned': orgOwned
-        }
-
-        // If a tax address has been provided include it to the request
-        if (taxAddr) {
-            request.tax_address = taxAddr;
-        }
+        ref = ref.split('/')[3];
 
         // Add payment info
-        request.payment = {};
+        request = {};
         if ($('#pay-method').val() == 'credit_card') {
             var cvv2 = $('#cvv2').val();
 
-            request.payment.method = 'credit_card';
+            request.method = 'credit_card';
 
             if (!$('curr-card').prop('checked')) {
                 var number, year;
@@ -36,7 +21,7 @@
                 year = $('#expire-year').val();
 
                 if (!(number == '') && !(year == '') && !(cvv2 == '')) {
-                    request.payment.credit_card = {
+                    request.credit_card = {
                         'number': number,
                         'type': $('#type').val(),
                         'expire_month': $('#expire-month').val(),
@@ -48,7 +33,7 @@
                 }
             } else {
                 if (!(cvv2 == '')) {
-                    request.payment.credit_card = {
+                    request.credit_card = {
                         'cvv2': cvv2
                     }
                 } else {
@@ -56,7 +41,7 @@
                 }
             }
         } else {
-            request.payment.method = 'paypal';
+            request.method = 'paypal';
         }
 
         if (!error) {
@@ -64,16 +49,15 @@
                 headers: {
                     'X-CSRFToken': csrfToken,
                 },
-                type: "POST",
-                url: EndpointManager.getEndpoint('PURCHASE_COLLECTION'),
+                type: "PUT",
+                url: EndpointManager.getEndpoint('PURCHASE_ENTRY', {
+                    'ref': ref
+                }),
                 dataType: 'json',
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
-                    //Download resources
-                    downloadResources(response);
-                    //Refresh offering details view
-                    offeringElement.setState('purchased');
+                    MessageManager.showMessage('Renovated', 'Subscriptions has been renovated');
                     refreshAndUpdateDetailsView();
                 },
                 error: function (xhr) {
@@ -85,15 +69,7 @@
         }
     };
 
-    var downloadResources = function downloadResources(data) {
-        var resources = data.resources;
-        for (var i = 0; i < resources.length; i++) {
-            window.open(resources[i]);
-        }
-        window.open(data.bill[0]);
-    };
-
-    var showPaymentInfoForm = function showPaymentInfoForm(offeringElement) {
+    var showPaymentForm = function showPaymentForm(offElem) {
         var select, acceptButton, cancelButton;
         // Crear modal body
         $('.modal-body').empty();
@@ -104,21 +80,21 @@
         $('<option></option>').text('------').appendTo(select);
         $('<option></option>').val('credit_card').text('Credit card').appendTo(select);
         $('<option></option>').val('paypal').text('Paypal').appendTo(select);
-
+        
         $('<div></div>').attr('id', 'method-cont').appendTo('.modal-body');
         $('#pay-method').change(function() {
             // In case the payment method were credit card, append credit card form
             if ($('#pay-method').val() == 'credit_card') {
                 var checked = false;
-
+                
                 $('<label></label>').attr('for', 'curr-card').text('Use user profile credit card').appendTo('#method-cont');
                 $('<input></input>').attr('type', 'checkbox').attr('value', 'curr-card').attr('id', 'curr-card').appendTo('#method-cont');
                 $('<div></div>').attr('id', 'card-form').appendTo('#method-cont');
-
+                
                 $.template('CreditCardTemplate', $('#credit_card_template'));
                 $.tmpl('CreditCardTemplate', {}).appendTo('#card-form');
 
-                // If the user uses their user profile credit card only the cvv2 code
+                // If the user uses their user profile credit card only the cvv2 code 
                 // is needed
                 $('#curr-card').change(function() {
                     if (checked) {
@@ -144,7 +120,7 @@
 
         acceptButton.click(function(evnt) {
             evnt.preventDefault();
-            makePurchaseRequest(offeringElement);
+            makeRenovationRequest(offElem);
             $('#message').modal('hide');
         });
 
@@ -153,80 +129,32 @@
         cancelButton.click(function() {
             $('#message').modal('hide');
         })
-    };
+    }
 
-    purchaseOffering = function purchaseOffering(offeringElement) {
-        var nextButton, cancelButton;
-        var checked = false;
+    paintRenovationForm = function paintRenovationForm(outDated, offElem) {
+        var btnYes, btnNo;
+        var msg = 'Pending renovations';
+        MessageManager.showMessage(msg, 'The following subscriptions are out of date: ');
+        for (var i = 0; i < outDated.length; i++) {
+            var p = $('<p></p>');
+            $('<b></b>').text(outDated[i].title).appendTo(p);
+            p.appendTo('.modal-body');
+            $('<p></p>').text('Price: ' + outDated[i].value + ' ' + outDated[i].currency + ' ' + outDated[i].unit).appendTo('.modal-body');
+        }
+        $('<div></div>').attr('class', 'line clear').appendTo('.modal-body');
+        $('<p></p>').text('Do you want to renovate them?').appendTo('.modal-body');
 
-        // Create the modal
-        MessageManager.showMessage('Purchase offering', '');
-
-        $('<label></label>').attr('for', 'tax_addr').text('Use user profile tax address').appendTo('.modal-body');
-        $('<input></input>').attr('type', 'checkbox').attr('value', 'tax_addr').attr('id', 'tax_addr').appendTo('.modal-body');
-        $('<div></div>').attr('id', 'addr_cont').appendTo('.modal-body');
-
-        // Append Tax address form
-        $.template('purchaseTemplate', $('#purchase_form_template'));
-        $.tmpl('purchaseTemplate', {}).appendTo('#addr_cont');
-
-        // If the user profile tax address is selected the form it is not necessary
-        $('#tax_addr').change(function () {
-            if(checked) {
-                $.template('purchaseTemplate', $('#purchase_form_template'));
-                $.tmpl('purchaseTemplate', {}).appendTo('#addr_cont');
-                checked = false;
-            } else {
-                $('#addr_cont').empty();
-                checked = true;
-            }
-        });
-
-        $('<label></label>').attr('for', 'owned').text('Make the offering available to the whole organization').appendTo('.modal-body');
-        $('<input></input>').attr('type', 'checkbox').attr('value', 'owned').attr('id', 'owned').appendTo('.modal-body');
-
-        // Set listeners
         $('.modal-footer').empty();
-        nextButton = $('<button></button>').attr('class', 'btn btn-basic').appendTo('.modal-footer');
-        nextButton.text('Next');
-
-        nextButton.click(function(evt) {
-            var error = false;
-
-            evt.preventDefault();
-            // Read the tax address and organization owned values in order to make them
-            // available to the next window
-            if (!$('#tax_addr').prop('checked')) {
-                var street, postal, city, country;
-
-                street = $('#street').val();
-                postal = $('#postal').val();
-                city = $('#city').val();
-                country = $('#country').val();
-
-                if (street != '' && postal != '' && city != '' && country != '') {
-                    taxAddr = {
-                        'street': street,
-                        'postal': postal,
-                        'city': city,
-                        'country': country
-                    };
-                } else {
-                    error = true;
-                }
-            }
-            if(!error) {
-                orgOwned = $('#owned').prop('checked');
-                showPaymentInfoForm(offeringElement);
-            }
+        btnYes = $('<button></button>').text('Yes').attr('class', 'btn btn-basic');
+        btnYes.appendTo('.modal-footer');
+        btnYes.click(function() {
+           showPaymentForm(offElem);
         });
 
-        // Append cancel button
-        cancelButton = $('<button></button>').attr('class', 'btn btn-danger').text('Cancel');
-        cancelButton.appendTo('.modal-footer');
-        cancelButton.click(function() {
+        btnNo = $('<button></button>').text('No').attr('class', 'btn btn-danger');
+        btnNo.appendTo('.modal-footer');
+        btnNo.click(function() {
             $('#message').modal('hide');
-        })
+        });
     };
-
 })();
