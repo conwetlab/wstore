@@ -4,8 +4,10 @@ from fiware_store.charging_engine.charging_engine import ChargingEngine
 from fiware_store.models import Purchase
 from fiware_store.models import UserProfile
 from fiware_store import charging_engine
+from fiware_store.contracting.purchase_rollback import PurchaseRollback
 
 
+@PurchaseRollback
 def create_purchase(user, offering, org_owned=False, payment_info=None):
 
     if offering.state != 'published':
