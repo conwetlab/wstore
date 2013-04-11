@@ -70,11 +70,16 @@
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
-                    //Download resources
-                    downloadResources(response);
-                    //Refresh offering details view
-                    offeringElement.setState('purchased');
-                    refreshAndUpdateDetailsView();
+
+                    if ('redirection_link' in response) {
+                        window.open(response.redirection_link, '_blank');
+                    } else {
+                        //Download resources
+                        downloadResources(response);
+                        //Refresh offering details view
+                        offeringElement.setState('purchased');
+                        refreshAndUpdateDetailsView();
+                    }
                 },
                 error: function (xhr) {
                     var resp = xhr.responseText;
