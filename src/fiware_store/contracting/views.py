@@ -44,29 +44,37 @@ class PurchaseCollection(Resource):
                 if 'credit_card' in data['payment']:
                     payment_info['credit_card'] = data['payment']['credit_card']
 
-                purchase = create_purchase(user, offering, data['organization_owned'], payment_info)
+                response_info = create_purchase(user, offering, data['organization_owned'], payment_info)
             except:
                 build_error_response(request, 400, 'Invalid json content')
 
         response = {}
-        # Load download resources URL
-        response['resources'] = []
+        # If the value returned by the create_purchase method is a string means that
+        # the purchase is not ended and need user confirmation. response_info contains
+        # the URL where redirect the user
+        if isinstance(response_info, str):
+            response['redirection_link'] = response_info
+            status = 200
+        else:  # The purchase is finished so the download links are returned
+            # Load download resources URL
+            response['resources'] = []
 
-        for res in offering.resources:
-            r = store_resource.objects.get(pk=res)
+            for res in offering.resources:
+                r = store_resource.objects.get(pk=res)
 
-            if r.resource_type == 'download':
-                # Check if the resource has been uploaded to the store or is
-                # in an external applications server
-                if r.resource_path != '':
-                    response['resources'].append(r.resource_path)
-                elif r.download_link != '':
-                    response['resources'].append(r.download_link)
+                if r.resource_type == 'download':
+                    # Check if the resource has been uploaded to the store or is
+                    # in an external applications server
+                    if r.resource_path != '':
+                        response['resources'].append(r.resource_path)
+                    elif r.download_link != '':
+                        response['resources'].append(r.download_link)
 
-        # Load bill URL
-        response['bill'] = purchase.bill
+            # Load bill URL
+            response['bill'] = response_info.bill
+            status = 201
 
-        return HttpResponse(json.dumps(response), status=201, mimetype=content_type)
+        return HttpResponse(json.dumps(response), status=status, mimetype=content_type)
 
 
 class PurchaseEntry(Resource):

@@ -9,6 +9,7 @@ from paypalpy import paypal
 
 from django.conf import settings
 from django.template import loader, Context
+from django.contrib.sites.models import Site
 
 from fiware_store.models import Resource
 from fiware_store.models import UserProfile
@@ -40,6 +41,20 @@ class ChargingEngine:
 
             self._payment_method = payment_method
 
+    def _fix_price(self, price):
+
+        price = str(price)
+
+        if price.find('.') != -1:
+            splited_price = price.split('.')
+
+            if len(splited_price[1]) > 2:
+                price = splited_price[0] + '.' + splited_price[1][:2]
+            elif len(splited_price[1]) < 2:
+                price = price + '0'
+
+        return price
+
     def _charge_client(self, price, concept):
 
         # Call payment gateway (paypal)
@@ -57,15 +72,7 @@ class ChargingEngine:
         if country_code == None:
             raise Exception('Country not recognized')
 
-        price = str(price)
-
-        if price.find('.') != -1:
-            splited_price = price.split('.')
-
-            if len(splited_price[1]) > 2:
-                price = splited_price[0] + '.' + splited_price[1][:2]
-            elif len(splited_price[1]) < 2:
-                price = price + '0'
+        price = self._fix_price(price)
 
         if self._payment_method == 'credit_card':
             try:
@@ -89,29 +96,28 @@ class ChargingEngine:
             except Exception, e:
                 raise Exception('Error while creating payment: ' + e.value)
 
-            self.update_contract(price, concept)
-
         elif self._payment_method == 'paypal':
             # Set express checkout
-            pass
+            url = Site.objects.all()[0].domain
+            if url[-1] != '/':
+                url += '/'
+
+            try:
+                resp = pp.SetExpressCheckout(
+                    paymentrequest_0_paymentaction='Sale',
+                    paymentrequest_0_amt=price,
+                    paymentrequest_0_currencycode='EUR',
+                    returnurl=url + 'api/contracting/' + self._purchase.ref + '/accept',
+                    cancelurl=url + 'api/contracting/' + self._purchase.ref + '/cancel',
+                )
+                self._purchase.state = 'pending'
+                self._purchase.save()
+            except Exception, e:
+                raise Exception('Error while creating payment: ' + e.value)
+
+            return settings.PAYPAL_CHECKOUT_URL + '&token=' + resp['TOKEN'][0]
         else:
             raise Exception('Invalid payment method')
-
-    def update_contract(self, price, concept):
-        # Update purchase state
-        if self._purchase.state == 'pending':
-            self._purchase.state = 'paid'
-
-        # Update contract
-        contract = self._purchase.contract
-        contract.charges.append({
-            'date': datetime.now(),
-            'cost': price,
-            'currency': 'euros',  # FIXME allow any currency
-            'concept': concept
-        })
-        contract.last_charge = datetime.now()
-        contract.save()
 
     def _generate_cdr(self, cost, tax):
         pass
@@ -278,6 +284,63 @@ class ChargingEngine:
         renovation_date = datetime.fromtimestamp(renovation_date)
         return renovation_date
 
+    def end_charging(self, price, concept, related_model):
+
+        # Update purchase state
+        if self._purchase.state == 'pending':
+            self._purchase.state = 'paid'
+            self._purchase.save()
+
+        # Update contract
+        contract = self._purchase.contract
+        contract.charges.append({
+            'date': datetime.now(),
+            'cost': price,
+            'currency': 'euros',  # FIXME allow any currency
+            'concept': concept
+        })
+
+        if self._price_model == None:
+            self._price_model = contract.pricing_model
+
+        contract.last_charge = datetime.now()
+
+        if concept == 'initial charge':
+            # If subscription parts has been charged update renovation dates
+            if 'subscription' in related_model:
+                updated_subscriptions = []
+
+                for subs in self._price_model['subscription']:
+                    up_sub = subs
+                    # Calculate renovation date
+                    up_sub['renovation_date'] = self._calculate_renovation_date(subs['unit'])
+                    updated_subscriptions.append(subs)
+
+                    self._price_model['subscription'] = updated_subscriptions
+
+                # Update price model in contract
+                contract.pricing_model = self._price_model
+                # Create the CDR
+                # Send the CDR to the RSS
+
+                # Generate the invoice
+                self._generate_invoice(price, related_model, 'initial')
+
+        elif concept == 'Renovation':
+
+            for subs in related_model['subscription']:
+                subs['renovation_date'] = self._calculate_renovation_date(subs['unit'])
+
+            updated_subscriptions = related_model['subscription']
+            if 'unmodified' in related_model:
+                updated_subscriptions.extend(related_model['unmodified'])
+
+            self._price_model['subscription'] = updated_subscriptions
+            contract.pricing_model = self._price_model
+            self._generate_invoice(price, related_model, 'Renovation')
+
+        contract.save()
+
     def resolve_charging(self, new_purchase=False, sdr=None):
 
         # Check if there is a new purchase
@@ -301,29 +364,19 @@ class ChargingEngine:
                 # Call the price resolver
                 price = resolve_price(related_model)
                 # Make the charge
-                self._charge_client(price, 'initial charge')
+                redirect_url = self._charge_client(price, 'initial charge')
 
-            # If subscription parts has been charged update renovation dates
-            if 'subscription' in related_model:
-                updated_subscriptions = []
-
-                for subs in self._price_model['subscription']:
-                    up_sub = subs
-                    # Calculate renovation date
-                    up_sub['renovation_date'] = self._calculate_renovation_date(subs['unit'])
-                    updated_subscriptions.append(subs)
-
-                self._price_model['subscription'] = updated_subscriptions
-
-                # Update price model in contract
-                self._purchase.contract.pricing_model = self._price_model
+            if self._purchase.state == 'paid':
+                self.update_contract(price, 'initial charge', related_model)
+            else:
+                price = self._fix_price(price)
+                self._purchase.contract.pending_payment = {
+                    'price': price,
+                    'concept': 'initial charge',
+                    'related_model': related_model
+                }
                 self._purchase.contract.save()
-
-            # Create the CDR
-            # Send the CDR to the RSS
-
-            # Generate the invoice
-            self._generate_invoice(price, related_model, 'initial')
+                return redirect_url
 
         else:
             self._price_model = self._purchase.contract.pricing_model
@@ -339,24 +392,30 @@ class ChargingEngine:
                 }
 
                 now = datetime.now()
-                updated_subscriptions = []
+                unmodified = []
 
                 for s in self._price_model['subscription']:
-                    up_subs = s
                     renovation_date = s['renovation_date']
 
                     if renovation_date < now:
                         related_model['subscription'].append(s)
-                        up_subs['renovation_date'] = self._calculate_renovation_date(s['unit'])
-
-                    updated_subscriptions.append(up_subs)
+                    else:
+                        unmodified.append(s)
 
                 price = resolve_price(related_model)
-                self._charge_client(price, 'Renovation')
+                redirect_url = self._charge_client(price, 'Renovation')
 
-                self._price_model['suscription'] = updated_subscriptions
-                self._purchase.contract.pricing_model = self._price_model
-                self._purchase.contract.save()
+                if len(unmodified) > 0:
+                    related_model['unmodified'] = unmodified
 
-                # Update the charged parts renovation dates
-                self._generate_invoice(price, related_model, 'Renovation')
+                if self._purchase.state == 'paid':
+                    self.update_contract(price, 'Renovation', related_model)
+                else:
+                    price = self._fix_price(price)
+                    self._purchase.contract.pending_payment = {
+                        'price': price,
+                        'concept': 'Renovation',
+                        'related_model': related_model
+                    }
+                    self._purchase.contract.save()
+                    return redirect_url

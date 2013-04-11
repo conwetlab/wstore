@@ -15,9 +15,11 @@ class Contract(models.Model):
     applied_sdrs = ListField()
     # Related purchase
     purchase = models.OneToOneField(Purchase)
+    # Pending paid info used in asynchronous charges
+    pending_payment = DictField()
 
 
-# This model is used as a unit dictionary in oreder to determine
+# This model is used as a unit dictionary in order to determine
 # the pricing model that is being used
 class Unit(models.Model):
     # Name of the unit

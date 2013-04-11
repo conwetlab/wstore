@@ -154,6 +154,7 @@ PAYPAL_USER = '<your_PayPal_username>'
 PAYPAL_PASSWD = '<your_PayPal_passwd>'
 PAYPAL_SIGNATURE = '<your_PayPal_signature>'
 PAYPAL_URL = 'https://api-3t.sandbox.paypal.com/nvp'
+PAYPAL_CHECKOUT_URL='https://www.sandbox.paypal.com/webscr?cmd=_express-checkout'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
