@@ -8,6 +8,8 @@ from django.shortcuts import render
 from fiware_store.store_commons.resource import Resource
 from fiware_store.store_commons.utils.http import build_error_response, supported_request_mime_types
 from fiware_store.models import Purchase
+from fiware_store.models import UserProfile
+from fiware_store.models import Organization
 from fiware_store.charging_engine.charging_engine import ChargingEngine
 
 
@@ -49,6 +51,16 @@ class PayPalConfirmation(Resource):
             charging_engine.end_charging(pending_info['price'], pending_info['concept'], pending_info['related_model'])
         except:
             return build_error_response(request, 400, 'Invalid request')
+
+        # Check if is the first payment
+        if len(purchase.contract.charges) == 1:
+            # Add the offering to the user profile
+            user_profile = UserProfile.objects.get(user=purchase.customer)
+            user_profile.offerings_purchased.append(purchase.offering.pk)
+
+            if purchase.organization_owned:
+                org = Organization.objects.get(name=purchase.owner_organization)
+                org.offerings_purchased.append(purchase.offering.pk)
 
         # Return the confirmation web page
         return render(request, 'store/paypal_confirmation_template.html')

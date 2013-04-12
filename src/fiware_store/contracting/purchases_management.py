@@ -38,11 +38,9 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
         raise Exception('Invalid payment method')
 
     org = ''
-    if org_owned == True:
+    if org_owned:
         organization = profile.organization
         org = organization.name
-        organization.offerings_purchased.append(offering.pk)
-        organization.save()
 
     # Create the purchase
     purchase = Purchase.objects.create(
@@ -58,10 +56,6 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
     purchase.ref = purchase.pk
     purchase.save()
 
-    # Add the offering to the user profile
-    profile.offerings_purchased.append(offering.pk)
-    profile.save()
-
     if credit_card_info != None:
         charging_engine = ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card_info)
     else:
@@ -71,6 +65,16 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
 
     if redirect_url == None:
         result = purchase
+
+        # If no redirect URL is provided the purchase has ended so the user profile
+        # info is updated
+        profile.offerings_purchased.append(offering.pk)
+        profile.save()
+
+        if org_owned:
+            organization.offerings_purchased.append(offering.pk)
+            organization.save()
+
     else:
         result = redirect_url
 
