@@ -4,6 +4,8 @@ import os
 import json
 import rdflib
 from datetime import datetime
+from pymongo import MongoClient
+from bson import ObjectId
 
 from django.test import TestCase
 from django.conf import settings
@@ -39,8 +41,23 @@ class FakePal():
         def __init__(self, usr, passwd, singn, url):
             pass
 
-        def DoDirectPayment(self, paymentaction, ipaddress, creditcardtype, acct, expdate, cvv2, firstname, lastname,
-                    street, state, city, countrycode, zip, amt, currencycode):
+        def DoDirectPayment(self, **kwargs):
+            pass
+
+        def SetExpressCheckout(self, **kwargs):
+            return {
+                'TOKEN': ['11111111']
+            }
+
+
+class FakeThreading():
+
+    class Timer():
+
+        def __init__(self, time, handler):
+            pass
+
+        def start(self):
             pass
 
 
@@ -487,3 +504,161 @@ class SubscriptionChargingTestCase(TestCase):
 
         self.assertTrue(error)
         self.assertEqual(msg, 'No subscriptions to renovate')
+
+
+class AsynchronousPaymentTestCase(TestCase):
+
+    fixtures = ['async.json']
+
+    _to_delete = []
+
+    @classmethod
+    def setUpClass(cls):
+        charging_engine.paypal = FakePal()
+        charging_engine.threading = FakeThreading()
+        super(AsynchronousPaymentTestCase, cls).setUpClass()
+
+    def setUp(self):
+        self._to_delete = []
+
+    def tearDown(self):
+
+        for f in self._to_delete:
+            fil = os.path.join(settings.BASEDIR, f[1:])
+            os.remove(fil)
+
+        self._to_delete = []
+
+    def test_basic_asynchronous_payment(self):
+
+        # Load model
+        model = os.path.join(settings.BASEDIR, 'fiware_store')
+        model = os.path.join(model, 'charging_engine')
+        model = os.path.join(model, 'test')
+        model = os.path.join(model, 'basic_price.ttl')
+        f = open(model, 'rb')
+        graph = rdflib.Graph()
+        graph.parse(data=f.read(), format='n3')
+        f.close()
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = UserProfile.objects.get(user=user)
+
+        tax_address = {
+            "street": "test street",
+            "postal": "20000",
+            "city": "test city",
+            "country": "test country"
+        }
+
+        profile.tax_address = tax_address
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        offering = purchase.offering
+        json_model = graph.serialize(format='json-ld')
+
+        offering.offering_description = json.loads(json_model)
+        offering.save()
+
+        # First step
+        charging = charging_engine.ChargingEngine(purchase, payment_method='paypal')
+        url = charging.resolve_charging(new_purchase=True)
+
+        self.assertEqual(url, 'https://www.sandbox.paypal.com/webscr?cmd=_express-checkout&token=11111111')
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        self.assertEqual(purchase.state, 'pending')
+        self.assertEqual(len(purchase.bill), 0)
+
+        contract = purchase.contract
+        self.assertEqual(len(contract.charges), 0)
+        self.assertEqual(contract.pending_payment['price'], '5.00')
+        self.assertEqual(contract.pending_payment['concept'], 'initial charge')
+
+        model = contract.pending_payment['related_model']
+        self.assertEqual(len(model['single_payment']), 1)
+        self.assertEqual(model['single_payment'][0]['title'], 'Price component 1')
+        self.assertEqual(model['single_payment'][0]['value'], '5')
+
+        # Second step
+        charging = charging_engine.ChargingEngine(purchase)
+        charging.end_charging(contract.pending_payment['price'], contract.pending_payment['concept'], contract.pending_payment['related_model'])
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        self.assertEqual(purchase.state, 'paid')
+        bills = purchase.bill
+
+        self.assertEqual(len(bills), 1)
+        self._to_delete.append(bills[0])
+
+        contract = purchase.contract
+        self.assertEqual(len(contract.charges), 1)
+
+        self.assertEqual(contract.charges[0]['cost'], '5.00')
+        self.assertEqual(contract.charges[0]['currency'], 'euros')
+        self.assertEqual(contract.charges[0]['concept'], 'initial charge')
+
+        self.assertEqual(contract.pending_payment, {})
+
+    def test_timeout(self):
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        charging = charging_engine.ChargingEngine(purchase)
+
+        def fakeroll(purch):
+            purch.state = 'rollback'
+            purch.save()
+
+        charging_engine.rollback = fakeroll
+        charging._timeout_handler()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        self.assertEqual(purchase.state, 'rollback')
+
+    def test_timeout_locked(self):
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f02111')
+        charging = charging_engine.ChargingEngine(purchase)
+
+        connection = MongoClient()
+        db = connection[settings.DATABASES['default']['NAME']]
+
+        raw_purchase = db.fiware_store_purchase.find_one({'_id': ObjectId(purchase.pk)})
+        raw_purchase['_lock'] = True
+
+        db.fiware_store_purchase.save(raw_purchase)
+
+        def fakeroll(purch):
+            purch.state = 'rollback'
+            purch.save()
+
+        charging_engine.rollback = fakeroll
+        charging._timeout_handler()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f02111')
+        self.assertEqual(purchase.state, 'pending')
+
+    def test_timeout_finished(self):
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f02222')
+        charging = charging_engine.ChargingEngine(purchase)
+
+        connection = MongoClient()
+        db = connection[settings.DATABASES['default']['NAME']]
+
+        raw_purchase = db.fiware_store_purchase.find_one({'_id': ObjectId(purchase.pk)})
+        raw_purchase['_lock'] = False
+
+        db.fiware_store_purchase.save(raw_purchase)
+
+        def fakeroll(purch):
+            purch.state = 'rollback'
+            purch.save()
+
+        charging_engine.rollback = fakeroll
+        charging._timeout_handler()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f02222')
+        self.assertEqual(purchase.state, 'paid')
