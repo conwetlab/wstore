@@ -1,4 +1,5 @@
 import json
+import threading
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -12,6 +13,7 @@ from fiware_store.charging_engine.charging_engine import ChargingEngine
 from fiware_store.models import Offering
 from fiware_store.models import Purchase
 from fiware_store.models import Resource as store_resource
+from fiware_store.contracting.purchase_rollback import rollback
 
 
 class PurchaseCollection(Resource):
@@ -99,6 +101,9 @@ class PurchaseEntry(Resource):
 
             charging_engine.resolve_charging()
         except:
+            # Refresh the purchase info
+            purchase = Purchase.objects.get(ref=reference)
+            rollback(purchase)
             build_error_response(request, 400, 'Invalid JSON content')
 
         return build_error_response(request, 200, 'OK')
