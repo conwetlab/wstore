@@ -10,7 +10,7 @@ from fiware_store.models import UserProfile
 
 class FakeChargingEngine:
 
-    def __init__(self, purchase):
+    def __init__(self, purchase, payment_method=None, credit_card=None):
         pass
 
     def resolve_charging(self, new_purchase):
@@ -49,7 +49,14 @@ class PurchasesCreationTestCase(TestCase):
         user_profile.organization = org
         user_profile.save()
 
-        purchase = purchases_management.create_purchase(user, offering)
+        payment_info = {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234'
+            }
+        }
+
+        purchase = purchases_management.create_purchase(user, offering, payment_info=payment_info)
 
         self.assertEqual(purchase.customer.username, 'test_user')
         self.assertEqual(purchase.organization_owned, False)
@@ -90,7 +97,15 @@ class PurchasesCreationTestCase(TestCase):
         org = Organization.objects.get(name='test_organization')
         user_profile.organization = org
         user_profile.save()
-        purchase = purchases_management.create_purchase(user, offering, True)
+
+        payment_info = {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234'
+            }
+        }
+
+        purchase = purchases_management.create_purchase(user, offering, True, payment_info=payment_info)
 
         self.assertEqual(purchase.customer.username, 'test_user')
         self.assertEqual(purchase.organization_owned, True)
@@ -110,11 +125,17 @@ class PurchasesCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         offering = Offering.objects.get(name='test_offering')
 
-        tax_address = {
-            'street': 'test street',
-            'postal': '28000',
-            'city': 'test city',
-            'country': 'test country'
+        payment_info = {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234'
+            },
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
         }
 
         user_profile = UserProfile.objects.get(user=user)
@@ -122,7 +143,7 @@ class PurchasesCreationTestCase(TestCase):
         user_profile.organization = org
         user_profile.save()
 
-        purchase = purchases_management.create_purchase(user, offering, tax_address=tax_address)
+        purchase = purchases_management.create_purchase(user, offering, payment_info=payment_info)
 
         self.assertEqual(purchase.customer.username, 'test_user')
         self.assertEqual(purchase.organization_owned, False)
@@ -151,18 +172,24 @@ class PurchasesCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         offering = Offering.objects.get(name='test_offering2')
 
-        tax_address = {
-            'street': 'test street',
-            'postal': '28000',
-            'city': 'test city',
-            'country': 'test country'
+        payment_info = {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234'
+            },
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
         }
 
         error = False
         msg = None
 
         try:
-            purchases_management.create_purchase(user, offering, tax_address=tax_address)
+            purchases_management.create_purchase(user, offering, payment_info=payment_info)
         except Exception, e:
             error = True
             msg = e.message
@@ -180,18 +207,24 @@ class PurchasesCreationTestCase(TestCase):
         user_profile.organization = org
         user_profile.save()
 
-        tax_address = {
-            'street': 'test street',
-            'postal': '28000',
-            'city': 'test city',
-            'country': 'test country'
+        payment_info = {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234'
+            },
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
         }
 
         error = False
         msg = None
 
         try:
-            purchases_management.create_purchase(user, offering, tax_address=tax_address)
+            purchases_management.create_purchase(user, offering, payment_info=payment_info)
         except Exception, e:
             error = True
             msg = e.message
@@ -210,18 +243,24 @@ class PurchasesCreationTestCase(TestCase):
         user_profile.organization = org
         user_profile.save()
 
-        tax_address = {
-            'street': 'test street',
-            'postal': '28000',
-            'city': 'test city',
-            'country': 'test country'
+        payment_info = {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234'
+            },
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
         }
 
         error = False
         msg = None
 
         try:
-            purchases_management.create_purchase(user, offering, tax_address=tax_address)
+            purchases_management.create_purchase(user, offering, payment_info=payment_info)
         except Exception, e:
             error = True
             msg = e.message
