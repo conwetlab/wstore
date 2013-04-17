@@ -72,4 +72,16 @@ class PayPalCancelation(Resource):
     # when is using a PayPal account
     @method_decorator(login_required)
     def read(self, request, reference):
-        pass
+        # In case the user cancels the payment is necessary to update
+        # the database in order to avoid an inconsistent state
+        try:
+            purchase = Purchase.objects.get(pk=reference)
+            rollback(purchase)
+        except:
+            return build_error_response(request, 400, 'Invalid request')
+
+        context = {
+            'title': 'Payment Canceled',
+            'message': 'Your payment has been canceled. If you want to acquire the offering purchase it again in W-Store.'
+        }
+        return render(request, 'store/paypal_template.html', context)
