@@ -2,10 +2,12 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 
 from fiware_store.contracting import purchases_management
+from fiware_store.contracting.purchase_rollback import rollback
 from fiware_store.models import Offering
 from fiware_store.models import Organization
 from fiware_store.models import Purchase
 from fiware_store.models import UserProfile
+from fiware_store.charging_engine.models import Contract
 
 
 class FakeChargingEngine:
@@ -267,3 +269,103 @@ class PurchasesCreationTestCase(TestCase):
 
         self.assertTrue(error)
         self.assertEqual(msg, "The offering has been already purchased")
+
+
+class PurchaseRollbackTestCase(TestCase):
+
+    fixtures = ['purch_rollback.json']
+
+    def test_rollback_not_paid_exeption(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = UserProfile.objects.get(user=user)
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
+        rollback(purchase)
+
+        # Check the final state of the database
+        error = False
+        msg = None
+        try:
+            Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
+        except Exception, e:
+            error = True
+            msg = e.message
+
+        self.assertTrue(error)
+        self.assertEqual(msg, 'Purchase matching query does not exist.')
+
+    def test_rollback_not_paid_contract(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = UserProfile.objects.get(user=user)
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02111')
+        rollback(purchase)
+
+        # Check the final state of the database
+        error_purch = False
+        error_cont = False
+        msg_purch = None
+        msg_cont = None
+        try:
+            Purchase.objects.get(pk='61005aba8e05ac2115f02111')
+        except Exception, e:
+            error_purch = True
+            msg_purch = e.message
+
+        try:
+            Contract.objects.get(pk='6100023a7825a622562020f9')
+        except Exception, e:
+            error_cont = True
+            msg_cont = e.message
+
+        self.assertTrue(error_purch)
+        self.assertEqual(msg_purch, 'Purchase matching query does not exist.')
+        self.assertTrue(error_cont)
+        self.assertEqual(msg_cont, 'Contract matching query does not exist.')
+
+    def test_rollback_not_paid_renovation(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = UserProfile.objects.get(user=user)
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02222')
+        rollback(purchase)
+
+        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02222')
+
+        self.assertEqual(purchase.state, 'paid')
+
+        contract = purchase.contract
+        self.assertEqual(len(contract.charges), 1)
+        self.assertEqual(contract.charges[0]['concept'], 'initial')
+
+    def test_rollback_paid_exeption(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = UserProfile.objects.get(user=user)
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02333')
+        rollback(purchase)
+
+        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02333')
+
+        self.assertEqual(purchase.state, 'paid')
+
+        contract = purchase.contract
+        self.assertEqual(len(contract.charges), 2)
+        self.assertEqual(contract.charges[0]['concept'], 'initial')
+        self.assertEqual(contract.charges[1]['concept'], 'renovation')
