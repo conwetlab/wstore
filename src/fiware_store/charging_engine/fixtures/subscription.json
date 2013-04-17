@@ -94,13 +94,13 @@
         "pk": "61004aba5e05acc115f022f0",
         "model": "fiware_store.Purchase",
         "fields": {
-            "ref": "61005aba8e05ac2115f022f0",
+            "ref": "61004aba5e05acc115f022f0",
             "customer": "51070aba8e05cc2115f022f9",
             "organization_owned": true,
             "owner_organization": "test_organization1",
             "date": "2013-02-05 17:06:46",
             "offering": "61000aba8e05ac2115f022f9",
-            "state": "paid",
+            "state": "pending",
             "bill": [],
             "tax_address": {
                 "street": "test street",
@@ -114,7 +114,7 @@
         "pk": "61005a1a8205ac3115111111",
         "model": "fiware_store.Purchase",
         "fields": {
-            "ref": "61005aba8e05ac2115f022f0",
+            "ref": "61005a1a8205ac3115111111",
             "customer": "51070aba8e05cc2115f022f9",
             "organization_owned": true,
             "owner_organization": "test_organization1",
@@ -134,7 +134,7 @@
         "pk": "61005aba8e06ac2015f022f0",
         "model": "fiware_store.Purchase",
         "fields": {
-            "ref": "61005aba8e05ac2115f022f0",
+            "ref": "61005aba8e06ac2015f022f0",
             "customer": "51070aba8e05cc2115f022f9",
             "organization_owned": true,
             "owner_organization": "test_organization1",
@@ -154,7 +154,7 @@
         "pk": "61015a1a1e06ac2015f122f0",
         "model": "fiware_store.Purchase",
         "fields": {
-            "ref": "61005aba8e05ac2115f022f0",
+            "ref": "61015a1a1e06ac2015f122f0",
             "customer": "51070aba8e05cc2115f022f9",
             "organization_owned": true,
             "owner_organization": "test_organization1",

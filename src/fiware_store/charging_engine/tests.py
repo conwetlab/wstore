@@ -9,10 +9,11 @@ from django.test import TestCase
 from django.conf import settings
 from django.contrib.auth.models import User
 
-from fiware_store.charging_engine.charging_engine import ChargingEngine
+from fiware_store.charging_engine import charging_engine
 from fiware_store.models import Purchase
 from fiware_store.models import UserProfile
 from fiware_store.models import Organization
+#from fiware_store import charging_engine
 
 
 def fake_renovation_date(unit):
@@ -23,11 +24,36 @@ def fake_renovation_date(unit):
         return datetime(2013, 03, 20, 00, 00, 00)
 
 
+class FakePal():
+
+    COUNTRY_CODES = (('SP', 'test country'),)
+
+    def __init__(self):
+        pass
+
+    def ShortDate(self, year, month):
+        return 0
+
+    class PayPal():
+
+        def __init__(self, usr, passwd, singn, url):
+            pass
+
+        def DoDirectPayment(self, paymentaction, ipaddress, creditcardtype, acct, expdate, cvv2, firstname, lastname,
+                    street, state, city, countrycode, zip, amt, currencycode):
+            pass
+
+
 class SinglePaymentChargingTestCase(TestCase):
 
     fixtures = ['single_payment.json']
 
     _to_delete = []
+
+    @classmethod
+    def setUpClass(cls):
+        charging_engine.paypal = FakePal()
+        super(SinglePaymentChargingTestCase, cls).setUpClass()
 
     def setUp(self):
         self._to_delete = []
@@ -40,7 +66,7 @@ class SinglePaymentChargingTestCase(TestCase):
 
         self._to_delete = []
 
-    def test_basic_charging_single_payment(self):  
+    def test_basic_charging_single_payment(self):
 
         # Load model
         model = os.path.join(settings.BASEDIR, 'fiware_store')
@@ -75,10 +101,18 @@ class SinglePaymentChargingTestCase(TestCase):
         offering.offering_description = json.loads(json_model)
         offering.save()
 
-        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
-        charging_engine = ChargingEngine(purchase)
+        credit_card = {
+            'type': 'Visa',
+            'number': '1234123412341234',
+            'expire_year': '2018',
+            'expire_month': '2',
+            'cvv2': '111',
+        }
 
-        charging_engine.resolve_charging(new_purchase=True)
+        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
+        charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
+
+        charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
         bills = purchase.bill
@@ -105,6 +139,7 @@ class SinglePaymentChargingTestCase(TestCase):
         self.assertEqual(price_model['single_payment'][0]['value'], '5')
 
     def test_charging_single_payment_parts(self):
+
         # Load model
         model = os.path.join(settings.BASEDIR, 'fiware_store')
         model = os.path.join(model, 'charging_engine')
@@ -138,10 +173,18 @@ class SinglePaymentChargingTestCase(TestCase):
         offering.offering_description = json.loads(json_model)
         offering.save()
 
-        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
-        charging_engine = ChargingEngine(purchase)
+        credit_card = {
+            'type': 'Visa',
+            'number': '1234123412341234',
+            'expire_year': '2018',
+            'expire_month': '2',
+            'cvv2': '111',
+        }
 
-        charging_engine.resolve_charging(new_purchase=True)
+        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
+        charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
+
+        charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
         bills = purchase.bill
@@ -184,6 +227,11 @@ class SubscriptionChargingTestCase(TestCase):
     fixtures = ['subscription.json']
 
     _to_delete = []
+
+    @classmethod
+    def setUpClass(cls):
+        charging_engine.paypal = FakePal()
+        super(SubscriptionChargingTestCase, cls).setUpClass()
 
     def setUp(self):
         self._to_delete = []
@@ -231,10 +279,19 @@ class SubscriptionChargingTestCase(TestCase):
         offering.offering_description = json.loads(json_model)
         offering.save()
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        charging_engine = ChargingEngine(purchase)
-        charging_engine._calculate_renovation_date = fake_renovation_date
 
-        charging_engine.resolve_charging(new_purchase=True)
+        credit_card = {
+            'type': 'Visa',
+            'number': '1234123412341234',
+            'expire_year': '2018',
+            'expire_month': '2',
+            'cvv2': '111',
+        }
+
+        charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
+        charging._calculate_renovation_date = fake_renovation_date
+
+        charging.resolve_charging(new_purchase=True)
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
         contract = purchase.contract
 
@@ -278,10 +335,31 @@ class SubscriptionChargingTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
-        charging_engine = ChargingEngine(purchase)
-        charging_engine._calculate_renovation_date = fake_renovation_date
+        contract = purchase.contract
 
-        charging_engine.resolve_charging()
+        # Change renovation date type (JSON does not allow complex types as MongoDB does)
+        new_subs = []
+        for sub in contract.pricing_model['subscription']:
+
+            new_sub = sub
+            new_sub['renovation_date'] = datetime.strptime(new_sub['renovation_date'], '%Y-%m-%d %H:%M:%S')
+            new_subs.append(new_sub)
+
+        contract.pricing_model['subscription'] = new_subs
+        contract.save()
+
+        credit_card = {
+            'type': 'Visa',
+            'number': '1234123412341234',
+            'expire_year': '2018',
+            'expire_month': '2',
+            'cvv2': '111',
+        }
+
+        charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
+        charging._calculate_renovation_date = fake_renovation_date
+
+        charging.resolve_charging()
         purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
         contract = purchase.contract
 
@@ -328,10 +406,31 @@ class SubscriptionChargingTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
-        charging_engine = ChargingEngine(purchase)
-        charging_engine._calculate_renovation_date = fake_renovation_date
+        contract = purchase.contract
 
-        charging_engine.resolve_charging()
+        # Change renovation date type (JSON does not allow complex types as MongoDB does)
+        new_subs = []
+        for sub in contract.pricing_model['subscription']:
+
+            new_sub = sub
+            new_sub['renovation_date'] = datetime.strptime(new_sub['renovation_date'], '%Y-%m-%d %H:%M:%S')
+            new_subs.append(new_sub)
+
+        contract.pricing_model['subscription'] = new_subs
+        contract.save()
+
+        credit_card = {
+            'type': 'Visa',
+            'number': '1234123412341234',
+            'expire_year': '2018',
+            'expire_month': '2',
+            'cvv2': '111',
+        }
+
+        charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
+        charging._calculate_renovation_date = fake_renovation_date
+
+        charging.resolve_charging()
         purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
         contract = purchase.contract
 
@@ -377,11 +476,11 @@ class SubscriptionChargingTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk="61015a1a1e06ac2015f122f0")
-        charging_engine = ChargingEngine(purchase)
+        charging = charging_engine.ChargingEngine(purchase)
 
         error = False
         try:
-            charging_engine.resolve_charging()
+            charging.resolve_charging()
         except Exception, e:
             error = True
             msg = e.message
