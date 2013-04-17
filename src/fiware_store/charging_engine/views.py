@@ -1,4 +1,5 @@
 from paypalpy import paypal
+from pymongo import MongoClient
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -11,6 +12,7 @@ from fiware_store.models import Purchase
 from fiware_store.models import UserProfile
 from fiware_store.models import Organization
 from fiware_store.charging_engine.charging_engine import ChargingEngine
+from fiware_store.contracting.purchase_rollback import rollback
 
 
 class ServiceRecordCollection(Resource):
@@ -35,9 +37,36 @@ class PayPalConfirmation(Resource):
             token = request.GET.get('token')
             payer_id = request.GET.get('PayerID')
 
+            connection = MongoClient()
+            db = connection[settings.DATABASES['default']['NAME']]
+
+            # Uses an atomic operation to get and set the _lock value in the purchase
+            # document
+            pre_value = db.fiware_store_purchase.find_and_modify(
+                query={'_id': reference},
+                update={'$set': {'_lock': True}}
+            )
+
+            # If the value of _lock before setting it to true was true means
+            # that the time out function has acquired it previously so the
+            # view ends
+            if pre_value['_lock']:
+                raise Exception('')
+
             pp = paypal.PayPal(settings.PAYPAL_USER, settings.PAYPAL_PASSWD, settings.PAYPAL_SIGNATURE, settings.PAYPAL_URL)
 
             purchase = Purchase.objects.get(pk=reference)
+
+            # If the purchase state value is different from pending means that
+            # the timeout function has completely ended before acquire the resource
+            # so _lock is set to false and the view ends
+            if purchase.state != 'pending':
+                db.fiware_store_purchase.find_and_modify(
+                    query={'_id': reference},
+                    update={'$set': {'_lock': False}}
+                )
+                raise Exception('')
+
             pending_info = purchase.contract.pending_payment
 
             pp.DoExpressCheckoutPayment(
@@ -62,8 +91,18 @@ class PayPalConfirmation(Resource):
                 org = Organization.objects.get(name=purchase.owner_organization)
                 org.offerings_purchased.append(purchase.offering.pk)
 
+        # _lock is set to false
+        db.fiware_store_purchase.find_and_modify(
+            query={'_id': reference},
+            update={'$set': {'_lock': False}}
+        )
+
         # Return the confirmation web page
-        return render(request, 'store/paypal_confirmation_template.html')
+        context = {
+            'title': 'Payment Confirmed',
+            'message': 'Your payment has been received. To download the resources and the invoice go to the offering details page.'
+        }
+        return render(request, 'store/paypal_template.html', context)
 
 
 class PayPalCancelation(Resource):

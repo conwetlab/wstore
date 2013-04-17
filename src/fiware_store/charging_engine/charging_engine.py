@@ -4,6 +4,10 @@ import os
 import json
 import time
 import subprocess
+import threading
+from pymongo import MongoClient
+from bson import ObjectId
+
 from datetime import datetime
 from paypalpy import paypal
 
@@ -13,10 +17,12 @@ from django.contrib.sites.models import Site
 
 from fiware_store.models import Resource
 from fiware_store.models import UserProfile
+from fiware_store.models import Purchase
 from fiware_store.charging_engine.models import Contract
 from fiware_store.charging_engine.models import Unit
 from fiware_store.charging_engine.price_resolver import resolve_price
 from fiware_store.store_commons.utils.usdlParser import USDLParser
+from fiware_store.contracting.purchase_rollback import rollback
 
 
 class ChargingEngine:
@@ -40,6 +46,33 @@ class ChargingEngine:
                     self._credit_card_info = credit_card
 
             self._payment_method = payment_method
+
+    def _timeout_handler(self):
+
+        connection = MongoClient()
+        db = connection[settings.DATABASES['default']['NAME']]
+
+        # Uses an atomic operation to get and set the _lock value in the purchase
+        # document
+        pre_value = db.fiware_store_purchase.find_and_modify(
+            query={'_id': ObjectId(self._purchase.pk)},
+            update={ '$set': {'_lock': True}}
+        )
+
+        # If _lock not exists or is set to false means that this function has
+        # acquired the resource
+        if not '_lock' in pre_value or not pre_value['_lock']:
+
+            # Only rollback if the state is pending
+            if pre_value['state'] == 'pending':
+                # Refresh the purchase
+                purchase = Purchase.objects.get(pk=self._purchase.pk)
+                rollback(purchase)
+
+            db.fiware_store_purchase.find_and_modify(
+                query={'_id': ObjectId(self._purchase.pk)},
+                update={ '$set': {'_lock': False}}
+            )
 
     def _fix_price(self, price):
 
@@ -95,6 +128,7 @@ class ChargingEngine:
                 )
             except Exception, e:
                 raise Exception('Error while creating payment: ' + e.value)
+            self._purchase.state = 'paid'
 
         elif self._payment_method == 'paypal':
             # Set express checkout
@@ -110,8 +144,11 @@ class ChargingEngine:
                     returnurl=url + 'api/contracting/' + self._purchase.ref + '/accept',
                     cancelurl=url + 'api/contracting/' + self._purchase.ref + '/cancel',
                 )
-                self._purchase.state = 'pending'
-                self._purchase.save()
+
+                # Set timeout for PayPal transaction to 5 minutes
+                t = threading.Timer(300, self._timeout_handler)
+                t.start()
+
             except Exception, e:
                 raise Exception('Error while creating payment: ' + e.value)
 
@@ -300,6 +337,7 @@ class ChargingEngine:
             'concept': concept
         })
 
+        contract.pending_payment = {}
         if self._price_model == None:
             self._price_model = contract.pricing_model
 
@@ -323,8 +361,8 @@ class ChargingEngine:
                 # Create the CDR
                 # Send the CDR to the RSS
 
-                # Generate the invoice
-                self._generate_invoice(price, related_model, 'initial')
+            # Generate the invoice
+            self._generate_invoice(price, related_model, 'initial')
 
         elif concept == 'Renovation':
 
@@ -367,7 +405,7 @@ class ChargingEngine:
                 redirect_url = self._charge_client(price, 'initial charge')
 
             if self._purchase.state == 'paid':
-                self.update_contract(price, 'initial charge', related_model)
+                self.end_charging(price, 'initial charge', related_model)
             else:
                 price = self._fix_price(price)
                 self._purchase.contract.pending_payment = {
@@ -380,6 +418,8 @@ class ChargingEngine:
 
         else:
             self._price_model = self._purchase.contract.pricing_model
+            self._purchase.state = 'pending'
+            self._purchase.save()
 
             # If not SDR received means that the call is a renovation
             if sdr == None:
@@ -409,7 +449,7 @@ class ChargingEngine:
                     related_model['unmodified'] = unmodified
 
                 if self._purchase.state == 'paid':
-                    self.update_contract(price, 'Renovation', related_model)
+                    self.end_charging(price, 'Renovation', related_model)
                 else:
                     price = self._fix_price(price)
                     self._purchase.contract.pending_payment = {
