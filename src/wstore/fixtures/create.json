@@ -1,0 +1,63 @@
+[
+    {
+        "pk": "51000aba8e05ac2115f022f9",
+        "model": "auth.user",
+        "fields": {
+            "username": "test_user",
+            "first_name": "",
+            "last_name": "",
+            "email": "admin@c.com",
+            "password": "sha1$5AphFrMHRX5o$bd3394cfeb25266a67d88683d24ae0c7b0647bd8",
+            "is_staff": false,
+            "is_active": true,
+            "is_superuser": false,
+            "last_login": "2011-10-10 11:27:12",
+            "date_joined": "2011-10-10 11:27:12"
+        }
+    },
+    {
+        "pk": "51000aba8e05ac2115f022ff",
+        "model": "wstore.Repository",
+        "fields": {
+            "name": "test_repository",
+            "host": "http://testrepository/"
+        }
+    },
+    {
+        "pk": "51000aba8e05ac2135f122ff",
+        "model": "wstore.Organization",
+        "fields": {
+            "name": "test_organization",
+            "offerings_purchased": []
+        }
+    },
+    {
+        "pk": "51000aba8e05ac2115f122ff",
+        "model": "wstore.UserProfile",
+        "fields": {
+            "user": "51000aba8e05ac2115f022f9",
+            "organization": "51000aba8e05ac2135f122ff",
+            "roles": ["customer", "provider"]
+        }
+    },
+    {
+        "pk": "61000aba8e05ac2115f022f9",
+        "model": "wstore.Offering",
+        "fields": {
+            "name": "test_offering_fail",
+            "owner_admin_user": "51000aba8e05ac2115f022f9",
+            "version": "1.0",
+            "state": "uploaded",
+            "marketplaces": [],
+            "rating": "0",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
+            "owner_organization": "test_organization",
+            "offering_description": {}
+        }
+    }
+]
