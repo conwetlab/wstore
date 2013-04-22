@@ -26,6 +26,7 @@ from urlparse import urljoin, urlparse
 from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils.fix_url import url_fix
 
+
 class MarketAdaptor(object):
 
     _marketplace_uri = None
@@ -52,7 +53,7 @@ class MarketAdaptor(object):
 
         except HTTPError, e:
             # Marketplace can return an error code but authenticate
-            parsed_url = urlparse(e.url)
+            parsed_url = urlparse(e.filename)
 
         if parsed_url[4] != 'login_error' and parsed_url[3][:10] == 'jsessionid':
             # parsed_url[3] params field, contains jsessionid
@@ -77,13 +78,13 @@ class MarketAdaptor(object):
             # Marketplace redirects to a login page (sprint_security_login) if
             # the session expires. In addition, python don't follow
             # redirections when issuing DELETE requests, so we have to check for
-            # a 302 startus code
+            # a 302 status code
             if e.code == 302:
                 self._session_id = None
                 self.add_store(store_info)
                 return
             else:
-                raise HTTPError(e.url, e.code, e.msg, None, None)
+                raise e
 
         if response.code != 201:
             raise HTTPError(response.url, response.code, response.msg, None, None)
@@ -117,7 +118,7 @@ class MarketAdaptor(object):
                 self.delete_store(store)
                 return
             else:
-                raise HTTPError(e.url, e.code, e.msg, None, None)
+                raise e
 
         if response.code != 200:
             raise HTTPError(response.url, response.code, response.msg, None, None)
@@ -148,7 +149,7 @@ class MarketAdaptor(object):
                 self.add_service(store, service_info)
                 return
             else:
-                raise HTTPError(e.url, e.code, e.msg, None, None)
+                raise e
 
         if response.code != 201:
             raise HTTPError(response.url, response.code, response.msg, None, None)
@@ -182,7 +183,7 @@ class MarketAdaptor(object):
                 self.delete_service(store, service)
                 return
             else:
-                raise HTTPError(e.url, e.code, e.msg, None, None)
+                raise e
 
         if response.code != 200:
             raise HTTPError(response.url, response.code, response.msg, None, None)
