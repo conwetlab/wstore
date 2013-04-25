@@ -76,8 +76,8 @@
         var name, version, rep, csrfToken, request = {};
 
         evnt.preventDefault();
-        name = $('[name="app-name"]').val();
-        version = $('[name="app-version"]').val();
+        name = $.trim($('[name="app-name"]').val());
+        version = $.trim($('[name="app-version"]').val());
         rep = $('#repositories').val();
         $('#message').modal('hide');
         $('#message-container').empty();

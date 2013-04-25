@@ -25,15 +25,15 @@
         // Add payment info
         request.payment = {};
         if ($('#pay-method').val() == 'credit_card') {
-            var cvv2 = $('#cvv2').val();
+            var cvv2 = $.trim($('#cvv2').val());
 
             request.payment.method = 'credit_card';
 
             if (!$('curr-card').prop('checked')) {
                 var number, year;
 
-                number = $('#number').val();
-                year = $('#expire-year').val();
+                number = $.trim($('#number').val());
+                year = $.trim($('#expire-year').val());
 
                 if (!(number == '') && !(year == '') && !(cvv2 == '')) {
                     request.payment.credit_card = {
@@ -204,10 +204,10 @@
             if (!$('#tax_addr').prop('checked')) {
                 var street, postal, city, country;
 
-                street = $('#street').val();
-                postal = $('#postal').val();
-                city = $('#city').val();
-                country = $('#country').val();
+                street = $.trim($('#street').val());
+                postal = $.trim($('#postal').val());
+                city = $.trim($('#city').val());
+                country = $.trim($('#country').val());
 
                 if (street != '' && postal != '' && city != '' && country != '') {
                     taxAddr = {

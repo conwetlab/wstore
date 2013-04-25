@@ -76,8 +76,8 @@
     makeCreateRequest = function makeCreateRequest(endpoint, title) {
         var name, host;
 
-        name = $('#elem-name').val();
-        host = $('#elem-host').val();
+        name = $.trim($('#elem-name').val());
+        host = $.trim($('#elem-host').val());
 
         if (name && host) {
             var csrfToken = $.cookie('csrftoken');

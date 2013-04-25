@@ -22,10 +22,10 @@
          var name, version, link, request = {};
 
          evnt.preventDefault();
-         name = $('[name="res-name"]').val();
-         version = $('[name="res-version"]').val();
-         link = $('[name="res-link"]').val();
-         description = $('[name="res-description"]').val();
+         name = $.trim($('[name="res-name"]').val());
+         version = $.trim($('[name="res-version"]').val());
+         link = $.trim($('[name="res-link"]').val());
+         description = $.trim($('[name="res-description"]').val());
 
          if (name && version) {
              csrfToken = $.cookie('csrftoken');

@@ -10,15 +10,15 @@
         // Add payment info
         request = {};
         if ($('#pay-method').val() == 'credit_card') {
-            var cvv2 = $('#cvv2').val();
+            var cvv2 = $.trim($('#cvv2').val());
 
             request.method = 'credit_card';
 
             if (!$('curr-card').prop('checked')) {
                 var number, year;
 
-                number = $('#number').val();
-                year = $('#expire-year').val();
+                number = $.trim($('#number').val());
+                year = $.trim($('#expire-year').val());
 
                 if (!(number == '') && !(year == '') && !(cvv2 == '')) {
                     request.credit_card = {
