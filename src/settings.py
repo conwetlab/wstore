@@ -14,18 +14,19 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django_mongodb_engine',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'fiwarestore_db',           # Or path to database file if using sqlite3.
+        'NAME': 'wstore_db',           # Or path to database file if using sqlite3.
         'USER': '',                         # Not used with sqlite3.
         'PASSWORD': '',                     # Not used with sqlite3.
         'HOST': '',                         # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                         # Set to empty string for default. Not used with sqlite3.
+        'TEST_NAME': 'test_database',
     }
 }
 
 BASEDIR = path.dirname(path.abspath(__file__))
 
-STORE_NAME = 'CoNWeT Store'
-AUTH_PROFILE_MODULE = 'fiware_store.models.UserProfile'
+STORE_NAME = 'CoNWeT'
+AUTH_PROFILE_MODULE = 'wstore.models.UserProfile'
 #THEME_ACTIVE = 'defaulttheme'
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -142,10 +143,10 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     'django_mongodb_engine',
     'djangotoolbox',
-    'fiware_store',
-    'fiware_store.defaulttheme',
-    'fiware_store.charging_engine',
-    'fiware_store.store_commons',
+    'wstore',
+    'wstore.defaulttheme',
+    'wstore.charging_engine',
+    'wstore.store_commons',
     'usdl-editor',
 )
 
