@@ -1,5 +1,6 @@
 from paypalpy import paypal
 from pymongo import MongoClient
+from bson import ObjectId
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -43,14 +44,14 @@ class PayPalConfirmation(Resource):
             # Uses an atomic operation to get and set the _lock value in the purchase
             # document
             pre_value = db.wstore_purchase.find_and_modify(
-                query={'_id': reference},
+                query={'_id': ObjectId(reference)},
                 update={'$set': {'_lock': True}}
             )
 
             # If the value of _lock before setting it to true was true means
             # that the time out function has acquired it previously so the
             # view ends
-            if pre_value['_lock']:
+            if '_lock' in pre_value and pre_value['_lock']:
                 raise Exception('')
 
             pp = paypal.PayPal(settings.PAYPAL_USER, settings.PAYPAL_PASSWD, settings.PAYPAL_SIGNATURE, settings.PAYPAL_URL)
@@ -62,7 +63,7 @@ class PayPalConfirmation(Resource):
             # so _lock is set to false and the view ends
             if purchase.state != 'pending':
                 db.wstore_purchase.find_and_modify(
-                    query={'_id': reference},
+                    query={'_id': ObjectId(reference)},
                     update={'$set': {'_lock': False}}
                 )
                 raise Exception('')
@@ -79,17 +80,23 @@ class PayPalConfirmation(Resource):
             charging_engine = ChargingEngine(purchase)
             charging_engine.end_charging(pending_info['price'], pending_info['concept'], pending_info['related_model'])
         except:
-            return build_error_response(request, 400, 'Invalid request')
+            context = {
+                'title': 'Payment Canceled',
+                'message': 'Your payment has been canceled. An error occurs or the timeout has finished, if you want to acquire the offering purchase it again in W-Store.'
+            }
+            return render(request, 'store/paypal_template.html', context)
 
         # Check if is the first payment
         if len(purchase.contract.charges) == 1:
             # Add the offering to the user profile
             user_profile = UserProfile.objects.get(user=purchase.customer)
             user_profile.offerings_purchased.append(purchase.offering.pk)
+            user_profile.save()
 
             if purchase.organization_owned:
                 org = Organization.objects.get(name=purchase.owner_organization)
                 org.offerings_purchased.append(purchase.offering.pk)
+                org.save()
 
         # _lock is set to false
         db.wstore_purchase.find_and_modify(
