@@ -1,6 +1,8 @@
 
 (function () {
 
+    var main = false;
+
     adminInfoRequest = function adminInfoRequest(endpoint, title) {
         $.ajax({
             type: "GET",
@@ -118,7 +120,12 @@
 
         $('#back').click(function () {
             $('#message-container').empty();
-            paintElementTable();
+            if (main) {
+                paintElementTable();
+            } else {
+                adminInfoRequest(endpoint, title);
+            }
+            main = false;
         });
 
         $('#request-button').click(function () {
@@ -140,12 +147,30 @@
             adminInfoRequest('REPOSITORY_COLLECTION', 'Repositories');
         });
 
+        $('.show-org').click(function() {
+            orgInfoRequest(paintOrganizations);
+        });
+
+        $('.show-prof').click(function() {
+            userInfoRequest();
+        });
+
         $('.add-market').click(function() {
+            main = true;
             paintForm('MARKET_COLLECTION', 'Marketplace');
         });
 
         $('.add-rep').click(function() {
+            main = true;
             paintForm('REPOSITORY_COLLECTION', 'Repository');
+        });
+
+        $('.add-org').click(function() {
+            painOrganizationForm();
+        });
+
+        $('.add-prof').click(function() {
+            paintUserForm();
         });
     };
 

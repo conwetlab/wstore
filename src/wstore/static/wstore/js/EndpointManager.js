@@ -7,6 +7,8 @@
     var staticEndpoints = {
         'MARKET_COLLECTION': '/api/administration/marketplaces',
         'REPOSITORY_COLLECTION': '/api/administration/repositories',
+        'USERPROFILE_COLLECTION': '/api/administration/profiles',
+        'ORGANIZATION_COLLECTION': '/api/administration/organizations',
         'RESOURCE_COLLECTION': '/api/offering/resources',
         'OFFERING_COLLECTION': '/api/offering/offerings',
         'PURCHASE_COLLECTION': '/api/contracting'
@@ -16,6 +18,8 @@
     var contextEndpoints = {
         'MARKET_ENTRY': '/api/administration/marketplaces/${name}',
         'REPOSITORY_ENTRY': '/api/administration/repositories/${name}',
+        'USERPROFILE_ENTRY': '/api/administration/profiles/${username}',
+        'ORGANIZATION_ENTRY': '/api/administration/organizations/${org}',
         'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}',
         'PUBLISH_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/publish',
         'BIND_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/bind',
