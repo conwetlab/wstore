@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from wstore.repositories.repositories_management import register_repository, unregister_repository, get_repositories
+from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, get_repositories
 from wstore.models import Repository
 
 

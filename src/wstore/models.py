@@ -4,8 +4,8 @@ from django.db.models.signals import post_save
 from djangotoolbox.fields import ListField
 from djangotoolbox.fields import DictField
 
-from wstore.markets.models import *
-from wstore.repositories.models import *
+from wstore.admin.markets.models import *
+from wstore.admin.repositories.models import *
 from wstore.offerings.models import *
 from wstore.contracting.models import *
 

@@ -2,8 +2,9 @@
 from django.conf.urls.defaults import patterns, include, url
 
 from wstore import views
-from wstore.markets import views as market_views
-from wstore.repositories import views as rep_views
+from wstore.admin import views as admin_views
+from wstore.admin.markets import views as market_views
+from wstore.admin.repositories import views as rep_views
 from wstore.offerings import views as offering_views
 from wstore.contracting import views as contracting_views
 from wstore.search import views as search_views

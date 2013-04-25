@@ -3,7 +3,7 @@ from urllib2 import HTTPError
 
 from django.test import TestCase
 
-from wstore.markets import markets_management
+from wstore.admin.markets import markets_management
 from wstore.models import Marketplace
 
 

@@ -3,24 +3,24 @@ from lxml import etree
 
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.contrib.sites.models import get_current_site
+
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
-from wstore.markets.markets_management import get_marketplaces, register_on_market, unregister_from_market
+from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, get_repositories
 
 
-class MarketplaceCollection(Resource):
+class RepositoryCollection(Resource):
 
-    # Creates a new marketplace resource, that is
-    # register the store in a marketplace and
-    # add the marketplace info needed for access in
-    # the database
+    # Register a new repository on the store
+    # in order to be able to upload and
+    # download resources
     @method_decorator(login_required)
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
-        if not request.user.is_staff:  # Only an admin could register the store in a marketplace
+
+        if not request.user.is_staff:  # Only an admin could register a new repository
             return build_error_response(request, 401, 'Unautorized')
 
         content_type = get_content_type(request)[0]
@@ -45,22 +45,15 @@ class MarketplaceCollection(Resource):
                 name = content.xpath('/marketplace/name')[0].text
                 host = content.xpath('/marketplace/host')[0].text
             except:
-                msg = "Request body is not a valid XML data"
+                msg = "Request body is not valid XML data"
                 return build_error_response(request, 400, msg)
 
         try:
-            register_on_market(name, host, get_current_site(request).domain)
+            register_repository(name, host)
         except Exception, e:
-            if e.message == 'Bad Gateway':
-                code = 502
-                msg = e.message
-            else:
-                code = 400
-                msg = 'Bad request'
+            return build_error_response(request, 400, e.message)
 
-            return build_error_response(request, code, msg)
-
-        return build_error_response(request, 201, 'Created')
+        return build_error_response(request, 201, 'Created')  # TODO use a generic method
 
     @method_decorator(login_required)
     def read(self, request):
@@ -69,21 +62,21 @@ class MarketplaceCollection(Resource):
         accept = request.META.get('ACCEPT', '')
         response = None
         mime_type = None
+        repositories = get_repositories()
 
-        result = get_marketplaces()
         if accept == '' or accept.find('application/JSON') > -1:
-            response = json.dumps(result)
+            response = json.dumps(repositories)
             mime_type = 'application/JSON; charset=UTF-8'
 
         elif accept.find('application/xml') > -1:
-            root_elem = etree.Element('Marketplaces')
+            root_elem = etree.Element('Repositories')
 
-            for market in result:
-                market_elem = etree.SubElement(root_elem, 'Marketplace')
-                name_elem = etree.SubElement(market_elem, 'Name')
-                name_elem.text = market['name']
-                host_elem = etree.SubElement(market_elem, 'Host')
-                host_elem.text = market['host']
+            for rep in repositories:
+                rep_elem = etree.SubElement(root_elem, 'Repository')
+                name_elem = etree.SubElement(rep_elem, 'Name')
+                name_elem.text = rep['name']
+                host_elem = etree.SubElement(rep_elem, 'Host')
+                host_elem.text = rep['host']
 
             response = etree.tounicode(root_elem)
             mime_type = 'application/xml; charset=UTF-8'
@@ -94,36 +87,22 @@ class MarketplaceCollection(Resource):
         return HttpResponse(response, status=200, mimetype=mime_type)
 
 
-class MarketplaceEntry(Resource):
+class RepositoryEntry(Resource):
 
     @method_decorator(login_required)
-    def read(self, request, market):
-        pass
-
-    @method_decorator(login_required)
-    def update(self, request, market):
-        pass
-
-    @method_decorator(login_required)
-    def delete(self, request, market):
+    def delete(self, request, repository):
 
         if not request.user.is_staff:
             return build_error_response(request, 401, 'Unathorized')
 
         try:
-            unregister_from_market(market)
+            unregister_repository(repository)
         except Exception, e:
-            if e.message == 'Bad Gateway':
-                code = 502
-                msg = e.message
+            if e.message == 'Not found':
+                code = 404
             else:
-                if e.message == 'Not found':
-                    code = 404
-                    msg = e.message
-                else:
-                    code = 400
-                    msg = 'Bad request'
+                code = 400
 
-            return build_error_response(request, code, msg)
+            return build_error_response(request, code, e.message)
 
         return build_error_response(request, 204, 'No content')
