@@ -3,7 +3,7 @@
     MessageManager = {};
 
     MessageManager.showMessage = function showMessage(title, msg) {
-
+        
         $('#message-container').empty();
         $.template('modal', $('#modal_template'));
         $.tmpl('modal', {'title': title, 'message': msg}).appendTo('#message-container');
@@ -14,25 +14,37 @@
         });
     };
 
-    MessageManager.showAlertError = function showAlertError(title, msg) {
-        
-        $('#message-container').empty();
+    MessageManager.showAlertError = function showAlertError(title, msg, messageCont) {
+        var container = $('#message-container');
+
+        if (messageCont) {
+            container = messageCont;
+        }
+
+        container.empty();
         $.template('alertError', $('#alert_error_template'));
-        $.tmpl('alertError', {'title': title, 'message': msg}).appendTo('#message-container');
+        $.tmpl('alertError', {'title': title, 'message': msg}).appendTo(container);
 
         $('#message').bind('closed', function() {
-            $('#message-container').empty();
+            $(container).empty();
         });
     };
 
-    MessageManager.showAlertInfo = function showAlertInfo(title, msg) {
-        
-        $('#message-container').empty();
+    MessageManager.showAlertInfo = function showAlertInfo(title, msg, messageCont) {
+        var container = $('#message-container');
+        var template;
+
+        if (messageCont) {
+            container = messageCont;
+        }
+
+        container.empty();
         $.template('alertInfo', $('#alert_info_template'));
-        $.tmpl('alertInfo', {'title': title, 'message': msg}).appendTo('#message-container');
+        template = $.tmpl('alertInfo', {'title': title, 'message': msg})
+        container.append(template);
 
         $('#message').bind('closed', function() {
-            $('#message-container').empty();
+            $(container).empty();
         });
     };
 
