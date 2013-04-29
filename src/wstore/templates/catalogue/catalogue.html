@@ -22,6 +22,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MessageManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CreateAppForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/RegisterResForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/PublishOffering.js"></script>
@@ -33,6 +34,10 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CatalogueSearchView.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CatalogueView.js"></script>
        
+        <script type="text/x-jquery-tmpl" id="user_conf_template">{% include "user_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="address_conf_template">{% include "address_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="payment_info_conf_template">{% include "payment_info_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="catalogue_search_template">{% include "catalogue/catalogue_search_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="create_app_form_template">{% include "catalogue/create_app_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="register_res_form_template">{% include "catalogue/register_res_form_template.html" %}</script>
@@ -84,6 +89,7 @@
                            <b class="caret"></b>
                        </div>
                        <ul class="dropdown-menu">
+                           <li><a id="conf-link">Configuration</a></li>
                            <li><a href="/logout">Logout</a></li>
                        </ul>
                    </div>

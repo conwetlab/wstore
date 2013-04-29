@@ -61,6 +61,10 @@
     float: right !important;
 }
 
+.inline {
+    display: inline;
+}
+
 .admin-element {
     margin-top: 100px;
 }

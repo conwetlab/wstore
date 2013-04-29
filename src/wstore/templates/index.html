@@ -20,6 +20,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script> 
         <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/RenovationsForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/DownloadResourcesForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/PurchaseForm.js"></script>
@@ -31,7 +32,11 @@
 
         <script type="text/x-jquery-tmpl" id="modal_template">{% include "modal_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="yes_no_window_template">{% include "yes_no_window_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="user_conf_template">{% include "user_conf_template.html" %}</script>
 
+        <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="address_conf_template">{% include "address_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="payment_info_conf_template">{% include "payment_info_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="mini_offering_template">{% include "catalogue/mini_offering_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="home_page_template">{% include "store/home_page_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="details_offering_template">{% include "catalogue/details_offering_template.html" %}</script>
@@ -78,7 +83,8 @@
                            <b class="caret"></b>
                         </div>
                         <ul class="dropdown-menu">
-                           <li><a href="/logout">Logout</a></li>
+                            <li><a id="conf-link">Configuration</a></li>
+                            <li><a href="/logout">Logout</a></li>
                         </ul>
                     </div>
                 </div>
