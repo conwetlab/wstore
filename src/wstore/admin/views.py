@@ -99,7 +99,34 @@ class UserProfileEntry(Resource):
 
     @method_decorator(login_required)
     def read(self, request, username):
-        pass
+
+        if not request.user.is_staff and not request.user.username == username:
+            return build_error_response(request, 403, 'Forbidden')
+
+        user = User.objects.get(username=username)
+        user_profile = {}
+        user_profile['username'] = user.username
+        user_profile['first_name'] = user.first_name
+        user_profile['last_name'] = user.last_name
+
+        profile = UserProfile.objects.get(user=user)
+        user_profile['organization'] = profile.organization.name
+        user_profile['tax_address'] = profile.tax_address
+        user_profile['roles'] = profile.roles
+
+        if user.is_staff:
+            user_profile['roles'].append('admin')
+
+        if 'number' in profile.payment_info:
+            user_profile['payment_info'] = {}
+            number = profile.payment_info['number']
+            number = 'xxxxxxxxxxxx' + number[-4:]
+            user_profile['payment_info']['number'] = number
+            user_profile['payment_info']['type'] = profile.payment_info['type']
+            user_profile['payment_info']['expire_year'] = profile.payment_info['expire_year']
+            user_profile['payment_info']['expire_month'] = profile.payment_info['expire_month']
+
+        return HttpResponse(json.dumps(user_profile), status=200, mimetype='application/json')
 
     @method_decorator(login_required)
     @supported_request_mime_types(('application/json',))
