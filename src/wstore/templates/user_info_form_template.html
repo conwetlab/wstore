@@ -1,0 +1,16 @@
+
+<h2>User Info</h2>
+<form class="form">
+    <p><b>User name: </b></p>
+    <input type="text" id="user-name" placeholder="User name" readonly value="${username}"></input>
+    <p><b>First name: </b></p>
+    <input type="text" id="first-name" placeholder="First name" value="${first_name}"></input>
+    <p><b>Last name: </b></p>
+    <input type="text" id="last-name" placeholder="Last name" value="${last_name}"></input>
+    <p><b>Roles: </b></p>
+    {% if user.is_staff %}
+    <input type="checkbox" id="admin"></input>Admin
+    <div class="clear space"></div>
+    {% endif %}
+    <input type="checkbox" id="provider"></input>Provider
+</form>

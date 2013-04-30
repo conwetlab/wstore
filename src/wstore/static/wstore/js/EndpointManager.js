@@ -28,7 +28,7 @@
     }
 
     /**
-     * Returns the endpoint in string format rendered if necesary
+     * Returns the endpoint in string format rendered if necessary
      */
     EndpointManager.getEndpoint = function getEndpoint(endpoint, options) {
         var result;

@@ -200,7 +200,7 @@
     margin-top: 10px;
 }
 
-#back {
+.tab-button {
     position: absolute;
     right: 20px;
     z-index: 3;

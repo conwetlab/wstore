@@ -111,7 +111,15 @@ class UserProfileEntry(Resource):
 
         profile = UserProfile.objects.get(user=user)
         user_profile['organization'] = profile.organization.name
-        user_profile['tax_address'] = profile.tax_address
+
+        if 'street' in profile.tax_address:
+            user_profile['tax_address'] = {
+                'street': profile.tax_address['street'],
+                'postal': profile.tax_address['postal'],
+                'city': profile.tax_address['city'],
+                'country': profile.tax_address['country']
+            }
+
         user_profile['roles'] = profile.roles
 
         if user.is_staff:
@@ -132,7 +140,7 @@ class UserProfileEntry(Resource):
     @supported_request_mime_types(('application/json',))
     def update(self, request, username):
 
-        if not request.user.is_staff:
+        if not request.user.is_staff and not request.user.username == username:
             return build_error_response(request, 403, 'Forbidden')
 
         data = json.loads(request.raw_post_data)
@@ -140,13 +148,14 @@ class UserProfileEntry(Resource):
         try:
             user = User.objects.get(username=username)
 
-            if 'admin' in data['roles']:
+            if 'admin' in data['roles'] and request.user.is_staff:
                 user.is_staff = True
 
             if 'password' in data:
                 user.set_password(data['password'])
 
-            user.save()
+            user.first_name = data['first_name']
+            user.last_name = data['last_name']
 
             # Get the user profile
             user_profile = UserProfile.objects.get(user=user)
@@ -164,6 +173,10 @@ class UserProfileEntry(Resource):
                     'city': data['tax_address']['city'],
                     'country': data['tax_address']['country']
                 }
+            else:
+                # the update is absolute so if no tax address provided it is deleted
+                user_profile.tax_address = {}
+
             if 'payment_info' in data:
                 user_profile.payment_info = {
                     'type': data['payment_info']['type'],
@@ -171,7 +184,11 @@ class UserProfileEntry(Resource):
                     'expire_month': data['payment_info']['expire_month'],
                     'expire_year': data['payment_info']['expire_year']
                 }
+            else:
+                # the update is absolute so if no payment info provided it is deleted
+                user_profile.payment_info = {}
 
+            user.save()
             user_profile.save()
 
         except:
