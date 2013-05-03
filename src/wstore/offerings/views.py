@@ -10,8 +10,10 @@ from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
 from wstore.models import Offering
 from wstore.models import UserProfile
+from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering, publish_offering, bind_resources, count_offerings
 from wstore.offerings.resources_management import register_resource, get_provider_resources
+from django.contrib.sites.models import get_current_site
 
 
 class OfferingCollection(Resource):
@@ -186,6 +188,18 @@ class PublishEntry(Resource):
             except Exception, e:
                 return build_error_response(request, 400, e.message)
 
+        # Append the new offering to the newest list
+        site = get_current_site(request)
+        context = Context.objects.get(site=site)
+
+        if len(context.newest) < 5:
+            context.newest.insert(0, offering.pk)
+        else:
+            context.newest.pop()
+            context.newest.insert(0, offering.pk)
+
+        context.save()
+
         return build_error_response(request, 200, 'OK')
 
 
@@ -214,3 +228,20 @@ class BindEntry(Resource):
                 build_error_response(request, 400, 'Invalid JSON content')
 
         return build_error_response(request, 200, 'OK')
+
+
+class NewestCollection(Resource):
+
+    @method_decorator(login_required)
+    def read(self, request):
+        #import ipdb; ipdb.set_trace()
+
+        site = get_current_site(request)
+        context = Context.objects.get(site=site)
+
+        response = []
+        for off in context.newest:
+            offering = Offering.objects.get(pk=off)
+            response.append(get_offering_info(offering, request.user))
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json')

@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from django.db import models
 from django.db.models.signals import post_save
 from djangotoolbox.fields import ListField
@@ -8,6 +9,13 @@ from wstore.admin.markets.models import *
 from wstore.admin.repositories.models import *
 from wstore.offerings.models import *
 from wstore.contracting.models import *
+
+
+class Context(models.Model):
+
+    site = models.OneToOneField(Site)
+    top_rated = ListField()
+    newest = ListField()
 
 
 class Organization(models.Model):
