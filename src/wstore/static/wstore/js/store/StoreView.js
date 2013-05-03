@@ -10,7 +10,7 @@
                 url: EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': text}),
                 dataType: 'json',
                 success: function(response) {
-                    paintOfferings(response);
+                    paintOfferings(response, $('#store-container'));
                 },
                 error: function(xhr) {
                     var resp = xhr.responseText;
@@ -21,13 +21,13 @@
         }
     };
 
-    var getOfferings = function getOfferings() {
+    var getOfferings = function getOfferings(endpoint, container) {
          $.ajax({
             type: "GET",
-            url: EndpointManager.getEndpoint('OFFERING_COLLECTION'),
+            url: EndpointManager.getEndpoint(endpoint),
             dataType: 'json',
             success: function(response) {
-                paintOfferings(response);
+                paintOfferings(response, container);
             },
             error: function(xhr) {
                 var resp = xhr.responseText;
@@ -36,10 +36,10 @@
             }
 
         });
-    }
+    };
 
-    var paintOfferings = function paintOfferings(data) {
-        $('#store-container').empty();
+    var paintOfferings = function paintOfferings(data, container) {
+        container.empty();
 
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
@@ -62,7 +62,7 @@
                 'rating': offering_elem.getRating(),
                 'description': offering_elem.getShortDescription(),
                 'label_class': labelClass
-            }).appendTo('#store-container').click(paintOfferingDetails.bind(this, offering_elem, paintHomePage, '#home-container'));
+            }).appendTo(container).click(paintOfferingDetails.bind(this, offering_elem, paintHomePage, '#home-container'));
         }
     }
 
@@ -72,7 +72,8 @@
 
         // Set search listeners
         $('#search').click(searchOfferings);
-        getOfferings();
+        getOfferings('NEWEST_COLLECTION', $('#newest-container'));
+        getOfferings('TOPRATED_COLLECTION', $('#top-rated-container'));
     };
 
     $(document).ready(paintHomePage);

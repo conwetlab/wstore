@@ -11,7 +11,9 @@
         'ORGANIZATION_COLLECTION': '/api/administration/organizations',
         'RESOURCE_COLLECTION': '/api/offering/resources',
         'OFFERING_COLLECTION': '/api/offering/offerings',
-        'PURCHASE_COLLECTION': '/api/contracting'
+        'PURCHASE_COLLECTION': '/api/contracting',
+        'NEWEST_COLLECTION': '/api/offering/offerings/newest',
+        'TOPRATED_COLLECTION': '/api/offering/offerings/newest' // It points to the newest list since rating is not implemented
     };
 
     // Contains endpoints that depend on variables
