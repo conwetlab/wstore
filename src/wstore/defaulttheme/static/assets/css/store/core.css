@@ -91,6 +91,12 @@
     left: 250px;
 }
 
+.search-container {
+    position: absolute;
+    top: 300px;
+    left: 250px;
+}
+
 .menu-offering {
     text-align: left;
     border: 1px solid rgb(205, 206, 209);
@@ -238,7 +244,7 @@
 
 #store-container {
     display: inline-block;
-    margin-top: 50px;
+    margin-top: 0px;
 }
 
 #store-search {

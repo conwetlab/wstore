@@ -1,7 +1,7 @@
 
 (function () {
 
-    var searchOfferings = function searchOfferings () {
+    searchOfferings = function searchOfferings () {
         var text = $('#text-search').val();
 
         if (text != '') {
@@ -10,7 +10,7 @@
                 url: EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': text}),
                 dataType: 'json',
                 success: function(response) {
-                    paintOfferings(response, $('#store-container'));
+                    paintSearchView(response);
                 },
                 error: function(xhr) {
                     var resp = xhr.responseText;
@@ -21,13 +21,17 @@
         }
     };
 
-    var getOfferings = function getOfferings(endpoint, container) {
+    getOfferings = function getOfferings(endpoint, container, callback) {
          $.ajax({
             type: "GET",
             url: EndpointManager.getEndpoint(endpoint),
             dataType: 'json',
             success: function(response) {
-                paintOfferings(response, container);
+                if (callback) {
+                    callback(response);
+                } else {
+                    paintOfferings(response, container);
+                }
             },
             error: function(xhr) {
                 var resp = xhr.responseText;
@@ -38,8 +42,13 @@
         });
     };
 
-    var paintOfferings = function paintOfferings(data, container) {
+    paintOfferings = function paintOfferings(data, container, backAct) {
+        var action = paintHomePage;
         container.empty();
+
+        if (backAct) {
+            action=backAct;
+        }
 
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
@@ -62,16 +71,21 @@
                 'rating': offering_elem.getRating(),
                 'description': offering_elem.getShortDescription(),
                 'label_class': labelClass
-            }).appendTo(container).click(paintOfferingDetails.bind(this, offering_elem, paintHomePage, '#home-container'));
+            }).appendTo(container).click(paintOfferingDetails.bind(this, offering_elem, action, '#home-container'));
         }
     }
 
     paintHomePage = function paintHomePage () {
+        $('#home-container').empty();
         $.template('homePageTemplate', $('#home_page_template'));
         $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
 
         // Set search listeners
         $('#search').click(searchOfferings);
+        $('#all').click(function() {
+            getOfferings('OFFERING_COLLECTION', '', paintSearchView);
+        })
+        // Get initial offerings
         getOfferings('NEWEST_COLLECTION', $('#newest-container'));
         getOfferings('TOPRATED_COLLECTION', $('#top-rated-container'));
     };
