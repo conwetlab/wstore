@@ -107,7 +107,6 @@
 
         if(USERNAME == offeringElement.getProvider() && offeringElement.getState() == 'uploaded') {
             $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
-                resLoaded = false;
                 bindResourcesForm(offeringElement);
             });
         }
