@@ -256,8 +256,11 @@ class SubscriptionChargingTestCase(TestCase):
     def tearDown(self):
 
         for f in self._to_delete:
-            fil = os.path.join(settings.BASEDIR, f[1:])
-            os.remove(fil)
+            try:
+                fil = os.path.join(settings.BASEDIR, f[1:])
+                os.remove(fil)
+            except:
+                pass
 
         self._to_delete = []
 
@@ -310,6 +313,7 @@ class SubscriptionChargingTestCase(TestCase):
 
         charging.resolve_charging(new_purchase=True)
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        self._to_delete.extend(purchase.bill)
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 1)
@@ -378,6 +382,7 @@ class SubscriptionChargingTestCase(TestCase):
 
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
+        self._to_delete.extend(purchase.bill)
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 2)
@@ -449,6 +454,7 @@ class SubscriptionChargingTestCase(TestCase):
 
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
+        self._to_delete.extend(purchase.bill)
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 2)
