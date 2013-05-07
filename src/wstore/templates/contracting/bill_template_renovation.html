@@ -42,7 +42,7 @@
 
             <div class="span7" id="bill-info">
                 <h2>{{ off_organization }} {{ offering_name }} {{ off_version }}</h2>
-                <h3>Price parts</h3>
+                <h3>Renovations</h3>
                 <table class="table table-bordered">
                     <thead>
                         <tr>
@@ -50,30 +50,38 @@
                                 Name
                             </th>
                             <th>
-                                Charged unit
+                                Value
                             </th>
                             <th>
-                                Value
+                                Period
+                            </th>
+                            <th>
+                                Renovation date
                             </th>
                         <tr>
                     </thead>
                     <tbody>
-                        {% for n, v, u, c in parts %}
+                        {% for n, v, c, u, d in parts %}
                         <tr>
                             <td>
                                 {{ n }}
                             </td>
                             <td>
+                                 {{ v }} {{ c }}
+                            </td>
+                            <td>
                                 {{ u }}
                             </td>
                             <td>
-                                {{ v }} {{ c }}
+                                {{ d }}
                             </td>
                         </tr>
                         {% endfor %}
+                    </tbody>
+                </table>
+                <table class="table table-bordered">
+                    <tbody>
                         <tr>
-                            <td>
-                            </td>
                             <td>
                                 Subtotal
                             </td>

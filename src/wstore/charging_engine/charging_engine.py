@@ -14,10 +14,12 @@ from paypalpy import paypal
 from django.conf import settings
 from django.template import loader, Context
 from django.contrib.sites.models import Site
+from django.contrib.auth.models import User
 
 from wstore.models import Resource
 from wstore.models import UserProfile
 from wstore.models import Purchase
+from wstore.models import Offering
 from wstore.charging_engine.models import Contract
 from wstore.charging_engine.models import Unit
 from wstore.charging_engine.price_resolver import resolve_price
@@ -56,7 +58,7 @@ class ChargingEngine:
         # document
         pre_value = db.wstore_purchase.find_and_modify(
             query={'_id': ObjectId(self._purchase.pk)},
-            update={ '$set': {'_lock': True}}
+            update={'$set': {'_lock': True}}
         )
 
         # If _lock not exists or is set to false means that this function has
@@ -71,7 +73,7 @@ class ChargingEngine:
 
             db.wstore_purchase.find_and_modify(
                 query={'_id': ObjectId(self._purchase.pk)},
-                update={ '$set': {'_lock': False}}
+                update={'$set': {'_lock': False}}
             )
 
     def _fix_price(self, price):
@@ -165,26 +167,38 @@ class ChargingEngine:
 
         if type_ == 'initial':
             # If initial can only contain single payments and subscriptions
+            parts = {
+                'single_parts': [],
+                'subs_parts': []
+            }
             if 'single_payment' in applied_parts:
                 for part in applied_parts['single_payment']:
-                    parts.append((part['title'], part['value'], part['unit'], part['currency']))
+                    parts['single_parts'].append((part['title'], part['value'], part['currency']))
 
             if 'subscription' in applied_parts:
                 for part in applied_parts['subscription']:
-                    parts.append((part['title'], part['value'], part['unit'], part['currency']))
+                    parts['subs_parts'].append((part['title'], part['value'], part['currency'], part['unit'], str(part['renovation_date'])))
+
+            # Get the bill template
+            bill_template = loader.get_template('contracting/bill_template_initial.html')
 
         elif type_ == 'renovation':
             # If renovation can only contain subscription
             for part in applied_parts['subscription']:
-                parts.append((part['title'], part['value'], part['unit'], part['currency']))
+                parts.append((part['title'], part['value'], part['currency'], part['unit'], str(part['renovation_date'])))
+
+            # Get the bill template
+            bill_template = loader.get_template('contracting/bill_template_renovation.html')
 
         elif type_ == 'use':
             # If use can only contain pay per use parts
             for part in applied_parts['pay_per_use']:
-                parts.append((part['title'], part['value'], part['unit'], part['currency']))
+                parts.append((part['applied_part']['title'], part['applied_part']['value'],
+                              part['applied_part']['currency'], part['applied_part']['unit'],
+                              part['value'], part['price']))
 
-        # Get the bill template
-        bill_template = loader.get_template('contracting/bill_template.html')
+            # Get the bill template
+            bill_template = loader.get_template('contracting/bill_template_use.html')
 
         tax = self._purchase.tax_address
 
@@ -222,7 +236,6 @@ class ChargingEngine:
             'postal': tax.get('postal'),
             'city': tax.get('city'),
             'country': tax.get('country'),
-            'parts': parts,
             'taxes': [],
             'subtotal': price,  # TODO price without taxes
             'tax': '0',
@@ -230,6 +243,21 @@ class ChargingEngine:
             'resources': resources,
             'cur': 'euros'  # General currency of the invoice
         }
+
+        # Include the corresponding parts
+        if type_ == 'initial':
+            context['exists_single'] = False
+            context['exists_subs'] = False
+
+            if len(parts['single_parts']) > 0:
+                context['single_parts'] = parts['single_parts']
+                context['exists_single'] = True
+
+            if len(parts['subs_parts']) > 0:
+                context['subs_parts'] = parts['subs_parts']
+                context['exists_subs'] = True
+        else:
+            context['parts'] = parts
 
         bill_code = bill_template.render(Context(context))
 
@@ -321,6 +349,72 @@ class ChargingEngine:
         renovation_date = datetime.fromtimestamp(renovation_date)
         return renovation_date
 
+    def include_sdr(self, sdr):
+        # Check the offering and customer
+        off_data = sdr['offering']
+        offering = Offering.objects.get(name=off_data['name'], owner_organization=off_data['organization'], version=off_data['version'])
+
+        if offering != self._purchase.offering:
+            raise Exception('The offering defined in the SDR is not the purchase offering')
+
+        customer = User.objects.get(username=sdr['customer'])
+
+        if self._purchase.organization_owned:
+            # Check if the user belongs to the organization
+            profile = UserProfile.objects.get(user=customer)
+            if profile.organization.name != self._purchase.owner_organization:
+                raise Exception('The user not belongs to the owner organization')
+        else:
+            # Check if the user has purchased the offering
+            if customer != self._purchase.customer:
+                raise Exception('The user has not purchased the offering')
+
+        # Extract the pricing model from the purchase
+        self._price_model = self._purchase.contract.pricing_model
+
+        if not 'pay_per_use' in self._price_model:
+            raise Exception('No pay per use parts in the pricing model of the offering')
+
+        # Check the correlation number and timestamp
+        applied_sdrs = self._purchase.contract.applied_sdrs
+        pending_sdrs = self._purchase.contract.pending_sdrs
+        last_corr = 0
+        last_time = 0
+
+        if len(pending_sdrs) > 0:
+            last_corr = int(pending_sdrs[-1]['correlation_number'])
+            last_time = pending_sdrs[-1]['time_stamp']
+            last_time = time.mktime(last_time.timetuple())
+        else:
+            if len(applied_sdrs) > 0:
+                last_corr = int(applied_sdrs[-1]['correlation_number'])
+                last_time = applied_sdrs[-1]['time_stamp']
+                last_time = time.mktime(last_time.timetuple())
+
+        time_stamp = datetime.strptime(sdr['time_stamp'], '%Y-%m-%d %H:%M:%S.%f')
+        time_stamp_sec = time.mktime(time_stamp.timetuple())
+
+        if (int(sdr['correlation_number']) != last_corr + 1):
+            raise Exception('Invalid correlation number, expected: ' + str(last_corr + 1))
+
+        if last_time > time_stamp_sec:
+            raise Exception('Invalid time stamp')
+
+        related_model = {
+            'pay_per_use': self._price_model['pay_per_use']
+        }
+
+        # Call the price resolver
+        price_resolved = resolve_price(related_model, sdr)
+
+        # Store the SDR and the related price
+        sdr['time_stamp'] = time_stamp
+        sdr['price'] = price_resolved['price']
+        sdr['applied_part'] = price_resolved['part']
+
+        self._purchase.contract.pending_sdrs.append(sdr)
+        self._purchase.contract.save()
+
     def end_charging(self, price, concept, related_model):
 
         # Update purchase state
@@ -330,12 +424,14 @@ class ChargingEngine:
 
         # Update contract
         contract = self._purchase.contract
-        contract.charges.append({
-            'date': datetime.now(),
-            'cost': price,
-            'currency': 'euros',  # FIXME allow any currency
-            'concept': concept
-        })
+
+        if price > 0:
+            contract.charges.append({
+                'date': datetime.now(),
+                'cost': price,
+                'currency': 'euros',  # FIXME allow any currency
+                'concept': concept
+            })
 
         contract.pending_payment = {}
         if self._price_model == None:
@@ -375,11 +471,18 @@ class ChargingEngine:
 
             self._price_model['subscription'] = updated_subscriptions
             contract.pricing_model = self._price_model
-            self._generate_invoice(price, related_model, 'Renovation')
+            self._generate_invoice(price, related_model, 'renovation')
+
+        elif concept == 'pay per use':
+            # Move SDR from pending to applied
+            contract.applied_sdrs.extend(contract.pending_sdrs)
+            contract.pending_sdrs = []
+            # Generate the invoice
+            self._generate_invoice(price, related_model, 'use')
 
         contract.save()
 
-    def resolve_charging(self, new_purchase=False, sdr=None):
+    def resolve_charging(self, new_purchase=False, sdr=False):
 
         # Check if there is a new purchase
         if new_purchase:
@@ -403,6 +506,9 @@ class ChargingEngine:
                 price = resolve_price(related_model)
                 # Make the charge
                 redirect_url = self._charge_client(price, 'initial charge')
+            else:
+                # If it is not necessary to charge the customer the state is set to paid
+                self._purchase.state = 'paid'
 
             if self._purchase.state == 'paid':
                 self.end_charging(price, 'initial charge', related_model)
@@ -422,7 +528,7 @@ class ChargingEngine:
             self._purchase.save()
 
             # If not SDR received means that the call is a renovation
-            if sdr == None:
+            if not sdr:
                 # Determine the price parts to renovate
                 if not 'subscription' in self._price_model:
                     raise Exception('No subscriptions to renovate')
@@ -455,6 +561,40 @@ class ChargingEngine:
                     self._purchase.contract.pending_payment = {
                         'price': price,
                         'concept': 'Renovation',
+                        'related_model': related_model
+                    }
+                    self._purchase.contract.save()
+                    return redirect_url
+
+            # If sdr is true means that the call is a request for charging the use
+            # made of a service.
+            else:
+                # Aggregate the calculated charges
+                pending_sdrs = self._purchase.contract.pending_sdrs
+
+                if len(pending_sdrs) == 0:
+                    raise Exception('No SDRs to charge')
+
+                related_model = {
+                    'pay_per_use': [],
+                }
+
+                price = 0
+                for pend_sdr in pending_sdrs:
+                    price = price + pend_sdr['price']
+                    # Construct the related model using SDR
+                    related_model['pay_per_use'].append(pend_sdr)
+
+                # Charge the client
+                redirect_url = self._charge_client(price, 'Pay per use')
+
+                if self._purchase.state == 'paid':
+                    self.end_charging(price, 'pay per use', related_model)
+                else:
+                    price = self._fix_price(price)
+                    self._purchase.contract.pending_payment = {
+                        'price': price,
+                        'concept': 'pay per use',
                         'related_model': related_model
                     }
                     self._purchase.contract.save()

@@ -11,8 +11,10 @@ class Contract(models.Model):
     last_charge = models.DateTimeField(blank=True, null=True)
     # List with the made charges
     charges = ListField()
-    # List with the received SDRs for that offering
+    # List with the charged SDRs for that offering
     applied_sdrs = ListField()
+    # List the pending SDRs for that offering
+    pending_sdrs = ListField()
     # Related purchase
     purchase = models.OneToOneField(Purchase)
     # Pending paid info used in asynchronous charges

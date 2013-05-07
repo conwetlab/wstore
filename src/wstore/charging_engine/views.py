@@ -1,3 +1,4 @@
+import json
 from paypalpy import paypal
 from pymongo import MongoClient
 from bson import ObjectId
@@ -22,11 +23,27 @@ class ServiceRecordCollection(Resource):
     # start the charging process
     @method_decorator(login_required)
     @supported_request_mime_types(('application/json',))
-    def create(self, request):
-        # Extract SDR document from the HTTP request
-        # Call the charging engine core with the SDR
+    def create(self, request, reference):
+        try:
+            # Extract SDR document from the HTTP request
+            data = json.loads(request.raw_post_data)
+
+            # Validate SDR structure
+            if not 'offering' in data or not 'customer' in data or not 'time_stamp' in data \
+            or not 'correlation_number' in data or not 'record_type' in data or not 'unit' in data \
+            or not 'value' in data:
+                raise Exception('Invalid JSON content')
+
+            # Get the purchase
+            purchase = Purchase.objects.get(ref=reference)
+            # Call the charging engine core with the SDR
+            charging_engine = ChargingEngine(purchase)
+            charging_engine.include_sdr(data)
+        except Exception, e:
+            return build_error_response(request, 400, e.message)
+
         # Return response
-        pass
+        return build_error_response(request, 200, 'OK')
 
 
 class PayPalConfirmation(Resource):
