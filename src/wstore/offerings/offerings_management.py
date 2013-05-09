@@ -319,25 +319,50 @@ def create_offering(provider, profile, json_data):
             data['related_images'].append(settings.MEDIA_URL + dir_name + '/' + image['name'])
 
     # Save USDL document
+    # If the USDL itself is provided
 
-    offering_description = json_data['offering_description']
+    if 'offering_description' in json_data:
+        usdl_info = json_data['offering_description']
+
+        repository = Repository.objects.get(name=json_data['repository'])
+        repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
+        offering_id = organization.name + '__' + data['name'] + '__' + data['version']
+
+        usdl = usdl_info['data']
+        data['description_url'] = repository_adaptor.upload(offering_id, usdl_info['content_type'], usdl_info['data'])
+
+    # If the USDL is already uploaded in the repository
+    elif 'description_url' in json_data:
+
+        # Check that the link to USDL is unique since could be used to
+        # purchase offerings from Marketplace
+        usdl_info = json_data['description_url']
+        off = Offering.objects.filter(description_url=usdl_info['link'])
+
+        if len(off) != 0:
+            raise Exception('The provided USDL description is already registered')
+
+        # Download the USDL from the repository
+        repository_adaptor = RepositoryAdaptor(usdl_info['link'])
+        usdl = repository_adaptor.download(content_type=usdl_info['content_type'])
+        data['description_url'] = usdl_info['link']
+
+    else:
+        raise Exception('No USDL description provided')
+
+    # Serialize and store USDL info in json-ld format
     graph = rdflib.Graph()
-    rdf_format = offering_description['content_type']
+    rdf_format = usdl_info['content_type']
 
     if rdf_format == 'text/turtle' or rdf_format == 'text/plain':
-        rdf_format = 'n3'
+            rdf_format = 'n3'
     elif rdf_format == 'application/json':
-        rdf_format = 'json-ld'
+            rdf_format = 'json-ld'
 
-    graph.parse(data=offering_description['data'], format=rdf_format)
+    graph.parse(data=usdl, format=rdf_format)
     data['offering_description'] = graph.serialize(format='json-ld')
 
-    repository = Repository.objects.get(name=json_data['repository'])
-    repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
-    offering_id = organization.name + '__' + data['name'] + '__' + data['version']
-
-    data['description_url'] = repository_adaptor.upload(offering_id, offering_description['content_type'], offering_description['data'])
-
+    # Create the offering
     offering = Offering.objects.create(
         name=data['name'],
         owner_organization=organization.name,
