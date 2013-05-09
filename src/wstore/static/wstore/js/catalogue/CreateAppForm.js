@@ -73,28 +73,52 @@
     };
 
     var makeCreateAppRequest = function makeCreateAppRequest(evnt) {
-        var name, version, rep, csrfToken, request = {};
+        var name, version, rep, csrfToken, request = {}, error=false;
+        var msg;
 
+        // Stop the hide modal action
         evnt.preventDefault();
+        evnt.stopPropagation();
+
+        // Get offering basic info
         name = $.trim($('[name="app-name"]').val());
         version = $.trim($('[name="app-version"]').val());
-        rep = $('#repositories').val();
-        $('#message').modal('hide');
-        $('#message-container').empty();
 
-        if (name && version && logo && rep && usdl){
+        if (!name || !version || !logo) {
+            error = true;
+            msg = 'Missing required field'
+        }
 
-            csrfToken = $.cookie('csrftoken');
-            request.name = name;
-            request.version = version;
-            request.image = logo[0];
+        csrfToken = $.cookie('csrftoken');
+        request.name = name;
+        request.version = version;
+        request.image = logo[0];
+
+        // Get usdl info
+        if (usdl && ($('#usdl-doc').length > 0)) {
+            rep = $('#repositories').val();
             request.offering_description = usdl;
             request.repository = rep;
+        } else {
+            var usdlLink = $.trim($('#usdl-url').val());
+            var contentType = $.trim($('#content-type').val());
 
-            if (screenShots) {
-                request.related_images = screenShots;
+            if (usdlLink && contentType) {
+                request.description_url = {
+                    'content_type': contentType,
+                    'link': usdlLink
+                }
+            } else {
+                error = true;
+                msg = 'USDL info is missing'
             }
+        }
 
+        if (screenShots.length > 0) {
+            request.related_images = screenShots;
+        }
+
+        if (!error) {
             $.ajax({
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -105,6 +129,7 @@
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
+                    $('#message').modal('hide');
                     MessageManager.showMessage('Created', 'The offering has been created')
                     if (getCurrentTab() == '#provided-tab') {
                         getUserOfferings('#provided-tab', paintProvidedOfferings, false);
@@ -113,12 +138,46 @@
                 error: function (xhr) {
                     var resp = xhr.responseText;
                     var msg = JSON.parse(resp).message;
+                    $('#message').modal('hide');
                     MessageManager.showMessage('Error', msg);
                 }
             });
         } else {
-            MessageManager.showMessage('Error', 'missing a required field');
+            MessageManager.showAlertError('Error', msg, $('#error-message'));
         }
+    };
+
+    var displayUploadUSDLForm = function displayUploadUSDLForm(repositories) {
+        var i, repLength = repositories.length;
+
+        $('#usdl-container').empty();
+        $.template('usdlFormTemplate', $('#upload_usdl_form_template'));
+        $.tmpl('usdlFormTemplate', {}).appendTo('#usdl-container');
+
+        for(i=0; i<repLength; i+=1) {
+            $.template('radioTemplate', $('#radio_template'));
+            $.tmpl('radioTemplate', {
+                'name': 'rep-radio',
+                'id': 'rep-radio' + i,
+                'value': repositories[i].name,
+                'text': repositories[i].name}).appendTo('#repositories');
+        }
+
+        $('#usdl-editor').click(function(event) {
+            window.open('/usdleditor', 'USDL editor');
+        });
+
+        $('#usdl-doc').change(function(event) {
+            handleUSDLFileSelection(event);
+        });
+    };
+
+    var displayUSDLLinkForm = function displayUSDLLinkForm() {
+        $('#usdl-container').empty();
+
+        $('<input></input>').attr('type', 'text').attr('id', 'content-type').attr('placeholder', 'Content type').appendTo('#usdl-container');
+        $('<div></div>').addClass('clear space').appendTo('#usdl-container');
+        $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo('#usdl-container');
     };
 
     showCreateAppForm = function showCreateAppForm(repositories) {
@@ -139,20 +198,7 @@
         $.template('formTemplate', $('#create_app_form_template'));
         $.tmpl('formTemplate', {}).appendTo('.modal-body');
 
-        for(i=0; i<repLength; i+=1) {
-            $.template('radioTemplate', $('#radio_template'));
-            $.tmpl('radioTemplate', {
-                'name': 'rep-radio',
-                'id': 'rep-radio' + i,
-                'value': repositories[i].name,
-                'text': repositories[i].name}).appendTo('#repositories');
-        }
-
         // Create the listeners
-        $('#usdl-editor').click(function(event) {
-            window.open('/usdleditor', 'USDL editor');
-        });
-
         $('#img-logo').change(function(event) {
             handleImageFileSelection(event, 'logo');
         });
@@ -161,8 +207,18 @@
             handleImageFileSelection(event, 'screenshots');
         });
 
-        $('#usdl-doc').change(function(event) {
-            handleUSDLFileSelection(event);
+        $('#usdl-sel').change(function() {
+            if($(this).val() == "1") {
+                displayUploadUSDLForm(repositories);
+            } else if ($(this).val() == "2") {
+                displayUSDLLinkForm();
+            } else {
+                $('#usdl-container').empty()
+            }
+        });
+
+        $('#upload-help').on('hover', function () {
+            $('#upload-help').popover('show');
         });
 
         $('.modal-footer > .btn').click(function(event) {

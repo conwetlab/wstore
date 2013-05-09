@@ -1,22 +1,22 @@
 
 <form class="form form-vertical">
+    <div id="error-message"></div>
+    <div class="space clear"></div>
     <label>Name</label>
-    <input type="text" name="app-name" placeholder="App name"></input>
+    <input type="text" name="app-name" placeholder="Offering name"></input>
     <label>Version</label>
-    <input type="text" name="app-version" placeholder="App version"></input>
+    <input type="text" name="app-version" placeholder="Offering version"></input>
     <label>Image or Logo</label>
     <input type="file" name="files" id="img-logo"></input>
     <label>Screen shots</label>
     <input type="file" name="files" id="screen-shots" multiple></input>
-    <label>Upload USDL description</label>
-    <a id="usdl-editor">
-        USDL editor tool
-        <i class="icon-wrench"></i>
-    </a>
-    <input type="file" name="usdl" id="usdl-doc"></input>
-    <label>Select the repository</label>
-    <div class="controls">
-        <select id="repositories" class="radio">
-        </select>
-    </div>
+    <label>USDL Info</label>
+    <select id="usdl-sel">
+        <option value="0">-----</option>
+        <option value="1">Upload USDL</option>
+        <option value="2">Provide USDL URL</option>
+    </select>
+    <i class="icon-question-sign" id="upload-help" rel="popover" data-content="Select if you want to provide an USDL document or a link to the repository if you have already uploaded it" data-original-title="Help"></i>
+	<div id="usdl-container">
+	</div>
 </form>
