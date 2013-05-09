@@ -11,15 +11,17 @@ class RepositoryAdaptor():
     _repository_url = None
     _collection = None
 
-    def __init__(self, repository_url, collection):
+    def __init__(self, repository_url, collection=None):
+
         self._repository_url = repository_url
-        self._collection = collection
 
         if not self._repository_url.endswith('/'):
             self._repository_url += '/'
 
-        if not self._collection.endswith('/'):
-            self._collection += '/'
+        if collection != None:
+            self._collection = collection
+            if not self._collection.endswith('/'):
+                self._collection += '/'
 
     def upload(self, name, content_type, data):
 
@@ -38,12 +40,15 @@ class RepositoryAdaptor():
 
         return url
 
-    def download(self, name, content_type):
+    def download(self, name=None, content_type='application/rdf+xml'):
 
-        name = name.replace(' ', '')
-        url = urljoin(self._repository_url, self._collection)
-        url = urljoin(url, name)
+        url = self._repository_url
         opener = urllib2.build_opener()
+
+        if name != None:
+            name = name.replace(' ', '')
+            url = urljoin(url, self._collection)
+            url = urljoin(url, name)
 
         headers = {'Accept': content_type}
         request = MethodRequest('GET', url, '', headers)
