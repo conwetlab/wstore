@@ -60,12 +60,15 @@ class RepositoryAdaptor():
 
         return response.read()
 
-    def delete(self, name):
+    def delete(self, name=None):
 
-        name = name.replace(' ', '')
-        url = urljoin(self._repository_url, self._collection)
-        url = urljoin(url, name)
         opener = urllib2.build_opener()
+        url = self._repository_url
+
+        if name != None:
+            name = name.replace(' ', '')
+            url = urljoin(self._repository_url, self._collection)
+            url = urljoin(url, name)
 
         request = MethodRequest('DELETE', url)
 
