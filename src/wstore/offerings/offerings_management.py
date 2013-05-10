@@ -13,6 +13,7 @@ from django.contrib.auth.models import User
 from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.market_adaptor.marketadaptor import MarketAdaptor
 from wstore.search.search_engine import SearchEngine
+from wstore.offerings.offering_rollback import OfferingRollback
 from wstore.models import Resource
 from wstore.models import Repository
 from wstore.models import Offering
@@ -270,9 +271,13 @@ def get_offering_info(offering, user):
 
 # Creates a new offering including the media files and
 # the repository uploads
+@OfferingRollback
 def create_offering(provider, profile, json_data):
 
     data = {}
+    if not 'name' in json_data or not 'version' in json_data:
+        raise Exception('Missing required fields')
+
     data['name'] = json_data['name']
     data['version'] = json_data['version']
 
