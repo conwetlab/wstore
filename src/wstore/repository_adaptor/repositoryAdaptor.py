@@ -23,12 +23,15 @@ class RepositoryAdaptor():
             if not self._collection.endswith('/'):
                 self._collection += '/'
 
-    def upload(self, name, content_type, data):
+    def upload(self, content_type, data, name=None):
 
-        name = name.replace(' ', '')
-        url = urljoin(self._repository_url, self._collection)
-        url = urljoin(url, name)
         opener = urllib2.build_opener()
+        url = self._repository_url
+
+        if name != None:
+            name = name.replace(' ', '')
+            url = urljoin(self._repository_url, self._collection)
+            url = urljoin(url, name)
 
         headers = {'content-type': content_type}
         request = MethodRequest('PUT', url, data, headers)

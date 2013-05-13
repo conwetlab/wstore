@@ -334,7 +334,7 @@ def create_offering(provider, profile, json_data):
         offering_id = organization.name + '__' + data['name'] + '__' + data['version']
 
         usdl = usdl_info['data']
-        data['description_url'] = repository_adaptor.upload(offering_id, usdl_info['content_type'], usdl_info['data'])
+        data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl_info['data'], name=offering_id)
 
     # If the USDL is already uploaded in the repository
     elif 'description_url' in json_data:
