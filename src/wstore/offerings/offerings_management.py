@@ -394,6 +394,90 @@ def create_offering(provider, profile, json_data):
     search_engine.create_index(offering)
 
 
+def update_offering(offering, data):
+
+    # Check if the offering has been published,
+    # if published the offering cannot be updated
+    if offering.state != 'uploaded':
+        raise Exception('The offering cannot be edited')
+
+    dir_name = offering.owner_organization + '__' + offering.name + '__' + offering.version
+    path = os.path.join(settings.MEDIA_ROOT, dir_name)
+
+    # Update the logo
+    if 'image' in data:
+        logo_path = offering.image_url
+
+        # Remove the old logo
+        os.remove(logo_path)
+
+        # Save the new logo
+        f = open(os.path.join(path, data['image']['name']), "wb")
+        dec = base64.b64decode(data['image']['data'])
+        f.write(dec)
+        f.close()
+        offering.image_url = os.path.join(path, data['image']['name'])
+
+    # Update the related images
+    if 'related_images' in data:
+
+        # Delete old related images
+        for img in offering.related_images:
+            os.remove(img)
+
+        offering.related_images = []
+
+        # Create new images
+        for img in data['related_images']:
+            f = open(os.path.join(path, img['name']), "wb")
+            dec = base64.b64decode(img['data'])
+            f.write(dec)
+            f.close()
+            offering.related_images.append(os.path.join(path, img['name']))
+
+    new_usdl = False
+    # Update the USDL description
+    if 'offering_description' in data:
+        usdl_info = data['offering_description']
+
+        repository_adaptor = RepositoryAdaptor(offering.description_url)
+
+        usdl = usdl_info['data']
+        repository_adaptor.upload(usdl_info['content_type'], usdl)
+        new_usdl = True
+
+    # The USDL document has changed in the repository
+    elif 'description_url' in data:
+        usdl_info = data['description_url']
+
+        # Check the link
+        if usdl_info['link'] != offering.description_url:
+            raise Exception('The provided USDL URL is not valid')
+
+        # Download new content
+        repository_adaptor = RepositoryAdaptor(usdl_info['link'])
+        usdl = repository_adaptor.download(content_type=usdl_info['content_type'])
+        new_usdl = True
+
+    # If the USDL has changed store the new description
+    # in the offering model
+    if new_usdl:
+        # Serialize and store USDL info in json-ld format
+        graph = rdflib.Graph()
+
+        rdf_format = usdl_info['content_type']
+
+        if usdl_info['content_type'] == 'text/turtle' or usdl_info['content_type'] == 'text/plain':
+            rdf_format = 'n3'
+        elif usdl_info['content_type'] == 'application/json':
+            rdf_format = 'json-ld'
+
+        graph.parse(data=usdl, format=rdf_format)
+        offering.offering_description = json.loads(graph.serialize(format='json-ld'))
+
+    offering.save()
+
+
 def publish_offering(offering, data):
 
     for market in data['marketplaces']:

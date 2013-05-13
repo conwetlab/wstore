@@ -11,7 +11,8 @@ from wstore.store_commons.utils.http import build_error_response, get_content_ty
 from wstore.models import Offering
 from wstore.models import UserProfile
 from wstore.models import Context
-from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering, publish_offering, bind_resources, count_offerings
+from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
+publish_offering, bind_resources, count_offerings, update_offering
 from wstore.offerings.resources_management import register_resource, get_provider_resources
 from django.contrib.sites.models import get_current_site
 
@@ -108,13 +109,27 @@ class OfferingEntry(Resource):
     @method_decorator(login_required)
     @supported_request_mime_types(('application/json', 'application/xml'))
     def update(self, request, organization, name, version):
-        pass
+
+        user = request.user
+        try:
+            offering = Offering.objects.get(owner_organization=organization, name=name, version=version)
+
+            if offering.owner_admin_user != user:
+                return build_error_response(request, 403, 'Forbidden')
+
+            data = json.loads(request.raw_post_data)
+
+            update_offering(offering, data)
+        except Exception, e:
+            build_error_response(request, 400, e.message)
+
+        return build_error_response(request, 200, 'OK')
 
     @method_decorator(login_required)
     def delete(self, request, organization, name, version):
         # If the offering has been purchased it is not deleted
         # it is marked as deleted in order to allow customers that
-        # have puerchased the offering to intall it if needed
+        # have purchased the offering to install it if needed
         offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
         if not offering.is_owner(request.user):
             build_error_response(request, 401, 'Unauthorized')
