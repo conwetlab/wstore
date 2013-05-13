@@ -310,6 +310,7 @@ def create_offering(provider, profile, json_data):
     f = open(os.path.join(path, image['name']), "wb")
     dec = base64.b64decode(image['data'])
     f.write(dec)
+    f.close()
 
     data['image_url'] = settings.MEDIA_URL + dir_name + '/' + image['name']
     # Save screen shots
@@ -320,6 +321,7 @@ def create_offering(provider, profile, json_data):
             f = open(os.path.join(path, image['name']), "wb")
             dec = base64.b64decode(image['data'])
             f.write(dec)
+            f.close()
 
             data['related_images'].append(settings.MEDIA_URL + dir_name + '/' + image['name'])
 
