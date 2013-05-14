@@ -115,7 +115,9 @@
         $('#main-action').click(mainAction.bind(this, action));
 
         //Check renovations
-        checkRenovations(offeringElement.getPricing());
+        if (action == 'Download') {
+            checkRenovations(offeringElement.getPricing());
+        }
     };
 
     var checkRenovations = function checkRenovations(pricing) {
@@ -125,19 +127,23 @@
             var toRenovate = false;
             // Check if there are renovation dates
             for (var i = 0; i < price_plans.length; i++) {
-                var price_components = price_plans[i].price_components;
+                var price_components;
 
-                for (var j = 0; j < price_components.length; j++) {
-                    // Check if there are out of date subscriptions
-                    if ('renovation_date' in price_components[j]) {
-                        var currentDate = new Date();
-                        var renDate = new Date(price_components[j].renovation_date);
+                if (price_plans[i].price_components) {
+                    price_components = price_plans[i].price_components;
 
-                        if (renDate.getTime() < currentDate.getTime()) {
-                            if (!toRenovate) {
-                                toRenovate = true;
+                    for (var j = 0; j < price_components.length; j++) {
+                        // Check if there are out of date subscriptions
+                        if ('renovation_date' in price_components[j]) {
+                            var currentDate = new Date();
+                            var renDate = new Date(price_components[j].renovation_date);
+
+                            if (renDate.getTime() < currentDate.getTime()) {
+                                if (!toRenovate) {
+                                    toRenovate = true;
+                                }
+                                outDated.push(price_components[j]);
                             }
-                            outDated.push(price_components[j]);
                         }
                     }
                 }
