@@ -31,7 +31,7 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
         if 'number' in payment_info['credit_card']:
             credit_card_info = payment_info['credit_card']
         else:
-            credit_card_info = profile.payment_info['credit_card']
+            credit_card_info = profile.payment_info
             credit_card_info['cvv2'] = payment_info['credit_card']['cvv2']
 
     elif payment_info['payment_method'] != 'paypal':
