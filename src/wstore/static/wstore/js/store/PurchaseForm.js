@@ -6,6 +6,7 @@
     var makePurchaseRequest = function makePurchaseRequest(offeringElement) {
         var csrfToken = $.cookie('csrftoken');
         var error = false;
+        var msg;
 
         // Load the offering info
         var request = {
@@ -29,7 +30,7 @@
 
             request.payment.method = 'credit_card';
 
-            if (!$('curr-card').prop('checked')) {
+            if (!$('#curr-card').prop('checked')) {
                 var number, year;
 
                 number = $.trim($('#number').val());
@@ -45,6 +46,7 @@
                     }
                 } else {
                     error = true;
+                    msg = 'Missing required field';
                 }
             } else {
                 if (!(cvv2 == '')) {
@@ -53,10 +55,14 @@
                     }
                 } else {
                     error = true;
+                    msg = 'Missing cvv2';
                 }
             }
-        } else {
+        } else if ($('#pay-method').val() == 'paypal'){
             request.payment.method = 'paypal';
+        } else {
+            error = true;
+            msg = 'Please select a payment method';
         }
 
         if (!error) {
@@ -70,7 +76,6 @@
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
-
                     if ('redirection_link' in response) {
                         window.open(response.redirection_link, '_blank');
                     } else {
@@ -80,13 +85,17 @@
                         offeringElement.setState('purchased');
                         refreshAndUpdateDetailsView();
                     }
+                    $('#message').modal('hide');
                 },
                 error: function (xhr) {
                     var resp = xhr.responseText;
                     var msg = JSON.parse(resp).message;
+                    $('#message').modal('hide');
                     MessageManager.showMessage('Error', msg);
                 }
             });
+        } else {
+            MessageManager.showAlertError('Error', msg, $('#purchase-error'));
         }
     };
 
@@ -102,6 +111,9 @@
         var select, acceptButton, cancelButton;
         // Crear modal body
         $('.modal-body').empty();
+
+        $('<div></div>').attr('id', 'purchase-error').appendTo('.modal-body');
+        $('<div></div>').addClass('space clear').appendTo('.modal-body');
 
         // Append select component to choose payment method
         $('<p></p>').text('Payment method').appendTo('.modal-body');
@@ -150,7 +162,6 @@
         acceptButton.click(function(evnt) {
             evnt.preventDefault();
             makePurchaseRequest(offeringElement);
-            $('#message').modal('hide');
         });
 
         cancelButton = $('<button></button>').attr('class', 'btn btn-danger').text('Cancel');
