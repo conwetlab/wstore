@@ -29,13 +29,12 @@ from wstore.contracting.purchase_rollback import rollback
 
 class ChargingEngine:
 
-    _sdr = None
     _price_model = None
     _purchase = None
     _payment_method = None
     _credit_card_info = None
 
-    def __init__(self, purchase, payment_method=None, credit_card=None, sdr=None):
+    def __init__(self, purchase, payment_method=None, credit_card=None):
         self._purchase = purchase
         if payment_method != None:
 
