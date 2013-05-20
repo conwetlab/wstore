@@ -48,15 +48,6 @@
                     error = true;
                     msg = 'Missing required field';
                 }
-            } else {
-                if (!(cvv2 == '')) {
-                    request.payment.credit_card = {
-                        'cvv2': cvv2
-                    }
-                } else {
-                    error = true;
-                    msg = 'Missing cvv2';
-                }
             }
         } else if ($('#pay-method').val() == 'paypal'){
             request.payment.method = 'paypal';
@@ -144,9 +135,9 @@
                         $.tmpl('CreditCardTemplate', {}).appendTo('#card-form');
                         checked = false
                     } else {
-                        $('#card-form').empty();
+                        $('#card-form').empty();/*
                         $('<label></label>').attr('for', 'cvv2').text('Card verification value').appendTo('#card-form');
-                        $('<input></input>').attr('type', 'text').attr('id', 'cvv2').attr('placeholder', 'Card verification value').appendTo('#card-form');
+                        $('<input></input>').attr('type', 'text').attr('id', 'cvv2').attr('placeholder', 'Card verification value').appendTo('#card-form');*/
                         checked = true;
                     }
                 })
@@ -177,6 +168,9 @@
 
         // Create the modal
         MessageManager.showMessage('Purchase offering', '');
+
+        $('<div></div>').attr('id', 'purchase-error').appendTo('.modal-body');
+        $('<div></div>').addClass('space clear').appendTo('.modal-body');
 
         $('<label></label>').attr('for', 'tax_addr').text('Use user profile tax address').appendTo('.modal-body');
         $('<input></input>').attr('type', 'checkbox').attr('value', 'tax_addr').attr('id', 'tax_addr').appendTo('.modal-body');
@@ -234,6 +228,9 @@
             if(!error) {
                 orgOwned = $('#owned').prop('checked');
                 showPaymentInfoForm(offeringElement);
+            } else {
+                var msg = 'A tax address must be provided';
+                MessageManager.showAlertError('Error', msg, $('#purchase-error'));
             }
         });
 
