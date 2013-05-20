@@ -148,6 +148,7 @@ INSTALLED_APPS = (
     'wstore.charging_engine',
     'wstore.store_commons',
     'usdl-editor',
+    'django_crontab',
 )
 
 # Paypal creadetials
@@ -156,6 +157,11 @@ PAYPAL_PASSWD = '<your_PayPal_passwd>'
 PAYPAL_SIGNATURE = '<your_PayPal_signature>'
 PAYPAL_URL = 'https://api-3t.sandbox.paypal.com/nvp'
 PAYPAL_CHECKOUT_URL='https://www.sandbox.paypal.com/webscr?cmd=_express-checkout'
+
+# Daily job that checks pending pay-per-use charges
+CRONJOBS = [
+    ('0 5 * * *', 'wstore.charging_engine.charging_daemon.use_charging_daemon'),
+]
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
