@@ -2,6 +2,7 @@
 (function(){
     var makeRenovationRequest = function makeRenovationRequest(offElem) {
         var request, error = false;
+        var msg;
         var csrfToken = $.cookie('csrftoken');
         var ref = offElem.bill[0].split('_')[0];
 
@@ -30,14 +31,7 @@
                     }
                 } else {
                     error = true;
-                }
-            } else {
-                if (!(cvv2 == '')) {
-                    request.credit_card = {
-                        'cvv2': cvv2
-                    }
-                } else {
-                    error = true;
+                    msg = 'Missing required field';
                 }
             }
         } else {
@@ -57,15 +51,19 @@
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
+                    $('#message').modal('hide');
                     MessageManager.showMessage('Renovated', 'Subscriptions has been renovated');
                     refreshAndUpdateDetailsView();
                 },
                 error: function (xhr) {
                     var resp = xhr.responseText;
                     var msg = JSON.parse(resp).message;
+                    $('#message').modal('hide');
                     MessageManager.showMessage('Error', msg);
                 }
             });
+        } else {
+            MessageManager.showAlertError('Error', msg, $('#purchase-error'));
         }
     };
 
@@ -73,6 +71,9 @@
         var select, acceptButton, cancelButton;
         // Crear modal body
         $('.modal-body').empty();
+
+        $('<div></div>').attr('id', 'purchase-error').appendTo('.modal-body');
+        $('<div></div>').addClass('space clear').appendTo('.modal-body');
 
         // Append select component to choose payment method
         $('<p></p>').text('Payment method').appendTo('.modal-body');
@@ -104,8 +105,6 @@
                         checked = false
                     } else {
                         $('#card-form').empty();
-                        $('<label></label>').attr('for', 'cvv2').text('Card verification value').appendTo('#card-form');
-                        $('<input></input>').attr('type', 'text').attr('id', 'cvv2').attr('placeholder', 'Card verification value').appendTo('#card-form');
                         checked = true;
                     }
                 })
@@ -121,7 +120,6 @@
         acceptButton.click(function(evnt) {
             evnt.preventDefault();
             makeRenovationRequest(offElem);
-            $('#message').modal('hide');
         });
 
         cancelButton = $('<button></button>').attr('class', 'btn btn-danger').text('Cancel');

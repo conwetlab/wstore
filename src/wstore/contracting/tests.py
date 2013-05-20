@@ -54,7 +54,11 @@ class PurchasesCreationTestCase(TestCase):
         payment_info = {
             'payment_method': 'credit_card',
             'credit_card': {
-                'number': '1234123412341234'
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
             }
         }
 
@@ -103,7 +107,11 @@ class PurchasesCreationTestCase(TestCase):
         payment_info = {
             'payment_method': 'credit_card',
             'credit_card': {
-                'number': '1234123412341234'
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
             }
         }
 
@@ -130,7 +138,11 @@ class PurchasesCreationTestCase(TestCase):
         payment_info = {
             'payment_method': 'credit_card',
             'credit_card': {
-                'number': '1234123412341234'
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
             },
             'tax_address': {
                 'street': 'test street',
@@ -177,7 +189,11 @@ class PurchasesCreationTestCase(TestCase):
         payment_info = {
             'payment_method': 'credit_card',
             'credit_card': {
-                'number': '1234123412341234'
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
             },
             'tax_address': {
                 'street': 'test street',
@@ -212,7 +228,11 @@ class PurchasesCreationTestCase(TestCase):
         payment_info = {
             'payment_method': 'credit_card',
             'credit_card': {
-                'number': '1234123412341234'
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
             },
             'tax_address': {
                 'street': 'test street',
@@ -248,7 +268,11 @@ class PurchasesCreationTestCase(TestCase):
         payment_info = {
             'payment_method': 'credit_card',
             'credit_card': {
-                'number': '1234123412341234'
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
             },
             'tax_address': {
                 'street': 'test street',

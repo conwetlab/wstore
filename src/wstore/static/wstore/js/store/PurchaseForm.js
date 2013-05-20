@@ -135,9 +135,7 @@
                         $.tmpl('CreditCardTemplate', {}).appendTo('#card-form');
                         checked = false
                     } else {
-                        $('#card-form').empty();/*
-                        $('<label></label>').attr('for', 'cvv2').text('Card verification value').appendTo('#card-form');
-                        $('<input></input>').attr('type', 'text').attr('id', 'cvv2').attr('placeholder', 'Card verification value').appendTo('#card-form');*/
+                        $('#card-form').empty();
                         checked = true;
                     }
                 })
