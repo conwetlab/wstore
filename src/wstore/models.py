@@ -22,6 +22,7 @@ class Organization(models.Model):
 
     name = models.CharField(max_length=50, unique=True)
     offerings_purchased = ListField()
+    payment_info = DictField()
 
 
 class UserProfile(models.Model):
