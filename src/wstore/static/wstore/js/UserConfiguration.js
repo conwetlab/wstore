@@ -67,7 +67,7 @@
 
         // If any field is filled all fields must be filled
         if (filled != 0) {
-            if (filled != 4) {
+            if (filled != 5) {
                 error = true;
                 msg = 'If a field of payment info is filed all fields must be filled';
             } else {
@@ -75,7 +75,8 @@
                     'type': $('#type').val(),
                     'number': $.trim($('#number').val()),
                     'expire_month': $('#expire-month').val(),
-                    'expire_year': $.trim($('#expire-year').val())
+                    'expire_year': $.trim($('#expire-year').val()),
+                    'cvv2': $.trim($('#cvv2').val())
                 };
             }
         }
@@ -252,13 +253,15 @@
                 context = {
                     'number': paymentInfo.number,
                     'year': paymentInfo.expire_year,
+                    'cvv2': paymentInfo.cvv2
                 };
                 month = paymentInfo.expire_month;
                 type = paymentInfo.type;
             } else {
                 context = {
                     'number': '',
-                    'year': ''
+                    'year': '',
+                    'cvv2': ''
                 };
                 month = '';
                 type = '';
@@ -325,7 +328,8 @@
                     'type': paymentInfo.type,
                     'number': paymentInfo.number,
                     'year': paymentInfo.expire_year,
-                    'month': paymentInfo.expire_month
+                    'month': paymentInfo.expire_month,
+                    'cvv2': paymentInfo.cvv2
                 };
 
                 $.template('paymentInfoConfTemplate', $('#payment_info_conf_template'));

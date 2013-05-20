@@ -24,6 +24,7 @@
             $('#number').val(credit_card.number);
             $('#expire-month').val(credit_card.expire_month);
             $('#expire-year').val(credit_card.expire_year);
+            $('#cvv2').val(credit_card.cvv2);
         }
 
         if (userInfo.tax_address) {
@@ -162,7 +163,8 @@
                 'type': $('#type').val(),
                 'number': $.trim($('#number').val()),
                 'expire_month': $('#expire-month').val(),
-                'expire_year': $.trim($('#expire-year').val())
+                'expire_year': $.trim($('#expire-year').val()),
+                'cvv2': $.trim($('#cvv2').val())
             }
             request.payment_info = creditCard;
         } else if (filled != 0) {

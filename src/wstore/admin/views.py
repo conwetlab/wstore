@@ -42,6 +42,7 @@ class UserProfileCollection(Resource):
                 user_profile['payment_info']['type'] = profile.payment_info['type']
                 user_profile['payment_info']['expire_year'] = profile.payment_info['expire_year']
                 user_profile['payment_info']['expire_month'] = profile.payment_info['expire_month']
+                user_profile['payment_info']['cvv2'] = profile.payment_info['cvv2']
 
             response.append(user_profile)
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
@@ -84,7 +85,8 @@ class UserProfileCollection(Resource):
                     'type': data['payment_info']['type'],
                     'number': data['payment_info']['number'],
                     'expire_month': data['payment_info']['expire_month'],
-                    'expire_year': data['payment_info']['expire_year']
+                    'expire_year': data['payment_info']['expire_year'],
+                    'cvv2': data['payment_info']['cvv2']
                 }
 
             user_profile.save()
@@ -133,6 +135,7 @@ class UserProfileEntry(Resource):
             user_profile['payment_info']['type'] = profile.payment_info['type']
             user_profile['payment_info']['expire_year'] = profile.payment_info['expire_year']
             user_profile['payment_info']['expire_month'] = profile.payment_info['expire_month']
+            user_profile['payment_info']['cvv2'] = profile.payment_info['cvv2']
 
         return HttpResponse(json.dumps(user_profile), status=200, mimetype='application/json')
 
@@ -182,7 +185,8 @@ class UserProfileEntry(Resource):
                     'type': data['payment_info']['type'],
                     'number': data['payment_info']['number'],
                     'expire_month': data['payment_info']['expire_month'],
-                    'expire_year': data['payment_info']['expire_year']
+                    'expire_year': data['payment_info']['expire_year'],
+                    'cvv2': data['payment_info']['cvv2']
                 }
             else:
                 # the update is absolute so if no payment info provided it is deleted
