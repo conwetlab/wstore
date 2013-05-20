@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from wstore.charging_engine import charging_engine
+from wstore.charging_engine import charging_daemon
 from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.models import Organization
@@ -58,6 +59,26 @@ class FakeThreading():
 
         def start(self):
             pass
+
+
+class FakeChargingEngine():
+
+    _purchase = None
+    _payment_method = None
+    _credit_card = None
+
+    def __init__(self, purchase, payment_method, credit_card):
+        self._purchase = purchase
+        self._payment_method = payment_method
+        self._credit_card = credit_card
+
+    def resolve_charging(self, sdr=False):
+
+        if sdr and self._payment_method == 'credit_card':
+            sdrs = self._purchase.contract.pending_sdrs
+            self._purchase.contract.pending_sdrs = []
+            self._purchase.contract.applied_sdrs.extend(sdrs)
+            self._purchase.contract.save()
 
 
 class SinglePaymentChargingTestCase(TestCase):
@@ -1161,3 +1182,217 @@ class AsynchronousPaymentTestCase(TestCase):
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f02222')
         self.assertEqual(purchase.state, 'paid')
+
+
+class ChargingDaemonTestCase(TestCase):
+
+    fixtures = ['use_daemon.json']
+
+    @classmethod
+    def setUpClass(cls):
+        charging_daemon.ChargingEngine = FakeChargingEngine
+        super(ChargingDaemonTestCase, cls).setUpClass()
+
+    def test_basic_charging_daemon(self):
+
+        # Fill userprofile model
+        user = User.objects.get(pk='51000aba8e05ac2115f022f9')
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+
+        user.userprofile.organization = org
+        user.userprofile.payment_info = {
+        }
+
+        user.userprofile.save()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        # Add dateinfo to sdr
+        pending_sdrs = []
+        pending_sdrs.append({
+            'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
+        })
+
+        purchase.contract.pending_sdrs = pending_sdrs
+
+        purchase.contract.save()
+
+        # Run the method
+        charging_daemon.use_charging_daemon()
+
+        # Check the contract
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.pending_sdrs), 0)
+        self.assertEqual(len(contract.applied_sdrs), 1)
+
+    def test_charging_daemon_multiple_sdrs(self):
+
+        # Fill userprofile model
+        user = User.objects.get(pk='51000aba8e05ac2115f022f9')
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+
+        user.userprofile.organization = org
+        user.userprofile.payment_info = {
+        }
+
+        user.userprofile.save()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        # Add dateinfo to sdr
+        pending_sdrs = []
+        pending_sdrs.append({
+            'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
+        })
+        pending_sdrs.append({
+            'time_stamp': datetime(2013, 04, 02, 00, 00, 00, 00)
+        })
+        pending_sdrs.append({
+            'time_stamp': datetime(2013, 04, 03, 00, 00, 00, 00)
+        })
+
+        purchase.contract.pending_sdrs = pending_sdrs
+
+        purchase.contract.save()
+
+        # Run the method
+        charging_daemon.use_charging_daemon()
+
+        # Check the contract
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.pending_sdrs), 0)
+        self.assertEqual(len(contract.applied_sdrs), 3)
+
+    def test_charging_daemon_multiple_contracts(self):
+
+        # Fill userprofile model
+        user = User.objects.get(pk='51000aba8e05ac2115f022f9')
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+
+        user.userprofile.organization = org
+        user.userprofile.payment_info = {
+        }
+
+        user.userprofile.save()
+
+        purchase_1 = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        purchase_2 = Purchase.objects.get(pk='61004aba5e05acc115f03333')
+
+        # Add dateinfo to sdr
+        pending_sdrs_1 = []
+        pending_sdrs_1.append({
+            'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
+        })
+
+        pending_sdrs_2 = []
+        pending_sdrs_2.append({
+            'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
+        })
+        pending_sdrs_2.append({
+            'time_stamp': datetime(2013, 04, 02, 00, 00, 00, 00)
+        })
+        pending_sdrs_2.append({
+            'time_stamp': datetime(2013, 04, 03, 00, 00, 00, 00)
+        })
+
+        purchase_1.contract.pending_sdrs = pending_sdrs_1
+        purchase_1.contract.save()
+
+        purchase_2.contract.pending_sdrs = pending_sdrs_2
+        purchase_2.contract.save()
+
+        # Run the method
+        charging_daemon.use_charging_daemon()
+
+        # Check the first contract
+        purchase_1 = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        contract = purchase_1.contract
+
+        self.assertEqual(len(contract.pending_sdrs), 0)
+        self.assertEqual(len(contract.applied_sdrs), 1)
+
+        # Check the first contract
+        purchase_2 = Purchase.objects.get(pk='61004aba5e05acc115f03333')
+
+        contract = purchase_2.contract
+
+        self.assertEqual(len(contract.pending_sdrs), 0)
+        self.assertEqual(len(contract.applied_sdrs), 3)
+
+    def test_charging_daemon_organization_purchased(self):
+
+        # Fill userprofile model
+        user = User.objects.get(pk='51000aba8e05ac2115f022f9')
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+
+        org.payment_info = {}
+        org.save()
+
+        user.userprofile.organization = org
+
+        user.userprofile.save()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f08888')
+
+        # Add dateinfo to sdr
+        pending_sdrs = []
+        pending_sdrs.append({
+            'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
+        })
+
+        purchase.contract.pending_sdrs = pending_sdrs
+
+        purchase.contract.save()
+
+        # Run the method
+        charging_daemon.use_charging_daemon()
+
+        # Check the contract
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f08888')
+
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.pending_sdrs), 0)
+        self.assertEqual(len(contract.applied_sdrs), 1)
+
+    def test_charging_daemon_now_time(self):
+
+        # Fill userprofile model
+        user = User.objects.get(pk='51000aba8e05ac2115f022f9')
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+
+        user.userprofile.organization = org
+        user.userprofile.payment_info = {
+        }
+
+        user.userprofile.save()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        # Add dateinfo to sdr
+        pending_sdrs = []
+        pending_sdrs.append({
+            'time_stamp': datetime.now()
+        })
+
+        purchase.contract.pending_sdrs = pending_sdrs
+
+        purchase.contract.save()
+
+        # Run the method
+        charging_daemon.use_charging_daemon()
+
+        # Check the contract
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.pending_sdrs), 1)
+        self.assertEqual(len(contract.applied_sdrs), 0)
