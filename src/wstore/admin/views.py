@@ -11,6 +11,30 @@ from wstore.models import UserProfile
 from wstore.models import Organization
 
 
+def is_hidden_credit_card(number, profile_card):
+
+    hidden = False
+    if number.startswith('xxxxxxxxxxxx'):
+        if number[12:] == profile_card[12:]:
+            hidden = True
+
+    return hidden
+
+
+def is_valid_credit_card(number):
+    valid = True
+    digits = '1234567890'
+
+    if len(number) != 16:
+        valid = False
+
+    for d in number:
+        if not d in digits:
+            valid = False
+
+    return valid
+
+
 class UserProfileCollection(Resource):
 
     @method_decorator(login_required)
@@ -81,6 +105,9 @@ class UserProfileCollection(Resource):
                     'country': data['tax_address']['country']
                 }
             if 'payment_info' in data:
+                if not is_valid_credit_card(data['payment_info']['number']):
+                    raise Exception()
+
                 user_profile.payment_info = {
                     'type': data['payment_info']['type'],
                     'number': data['payment_info']['number'],
@@ -181,6 +208,13 @@ class UserProfileEntry(Resource):
                 user_profile.tax_address = {}
 
             if 'payment_info' in data:
+
+                number = data['payment_info']['number']
+
+                if not is_valid_credit_card(number):
+                    if is_hidden_credit_card(number, user_profile.payment_info['number']):
+                        number = user_profile.payment_info['number']
+
                 user_profile.payment_info = {
                     'type': data['payment_info']['type'],
                     'number': data['payment_info']['number'],
