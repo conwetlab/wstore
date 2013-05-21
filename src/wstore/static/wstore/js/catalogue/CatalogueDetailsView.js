@@ -109,6 +109,9 @@
             $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
                 bindResourcesForm(offeringElement);
             });
+            $('<input></input>').attr('type', 'button').attr('value', 'Edit').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
+                editOfferingForm(offeringElement);
+            });
         }
 
         // Set the main operation
