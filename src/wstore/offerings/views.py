@@ -121,7 +121,7 @@ class OfferingEntry(Resource):
 
             update_offering(offering, data)
         except Exception, e:
-            build_error_response(request, 400, e.message)
+            return build_error_response(request, 400, e.message)
 
         return build_error_response(request, 200, 'OK')
 
@@ -132,7 +132,7 @@ class OfferingEntry(Resource):
         # have purchased the offering to install it if needed
         offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
         if not offering.is_owner(request.user):
-            build_error_response(request, 401, 'Unauthorized')
+            return build_error_response(request, 401, 'Unauthorized')
 
         delete_offering(offering)
 

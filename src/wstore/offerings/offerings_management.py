@@ -407,6 +407,7 @@ def update_offering(offering, data):
     # Update the logo
     if 'image' in data:
         logo_path = offering.image_url
+        logo_path = os.path.join(settings.BASEDIR, logo_path[1:])
 
         # Remove the old logo
         os.remove(logo_path)
@@ -416,14 +417,15 @@ def update_offering(offering, data):
         dec = base64.b64decode(data['image']['data'])
         f.write(dec)
         f.close()
-        offering.image_url = os.path.join(path, data['image']['name'])
+        offering.image_url = settings.MEDIA_URL + dir_name + '/' + data['image']['name']
 
     # Update the related images
     if 'related_images' in data:
 
         # Delete old related images
         for img in offering.related_images:
-            os.remove(img)
+            old_image = os.path.join(settings.BASEDIR, img[1:])
+            os.remove(old_image)
 
         offering.related_images = []
 
@@ -433,7 +435,7 @@ def update_offering(offering, data):
             dec = base64.b64decode(img['data'])
             f.write(dec)
             f.close()
-            offering.related_images.append(os.path.join(path, img['name']))
+            offering.related_images.append(settings.MEDIA_URL + dir_name + '/' + img['name'])
 
     new_usdl = False
     # Update the USDL description
