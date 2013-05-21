@@ -7,6 +7,7 @@ from djangotoolbox.fields import DictField
 
 from wstore.admin.markets.models import *
 from wstore.admin.repositories.models import *
+from wstore.admin.rss.models import *
 from wstore.offerings.models import *
 from wstore.contracting.models import *
 
