@@ -49,7 +49,7 @@
         var name, jqObject, effectiveEndpoint, csfrToken;
 
         jqObject = jQuery(element);
-        name = jqObject.parent().parent().find('.elem-name').text();
+        name = jqObject.parent().parent().parent().find('.elem-name').text();
 
         effectiveEndpoint = endpoint.replace('COLLECTION', 'ENTRY');;
 
@@ -147,6 +147,10 @@
             adminInfoRequest('REPOSITORY_COLLECTION', 'Repositories');
         });
 
+        $('.show-rss').click(function() {
+            adminInfoRequest('RSS_COLLECTION', 'RSS');
+        });
+
         $('.show-org').click(function() {
             orgInfoRequest(paintOrganizations);
         });
@@ -163,6 +167,11 @@
         $('.add-rep').click(function() {
             main = true;
             paintForm('REPOSITORY_COLLECTION', 'Repository');
+        });
+
+        $('.add-rss').click(function() {
+            main = true;
+            paintForm('RSS_COLLECTION', 'RSS');
         });
 
         $('.add-org').click(function() {
