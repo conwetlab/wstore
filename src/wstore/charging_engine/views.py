@@ -3,13 +3,12 @@ from paypalpy import paypal
 from pymongo import MongoClient
 from bson import ObjectId
 
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from django.conf import settings
 from django.shortcuts import render
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, supported_request_mime_types
+from wstore.store_commons.utils.http import build_error_response, supported_request_mime_types, \
+authentication_required
 from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.models import Organization
@@ -21,7 +20,7 @@ class ServiceRecordCollection(Resource):
 
     # This method is used to load SDR documents and
     # start the charging process
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json',))
     def create(self, request, reference):
         try:
@@ -133,7 +132,7 @@ class PayPalCancelation(Resource):
 
     # This method is used when the user cancel a charge
     # when is using a PayPal account
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request, reference):
         # In case the user cancels the payment is necessary to update
         # the database in order to avoid an inconsistent state

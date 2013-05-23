@@ -1,13 +1,11 @@
 import json
 from lxml import etree
 
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
+from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types,\
+authentication_required
 from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, get_repositories
 
 
@@ -16,7 +14,7 @@ class RepositoryCollection(Resource):
     # Register a new repository on the store
     # in order to be able to upload and
     # download resources
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
 
@@ -55,7 +53,7 @@ class RepositoryCollection(Resource):
 
         return build_error_response(request, 201, 'Created')  # TODO use a generic method
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request):
 
         # Read Accept header to know the response mime type, JSON by default
@@ -89,7 +87,7 @@ class RepositoryCollection(Resource):
 
 class RepositoryEntry(Resource):
 
-    @method_decorator(login_required)
+    @authentication_required
     def delete(self, request, repository):
 
         if not request.user.is_staff:

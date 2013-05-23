@@ -1,14 +1,13 @@
 import json
 from urlparse import urlunparse, urlparse
 
-from django.contrib.auth.decorators import login_required
 from django.contrib.sites.models import get_current_site
-from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from django.shortcuts import render
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
+from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types, \
+authentication_required
 from wstore.offerings.offerings_management import get_offering_info
 from wstore.contracting.purchases_management import create_purchase
 from wstore.charging_engine.charging_engine import ChargingEngine
@@ -20,7 +19,7 @@ from wstore.contracting.purchase_rollback import rollback
 
 class PurchaseFormCollection(Resource):
 
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json', ))
     def create(self, request):
 
@@ -58,7 +57,7 @@ class PurchaseFormCollection(Resource):
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request):
         id_ = request.GET.get('ID')
 
@@ -85,7 +84,7 @@ class PurchaseFormCollection(Resource):
 class PurchaseCollection(Resource):
 
     # Creates a new purchase resource
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
         user = request.user
@@ -146,11 +145,11 @@ class PurchaseCollection(Resource):
 
 class PurchaseEntry(Resource):
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request):
         pass
 
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json',))
     def update(self, request, reference):
 

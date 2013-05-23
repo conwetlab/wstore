@@ -1,18 +1,16 @@
 import json
 
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, supported_request_mime_types
+from wstore.store_commons.utils.http import build_error_response, supported_request_mime_types, \
+authentication_required
 from wstore.models import RSS
 
 
 class RSSCollection(Resource):
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request):
 
         response = []
@@ -25,7 +23,7 @@ class RSSCollection(Resource):
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json',))
     def create(self, request):
 
@@ -51,7 +49,7 @@ class RSSCollection(Resource):
 
 class RSSEntry(Resource):
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request, rss):
 
         try:
@@ -65,7 +63,7 @@ class RSSEntry(Resource):
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
-    @method_decorator(login_required)
+    @authentication_required
     def delete(self, request, rss):
 
         if not request.user.is_staff:

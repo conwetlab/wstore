@@ -1,19 +1,17 @@
 import os
 import json
 
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from django.conf import settings
 
-from wstore.store_commons.utils.http import build_error_response
+from wstore.store_commons.utils.http import build_error_response, authentication_required
 from wstore.store_commons.resource import Resource
 from wstore.search.search_engine import SearchEngine
 
 
 class SearchEntry(Resource):
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request, text):
 
         index_path = os.path.join(settings.BASEDIR, 'wstore')

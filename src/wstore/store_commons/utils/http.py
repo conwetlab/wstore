@@ -19,8 +19,10 @@
 
 import socket
 from urlparse import urljoin
+from xml.dom.minidom import getDOMImplementation
 
 from django.conf import settings
+from django.shortcuts import render
 from django.contrib.sites.models import get_current_site
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -28,6 +30,23 @@ from django.utils.translation import ugettext as _
 
 from wstore.store_commons.utils.error_response import get_json_error_response, get_xml_error
 from wstore.store_commons.utils import mimeparser
+
+
+def get_html_basic_error_response(request, mimetype, status_code, message):
+    return render(request, '%s.html' % status_code, {'request_path': request.path}, status=status_code, content_type=mimetype)
+
+
+def get_xml_error_response(request, mimetype, status_code, value):
+    dom = getDOMImplementation()
+
+    doc = dom.createDocument(None, "error", None)
+    rootelement = doc.documentElement
+    text = doc.createTextNode(value)
+    rootelement.appendChild(text)
+    errormsg = doc.toxml("utf-8")
+    doc.unlink()
+
+    return errormsg
 
 ERROR_FORMATTERS = {
     'application/json; charset=utf-8': get_json_error_response,
@@ -48,6 +67,21 @@ def get_content_type(request):
     else:
         return content_type_header.split(';', 1)
 
+def authentication_required(func):
+
+    def wrapper(self, request, *args, **kwargs):
+        if request.user.is_anonymous():
+
+            return build_error_response(request, 401, 'Authentication required', extra_formats={
+                 'text/html; charset=utf-8': get_html_basic_error_response,
+                 'application/xhtml+xml; charset=utf-8': get_html_basic_error_response,
+             }, headers={
+                 'WWW-Authenticate': 'Cookie realm="Acme" form-action="%s" cookie-name="%s"' % (settings.LOGIN_URL, settings.SESSION_COOKIE_NAME)
+             })
+
+        return func(self, request, *args, **kwargs)
+
+    return wrapper
 
 def supported_request_mime_types(mime_types):
 

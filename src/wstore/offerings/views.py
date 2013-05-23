@@ -1,13 +1,12 @@
 import json
 from urllib2 import HTTPError
 
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
+from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types, \
+authentication_required
 from wstore.models import Offering
 from wstore.models import UserProfile
 from wstore.models import Context
@@ -21,7 +20,7 @@ class OfferingCollection(Resource):
 
     # Creates a new offering asociated with the user
     # that is create a new application model
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
 
@@ -48,7 +47,7 @@ class OfferingCollection(Resource):
 
         return build_error_response(request, 201, 'Created')
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request):
 
         # TODO support for xml requests
@@ -98,7 +97,7 @@ class OfferingCollection(Resource):
 
 class OfferingEntry(Resource):
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request, organization, name, version):
         user = request.user
         offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
@@ -106,7 +105,7 @@ class OfferingEntry(Resource):
 
         return HttpResponse(json.dumps(result), status=200, mimetype='application/json; charset=UTF-8')
 
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def update(self, request, organization, name, version):
 
@@ -125,7 +124,7 @@ class OfferingEntry(Resource):
 
         return build_error_response(request, 200, 'OK')
 
-    @method_decorator(login_required)
+    @authentication_required
     def delete(self, request, organization, name, version):
         # If the offering has been purchased it is not deleted
         # it is marked as deleted in order to allow customers that
@@ -142,7 +141,7 @@ class OfferingEntry(Resource):
 class ResourceCollection(Resource):
 
     # Creates a new resource asociated with an user
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
         user = request.user
@@ -164,7 +163,7 @@ class ResourceCollection(Resource):
 
         return build_error_response(request, 201, 'Created')
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request):
         profile = UserProfile.objects.get(user=request.user)
         if 'provider' in profile.roles:
@@ -180,7 +179,7 @@ class ResourceEntry(Resource):
 class PublishEntry(Resource):
 
     # Publish the offering is some marketplaces
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request, organization, name, version):
         # Obtains the offering
@@ -221,7 +220,7 @@ class PublishEntry(Resource):
 class BindEntry(Resource):
 
     # Binds resources with offerings
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request, organization, name, version):
         # Obtains the offering
@@ -247,9 +246,8 @@ class BindEntry(Resource):
 
 class NewestCollection(Resource):
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request):
-        #import ipdb; ipdb.set_trace()
 
         site = get_current_site(request)
         context = Context.objects.get(site=site)

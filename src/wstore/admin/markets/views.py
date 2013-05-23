@@ -1,13 +1,12 @@
 import json
 from lxml import etree
 
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types
+from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types,\
+ authentication_required
 from wstore.admin.markets.markets_management import get_marketplaces, register_on_market, unregister_from_market
 
 
@@ -17,7 +16,7 @@ class MarketplaceCollection(Resource):
     # register the store in a marketplace and
     # add the marketplace info needed for access in
     # the database
-    @method_decorator(login_required)
+    @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
         if not request.user.is_staff:  # Only an admin could register the store in a marketplace
@@ -62,7 +61,7 @@ class MarketplaceCollection(Resource):
 
         return build_error_response(request, 201, 'Created')
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request):
 
         # Read Accept header to know the response mime type, JSON by default
@@ -96,15 +95,15 @@ class MarketplaceCollection(Resource):
 
 class MarketplaceEntry(Resource):
 
-    @method_decorator(login_required)
+    @authentication_required
     def read(self, request, market):
         pass
 
-    @method_decorator(login_required)
+    @authentication_required
     def update(self, request, market):
         pass
 
-    @method_decorator(login_required)
+    @authentication_required
     def delete(self, request, market):
 
         if not request.user.is_staff:
