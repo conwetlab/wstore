@@ -7,3 +7,4 @@ from wstore.search.tests import *
 from wstore.charging_engine.tests import *
 from wstore.store_commons.tests import *
 from wstore.market_adaptor.tests import *
+from wstore.rss_adaptor.tests import *

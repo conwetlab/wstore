@@ -81,6 +81,10 @@ class FakeChargingEngine():
             self._purchase.contract.save()
 
 
+def fake_cdr_generation(parts, time):
+    pass
+
+
 class SinglePaymentChargingTestCase(TestCase):
 
     fixtures = ['single_payment.json']
@@ -149,6 +153,7 @@ class SinglePaymentChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
+        charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
@@ -221,6 +226,7 @@ class SinglePaymentChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
+        charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
@@ -331,6 +337,7 @@ class SubscriptionChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
         charging._calculate_renovation_date = fake_renovation_date
 
+        charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging(new_purchase=True)
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
         self._to_delete.extend(purchase.bill)
@@ -400,6 +407,7 @@ class SubscriptionChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
         charging._calculate_renovation_date = fake_renovation_date
 
+        charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
         self._to_delete.extend(purchase.bill)
@@ -472,6 +480,7 @@ class SubscriptionChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
         charging._calculate_renovation_date = fake_renovation_date
 
+        charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
         self._to_delete.extend(purchase.bill)
@@ -939,6 +948,7 @@ class PayPerUseChargingTestCase(TestCase):
 
         charging = charging_engine.ChargingEngine(purchase)
 
+        charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
@@ -990,6 +1000,8 @@ class PayPerUseChargingTestCase(TestCase):
         }
 
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
+
+        charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging(sdr=True)
 
         purchase = Purchase.objects.get(pk='61077ab75e07a7c415f372f2')
@@ -1106,6 +1118,8 @@ class AsynchronousPaymentTestCase(TestCase):
 
         # Second step
         charging = charging_engine.ChargingEngine(purchase)
+
+        charging._generate_cdr = fake_cdr_generation
         charging.end_charging(contract.pending_payment['price'], contract.pending_payment['concept'], contract.pending_payment['related_model'])
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
@@ -1396,3 +1410,263 @@ class ChargingDaemonTestCase(TestCase):
 
         self.assertEqual(len(contract.pending_sdrs), 1)
         self.assertEqual(len(contract.applied_sdrs), 0)
+
+
+class AdaptorWrapper():
+
+    _context = None
+
+    def __init__(self, context):
+        self._context = context
+
+    def __call__(self, url):
+        return self
+
+    def send_cdr(self, cdr):
+        self._context._cdrs = cdr
+
+
+class CDRGeranationTestCase(TestCase):
+
+    fixtures = ['cdr_generation.json']
+    _cdrs = None
+
+    @classmethod
+    def setUpClass(cls):
+        charging_engine.RSSAdaptor = AdaptorWrapper(cls)
+        super(CDRGeranationTestCase, cls).setUpClass()
+
+    def tearDown(self):
+        self._cdrs = None
+        TestCase.tearDown(self)
+
+    def test_basic_cdr_generation(self):
+
+        applied_parts = {
+            'single_payment': [{
+               'title': 'example part',
+               'unit': 'single_payment',
+               'currency': 'EUR',
+               'value': '1'
+            }]
+        }
+
+        # Load usdl
+        model = os.path.join(settings.BASEDIR, 'wstore')
+        model = os.path.join(model, 'charging_engine')
+        model = os.path.join(model, 'test')
+        model = os.path.join(model, 'basic_price.ttl')
+        f = open(model, 'rb')
+        graph = rdflib.Graph()
+        graph.parse(data=f.read(), format='n3')
+        f.close()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld'))
+        purchase.offering.save()
+
+        charging = charging_engine.ChargingEngine(purchase)
+        charging._generate_cdr(applied_parts, str(datetime.now()))
+
+        self.assertEqual(len(self._cdrs), 1)
+
+        cdr = self._cdrs[0]
+        self.assertEqual(cdr['provider'], 'test_organization')
+        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['defined_model'], 'Single payment event')
+        self.assertEqual(cdr['correlation'], 0)
+        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
+        self.assertEqual(cdr['offering'], 'test_offering 1.0')
+        self.assertEqual(cdr['product_class'], 'SaaS')
+        self.assertEqual(cdr['description'], 'Single payment: 1 EUR')
+        self.assertEqual(cdr['cost_currency'], 'EUR')
+        self.assertEqual(cdr['cost_value'], '1')
+        self.assertEqual(cdr['country'], 'SP')
+        self.assertEqual(cdr['customer'], 'test_user')
+
+    def test_cdr_generation_initial(self):
+
+        applied_parts = {
+            'single_payment': [{
+               'title': 'example part',
+               'unit': 'single_payment',
+               'currency': 'EUR',
+               'value': '1'
+            }],
+            'subscription': [{
+                'title': 'example part2',
+                'unit': 'per month',
+                'currency': 'EUR',
+                'value': '10'
+            }]
+        }
+
+        # Load usdl
+        model = os.path.join(settings.BASEDIR, 'wstore')
+        model = os.path.join(model, 'charging_engine')
+        model = os.path.join(model, 'test')
+        model = os.path.join(model, 'basic_price.ttl')
+        f = open(model, 'rb')
+        graph = rdflib.Graph()
+        graph.parse(data=f.read(), format='n3')
+        f.close()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld'))
+        purchase.offering.save()
+
+        charging = charging_engine.ChargingEngine(purchase)
+        charging._generate_cdr(applied_parts, str(datetime.now()))
+
+        self.assertEqual(len(self._cdrs), 2)
+
+        cdr = self._cdrs[0]
+        self.assertEqual(cdr['provider'], 'test_organization')
+        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['defined_model'], 'Single payment event')
+        self.assertEqual(cdr['correlation'], 0)
+        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
+        self.assertEqual(cdr['offering'], 'test_offering 1.0')
+        self.assertEqual(cdr['product_class'], 'SaaS')
+        self.assertEqual(cdr['description'], 'Single payment: 1 EUR')
+        self.assertEqual(cdr['cost_currency'], 'EUR')
+        self.assertEqual(cdr['cost_value'], '1')
+        self.assertEqual(cdr['country'], 'SP')
+        self.assertEqual(cdr['customer'], 'test_user')
+
+        cdr = self._cdrs[1]
+        self.assertEqual(cdr['provider'], 'test_organization')
+        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['defined_model'], 'Subscription event')
+        self.assertEqual(cdr['correlation'], 1)
+        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
+        self.assertEqual(cdr['offering'], 'test_offering 1.0')
+        self.assertEqual(cdr['product_class'], 'SaaS')
+        self.assertEqual(cdr['description'], 'Subscription: 10 EUR per month')
+        self.assertEqual(cdr['cost_currency'], 'EUR')
+        self.assertEqual(cdr['cost_value'], '10')
+        self.assertEqual(cdr['country'], 'SP')
+        self.assertEqual(cdr['customer'], 'test_user')
+
+    def test_cdr_eneration_org_owned(self):
+
+        applied_parts = {
+            'single_payment': [{
+               'title': 'example part',
+               'unit': 'single_payment',
+               'currency': 'EUR',
+               'value': '1'
+            }]
+        }
+
+        # Load usdl
+        model = os.path.join(settings.BASEDIR, 'wstore')
+        model = os.path.join(model, 'charging_engine')
+        model = os.path.join(model, 'test')
+        model = os.path.join(model, 'basic_price.ttl')
+        f = open(model, 'rb')
+        graph = rdflib.Graph()
+        graph.parse(data=f.read(), format='n3')
+        f.close()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld'))
+        purchase.offering.save()
+
+        purchase.organization_owned = True
+        purchase.owner_organization = 'test_organization'
+        purchase.save()
+
+        charging = charging_engine.ChargingEngine(purchase)
+        charging._generate_cdr(applied_parts, str(datetime.now()))
+
+        self.assertEqual(len(self._cdrs), 1)
+
+        cdr = self._cdrs[0]
+        self.assertEqual(cdr['customer'], 'test_organization')
+
+    def test_cdr_generation_use(self):
+
+        applied_parts = {
+            'pay_per_use': [{
+                'offering': {
+                    'name': 'test_offering',
+                    'organization': 'test_organization',
+                    'version': '1.0'
+                },
+                'customer': 'test_user',
+                'value': '15',
+                'unit': 'invocation',
+                'price': '15',
+                'applied_part': {
+                    'title': 'example part',
+                    'unit': 'invocation',
+                    'currency': 'EUR',
+                    'value': '1'
+                }
+            },
+            {
+                'offering': {
+                    'name': 'test_offering',
+                    'organization': 'test_organization',
+                    'version': '1.0'
+                },
+                'customer': 'test_user',
+                'value': '10',
+                'unit': 'invocation',
+                'price': '20',
+                'applied_part': {
+                    'title': 'example part',
+                    'unit': 'invocation',
+                    'currency': 'EUR',
+                    'value': '2'
+                }
+            }]
+        }
+
+        # Load usdl
+        model = os.path.join(settings.BASEDIR, 'wstore')
+        model = os.path.join(model, 'charging_engine')
+        model = os.path.join(model, 'test')
+        model = os.path.join(model, 'basic_price.ttl')
+        f = open(model, 'rb')
+        graph = rdflib.Graph()
+        graph.parse(data=f.read(), format='n3')
+        f.close()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld'))
+        purchase.offering.save()
+
+        charging = charging_engine.ChargingEngine(purchase)
+        charging._generate_cdr(applied_parts, str(datetime.now()))
+
+        self.assertEqual(len(self._cdrs), 2)
+
+        cdr = self._cdrs[0]
+        self.assertEqual(cdr['provider'], 'test_organization')
+        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['defined_model'], 'Pay per use event')
+        self.assertEqual(cdr['correlation'], 0)
+        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
+        self.assertEqual(cdr['offering'], 'test_offering 1.0')
+        self.assertEqual(cdr['product_class'], 'SaaS')
+        self.assertEqual(cdr['description'], 'Fee per invocation, Consumption: 15')
+        self.assertEqual(cdr['cost_currency'], 'EUR')
+        self.assertEqual(cdr['cost_value'], '15')
+        self.assertEqual(cdr['country'], 'SP')
+        self.assertEqual(cdr['customer'], 'test_user')
+
+        cdr = self._cdrs[1]
+        self.assertEqual(cdr['provider'], 'test_organization')
+        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['defined_model'], 'Pay per use event')
+        self.assertEqual(cdr['correlation'], 1)
+        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
+        self.assertEqual(cdr['offering'], 'test_offering 1.0')
+        self.assertEqual(cdr['product_class'], 'SaaS')
+        self.assertEqual(cdr['description'], 'Fee per invocation, Consumption: 10')
+        self.assertEqual(cdr['cost_currency'], 'EUR')
+        self.assertEqual(cdr['cost_value'], '20')
+        self.assertEqual(cdr['country'], 'SP')
+        self.assertEqual(cdr['customer'], 'test_user')
