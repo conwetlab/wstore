@@ -12,7 +12,7 @@ from wstore.store_commons.utils.http import build_error_response, get_content_ty
 from wstore.offerings.offerings_management import get_offering_info
 from wstore.contracting.purchases_management import create_purchase
 from wstore.charging_engine.charging_engine import ChargingEngine
-from wstore.models import Offering
+from wstore.models import Offering, Organization
 from wstore.models import Purchase
 from wstore.models import Resource as store_resource
 from wstore.contracting.purchase_rollback import rollback
@@ -162,13 +162,23 @@ class PurchaseEntry(Resource):
             if data['method'] == 'paypal':
                 charging_engine = ChargingEngine(purchase, payment_method='paypal')
             elif data['method'] == 'credit_card':
-                charging_engine = ChargingEngine(purchase, payment_method='credit_card', credit_card=data['credit_card'])
+
+                # Get the payment info
+                if 'credit_card' in data:
+                    credit_card = data['credit_card']
+                else:
+                    if purchase.organization_owned:
+                        org = Organization.objects.get(name=purchase.owner_organization)
+                        credit_card = org.payment_info
+                    else:
+                        credit_card = purchase.customer.userprofile.payment_info
+                charging_engine = ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
             charging_engine.resolve_charging()
         except:
             # Refresh the purchase info
             purchase = Purchase.objects.get(ref=reference)
             rollback(purchase)
-            build_error_response(request, 400, 'Invalid JSON content')
+            return build_error_response(request, 400, 'Invalid JSON content')
 
         return build_error_response(request, 200, 'OK')
