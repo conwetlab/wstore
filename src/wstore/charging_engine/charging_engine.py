@@ -20,11 +20,13 @@ from wstore.models import Resource
 from wstore.models import UserProfile
 from wstore.models import Purchase
 from wstore.models import Offering
+from wstore.models import RSS
 from wstore.charging_engine.models import Contract
 from wstore.charging_engine.models import Unit
 from wstore.charging_engine.price_resolver import resolve_price
 from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.contracting.purchase_rollback import rollback
+from wstore.rss_adaptor.rssAdaptor import RSSAdaptor
 
 
 class ChargingEngine:
@@ -89,6 +91,17 @@ class ChargingEngine:
 
         return price
 
+    def _get_country_code(self, country):
+
+        country_code = None
+        # Get country code
+        for cc in paypal.COUNTRY_CODES:
+            if cc[1].lower() == country.lower():
+                country_code = cc[0]
+                break
+
+        return country_code
+
     def _charge_client(self, price, concept):
 
         # Call payment gateway (paypal)
@@ -96,12 +109,7 @@ class ChargingEngine:
         paypal.SKIP_AMT_VALIDATION = True
         pp = paypal.PayPal(settings.PAYPAL_USER, settings.PAYPAL_PASSWD, settings.PAYPAL_SIGNATURE, settings.PAYPAL_URL)
 
-        country_code = None
-        # Get country code
-        for cc in paypal.COUNTRY_CODES:
-            if cc[1].lower() == self._purchase.tax_address['country'].lower():
-                country_code = cc[0]
-                break
+        country_code = self._get_country_code(self._purchase.tax_address['country'])
 
         if country_code == None:
             raise Exception('Country not recognized')
@@ -128,7 +136,7 @@ class ChargingEngine:
                     currencycode='EUR'
                 )
             except Exception, e:
-                raise Exception('Error while creating payment: ' + e.value)
+                raise Exception('Error while creating payment: ' + e.value[0])
             self._purchase.state = 'paid'
 
         elif self._payment_method == 'paypal':
@@ -151,14 +159,163 @@ class ChargingEngine:
                 t.start()
 
             except Exception, e:
-                raise Exception('Error while creating payment: ' + e.value)
+                raise Exception('Error while creating payment: ' + e.value[0])
 
             return settings.PAYPAL_CHECKOUT_URL + '&token=' + resp['TOKEN'][0]
         else:
             raise Exception('Invalid payment method')
 
-    def _generate_cdr(self, cost, tax):
-        pass
+    def _generate_cdr(self, applied_parts, time_stamp):
+
+        cdrs = []
+
+        # Take the first RSS registered
+        rss = RSS.objects.all()[0]
+
+        # Create connection for raw database access
+        connection = MongoClient()
+        db = connection[settings.DATABASES['default']['NAME']]
+
+        # Get the service name using direct access to the stored
+        # JSON USDL description
+
+        offering_description = self._purchase.offering.offering_description
+
+        # Get the used tag for RDF properties
+        service_tag = ''
+        dc_tag = ''
+        for k, v in offering_description['@context'].iteritems():
+            if v == 'http://www.linked-usdl.org/ns/usdl-core#':
+                service_tag = k
+            if v == 'http://purl.org/dc/terms/':
+                dc_tag = k
+
+        # Get the service name
+        service_name = ''
+        for node in offering_description['@graph']:
+            if node['@type'] == service_tag + ':Service':
+                service_name = node[dc_tag + ':title']['@value']
+
+        # Get the provider (Organization)
+        provider = self._purchase.offering.owner_organization
+
+        # Set offering ID
+        offering = self._purchase.offering.name + ' ' + self._purchase.offering.version
+
+        # Get the customer
+        if self._purchase.organization_owned:
+            customer = self._purchase.owner_organization
+        else:
+            customer = self._purchase.customer.username
+
+        # Get the country code
+        country_code = self._get_country_code(self._purchase.tax_address['country'])
+
+        # Check the type of the applied parts
+        if 'single_payment' in applied_parts:
+
+            # A cdr is generated for every price part
+            for part in applied_parts['single_payment']:
+
+                # Take and increment the correlation number using
+                # the mongoDB atomic access in order to avoid race
+                # problems
+                corr_number = db.wstore_rss.find_and_modify(
+                    query={'_id': ObjectId(rss.pk)},
+                    update={'$inc': {'correlation_number': 1}}
+                )['correlation_number']
+
+                # Set the description
+                description = 'Single payment: ' + part['value'] + ' ' + part['currency']
+
+                cdrs.append({
+                    'provider': provider,
+                    'service': service_name,
+                    'defined_model': 'Single payment event',
+                    'correlation': str(corr_number),
+                    'purchase': self._purchase.pk,
+                    'offering': offering,
+                    'product_class': 'SaaS',
+                    'description': description,
+                    'cost_currency': part['currency'],
+                    'cost_value': part['value'],
+                    'tax_currency': 'EUR',
+                    'tax_value': '0.0',
+                    'source': 'WStore',
+                    'operator': '1',
+                    'country': country_code,
+                    'time_stamp': time_stamp,
+                    'customer': customer,
+                })
+
+        if 'subscription' in applied_parts:
+
+            # A cdr is generated by price part
+            for part in applied_parts['subscription']:
+
+                corr_number = db.wstore_rss.find_and_modify(
+                    query={'_id': ObjectId(rss.pk)},
+                    update={'$inc': {'correlation_number': 1}}
+                )['correlation_number']
+
+                # Set the description
+                description = 'Subscription: ' + part['value'] + ' ' + part['currency'] + ' ' + part['unit']
+
+                cdrs.append({
+                    'provider': provider,
+                    'service': service_name,
+                    'defined_model': 'Subscription event',
+                    'correlation': str(corr_number),
+                    'purchase': self._purchase.pk,
+                    'offering': offering,
+                    'product_class': 'SaaS',
+                    'description': description,
+                    'cost_currency': part['currency'],
+                    'cost_value': part['value'],
+                    'tax_currency': 'EUR',
+                    'tax_value': '0.0',
+                    'source': 'WStore',
+                    'operator': '1',
+                    'country': country_code,
+                    'time_stamp': time_stamp,
+                    'customer': customer,
+                })
+
+        if 'pay_per_use' in applied_parts:
+
+            # A cdr is generated by price part
+            for part in applied_parts['pay_per_use']:
+
+                corr_number = db.wstore_rss.find_and_modify(
+                    query={'_id': ObjectId(rss.pk)},
+                    update={'$inc': {'correlation_number': 1}}
+                )['correlation_number']
+
+                # Set the description
+                description = 'Fee per ' + part['unit'] + ', Consumption: ' + part['value']
+                cdrs.append({
+                    'provider': provider,
+                    'service': service_name,
+                    'defined_model': 'Pay per use event',
+                    'correlation': str(corr_number),
+                    'purchase': self._purchase.pk,
+                    'offering': offering,
+                    'product_class': 'SaaS',
+                    'description': description,
+                    'cost_currency': part['applied_part']['currency'],
+                    'cost_value': part['price'],
+                    'tax_currency': 'EUR',
+                    'tax_value': '0.0',
+                    'source': 'WStore',
+                    'operator': '1',
+                    'country': country_code,
+                    'time_stamp': time_stamp,
+                    'customer': customer,
+                })
+
+        # Send the created CDRs to the Revenue Sharing System
+        rss_adaptor = RSSAdaptor(rss.host)
+        rss_adaptor.send_cdr(cdrs)
 
     def _generate_invoice(self, price, applied_parts, type_):
 
@@ -424,9 +581,11 @@ class ChargingEngine:
         # Update contract
         contract = self._purchase.contract
 
+        time_stamp = datetime.now()
+
         if price > 0:
             contract.charges.append({
-                'date': datetime.now(),
+                'date': time_stamp,
                 'cost': price,
                 'currency': 'euros',  # FIXME allow any currency
                 'concept': concept
@@ -436,7 +595,7 @@ class ChargingEngine:
         if self._price_model == None:
             self._price_model = contract.pricing_model
 
-        contract.last_charge = datetime.now()
+        contract.last_charge = time_stamp
 
         if concept == 'initial charge':
             # If subscription parts has been charged update renovation dates
@@ -453,8 +612,6 @@ class ChargingEngine:
 
                 # Update price model in contract
                 contract.pricing_model = self._price_model
-                # Create the CDR
-                # Send the CDR to the RSS
 
             # Generate the invoice
             self._generate_invoice(price, related_model, 'initial')
@@ -479,7 +636,14 @@ class ChargingEngine:
             # Generate the invoice
             self._generate_invoice(price, related_model, 'use')
 
+        # The contract is saved before the CDR creation to prevent
+        # that a transmission error in RSS request causes the
+        # customer being charged twice
         contract.save()
+
+        # If the customer has been charged create the CDR
+        if price > 0:
+            self._generate_cdr(related_model, str(time_stamp))
 
     def resolve_charging(self, new_purchase=False, sdr=False):
 
