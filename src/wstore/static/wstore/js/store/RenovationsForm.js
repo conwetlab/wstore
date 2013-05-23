@@ -11,11 +11,11 @@
         // Add payment info
         request = {};
         if ($('#pay-method').val() == 'credit_card') {
-            var cvv2 = $.trim($('#cvv2').val());
 
             request.method = 'credit_card';
 
-            if (!$('curr-card').prop('checked')) {
+            if (!$('#curr-card').prop('checked')) {
+                var cvv2 = $.trim($('#cvv2').val());
                 var number, year;
 
                 number = $.trim($('#number').val());
