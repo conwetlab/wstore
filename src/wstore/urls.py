@@ -1,6 +1,7 @@
 
 from django.conf.urls.defaults import patterns, url
 
+import wstore.oauth2provider.urls
 from wstore import views
 from wstore.admin import views as admin_views
 from wstore.admin.markets import views as market_views
@@ -42,3 +43,5 @@ urlpatterns = patterns('',
     url(r'^api/contracting/(?P<reference>[\w]+)/accounting?$', charging_views.ServiceRecordCollection(permitted_methods=('POST',))),
     url(r'^api/search/(?P<text>[\w -]+)/?$', search_views.SearchEntry(permitted_methods=('GET',))),
 )
+
+urlpatterns += wstore.oauth2provider.urls.urlpatterns

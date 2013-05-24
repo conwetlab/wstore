@@ -84,7 +84,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
-#    'fiware_store.themes.ActiveThemeFinder',
+#    'wstore.themes.ActiveThemeFinder',
 )
 
 LOGIN_URL = "/login"
@@ -103,21 +103,37 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-#    'fiware_store.themes.load_template_source',
+#    'wstore.themes.load_template_source',
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
 #     'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'wstore.store_commons.middleware.URLMiddleware',
 )
+
+URL_MIDDLEWARE_CLASSES = {
+    'default': (
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'wstore.store_commons.middleware.ConditionalGetMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+    ),
+    'api': (
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'wstore.store_commons.middleware.ConditionalGetMiddleware',
+        'wstore.store_commons.middleware.AuthenticationMiddleware',
+    ),
+    'media': (
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'wstore.store_commons.middleware.ConditionalGetMiddleware',
+        'wstore.store_commons.middleware.AuthenticationMiddleware',
+    )
+}
 
 ROOT_URLCONF = 'urls'
 
@@ -137,15 +153,13 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
     'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
     'django_mongodb_engine',
     'djangotoolbox',
     'wstore',
     'wstore.defaulttheme',
     'wstore.charging_engine',
+    'wstore.oauth2provider',
     'wstore.store_commons',
     'usdl-editor',
     'django_crontab',
