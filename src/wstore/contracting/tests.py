@@ -99,8 +99,9 @@ class PurchasesCreationTestCase(TestCase):
         }
 
         user_profile = UserProfile.objects.get(user=user)
-        user_profile.tax_address = tax_address
         org = Organization.objects.get(name='test_organization')
+        org.tax_address = tax_address
+        org.save()
         user_profile.organization = org
         user_profile.save()
 
