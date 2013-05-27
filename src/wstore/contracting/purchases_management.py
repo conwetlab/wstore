@@ -18,11 +18,27 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
     if offering.pk in profile.offerings_purchased or offering.pk in profile.organization.offerings_purchased:
         raise Exception('The offering has been already purchased')
 
+    org = ''
+    if org_owned:
+        organization = profile.organization
+        org = organization.name
+
     # Get the effective tax address
     if not 'tax_address' in payment_info:
-        tax = profile.tax_address
+        if org_owned:
+            tax = organization.tax_address
+        else:
+            tax = profile.tax_address
+
+        # Check that the customer has a tax address
+        if not 'street' in tax:
+            raise Exception('The customer does not have a tax address')
     else:
         tax = payment_info['tax_address']
+
+        # Check tax_address fields
+        if (not 'street' in tax) or (not 'postal' in tax) or (not 'city' in tax) or (not 'country' in tax):
+            raise Exception('The tax address is not valid')
 
     # Check the payment method before purchase creation in order to avoid
     # an inconsistent state in the database
@@ -37,15 +53,17 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
 
             credit_card_info = payment_info['credit_card']
         else:
-            credit_card_info = profile.payment_info
+            if org_owned:
+                credit_card_info = organization.payment_info
+            else:
+                credit_card_info = profile.payment_info
+
+            # Check the credit card info
+            if not 'number' in credit_card_info:
+                raise Exception('The customer does not have payment info')
 
     elif payment_info['payment_method'] != 'paypal':
         raise Exception('Invalid payment method')
-
-    org = ''
-    if org_owned:
-        organization = profile.organization
-        org = organization.name
 
     # Create the purchase
     purchase = Purchase.objects.create(
