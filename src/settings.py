@@ -174,7 +174,7 @@ PAYPAL_CHECKOUT_URL='https://www.sandbox.paypal.com/webscr?cmd=_express-checkout
 
 # Daily job that checks pending pay-per-use charges
 CRONJOBS = [
-    ('0 5 * * *', 'wstore.charging_engine.charging_daemon.use_charging_daemon'),
+    ('0 5 * * *', 'django.core.management.call_command', ['resolve_use_charging']),
 ]
 
 # A sample logging configuration. The only tangible logging
