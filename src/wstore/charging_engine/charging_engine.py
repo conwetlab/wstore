@@ -593,7 +593,7 @@ class ChargingEngine:
             contract.charges.append({
                 'date': time_stamp,
                 'cost': price,
-                'currency': 'euros',  # FIXME allow any currency
+                'currency': 'EUR',  # FIXME allow any currency
                 'concept': concept
             })
 
