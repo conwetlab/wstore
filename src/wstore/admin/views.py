@@ -211,12 +211,15 @@ class UserProfileEntry(Resource):
                 number = data['payment_info']['number']
 
                 if not is_valid_credit_card(number):
-                    if is_hidden_credit_card(number, user_profile.payment_info['number']):
+                    if 'number' in user_profile.payment_info and \
+                    is_hidden_credit_card(number, user_profile.payment_info['number']):
                         number = user_profile.payment_info['number']
+                    else:
+                        raise Exception('')
 
                 user_profile.payment_info = {
                     'type': data['payment_info']['type'],
-                    'number': data['payment_info']['number'],
+                    'number': number,
                     'expire_month': data['payment_info']['expire_month'],
                     'expire_year': data['payment_info']['expire_year'],
                     'cvv2': data['payment_info']['cvv2']
