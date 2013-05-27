@@ -112,7 +112,20 @@ class PurchaseCollection(Resource):
 
                 response_info = create_purchase(user, offering, data['organization_owned'], payment_info)
             except:
-                build_error_response(request, 400, 'Invalid json content')
+                # Check if the offering has been paid before the exception has been raised
+                paid = False
+
+                if data['organization_owned']:
+                    if offering.pk in request.user.userprofile.organization.offerings_purchased:
+                        paid = True
+                        response_info = Purchase.objects.get(owner_organization=request.user.userprofile.organization.name, offering=offering)
+                else:
+                    if offering.pk in request.user.userprofile.offerings_purchased:
+                        paid = True
+                        response_info = Purchase.objects.get(customer=request.user, offering=offering)
+
+                if not paid:
+                    return build_error_response(request, 400, 'Invalid json content')
 
         response = {}
         # If the value returned by the create_purchase method is a string means that

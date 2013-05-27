@@ -45,6 +45,20 @@ def rollback(purchase):
             # Delete the Purchase
             purchase.delete()
 
+    # If the purchase is paid the offering must be included in the customer
+    # offerings purchased list
+    else:
+        if purchase.organization_owned:
+            org = Organization.objects.get(name=purchase.owner_organization)
+            if not purchase.offering.pk in org.offerings_purchased:
+                org.offerings_purchased.append(purchase.offering.pk)
+                org.save()
+        else:
+            profile = purchase.customer.userprofile
+            if not purchase.offering.pk in profile.offerings_purchased:
+                profile.offerings_purchased.append(purchase.offering.pk)
+                profile.save()
+
 
 # This class is used as a decorator to avoid inconsistent states in
 # purchases models in case of Exception
