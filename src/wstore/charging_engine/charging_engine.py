@@ -27,6 +27,7 @@ from wstore.charging_engine.price_resolver import resolve_price
 from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.contracting.purchase_rollback import rollback
 from wstore.rss_adaptor.rssAdaptor import RSSAdaptor
+from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
 
 
 class ChargingEngine:
@@ -210,6 +211,7 @@ class ChargingEngine:
 
         # Get the country code
         country_code = self._get_country_code(self._purchase.tax_address['country'])
+        country_code = get_country_code(country_code)
 
         # Check the type of the applied parts
         if 'single_payment' in applied_parts:
@@ -227,6 +229,7 @@ class ChargingEngine:
 
                 # Set the description
                 description = 'Single payment: ' + part['value'] + ' ' + part['currency']
+                currency = get_curency_code(part['currency'])
 
                 cdrs.append({
                     'provider': provider,
@@ -237,11 +240,11 @@ class ChargingEngine:
                     'offering': offering,
                     'product_class': 'SaaS',
                     'description': description,
-                    'cost_currency': part['currency'],
+                    'cost_currency': currency,
                     'cost_value': part['value'],
-                    'tax_currency': 'EUR',
+                    'tax_currency': '1',
                     'tax_value': '0.0',
-                    'source': 'WStore',
+                    'source': '1',
                     'operator': '1',
                     'country': country_code,
                     'time_stamp': time_stamp,
@@ -260,6 +263,7 @@ class ChargingEngine:
 
                 # Set the description
                 description = 'Subscription: ' + part['value'] + ' ' + part['currency'] + ' ' + part['unit']
+                currency = get_curency_code(part['currency'])
 
                 cdrs.append({
                     'provider': provider,
@@ -270,11 +274,11 @@ class ChargingEngine:
                     'offering': offering,
                     'product_class': 'SaaS',
                     'description': description,
-                    'cost_currency': part['currency'],
+                    'cost_currency': currency,
                     'cost_value': part['value'],
-                    'tax_currency': 'EUR',
+                    'tax_currency': '1',
                     'tax_value': '0.0',
-                    'source': 'WStore',
+                    'source': '1',
                     'operator': '1',
                     'country': country_code,
                     'time_stamp': time_stamp,
@@ -293,6 +297,8 @@ class ChargingEngine:
 
                 # Set the description
                 description = 'Fee per ' + part['unit'] + ', Consumption: ' + part['value']
+                currency = get_curency_code(part['applied_part']['currency'])
+
                 cdrs.append({
                     'provider': provider,
                     'service': service_name,
@@ -302,11 +308,11 @@ class ChargingEngine:
                     'offering': offering,
                     'product_class': 'SaaS',
                     'description': description,
-                    'cost_currency': part['applied_part']['currency'],
+                    'cost_currency': currency,
                     'cost_value': part['price'],
                     'tax_currency': 'EUR',
                     'tax_value': '0.0',
-                    'source': 'WStore',
+                    'source': '1',
                     'operator': '1',
                     'country': country_code,
                     'time_stamp': time_stamp,
