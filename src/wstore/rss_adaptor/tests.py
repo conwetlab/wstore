@@ -43,6 +43,7 @@ class RSSAdaptorTestCase(TestCase):
     def test_rss_client(self):
 
         expected_xml = """
+        <?xmlversion='1.0'encoding='ASCII'?>
         <cdrs>
             <cdr>
                 <id_service_provider>test_provider</id_service_provider> 
