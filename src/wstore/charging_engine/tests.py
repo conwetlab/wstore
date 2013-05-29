@@ -12,10 +12,10 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from wstore.charging_engine import charging_engine
-from wstore.charging_engine import charging_daemon
 from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.models import Organization
+from wstore.charging_engine.management.commands import resolve_use_charging
 
 
 def fake_renovation_date(unit):
@@ -1201,10 +1201,13 @@ class AsynchronousPaymentTestCase(TestCase):
 class ChargingDaemonTestCase(TestCase):
 
     fixtures = ['use_daemon.json']
+    _command = None
 
     @classmethod
     def setUpClass(cls):
-        charging_daemon.ChargingEngine = FakeChargingEngine
+
+        resolve_use_charging.ChargingEngine = FakeChargingEngine
+        cls._command = resolve_use_charging.Command()
         super(ChargingDaemonTestCase, cls).setUpClass()
 
     def test_basic_charging_daemon(self):
@@ -1232,7 +1235,7 @@ class ChargingDaemonTestCase(TestCase):
         purchase.contract.save()
 
         # Run the method
-        charging_daemon.use_charging_daemon()
+        self._command.handle()
 
         # Check the contract
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
@@ -1273,7 +1276,7 @@ class ChargingDaemonTestCase(TestCase):
         purchase.contract.save()
 
         # Run the method
-        charging_daemon.use_charging_daemon()
+        self._command.handle()
 
         # Check the contract
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
@@ -1322,7 +1325,7 @@ class ChargingDaemonTestCase(TestCase):
         purchase_2.contract.save()
 
         # Run the method
-        charging_daemon.use_charging_daemon()
+        self._command.handle()
 
         # Check the first contract
         purchase_1 = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
@@ -1366,7 +1369,7 @@ class ChargingDaemonTestCase(TestCase):
         purchase.contract.save()
 
         # Run the method
-        charging_daemon.use_charging_daemon()
+        self._command.handle()
 
         # Check the contract
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f08888')
@@ -1401,7 +1404,7 @@ class ChargingDaemonTestCase(TestCase):
         purchase.contract.save()
 
         # Run the method
-        charging_daemon.use_charging_daemon()
+        self._command.handle()
 
         # Check the contract
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
