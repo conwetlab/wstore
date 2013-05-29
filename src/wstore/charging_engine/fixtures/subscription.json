@@ -178,14 +178,14 @@
                 "subscription": [{
                     "title": "price component 1",
                     "unit": "per month",
-                    "currency": "euros",
+                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
                 },
                 {
                     "title": "price component 2",
                     "unit": "per week",
-                    "currency": "euros",
+                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
                 }]
@@ -193,7 +193,7 @@
             "applied_sdrs": [],
             "charges": [{
                 "cost": 10,
-                "currency": "euros",
+                "currency": "EUR",
                 "concept": "initial"
             }],
             "purchase": "61005a1a8205ac3115111111"
@@ -207,14 +207,14 @@
                 "subscription": [{
                     "title": "price component 1",
                     "unit": "per month",
-                    "currency": "euros",
+                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
                 },
                 {
                     "title": "price component 2",
                     "unit": "per week",
-                    "currency": "euros",
+                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "2020-04-01 00:00:00"
                 }]
@@ -222,7 +222,7 @@
             "applied_sdrs": [],
             "charges": [{
                 "cost": 10,
-                "currency": "euros",
+                "currency": "EUR",
                 "concept": "initial"
             }],
             "purchase": "61005aba8e06ac2015f022f0"
@@ -236,14 +236,14 @@
                 "single_payment": [{
                     "title": "price component 1",
                     "unit": "single_payment",
-                    "currency": "euros",
+                    "currency": "EUR",
                     "value": "5"
                 }]
             },
             "applied_sdrs": [],
             "charges": [{
                 "cost": 5,
-                "currency": "euros",
+                "currency": "EUR",
                 "concept": "initial"
             }],
             "purchase": "61015a1a1e06ac2015f122f0"

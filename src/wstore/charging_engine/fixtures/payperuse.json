@@ -207,7 +207,7 @@
             "pending_sdrs": [],
             "charges": [{
                 "cost": 10,
-                "currency": "euros",
+                "currency": "EUR",
                 "concept": "pay per use"
             }],
             "purchase": "61074ab65e05acc415f322f2"
@@ -241,14 +241,14 @@
                 "subscription": [{
                     "title": "price component 1",
                     "unit": "per month",
-                    "currency": "euros",
+                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
                 },
                 {
                     "title": "price component 2",
                     "unit": "per week",
-                    "currency": "euros",
+                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
                 }]

@@ -167,7 +167,7 @@ class SinglePaymentChargingTestCase(TestCase):
 
         self.assertEqual(len(charges), 1)
         self.assertEqual(charges[0]['cost'], 5)
-        self.assertEqual(charges[0]['currency'], 'euros')
+        self.assertEqual(charges[0]['currency'], 'EUR')
         self.assertEqual(charges[0]['concept'], 'initial charge')
 
         price_model = contract.pricing_model
@@ -239,7 +239,7 @@ class SinglePaymentChargingTestCase(TestCase):
 
         self.assertEqual(len(charges), 1)
         self.assertEqual(charges[0]['cost'], 17)
-        self.assertEqual(charges[0]['currency'], 'euros')
+        self.assertEqual(charges[0]['currency'], 'EUR')
         self.assertEqual(charges[0]['concept'], 'initial charge')
 
         price_model = contract.pricing_model
@@ -345,7 +345,7 @@ class SubscriptionChargingTestCase(TestCase):
 
         self.assertEqual(len(contract.charges), 1)
         self.assertEqual(contract.charges[0]['cost'], 10)
-        self.assertEqual(contract.charges[0]['currency'], 'euros')
+        self.assertEqual(contract.charges[0]['currency'], 'EUR')
         self.assertEqual(contract.charges[0]['concept'], 'initial charge')
 
         pricing_model = contract.pricing_model
@@ -415,10 +415,10 @@ class SubscriptionChargingTestCase(TestCase):
 
         self.assertEqual(len(contract.charges), 2)
         self.assertEqual(contract.charges[0]['cost'], 10)
-        self.assertEqual(contract.charges[0]['currency'], 'euros')
+        self.assertEqual(contract.charges[0]['currency'], 'EUR')
         self.assertEqual(contract.charges[0]['concept'], 'initial')
         self.assertEqual(contract.charges[1]['cost'], 10)
-        self.assertEqual(contract.charges[1]['currency'], 'euros')
+        self.assertEqual(contract.charges[1]['currency'], 'EUR')
         self.assertEqual(contract.charges[1]['concept'], 'Renovation')
 
         pricing_model = contract.pricing_model
@@ -488,10 +488,10 @@ class SubscriptionChargingTestCase(TestCase):
 
         self.assertEqual(len(contract.charges), 2)
         self.assertEqual(contract.charges[0]['cost'], 10)
-        self.assertEqual(contract.charges[0]['currency'], 'euros')
+        self.assertEqual(contract.charges[0]['currency'], 'EUR')
         self.assertEqual(contract.charges[0]['concept'], 'initial')
         self.assertEqual(contract.charges[1]['cost'], 5)
-        self.assertEqual(contract.charges[1]['currency'], 'euros')
+        self.assertEqual(contract.charges[1]['currency'], 'EUR')
         self.assertEqual(contract.charges[1]['concept'], 'Renovation')
 
         pricing_model = contract.pricing_model
@@ -1133,7 +1133,7 @@ class AsynchronousPaymentTestCase(TestCase):
         self.assertEqual(len(contract.charges), 1)
 
         self.assertEqual(contract.charges[0]['cost'], '5.00')
-        self.assertEqual(contract.charges[0]['currency'], 'euros')
+        self.assertEqual(contract.charges[0]['currency'], 'EUR')
         self.assertEqual(contract.charges[0]['concept'], 'initial charge')
 
         self.assertEqual(contract.pending_payment, {})
