@@ -17,7 +17,6 @@ class Command(BaseCommand):
             of the offerings that have pending SDR for more than
             a month
         """
-        import ipdb; ipdb.set_trace()
         now = time.mktime(datetime.now().timetuple())
 
         # Get contracts
