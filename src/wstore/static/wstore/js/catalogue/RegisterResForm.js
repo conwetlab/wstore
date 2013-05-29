@@ -19,19 +19,21 @@
     };
 
     var makeRegisterResRequest = function makeRegisterResRequest (evnt) {
-         var name, version, link, request = {};
+         var name, version, link, contentType, request = {};
 
          evnt.preventDefault();
          name = $.trim($('[name="res-name"]').val());
          version = $.trim($('[name="res-version"]').val());
          link = $.trim($('[name="res-link"]').val());
+         contentType = $.trim($('[name="res-content-type"]').val());
          description = $.trim($('[name="res-description"]').val());
 
-         if (name && version) {
+         if (name && version && contentType) {
              csrfToken = $.cookie('csrftoken');
              request.name = name;
              request.version = version;
              request.description = description;
+             request.content_type = contentType
 
              if (resource) {
                  request.content = resource;

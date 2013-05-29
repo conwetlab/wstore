@@ -42,6 +42,7 @@ class Resource(models.Model):
     version = models.CharField(max_length=20)
     provider = models.ForeignKey(User)
     resource_type = models.CharField(max_length=50)
+    content_type = models.CharField(max_length=50)
     # Organization
     description = models.TextField()
     state = models.CharField(max_length=50)

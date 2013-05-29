@@ -149,7 +149,8 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
             res_info = {
                 'name': res.name,
                 'version': res.version,
-                'description': res.description
+                'description': res.description,
+                'content_type': res.content_type
             }
 
             if offer['state'] == 'purchased':
@@ -228,7 +229,8 @@ def get_offering_info(offering, user):
         res_info = {
             'name': resource.name,
             'version': resource.version,
-            'description': resource.description
+            'description': resource.description,
+            'content_type': resource.content_type
         }
 
         if state == 'purchased' and resource.resource_type == 'download':

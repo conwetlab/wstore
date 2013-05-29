@@ -23,6 +23,7 @@ def register_resource(provider, data):
         'version': data['version'],
         'type': 'download',
         'description': data['description'],
+        'content_type': data['content_type']
     }
 
     if 'content' in data:
@@ -50,7 +51,8 @@ def register_resource(provider, data):
         resource_type=resource_data['type'],
         description=resource_data['description'],
         download_link=resource_data['link'],
-        resource_path=resource_data['content_path']
+        resource_path=resource_data['content_path'],
+        content_type=resource_data['content_type']
     )
 
 
@@ -61,7 +63,8 @@ def get_provider_resources(provider):
         response.append({
             'name': res.name,
             'version': res.version,
-            'description': res.description
+            'description': res.description,
+            'content_type': res.content_type
         })
 
     return response
