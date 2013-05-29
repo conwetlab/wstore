@@ -2,16 +2,18 @@
 
 
 from django.contrib.auth.decorators import login_required
-from wstore.store_commons.utils.http import build_error_response
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_POST, require_http_methods
+from django.shortcuts import render
 
 from wstore.oauth2provider.provider import WstoreAuthorizationProvider
+from wstore.store_commons.utils.http import build_error_response
+
 
 
 provider = WstoreAuthorizationProvider()
 
 
-@require_GET
+@require_http_methods(['GET', 'POST'])
 @login_required
 def provide_authorization_code(request):
 
@@ -32,7 +34,10 @@ def provide_authorization_code(request):
         'redirect_uri':params['redirect_uri'][0]
     }
 
-    return provider.get_authorization_code(request.user, **params)
+    if request.method == 'GET':
+        return render(request, 'oauth2provider/auth.html', {'app': provider.get_client(params['client_id'])})
+    else:
+        return provider.get_authorization_code(request.user, **params)
 
 
 @require_POST

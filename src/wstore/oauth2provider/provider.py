@@ -17,6 +17,9 @@ class WstoreAuthorizationProvider(AuthorizationProvider):
 
         return response
 
+    def get_client(self, client_id):
+        return Application.objects.get(client_id=client_id)
+
     def validate_client_id(self, client_id):
         return Application.objects.filter(client_id=client_id).exists()
 
