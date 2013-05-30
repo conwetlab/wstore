@@ -2,7 +2,7 @@
 from xml.dom.minidom import getDOMImplementation
 from django.utils import simplejson
 
-def get_xml_error(value):
+def get_xml_error(request, mimetype, status_code, value):
     dom = getDOMImplementation()
 
     doc = dom.createDocument(None, "error", None)
@@ -15,12 +15,9 @@ def get_xml_error(value):
     return errormsg
 
 
-def get_json_error_response(value):
-    response = {}
 
-    response['result'] = "error"
-    response["message"] = value
-
-    response = simplejson.dumps(response)
-
-    return response
+def get_json_error_response(request, mimetype, status_code, message):
+    return simplejson.dumps({
+        'result': 'error',
+        'message': message
+    })
