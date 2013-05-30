@@ -15,6 +15,8 @@ from wstore.models import Offering, Organization
 from wstore.models import Purchase
 from wstore.models import Resource as store_resource
 from wstore.contracting.purchase_rollback import rollback
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 
 class PurchaseFormCollection(Resource):
@@ -57,20 +59,33 @@ class PurchaseFormCollection(Resource):
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
-    @authentication_required
+    @method_decorator(login_required)
     def read(self, request):
+
         id_ = request.GET.get('ID')
 
         user_profile = request.user.userprofile
 
         # Load the offering info
-        offering = Offering.objects.get(pk=id_)
+        try:
+            offering = Offering.objects.get(pk=id_)
+        except:
+            return build_error_response(request, 404, 'The offering not exists')
         offering_info = get_offering_info(offering, request.user)
+
+        # Check that the user is not the owner of the offering
+
+        if offering.owner_admin_user == request.user:
+            return build_error_response(request, 400, 'You are the owner of the offering')
 
         # Check that the user has not already purchased the offering
         if offering.pk in user_profile.offerings_purchased \
         or offering.pk in user_profile.organization.offerings_purchased:
             return build_error_response(request, 400, 'You have already purchased the offering')
+
+        # Check that the offering can be purchased
+        if offering.state != 'published':
+            return build_error_response(request, 400, 'The offering cannot be purchased')
 
         # Create the context
         context = {
