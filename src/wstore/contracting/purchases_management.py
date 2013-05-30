@@ -5,6 +5,7 @@ from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore import charging_engine
 from wstore.contracting.purchase_rollback import PurchaseRollback
+from wstore.contracting.notify_provider import notify_provider
 
 
 @PurchaseRollback
@@ -97,6 +98,8 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
         if org_owned:
             organization.offerings_purchased.append(offering.pk)
             organization.save()
+
+        notify_provider(purchase)
 
     else:
         result = redirect_url

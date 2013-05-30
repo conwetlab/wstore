@@ -14,6 +14,7 @@ from wstore.models import UserProfile
 from wstore.models import Organization
 from wstore.charging_engine.charging_engine import ChargingEngine
 from wstore.contracting.purchase_rollback import rollback
+from wstore.contracting.notify_provider import notify_provider
 
 
 class ServiceRecordCollection(Resource):
@@ -114,6 +115,8 @@ class PayPalConfirmation(Resource):
                 org = Organization.objects.get(name=purchase.owner_organization)
                 org.offerings_purchased.append(purchase.offering.pk)
                 org.save()
+
+            notify_provider(purchase)
 
         # _lock is set to false
         db.wstore_purchase.find_and_modify(

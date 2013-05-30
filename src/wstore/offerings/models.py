@@ -25,6 +25,7 @@ class Offering(models.Model):
     image_url = models.CharField(max_length=100)
     related_images = ListField()
     offering_description = DictField()
+    notification_url = models.CharField(max_length=100)
 
     def is_owner(self, user):
         return self.owner_admin_user == user

@@ -1,8 +1,11 @@
+import json
+
 from django.test import TestCase
 from django.contrib.auth.models import User
 
 from wstore.contracting import purchases_management
 from wstore.contracting.purchase_rollback import rollback
+from wstore.contracting import notify_provider
 from wstore.models import Offering
 from wstore.models import Organization
 from wstore.models import Purchase
