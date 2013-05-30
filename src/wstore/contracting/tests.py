@@ -397,3 +397,66 @@ class PurchaseRollbackTestCase(TestCase):
         self.assertEqual(len(contract.charges), 2)
         self.assertEqual(contract.charges[0]['concept'], 'initial')
         self.assertEqual(contract.charges[1]['concept'], 'renovation')
+
+
+class FakeUrlib2Notify():
+
+    _opener = None
+
+    def __init__(self):
+        self._opener = self.Opener(self.Response())
+
+    def build_opener(self):
+        return self._opener
+
+    class Opener():
+
+        _response = None
+        _method = None
+        _header = None
+        _body = None
+        _url = None
+
+        def __init__(self, response):
+            self._response = response
+
+        def open(self, request):
+            self._method = request.get_method()
+            self._header = request.get_header('Content-type')
+            self._body = request.data
+            self._url = request.get_full_url()
+
+            return self._response
+
+    class Response():
+        url = 'http://response.com/'
+        code = 201
+
+
+class ProviderNotificationTestCase(TestCase):
+
+    fixtures = ['notify.json']
+
+    _urllib = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls._urllib = FakeUrlib2Notify()
+        notify_provider.urllib2 = cls._urllib
+        super(ProviderNotificationTestCase, cls).setUpClass()
+
+    def test_provider_notification(self):
+
+        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
+        notify_provider.notify_provider(purchase)
+
+        opener = self._urllib._opener
+
+        content = json.loads(opener._body)
+
+        self.assertEqual(content['offering']['name'], 'test_offering')
+        self.assertEqual(content['offering']['organization'], 'test_organization')
+        self.assertEqual(content['offering']['version'], '1.0')
+
+        self.assertEqual(content['customer'], 'test_user')
+        self.assertEqual(content['purchase'], '61005aba8e05ac2115f022f0')
