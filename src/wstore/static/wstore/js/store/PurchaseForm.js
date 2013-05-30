@@ -104,7 +104,9 @@
                         }, 'Payment');
                     } else {
                         //Download resources
-                        downloadResources(response);
+                        if ($(window.location).attr('href').indexOf('contracting') == -1) {
+                            downloadResources(response);
+                        }
                         //Refresh offering details view
                         offeringElement.setState('purchased');
                         refreshAndUpdateDetailsView();
