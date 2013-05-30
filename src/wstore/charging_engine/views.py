@@ -21,7 +21,6 @@ class ServiceRecordCollection(Resource):
 
     # This method is used to load SDR documents and
     # start the charging process
-    @authentication_required
     @supported_request_mime_types(('application/json',))
     def create(self, request, reference):
         try:
