@@ -48,10 +48,17 @@
         });
     };
 
-    MessageManager.showYesNoWindow = function showYesNoWindow (msg, handler) {
+    MessageManager.showYesNoWindow = function showYesNoWindow (msg, handler, tit) {
+        var title = '';
+
+        if (tit) {
+            title = tit;
+        }
+
         $('#message-container').empty();
         $.template('yesNoWindowTemplate', $('#yes_no_window_template'));
         $.tmpl('yesNoWindowTemplate', {
+            'title': tit,
             'msg': msg
         }).appendTo('#message-container');
 
