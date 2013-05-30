@@ -17,6 +17,7 @@ class Context(models.Model):
     site = models.OneToOneField(Site)
     top_rated = ListField()
     newest = ListField()
+    user_refs = DictField()
 
 
 class Organization(models.Model):

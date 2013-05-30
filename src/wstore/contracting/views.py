@@ -4,6 +4,7 @@ from urlparse import urlunparse, urlparse
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.contrib.auth.models import User
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types, \
@@ -11,7 +12,7 @@ authentication_required
 from wstore.offerings.offerings_management import get_offering_info
 from wstore.contracting.purchases_management import create_purchase
 from wstore.charging_engine.charging_engine import ChargingEngine
-from wstore.models import Offering, Organization
+from wstore.models import Offering, Organization, Context
 from wstore.models import Purchase
 from wstore.models import Resource as store_resource
 from wstore.contracting.purchase_rollback import rollback
@@ -45,10 +46,18 @@ class PurchaseFormCollection(Resource):
         if offering.state != 'published':
             return build_error_response(request, 400, 'The offering cannot be purchased')
 
-        pk = offering.pk
+        token = offering.pk + request.user.pk
         site = get_current_site(request)
+
+        context = Context.objects.get(site=site)
+        context.user_refs[token] = {
+            'user': request.user.pk,
+            'offering': offering.pk
+        }
+
+        context.save()
         site = urlparse(site.domain)
-        query = 'ID=' + pk
+        query = 'ID=' + token
 
         # Create the URL that shows the purchase form
         url = urlunparse((site[0], site[1], '/api/contracting/form', '', query, ''))
@@ -62,20 +71,36 @@ class PurchaseFormCollection(Resource):
     @method_decorator(login_required)
     def read(self, request):
 
-        id_ = request.GET.get('ID')
+        # Get the token
+        token = request.GET.get('ID')
 
-        user_profile = request.user.userprofile
+        site = get_current_site(request)
+        context = Context.objects.get(site=site)
+
+        info = context.user_refs[token]
+
+        # Get the user and the offering
+        user = User.objects.get(pk=info['user'])
+        request.user = user
+
+        id_ = info['offering']
+
+        # Remove the context entry
+        del(context.user_refs[token])
+        context.save()
+
+        user_profile = user.userprofile
 
         # Load the offering info
         try:
             offering = Offering.objects.get(pk=id_)
         except:
             return build_error_response(request, 404, 'The offering not exists')
-        offering_info = get_offering_info(offering, request.user)
+        offering_info = get_offering_info(offering, user)
 
         # Check that the user is not the owner of the offering
 
-        if offering.owner_admin_user == request.user:
+        if offering.owner_admin_user == user:
             return build_error_response(request, 400, 'You are the owner of the offering')
 
         # Check that the user has not already purchased the offering
