@@ -68,15 +68,48 @@
                 data: JSON.stringify(request),
                 success: function (response) {
                     if ('redirection_link' in response) {
-                        window.open(response.redirection_link, '_blank');
+
+                        $('#message').modal('hide');
+                        MessageManager.showYesNoWindow('The payment process will continue in a separate window', function() {
+                            var newWindow = window.open(response.redirection_link);
+                            var timer;
+
+                            // Close yes no window
+                            $('#message').modal('hide');
+
+                            // Create a modal to lock the store during PayPal request
+                            MessageManager.showMessage('Payment', 'The Paypal checkout is open in another window');
+
+                            $('.modal-footer').empty()
+
+                            $('<input></input>').addClass('btn btn-danger').attr('type', 'button').attr('value', 'Cancel').click(function() {
+                                $('#message').modal('hide');
+                            }).appendTo('.modal-footer');
+
+                            $('#message').on('hidden', function(event) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                newWindow.close();
+                                $('#message-container').empty();
+                            })
+
+                            timer = setInterval(function() {
+                                if (newWindow.closed) {
+                                    clearInterval(timer);
+                                    $('#message').modal('hide');
+                                    refreshAndUpdateDetailsView();
+                                }
+                            }, 1000);
+
+                        }, 'Payment');
                     } else {
                         //Download resources
                         downloadResources(response);
                         //Refresh offering details view
                         offeringElement.setState('purchased');
                         refreshAndUpdateDetailsView();
+                        $('#message').modal('hide');
                     }
-                    $('#message').modal('hide');
                 },
                 error: function (xhr) {
                     var resp = xhr.responseText;
