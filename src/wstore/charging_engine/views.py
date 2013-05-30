@@ -96,6 +96,7 @@ class PayPalConfirmation(Resource):
             charging_engine = ChargingEngine(purchase)
             charging_engine.end_charging(pending_info['price'], pending_info['concept'], pending_info['related_model'])
         except:
+            rollback(purchase)
             context = {
                 'title': 'Payment Canceled',
                 'message': 'Your payment has been canceled. An error occurs or the timeout has finished, if you want to acquire the offering purchase it again in W-Store.'

@@ -612,12 +612,13 @@ class ChargingEngine:
                     up_sub = subs
                     # Calculate renovation date
                     up_sub['renovation_date'] = self._calculate_renovation_date(subs['unit'])
-                    updated_subscriptions.append(subs)
+                    updated_subscriptions.append(up_sub)
 
-                    self._price_model['subscription'] = updated_subscriptions
+                self._price_model['subscription'] = updated_subscriptions
 
                 # Update price model in contract
                 contract.pricing_model = self._price_model
+                related_model['subscription'] = updated_subscriptions
 
             # Generate the invoice
             self._generate_invoice(price, related_model, 'initial')
@@ -633,6 +634,7 @@ class ChargingEngine:
 
             self._price_model['subscription'] = updated_subscriptions
             contract.pricing_model = self._price_model
+            related_model['subscription'] = updated_subscriptions
             self._generate_invoice(price, related_model, 'renovation')
 
         elif concept == 'pay per use':
