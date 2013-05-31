@@ -141,9 +141,10 @@ class OfferingEntry(Resource):
 class ResourceCollection(Resource):
 
     # Creates a new resource asociated with an user
+    @supported_request_mime_types(('application/json', 'multipart/form-data'))
     @authentication_required
-    @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
+
         user = request.user
         profile = UserProfile.objects.get(user=user)
         content_type = get_content_type(request)[0]
@@ -156,8 +157,13 @@ class ResourceCollection(Resource):
                     register_resource(user, data)
                 except:
                     return build_error_response(request, 400, 'Invalid JSON content')
-            else:  # TODO parse xml request
-                pass
+            elif content_type == 'multipart/form-data':
+                try:
+                    data = json.loads(request.POST['json'])
+                    f = request.FILES['file']
+                    register_resource(user, data, file_=f)
+                except:
+                    return build_error_response(request, 400, 'Invalid JSON content')
         else:
             pass
 

@@ -6,7 +6,7 @@ from django.conf import settings
 from wstore.models import Resource
 
 
-def register_resource(provider, data):
+def register_resource(provider, data, file_=None):
 
     # Check if the resource already exists
     existing = True
@@ -26,23 +26,36 @@ def register_resource(provider, data):
         'content_type': data['content_type']
     }
 
-    if 'content' in data:
-        resource = data['content']
+    if file_ is None:
+        if 'content' in data:
+            resource = data['content']
 
+            #decode the content and save the media file
+            file_name = provider.username + '__' + data['name'] + '__' + data['version'] + '__' + resource['name']
+            path = os.path.join(settings.MEDIA_ROOT, 'resources')
+            file_path = os.path.join(path, file_name)
+            f = open(file_path, "wb")
+            dec = base64.b64decode(resource['data'])
+            f.write(dec)
+            f.close()
+            resource_data['content_path'] = settings.MEDIA_URL + 'resources/' + file_name
+            resource_data['link'] = ''
+
+        elif 'link' in data:
+            # Add the download link
+            resource_data['link'] = data['link']
+            resource_data['content_path'] = ''
+
+    else:
         #decode the content and save the media file
-        file_name = provider.username + '__' + data['name'] + '__' + data['version'] + '__' + resource['name']
+        file_name = provider.username + '__' + data['name'] + '__' + data['version'] + '__' + file_.name
         path = os.path.join(settings.MEDIA_ROOT, 'resources')
         file_path = os.path.join(path, file_name)
         f = open(file_path, "wb")
-        dec = base64.b64decode(resource['data'])
-        f.write(dec)
+        f.write(file_.read())
+        f.close()
         resource_data['content_path'] = settings.MEDIA_URL + 'resources/' + file_name
         resource_data['link'] = ''
-
-    elif 'link' in data:
-        # Add the download link
-        resource_data['link'] = data['link']
-        resource_data['content_path'] = ''
 
     Resource.objects.create(
         name=resource_data['name'],
