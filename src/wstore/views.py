@@ -85,7 +85,7 @@ class ServeMedia(API_Resource):
 
         if dir_path.endswith('bills'):
             user_profile = UserProfile.objects.get(user=request.user)
-            purchase = Purchase.objects.get(ref=name[:-15])
+            purchase = Purchase.objects.get(ref=name[:24])
 
             if purchase.organization_owned:
                 user_org = user_profile.organization

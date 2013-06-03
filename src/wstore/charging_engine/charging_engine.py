@@ -429,8 +429,15 @@ class ChargingEngine:
         f = open(bill_path, 'wb')
         f.write(bill_code)
         f.close()
+
+        in_name = bill_path[:-4] + 'pdf'
+
+        if os.path.exists(in_name):
+            in_name = bill_path[:-5] + '_1.pdf'
+            invoice_name += '_1'
+
         # Compile the bill file
-        subprocess.call(['/usr/bin/wkhtmltopdf', bill_path, bill_path[:-4] + 'pdf'])
+        subprocess.call(['/usr/bin/wkhtmltopdf', bill_path, in_name])
 
         # Remove temporal files
         for file_ in os.listdir(settings.BILL_ROOT):
