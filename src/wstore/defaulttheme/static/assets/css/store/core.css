@@ -226,7 +226,7 @@
     margin: 10px;
     padding: 10px;
     border-radius: 6px;
-    width: 26%;
+    width: 41%;
     transition: border linear 0.2s, box-shadow linear 0.2s, background linear 0.2s;
     -moz-transition: border linear 0.2s, box-shadow linear 0.2s, background linear 0.2s; /* Firefox 4 */
     -webkit-transition: border linear 0.2s, box-shadow linear 0.2s, background linear 0.2s; /* Safari and Chrome */

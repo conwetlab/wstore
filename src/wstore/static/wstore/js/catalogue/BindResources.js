@@ -2,13 +2,13 @@
 
     var offeringElem;
 
-    var getUserResources = function getUserResources (callback) {
+    var getUserResources = function getUserResources (callback, viewOnly) {
         $.ajax({
             type: "GET",
             url: EndpointManager.getEndpoint('RESOURCE_COLLECTION'),
             dataType: 'json',
             success: function (response) {
-                callback(response);
+                callback(response, viewOnly);
             },
             error: function (xhr) {
                 var resp = xhr.responseText;
@@ -54,8 +54,8 @@
         });
     };
 
-    var paintResources = function paintResources (resources) {
-        MessageManager.showMessage('Bind resources', '');
+    var paintResources = function paintResources (resources, viewOnly) {
+        MessageManager.showMessage('User resources', '');
         // Create the form
         $.template('bindResourcesTemplate', $('#bind_resources_template'));
         $.tmpl('bindResourcesTemplate' , {}).appendTo('.modal-body');
@@ -71,26 +71,37 @@
             $.tmpl('resourceTemplate', res).appendTo('#resources').on('hover', function(e) {
                 $(e.target).popover('show');
             });
-            // Checks if the resource is already binded to the offering
-            offeringRes = offeringElem.getResources()
-            while(!found && j < offeringRes.length) {
-                if (res.name == offeringRes[j].name && res.version == offeringRes[j].version) {
-                    found = true;
-                    $('#check-' + i).prop('checked', true);
+
+            if (!viewOnly) {
+                // Checks if the resource is already binded to the offering
+                offeringRes = offeringElem.getResources()
+                while(!found && j < offeringRes.length) {
+                    if (res.name == offeringRes[j].name && res.version == offeringRes[j].version) {
+                        found = true;
+                        $('#check-' + i).prop('checked', true);
+                    }
+                    j++;
                 }
-                j++;
             }
         }
 
-        // Set listener
-        $('.modal-footer > .btn').click(function () {
-            bindResources(resources);
-        });
+        if(!viewOnly) {
+            // Set listener
+            $('.modal-footer > .btn').click(function () {
+                bindResources(resources);
+            });
+        } else {
+            $('[type="checkbox"]').remove();
+        }
     };
 
-    bindResourcesForm = function bindResourcesForm (offeringElement) {
+    bindResourcesForm = function bindResourcesForm (offeringElement, vOnly) {
+        var viewOnly = false;
+        if (vOnly) {
+            viewOnly = true;
+        }
         offeringElem = offeringElement;
-        getUserResources(paintResources);
+        getUserResources(paintResources, viewOnly);
     };
 
 })();

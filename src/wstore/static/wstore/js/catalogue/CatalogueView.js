@@ -146,6 +146,13 @@
                 getRepositories(showCreateAppForm);
             });
             $('#register-res').click(showRegisterResourceForm);
+            $('#view-res').click(function() {
+                var offElem = {}
+                offElem.getResources = function() {
+                    return [];
+                }
+                bindResourcesForm(offElem, true);
+            });
         }
 
         // Load data into the tabs on show
