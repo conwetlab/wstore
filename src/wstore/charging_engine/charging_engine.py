@@ -296,7 +296,7 @@ class ChargingEngine:
                 )['correlation_number']
 
                 # Set the description
-                description = 'Fee per ' + part['unit'] + ', Consumption: ' + part['value']
+                description = 'Fee per ' + part['unit'] + ', Consumption: ' + str(part['value'])
                 currency = get_curency_code(part['applied_part']['currency'])
 
                 cdrs.append({
@@ -309,8 +309,8 @@ class ChargingEngine:
                     'product_class': 'SaaS',
                     'description': description,
                     'cost_currency': currency,
-                    'cost_value': part['price'],
-                    'tax_currency': 'EUR',
+                    'cost_value': str(part['price']),
+                    'tax_currency': '1',
                     'tax_value': '0.0',
                     'source': '1',
                     'operator': '1',
