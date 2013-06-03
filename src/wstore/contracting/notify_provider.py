@@ -22,7 +22,7 @@ def notify_provider(purchase):
                 'name': purchase.offering.name,
                 'version': purchase.offering.version
             },
-            'purchase': purchase.ref,
+            'reference': purchase.ref,
             'customer': purchase.customer.username
         }
 
