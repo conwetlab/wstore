@@ -50,6 +50,7 @@
             for (var i = 0; i < markets.length; i++) {
                 $('<input></input>').attr('type', 'checkbox').attr('value', markets[i].name).attr('id', markets[i].name).appendTo(formContent);
                 $('<label></label>').attr('for', markets[i].name).text(markets[i].name).appendTo(formContent);
+                $('<label></label>').text(markets[i].host).appendTo(formContent);
             };
 
             formContent.appendTo('.modal-body');
