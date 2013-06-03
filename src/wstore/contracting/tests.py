@@ -479,4 +479,4 @@ class ProviderNotificationTestCase(TestCase):
         self.assertEqual(content['offering']['version'], '1.0')
 
         self.assertEqual(content['customer'], 'test_user')
-        self.assertEqual(content['purchase'], '61005aba8e05ac2115f022f0')
+        self.assertEqual(content['reference'], '61005aba8e05ac2115f022f0')
