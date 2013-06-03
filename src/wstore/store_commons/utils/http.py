@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 
-# Copyright 2012 Universidad Politécnica de Madrid
+# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
 
-# This file is part of Wirecloud.
+# This file is part of WStore.
 
-# Wirecloud is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# WStore is free software: you can redistribute it and/or modify
+# it under the terms of the European Union Public Licence (EUPL) 
+# as published by the European Commission, either version 1.1 
+# of the License, or (at your option) any later version.
 
-# Wirecloud is distributed in the hope that it will be useful,
+# WStore is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# European Union Public Licence for more details.
 
-# You should have received a copy of the GNU General Public License
-# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the European Union Public Licence
+# along with WStore.  
+# If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import socket
 from urlparse import urljoin
