@@ -580,7 +580,11 @@ class ChargingEngine:
                 last_time = applied_sdrs[-1]['time_stamp']
                 last_time = time.mktime(last_time.timetuple())
 
-        time_stamp = datetime.strptime(sdr['time_stamp'], '%Y-%m-%dT%H:%M:%S.%f')
+        try:
+            time_stamp = datetime.strptime(sdr['time_stamp'], '%Y-%m-%dT%H:%M:%S.%f')
+        except:
+            time_stamp = datetime.strptime(sdr['time_stamp'], '%Y-%m-%d %H:%M:%S.%f')
+
         time_stamp_sec = time.mktime(time_stamp.timetuple())
 
         if (int(sdr['correlation_number']) != last_corr + 1):
