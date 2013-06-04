@@ -26,6 +26,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
+from django.utils.safestring import mark_safe
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types, \
@@ -138,7 +139,7 @@ class PurchaseFormCollection(Resource):
 
         # Create the context
         context = {
-            'offering_info': json.dumps(offering_info)
+            'offering_info': mark_safe(json.dumps(offering_info))
         }
 
         # Return the form to purchase the offering

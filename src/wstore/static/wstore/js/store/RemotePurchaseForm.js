@@ -21,13 +21,10 @@
 (function() {
 
     var displayPurchaseInfo = function displayPurchaseInfo() {
-        var offeringJson, offeringElement;
-
-        // Fix the offering info
-        offeringJson = JSON.parse(OFFERING_INFO.replace(/&quot;/g, "\""));
+        var offeringElement;
 
         // Create the offering Element
-        offeringElement = new OfferingElement(offeringJson);
+        offeringElement = new OfferingElement(OFFERING_INFO);
 
         // Display offering details view
         paintOfferingDetails(offeringElement, null, $('#remote-container'));
