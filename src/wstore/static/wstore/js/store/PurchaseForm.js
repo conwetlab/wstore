@@ -91,7 +91,7 @@
                         $('#message').modal('hide');
                         MessageManager.showYesNoWindow('The payment process will continue in a separate window', function() {
                             var newWindow = window.open(response.redirection_link);
-                            var timer;
+                            var timer, timer1;
 
                             // Close yes no window
                             $('#message').modal('hide');
@@ -117,11 +117,36 @@
                                     clearInterval(timer);
                                     $('#message').modal('hide');
                                     refreshAndUpdateDetailsView();
+                                } else if (newWindow.location.host == window.location.host) {
+                                    clearInterval(timer);
+                                    $('#message').modal('hide');
+                                    MessageManager.showMessage('Payment', 'The PayPal process has finished. The external window will be closed');
+
+                                    $('.modal-footer > .btn').click(function() {
+                                        newWindow.close();
+                                        refreshAndUpdateDetailsView();
+                                    });
                                 }
                             }, 1000);
 
+                            timer1 = setInterval(function() {
+
+                                if ($('#back').length > 0) {
+                                    clearInterval(timer1);
+
+                                    if ('client_redirection_uri' in response) {
+                                        // The window has been opened from an external source
+                                        $('#back').remove();
+                                        $('<input></input>').attr('id', 'back').addClass('btn btn-basic').attr('type', 'button').attr('value', 'End purchase').click(function() {
+                                            window.location = response.client_redirection_uri;
+                                        }).appendTo('[class="nav nav-tabs"]');
+                                    }
+                                }
+                            }, 500);
+
                         }, 'Payment');
                     } else {
+                        var timer;
                         //Download resources
                         if ($(window.location).attr('href').indexOf('contracting') == -1) {
                             downloadResources(response);
@@ -130,6 +155,21 @@
                         offeringElement.setState('purchased');
                         refreshAndUpdateDetailsView();
                         $('#message').modal('hide');
+
+                        timer = setInterval(function() {
+
+                            if ($('#back').length > 0) {
+                                clearInterval(timer);
+
+                                if ('client_redirection_uri' in response) {
+                                    // The window has been opened from an external source
+                                    $('#back').remove();
+                                    $('<input></input>').attr('id', 'back').addClass('btn btn-basic').attr('type', 'button').attr('value', 'End purchase').click(function() {
+                                        window.location = response.client_redirection_uri;
+                                    }).appendTo('[class="nav nav-tabs"]');
+                                }
+                            }
+                        }, 500);
                     }
                 },
                 error: function (xhr) {

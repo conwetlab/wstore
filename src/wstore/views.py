@@ -58,7 +58,7 @@ def catalogue(request):
 
 class ServeMedia(API_Resource):
 
-    @authentication_required
+    #@authentication_required
     def read(self, request, path, name):
         if request.method != 'GET':
             return build_error_response(request, 415, 'Method not supported')

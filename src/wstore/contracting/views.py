@@ -25,6 +25,7 @@ from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.models import User
+from django.shortcuts import redirect
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types, \
@@ -57,6 +58,8 @@ class PurchaseFormCollection(Resource):
         else:
             offering = Offering.objects.get(description_url=data['offering'])
 
+        redirect_uri = data['redirect_uri']
+
         # Check that the user has not already purchased the offering
         if offering.pk in user_profile.offerings_purchased \
         or offering.pk in user_profile.organization.offerings_purchased:
@@ -72,7 +75,8 @@ class PurchaseFormCollection(Resource):
         context = Context.objects.get(site=site)
         context.user_refs[token] = {
             'user': request.user.pk,
-            'offering': offering.pk
+            'offering': offering.pk,
+            'redirect_uri': redirect_uri
         }
 
         context.save()
@@ -106,7 +110,7 @@ class PurchaseFormCollection(Resource):
         id_ = info['offering']
 
         # Remove the context entry
-        del(context.user_refs[token])
+        # del(context.user_refs[token])
         context.save()
 
         user_profile = user.userprofile
@@ -196,6 +200,7 @@ class PurchaseCollection(Resource):
             status = 200
         else:  # The purchase is finished so the download links are returned
             # Load download resources URL
+
             response['resources'] = []
 
             for res in offering.resources:
@@ -212,6 +217,17 @@ class PurchaseCollection(Resource):
             # Load bill URL
             response['bill'] = response_info.bill
             status = 201
+
+        # Check if there are to redirect the user
+        token = offering.pk + user.pk
+
+        site = get_current_site(request)
+        context = Context.objects.get(site=site)
+
+        if token in context.user_refs:
+            redirect_uri = context.user_refs[token]['redirect_uri']
+            del(context.user_refs[token])
+            response['client_redirection_uri'] = redirect_uri
 
         return HttpResponse(json.dumps(response), status=status, mimetype=content_type)
 

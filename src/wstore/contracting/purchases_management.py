@@ -20,8 +20,10 @@
 
 from datetime import datetime
 
+from django.contrib.sites.models import get_current_site
+
 from wstore.charging_engine.charging_engine import ChargingEngine
-from wstore.models import Purchase
+from wstore.models import Purchase, Context
 from wstore.models import UserProfile
 from wstore import charging_engine
 from wstore.contracting.purchase_rollback import PurchaseRollback

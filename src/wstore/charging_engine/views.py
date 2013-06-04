@@ -25,11 +25,13 @@ from bson import ObjectId
 
 from django.conf import settings
 from django.shortcuts import render
+from django.contrib.sites.models import get_current_site
+from django.shortcuts import redirect
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_error_response, supported_request_mime_types, \
 authentication_required
-from wstore.models import Purchase
+from wstore.models import Purchase, Context
 from wstore.models import UserProfile
 from wstore.models import Organization
 from wstore.charging_engine.charging_engine import ChargingEngine
