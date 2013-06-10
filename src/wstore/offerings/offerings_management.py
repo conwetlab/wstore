@@ -404,7 +404,8 @@ def create_offering(provider, profile, json_data):
         tags=[],
         image_url=data['image_url'],
         related_images=data['related_images'],
-        offering_description=json.loads(data['offering_description'])
+        offering_description=json.loads(data['offering_description']),
+        notification_url='http://130.206.82.141:5000/get_accounting'  # FIXME hardcoded
     )
 
     # Load offering document to the search index

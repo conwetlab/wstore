@@ -32,7 +32,7 @@ class MarketAdaptor(object):
     _marketplace_uri = None
     _session_id = None
 
-    def __init__(self, marketplace_uri, user='store_conwet', passwd='store_conwet'):
+    def __init__(self, marketplace_uri, user='wirecloud', passwd='wirecloud'):
         self._marketplace_uri = marketplace_uri
         self._user = user
         self._passwd = passwd

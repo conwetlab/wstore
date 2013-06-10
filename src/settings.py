@@ -43,7 +43,7 @@ DATABASES = {
 
 BASEDIR = path.dirname(path.abspath(__file__))
 
-STORE_NAME = 'CoNWeT'
+STORE_NAME = 'WStore'
 AUTH_PROFILE_MODULE = 'wstore.models.UserProfile'
 #THEME_ACTIVE = 'defaulttheme'
 # Local time zone for this installation. Choices can be found here:

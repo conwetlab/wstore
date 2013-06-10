@@ -42,6 +42,7 @@ class UsdlParserTestCase(TestCase):
         self.assertEqual(parsed_info['services_included'][0]['version'], '1.0')
 
     def test_parse_complete_offering(self):
+
         f = open('./wstore/store_commons/test/test_usdl1.ttl', 'rb')
 
         parser = USDLParser(f.read(), 'text/turtle')
@@ -69,20 +70,20 @@ class UsdlParserTestCase(TestCase):
             if price_com['title'] == 'Price component 1':
                 self.assertEqual(price_com['title'], 'Price component 1')
                 self.assertEqual(price_com['description'], 'price component 1 description')
-                self.assertEqual(price_com['value'], '1')
+                self.assertEqual(price_com['value'], '1.0')
                 self.assertEqual(price_com['currency'], 'euros')
                 self.assertEqual(price_com['unit'], 'single pay')
             else:
                 self.assertEqual(price_com['title'], 'Price component 2')
                 self.assertEqual(price_com['description'], 'price component 2 description')
-                self.assertEqual(price_com['value'], '1')
+                self.assertEqual(price_com['value'], '1.0')
                 self.assertEqual(price_com['currency'], 'euros')
                 self.assertEqual(price_com['unit'], 'single pay')
 
         self.assertEqual(len(price_plan['taxes']), 1)
         self.assertEqual(price_plan['taxes'][0]['title'], 'Example tax')
         self.assertEqual(price_plan['taxes'][0]['description'], 'example tax description')
-        self.assertEqual(price_plan['taxes'][0]['value'], '1')
+        self.assertEqual(price_plan['taxes'][0]['value'], '1.0')
         self.assertEqual(price_plan['taxes'][0]['currency'], 'euros')
         self.assertEqual(price_plan['taxes'][0]['unit'], 'percent')
 

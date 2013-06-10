@@ -38,13 +38,21 @@ def register_resource(provider, data, file_=None):
     if existing:
         raise Exception('The resource already exists')
 
+    if 'type' in data:
+        resource_type = data['type']
+    else:
+        resource_type = 'download'
+
     resource_data = {
         'name': data['name'],
         'version': data['version'],
-        'type': 'download',
+        'type': resource_type,
         'description': data['description'],
-        'content_type': data['content_type']
+        'content_type': ''
     }
+
+    if resource_type == 'download':
+        resource_data['content_type'] = data['content_type']
 
     if file_ is None:
         if 'content' in data:
@@ -93,11 +101,17 @@ def get_provider_resources(provider):
     resouces = Resource.objects.filter(provider=provider)
     response = []
     for res in resouces:
-        response.append({
+        resource_info = {
             'name': res.name,
             'version': res.version,
             'description': res.description,
             'content_type': res.content_type
-        })
+        }
+        if res.resource_type == 'download':
+            resource_info['type'] = 'Downloadable resource'
+        else:
+            resource_info['type'] = 'Backend resource'
+
+        response.append(resource_info)
 
     return response

@@ -198,7 +198,7 @@ class SinglePaymentChargingTestCase(TestCase):
 
         self.assertEqual(len(price_model['single_payment']), 1)
         self.assertEqual(price_model['single_payment'][0]['title'], 'Price component 1')
-        self.assertEqual(price_model['single_payment'][0]['value'], '5')
+        self.assertEqual(price_model['single_payment'][0]['value'], '5.0')
 
     def test_charging_single_payment_parts(self):
 
@@ -274,15 +274,15 @@ class SinglePaymentChargingTestCase(TestCase):
 
             if pay['title'] == 'Price component 1':
                 self.assertEqual(pay['title'], 'Price component 1')
-                self.assertEqual(pay['value'], '5')
+                self.assertEqual(pay['value'], '5.0')
 
             elif pay['title'] == 'Price component 2':
                 self.assertEqual(pay['title'], 'Price component 2')
-                self.assertEqual(pay['value'], '5')
+                self.assertEqual(pay['value'], '5.0')
 
             elif pay['title'] == 'Price component 3':
                 self.assertEqual(pay['title'], 'Price component 3')
-                self.assertEqual(pay['value'], '7')
+                self.assertEqual(pay['value'], '7.0')
 
 
 class SubscriptionChargingTestCase(TestCase):
@@ -376,12 +376,12 @@ class SubscriptionChargingTestCase(TestCase):
 
         for sub in pricing_model['subscription']:
             if sub['title'] == 'Price component 1':
-                self.assertEqual(sub['value'], '5')
+                self.assertEqual(sub['value'], '5.0')
                 self.assertEqual(sub['unit'], 'per month')
                 self.assertEqual(str(sub['renovation_date']), '2013-04-01 00:00:00')
             else:
                 self.assertEqual(sub['title'], 'Price component 2')
-                self.assertEqual(sub['value'], '5')
+                self.assertEqual(sub['value'], '5.0')
                 self.assertEqual(sub['unit'], 'per week')
                 self.assertEqual(str(sub['renovation_date']), '2013-03-20 00:00:00')
 
@@ -989,7 +989,7 @@ class PayPerUseChargingTestCase(TestCase):
 
         self.assertEqual(len(price_model['pay_per_use']), 1)
         self.assertEqual(price_model['pay_per_use'][0]['title'], 'Pay per use')
-        self.assertEqual(price_model['pay_per_use'][0]['value'], '5')
+        self.assertEqual(price_model['pay_per_use'][0]['value'], '5.0')
         self.assertEqual(price_model['pay_per_use'][0]['unit'], 'invocation')
         self.assertEqual(price_model['pay_per_use'][0]['currency'], 'EUR')
 
@@ -1134,7 +1134,7 @@ class AsynchronousPaymentTestCase(TestCase):
         model = contract.pending_payment['related_model']
         self.assertEqual(len(model['single_payment']), 1)
         self.assertEqual(model['single_payment'][0]['title'], 'Price component 1')
-        self.assertEqual(model['single_payment'][0]['value'], '5')
+        self.assertEqual(model['single_payment'][0]['value'], '5.0')
 
         # Second step
         charging = charging_engine.ChargingEngine(purchase)

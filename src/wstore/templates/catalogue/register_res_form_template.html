@@ -1,5 +1,11 @@
 
 <form class="form form-vertical">
+    <label>Resource type</label>
+    <select name="res-type">
+        <option value="download">Downloadable resource</option>
+        <option value="api">Backend resource</option>
+    </select>
+    <div class="space clear" />
     <label>Name</label>
     <input type="text" name="res-name" placeholder="Resource name"></input>
     <label>Version</label>
@@ -11,7 +17,7 @@
     <label>Upload resource</label>
     <input type="file" name="files" id="upload"></input>
     <i class="icon-question-sign" id="upload-help" rel="popover" data-content="Upload the resource itself i.e. an executable file or packaged code" data-original-title="Help"></i>
-    <label>Dowload link</label>
+    <label>Resource endpoint</label>
     <input type="text" name="res-link" placeholder="Resource link"></input>
     <i class="icon-question-sign" id="link-help" rel="popover" data-content="Provide a link or api where the resource can be downloaded" data-original-title="Help"></i>
 </form>

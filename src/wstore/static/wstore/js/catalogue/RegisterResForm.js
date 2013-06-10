@@ -48,19 +48,22 @@
          contentType = $.trim($('[name="res-content-type"]').val());
          description = $.trim($('[name="res-description"]').val());
 
-         if (name && version && contentType) {
+         if (name && version) {
+             if ($('[name="res-type"]').val() == 'download') {
+                 request.content_type = contentType
+             }
              csrfToken = $.cookie('csrftoken');
              request.name = name;
              request.version = version;
              request.description = description;
-             request.content_type = contentType
+             request.type = $('[name="res-type"]').val();
 
              if (resource) {
                  request.content = resource;
              } else if (link) {
                  request.link = link;
              } else {
-                 MessageManager.showMessage('Error', 'You do not have added a resource');
+                 MessageManager.showMessage('Error', 'You have not added a resource');
                  return;
              }
 
@@ -104,6 +107,22 @@
         $('#link-help').on('hover', function () {
             $('#link-help').popover('show');
         })
+
+        $('[name="res-type"]').on('change', function() {
+            if ($(this).val() == 'api') {
+                $('[name="res-content-type"]').addClass('hide');
+                $('#upload').addClass('hide');
+                $('label:contains(Content type)').addClass('hide');
+                $('label:contains(Upload resource)').addClass('hide');
+                $('#upload-help').addClass('hide');
+            } else {
+                $('[name="res-content-type"]').removeClass('hide');
+                $('#upload').removeClass('hide');
+                $('label:contains(Content type)').removeClass('hide');
+                $('label:contains(Upload resource)').removeClass('hide');
+                $('#upload-help').removeClass('hide');
+            }
+        });
 
         $('#upload').on('change', handleResourceSelection);
         $('.modal-footer > .btn').click(makeRegisterResRequest);

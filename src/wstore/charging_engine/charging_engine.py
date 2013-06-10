@@ -340,8 +340,11 @@ class ChargingEngine:
                 })
 
         # Send the created CDRs to the Revenue Sharing System
-        rss_adaptor = RSSAdaptor(rss.host)
-        rss_adaptor.send_cdr(cdrs)
+        try:
+            rss_adaptor = RSSAdaptor(rss.host)
+            rss_adaptor.send_cdr(cdrs)
+        except:
+            pass
 
     def _generate_invoice(self, price, applied_parts, type_):
 
