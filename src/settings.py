@@ -107,6 +107,8 @@ STATICFILES_FINDERS = (
 
 LOGIN_URL = "/login"
 
+USDL_EDITOR_URL = "http://wstore.lab.fi-ware.eu/usdl-editor"
+
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '8p509oqr^68+z)y48_*pv!ceun)gu7)yw6%y9j2^0=o14)jetr'
 

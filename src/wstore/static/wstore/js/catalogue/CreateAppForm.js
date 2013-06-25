@@ -183,7 +183,7 @@
         }
 
         $('#usdl-editor').click(function(event) {
-            window.open('/usdleditor', 'USDL editor');
+            window.open(USDLEDITOR, 'USDL editor');
         });
 
         $('#usdl-doc').change(function(event) {
