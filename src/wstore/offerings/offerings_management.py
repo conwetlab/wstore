@@ -389,7 +389,7 @@ def create_offering(provider, profile, json_data):
             rdf_format = 'json-ld'
 
     graph.parse(data=usdl, format=rdf_format)
-    data['offering_description'] = graph.serialize(format='json-ld')
+    data['offering_description'] = graph.serialize(format='json-ld', compact=True)
 
     # Create the offering
     offering = Offering.objects.create(
@@ -498,7 +498,7 @@ def update_offering(offering, data):
             rdf_format = 'json-ld'
 
         graph.parse(data=usdl, format=rdf_format)
-        offering.offering_description = json.loads(graph.serialize(format='json-ld'))
+        offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
 
     offering.save()
 
