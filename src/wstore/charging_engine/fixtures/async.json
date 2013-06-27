@@ -40,30 +40,6 @@
         }
     },
     {
-        "pk": "51004aba8e08ac21150022f9",
-        "model": "charging_engine.Unit",
-        "fields": {
-            "name": "single payment",
-            "defined_model": "single payment"
-        }
-    },
-    {
-        "pk": "51004aca8e08dc21150022f9",
-        "model": "charging_engine.Unit",
-        "fields": {
-            "name": "per month",
-            "defined_model": "subscription"
-        }
-    },
-    {
-        "pk": "510045ba8e04ac21151022f9",
-        "model": "charging_engine.Unit",
-        "fields": {
-            "name": "per week",
-            "defined_model": "subscription"
-        }
-    },
-    {
         "pk": "61000aba8e05ac2115f022f9",
         "model": "wstore.Offering",
         "fields": {

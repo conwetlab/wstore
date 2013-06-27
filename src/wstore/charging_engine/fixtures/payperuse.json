@@ -40,14 +40,6 @@
         }
     },
     {
-        "pk": "51004aba8e08ac21150022f9",
-        "model": "charging_engine.Unit",
-        "fields": {
-            "name": "invocation",
-            "defined_model": "pay per use"
-        }
-    },
-    {
         "pk": "61000aba8e05ac2115f022f9",
         "model": "wstore.Offering",
         "fields": {
