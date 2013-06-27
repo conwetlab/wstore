@@ -20,6 +20,7 @@
 
 import base64
 import os
+import re
 
 from django.conf import settings
 
@@ -37,6 +38,9 @@ def register_resource(provider, data, file_=None):
 
     if existing:
         raise Exception('The resource already exists')
+
+    if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
+        raise Exception('Invalid version format')
 
     if 'type' in data:
         resource_type = data['type']
