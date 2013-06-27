@@ -23,6 +23,8 @@ from django.test import TestCase
 from wstore.rss_adaptor import rssAdaptor
 
 
+__test__ = False
+
 class FakeUrlib2Rss():
 
     _opener = None
@@ -59,6 +61,8 @@ class FakeUrlib2Rss():
 
 class RSSAdaptorTestCase(TestCase):
 
+    tags = ('fiware-ut-18',)
+    
     def test_rss_client(self):
 
         expected_xml = """

@@ -23,6 +23,8 @@ from django.test import TestCase
 from wstore.store_commons.utils.usdlParser import USDLParser
 
 
+__test__ = False
+
 class UsdlParserTestCase(TestCase):
 
     def test_basic_parse(self):

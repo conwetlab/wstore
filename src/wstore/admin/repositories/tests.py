@@ -24,8 +24,10 @@ from wstore.admin.repositories.repositories_management import register_repositor
 from wstore.models import Repository
 
 
+__test__ = False
 class RegisteringRepositoriesTestCase(TestCase):
 
+    tags = ('fiware-ut-10',)
     fixtures = ['reg_rep.json']
 
     def test_basic_registering_rep(self):
@@ -58,6 +60,7 @@ class RegisteringRepositoriesTestCase(TestCase):
 
 class UnregisteringRepositoriesTestCase(TestCase):
 
+    tags = ('fiware-ut-11',)
     fixtures = ['del_rep.json']
 
     def test_basic_unregistering_rep(self):

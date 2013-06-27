@@ -17,6 +17,14 @@
         }
     },
     {
+        "pk": "515ab0738e05ac20b622888b",
+        "model": "sites.site",
+        "fields": {
+            "domain": "http://antares.ls.fi.upm.es:8000",
+            "name": "antares"
+        }
+    },
+    {
         "pk": "51070aba8e05cc2115f022f9",
         "model": "auth.user",
         "fields": {

@@ -26,6 +26,8 @@ from wstore.admin.markets import markets_management
 from wstore.models import Marketplace
 
 
+__test__ = False
+
 class FakeMarketAdaptor():
 
     def __init__(self, url):
@@ -47,6 +49,7 @@ class FakeMarketAdaptor():
 
 class RegisteringOnMarketplaceTestCase(TestCase):
 
+    tags = ('fiware-ut-7',)
     fixtures = ['reg_mark.json']
 
     @classmethod
@@ -106,6 +109,7 @@ class MarketPlacesRetievingTestCase(TestCase):
 
 class UnregisteringFromMarketplaceTestCase(TestCase):
 
+    tags = ('fiware-ut-8',)
     fixtures = ['del_mark.json']
 
     @classmethod

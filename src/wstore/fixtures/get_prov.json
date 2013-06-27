@@ -16,7 +16,15 @@
         }
     },
     {
-        "pk": "61000aba8e05ac2115f022f9",
+        "pk": "515ab0738e05ac20b622888b",
+        "model": "sites.site",
+        "fields": {
+            "domain": "http://antares.ls.fi.upm.es:8000",
+            "name": "antares"
+        }
+    },
+    {
+        "pk": "11000aba8e05ac2115f022f9",
         "model": "wstore.Offering",
         "fields": {
             "name": "test_offering1",
@@ -36,7 +44,7 @@
         }
     },
     {
-        "pk": "61000aba8e05ac2115f022ff",
+        "pk": "21000aba8e05ac2115f022ff",
         "model": "wstore.Offering",
         "fields": {
             "name": "test_offering2",
@@ -56,7 +64,7 @@
         }
     },
     {
-        "pk": "61000aba8e05ac2115f022f0",
+        "pk": "31000aba8e05ac2115f022f0",
         "model": "wstore.Offering",
         "fields": {
             "name": "test_offering3",

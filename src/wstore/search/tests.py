@@ -33,6 +33,8 @@ from wstore.models import Organization
 from wstore.models import Offering
 
 
+__test__ = False
+
 class FakeUSDLParser():
 
     def __init__(self, data, type_):
@@ -50,6 +52,7 @@ class FakeUSDLParser():
 
 class IndexCreationTestCase(TestCase):
 
+    tags = ('fiware-ut-6',)
     fixtures = ['create_index.json']
 
     @classmethod
@@ -84,6 +87,7 @@ class IndexCreationTestCase(TestCase):
 
 class FullTextSearchTestCase(TestCase):
 
+    tags = ('fiware-ut-6',)
     fixtures = ['full_text.json']
 
     @classmethod

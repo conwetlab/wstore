@@ -38,6 +38,8 @@ from wstore.models import Organization
 from wstore.charging_engine.management.commands import resolve_use_charging
 
 
+__test__ = False
+
 def fake_renovation_date(unit):
 
     if unit == 'per month':
@@ -107,6 +109,7 @@ def fake_cdr_generation(parts, time):
 
 class SinglePaymentChargingTestCase(TestCase):
 
+    tags = ('fiware-ut-12',)
     fixtures = ['single_payment.json']
 
     _to_delete = []
@@ -287,6 +290,7 @@ class SinglePaymentChargingTestCase(TestCase):
 
 class SubscriptionChargingTestCase(TestCase):
 
+    tags = ('fiware-ut-13',)
     fixtures = ['subscription.json']
 
     _to_delete = []
@@ -629,6 +633,8 @@ class PayPerUseChargingTestCase(TestCase):
 
         self.assertEqual(loaded_sdr['price'], 10.0)
 
+    test_basic_sdr_feeding.tags = ('fiware-ut-14',)
+
     def test_sdr_feeding_some_applied(self):
 
         sdr = {
@@ -679,6 +685,8 @@ class PayPerUseChargingTestCase(TestCase):
 
         self.assertEqual(loaded_sdr['price'], 10.0)
 
+    test_sdr_feeding_some_applied.tags = ('fiware-ut-14',)
+    
     def test_sdr_feeding_some_pending(self):
 
         sdr = {
@@ -726,6 +734,8 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertEqual(part['currency'], 'EUR')
 
         self.assertEqual(loaded_sdr['price'], 10.0)
+
+    test_sdr_feeding_some_pending.tags = ('fiware-ut-14',)
 
     def test_sdr_feeding_org_owned(self):
 
@@ -776,6 +786,8 @@ class PayPerUseChargingTestCase(TestCase):
 
         self.assertEqual(loaded_sdr['price'], 10.0)
 
+    test_sdr_feeding_org_owned.tags = ('fiware-ut-14',)
+
     def test_sdr_feeding_invalid_user(self):
 
         sdr = {
@@ -806,6 +818,8 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertTrue(error)
         self.assertEquals(msg, 'The user has not purchased the offering')
 
+    test_sdr_feeding_invalid_user.tags = ('fiware-ut-14',)
+
     def test_sdr_feeding_invalid_correlation(self):
 
         sdr = {
@@ -835,6 +849,8 @@ class PayPerUseChargingTestCase(TestCase):
 
         self.assertTrue(error)
         self.assertEquals(msg, 'Invalid correlation number, expected: 1')
+
+    test_sdr_feeding_invalid_correlation.tags = ('fiware-ut-14',)
 
     def test_sdr_feeding_invalid_timestamp(self):
 
@@ -871,6 +887,8 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertTrue(error)
         self.assertEquals(msg, 'Invalid time stamp')
 
+    test_sdr_feeding_invalid_timestamp.tags = ('fiware-ut-14',)
+
     def test_sdr_feeding_invalid_offering(self):
 
         sdr = {
@@ -901,6 +919,8 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertTrue(error)
         self.assertEquals(msg, 'The offering defined in the SDR is not the purchase offering')
 
+    test_sdr_feeding_invalid_offering.tags = ('fiware-ut-14',)
+
     def test_sdr_feeding_invalid_purchase(self):
 
         sdr = {
@@ -930,6 +950,8 @@ class PayPerUseChargingTestCase(TestCase):
 
         self.assertTrue(error)
         self.assertEquals(msg, 'No pay per use parts in the pricing model of the offering')
+
+    test_sdr_feeding_invalid_purchase.tags = ('fiware-ut-14',)
 
     def test_new_purchase_use(self):
 
@@ -993,6 +1015,8 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertEqual(price_model['pay_per_use'][0]['unit'], 'invocation')
         self.assertEqual(price_model['pay_per_use'][0]['currency'], 'EUR')
 
+    test_new_purchase_use.tags = ('fiware-ut-16',)
+
     def test_basic_resolve_use_charging(self):
 
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
@@ -1041,6 +1065,8 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertEqual(len(contract.pending_sdrs), 0)
         self.assertEqual(len(contract.applied_sdrs), 1)
 
+    test_basic_resolve_use_charging.tags = ('fiware-ut-15',)
+
     def test_resolve_use_charging_no_sdr(self):
 
         purchase = Purchase.objects.get(pk='61004a9a5e95ac9115902290')
@@ -1057,9 +1083,12 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertTrue(error)
         self.assertEquals(msg, 'No SDRs to charge')
 
+    test_resolve_use_charging_no_sdr.tags = ('fiware-ut-15',)
+
 
 class AsynchronousPaymentTestCase(TestCase):
 
+    tags = ('fiware-ut-17',)
     fixtures = ['async.json']
 
     _to_delete = []
@@ -1220,6 +1249,7 @@ class AsynchronousPaymentTestCase(TestCase):
 
 class ChargingDaemonTestCase(TestCase):
 
+    tags = ('fiware-ut-15',)
     fixtures = ['use_daemon.json']
     _command = None
 
@@ -1451,6 +1481,7 @@ class AdaptorWrapper():
 
 class CDRGeranationTestCase(TestCase):
 
+    tags = ('fiware-ut-18',)
     fixtures = ['cdr_generation.json']
     _cdrs = None
 
@@ -1573,7 +1604,7 @@ class CDRGeranationTestCase(TestCase):
         self.assertEqual(cdr['country'], '1')
         self.assertEqual(cdr['customer'], 'test_user')
 
-    def test_cdr_eneration_org_owned(self):
+    def test_cdr_generation_org_owned(self):
 
         applied_parts = {
             'single_payment': [{

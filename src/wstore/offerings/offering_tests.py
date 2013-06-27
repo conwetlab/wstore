@@ -36,6 +36,8 @@ from wstore.models import Resource
 from wstore.models import Organization
 
 
+__test__ = False
+
 class FakeRepositoryAdaptor():
 
     _url = None
@@ -113,6 +115,7 @@ class FakeOfferingRollback():
 
 class OfferingCreationTestCase(TestCase):
 
+    tags = ('fiware-ut-1',)
     _db = None
     _image = None
     _usdl = None
@@ -537,6 +540,7 @@ class OfferingUpdateTestCase(TestCase):
 
 class OfferingRetrievingTestCase(TestCase):
 
+    tags = ('fiware-ut-2',)
     fixtures = ['get_prov.json']
 
     @classmethod
@@ -586,6 +590,7 @@ class OfferingRetrievingTestCase(TestCase):
 
 class PurchasedOfferingRetrievingTestCase(TestCase):
 
+    tags = ('fiware-ut-2',)
     fixtures = ['get_purch.json']
 
     @classmethod
@@ -595,11 +600,12 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         super(PurchasedOfferingRetrievingTestCase, cls).setUpClass()
 
     def test_get_customer_purchased_offerings(self):
+
         user = User.objects.get(username='test_user2')
         profile = UserProfile.objects.get(user=user)
-        profile.offerings_purchased = ['61000aba8e05ac2115f022f9']
+        profile.offerings_purchased = ['11000aba8e05ac2115f022f9']
         org = Organization.objects.create(name='test_organization1')
-        org.offerings_purchased = ['61000aba8e05ac2115f022ff', '61000aba8e05ac2115f022f9']
+        org.offerings_purchased = ['21000aba8e05ac2115f022ff', '11000aba8e05ac2115f022f9']
         org.save()
         profile.organization = org
         profile.save()
@@ -638,9 +644,9 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
     def test_get_published_offerings(self):
         user = User.objects.get(username='test_user2')
         profile = UserProfile.objects.get(user=user)
-        profile.offerings_purchased = ['61000aba8e05ac2115f022f9']
+        profile.offerings_purchased = ['11000aba8e05ac2115f022f9']
         org = Organization.objects.create(name='test_organization1')
-        org.offerings_purchased = ['61000aba8e05ac2115f022ff', '61000aba8e05ac2115f022f9']
+        org.offerings_purchased = ['21000aba8e05ac2115f022ff', '11000aba8e05ac2115f022f9']
         org.save()
         profile.organization = org
         profile.save()
@@ -681,6 +687,7 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
 
 class OfferingPaginationTestCase(TestCase):
 
+    tags = ('fiware-ut-2',)
     fixtures = ['get_off_pag.json']
 
     @classmethod
@@ -690,6 +697,7 @@ class OfferingPaginationTestCase(TestCase):
         super(OfferingPaginationTestCase, cls).setUpClass()
 
     def test_basic_retrieving_pagination(self):
+
         pagination = {
             'skip': '1',
             'limit': '3'
@@ -777,6 +785,7 @@ class OfferingPaginationTestCase(TestCase):
 
 class PurchasedOfferingPaginationTestCase(TestCase):
 
+    tags = ('fiware-ut-2',)
     fixtures = ['get_purch_off_pag.json']
 
     @classmethod
@@ -793,9 +802,9 @@ class PurchasedOfferingPaginationTestCase(TestCase):
         }
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
-        profile.offerings_purchased = ['61000aba8e05ac2115f022f9', '71000aba8e05ac2115f022ff', '81000aba8e05ac2115f022f0']
+        profile.offerings_purchased = ['11000aba8e05ac2115f022f9', '21000aba8e05ac2115f022ff', '31000aba8e05ac2115f022f0']
         org = Organization.objects.create(name='test_organization1')
-        org.offerings_purchased = ['91000aba8e05ac2115f022f0', '61100aba8e05ac2115f022f0']
+        org.offerings_purchased = ['41000aba8e05ac2115f022f0', '51100aba8e05ac2115f022f0']
         org.save()
         profile.organization = org
         profile.save()
@@ -823,6 +832,7 @@ class PurchasedOfferingPaginationTestCase(TestCase):
 
 class OfferingPublicationTestCase(TestCase):
 
+    tags = ('fiware-ut-4',)
     fixtures = ['pub.json']
 
     @classmethod
@@ -984,6 +994,7 @@ class OfferingBindingTestCase(TestCase):
 
 class OfferingDeletionTestCase(TestCase):
 
+    tags = ('fiware-ut-5',)
     fixtures = ['del.json']
 
     @classmethod

@@ -33,6 +33,8 @@ from wstore.models import UserProfile
 from wstore.charging_engine.models import Contract
 
 
+__test__ = False
+
 class FakeChargingEngine:
 
     def __init__(self, purchase, payment_method=None, credit_card=None):
@@ -48,6 +50,7 @@ def fake_generate_bill():
 
 class PurchasesCreationTestCase(TestCase):
 
+    tags = ('fiware-ut-16',)
     fixtures = ['purch_creat.json']
 
     @classmethod

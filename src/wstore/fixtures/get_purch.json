@@ -16,6 +16,14 @@
         }
     },
     {
+        "pk": "515ab0738e05ac20b622888b",
+        "model": "sites.site",
+        "fields": {
+            "domain": "http://antares.ls.fi.upm.es:8000",
+            "name": "antares"
+        }
+    },
+    {
         "pk": "51070aba8e05cc2115f022f9",
         "model": "auth.user",
         "fields": {
@@ -32,7 +40,7 @@
         }
     },
     {
-        "pk": "61000aba8e05ac2115f022f9",
+        "pk": "11000aba8e05ac2115f022f9",
         "model": "wstore.Offering",
         "fields": {
             "name": "test_offering1",
@@ -52,7 +60,7 @@
         }
     },
     {
-        "pk": "61000aba8e05ac2115f022ff",
+        "pk": "21000aba8e05ac2115f022ff",
         "model": "wstore.Offering",
         "fields": {
             "name": "test_offering2",
@@ -72,7 +80,7 @@
         }
     },
     {
-        "pk": "61000aba8e05ac2115f022f0",
+        "pk": "31000aba8e05ac2115f022f0",
         "model": "wstore.Offering",
         "fields": {
             "name": "test_offering3",
@@ -123,7 +131,7 @@
             "organization_owned": true,
             "owner_organization": "test_organization1",
             "date": "2013-02-05 17:06:46",
-            "offering": "61000aba8e05ac2115f022f9",
+            "offering": "11000aba8e05ac2115f022f9",
             "state": "paid",
             "bill": ["/media/bills/61005aba8e05ac2115f022f0.pdf"],
             "tax_address": {
@@ -172,7 +180,7 @@
             "organization_owned": true,
             "owner_organization": "test_organization1",
             "date": "2013-02-05 17:06:46",
-            "offering": "61000aba8e05ac2115f022ff",
+            "offering": "21000aba8e05ac2115f022ff",
             "state": "paid",
             "bill": ["/media/bills/61006aba8e05ac2115f022f0.pdf"],
             "tax_address": {

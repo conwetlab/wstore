@@ -25,6 +25,8 @@ from django.test import TestCase
 from wstore.market_adaptor import marketadaptor
 
 
+__test__ = False
+
 class FakeUrllib2():
 
     _opener = None
@@ -167,6 +169,8 @@ class MarketAdaptorTestCase(TestCase):
         self.assertEqual(opener._method, 'PUT')
         self.assertEqual(opener._body, expected_body)
 
+    test_add_store.tags = ('fiware-ut-7',)
+
     def test_add_store_error(self):
         marketplace = 'http://add_store_error/'
 
@@ -192,6 +196,8 @@ class MarketAdaptorTestCase(TestCase):
         self.assertTrue(error)
         self.assertEqual(msg, 'Error add store')
 
+    test_add_store_error.tags = ('fiware-ut-7',)
+
     def test_add_store_redirection(self):
         marketplace = 'http://add_store_redirection/'
 
@@ -215,6 +221,8 @@ class MarketAdaptorTestCase(TestCase):
                 redirected = True
 
         self.assertTrue(redirected)
+
+    test_add_store_redirection.tags = ('fiware-ut-7',)
 
     def test_delete_store(self):
         marketplace = 'http://delete_store_marketplace/'
@@ -292,6 +300,8 @@ class MarketAdaptorTestCase(TestCase):
         self.assertEqual(opener._method, 'PUT')
         self.assertEqual(opener._body, expected_body)
 
+    test_add_service.tags = ('fiware-ut-4',)
+
     def test_add_service_error(self):
 
         marketplace = 'http://add_service_error/'
@@ -318,6 +328,8 @@ class MarketAdaptorTestCase(TestCase):
         self.assertTrue(error)
         self.assertEqual(msg, 'Error add service')
 
+    test_add_service_error.tags = ('fiware-ut-4',)
+
     def test_add_service_redirection(self):
 
         marketplace = 'http://add_service_redirection/'
@@ -343,6 +355,8 @@ class MarketAdaptorTestCase(TestCase):
 
         self.assertTrue(redirected)
 
+    test_add_service_redirection.tags = ('fiware-ut-4',)
+
     def test_delete_service(self):
 
         marketplace = 'http://delete_service_marketplace/'
@@ -357,6 +371,8 @@ class MarketAdaptorTestCase(TestCase):
         opener = fake_urllib._opener
         self.assertEqual(opener._url, 'http://delete_service_marketplace/offering/store/test_store/offering/test_service')
         self.assertEqual(opener._method, 'DELETE')
+
+    test_delete_service.tags = ('fiware-ut-9',)
 
     def test_delete_service_error(self):
 
@@ -378,6 +394,8 @@ class MarketAdaptorTestCase(TestCase):
         self.assertTrue(error)
         self.assertEqual(msg, 'Error delete service')
 
+    test_delete_service_error.tags = ('fiware-ut-9',)
+
     def test_delete_service_redirection(self):
         marketplace = 'http://delete_service_redirection/'
 
@@ -396,3 +414,5 @@ class MarketAdaptorTestCase(TestCase):
                 redirected = True
 
         self.assertTrue(redirected)
+
+    test_delete_service_redirection.tags = ('fiware-ut-9',)
