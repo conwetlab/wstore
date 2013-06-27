@@ -63,7 +63,8 @@ class UserProfile(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
 
     if created:
-        profile, created = UserProfile.objects.get_or_create(user=instance, roles=['customer'])
+        default_organization = Organization.objects.get_or_create(name='default')
+        profile, created = UserProfile.objects.get_or_create(user=instance, roles=['customer'], organization=default_organization[0])
 
 #Creates a new user profile when an user is created
 post_save.connect(create_user_profile, sender=User)
