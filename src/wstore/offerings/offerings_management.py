@@ -95,11 +95,11 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
     # Pagination: define the first element and the number of elements
     if owned:
         if  filter_ == 'uploaded':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'})
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'}).sort('_id', 1)
         elif filter_ == 'all':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id)})
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id)}).sort('_id', 1)
         elif  filter_ == 'published':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'published'})
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'published'}).sort('_id', 1)
         elif filter_ == 'purchased':
             if pagination:
                 prov_offerings = _get_purchased_offerings(user, db, pagination)
@@ -109,7 +109,7 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
 
     else:
         if  filter_ == 'published':
-            prov_offerings = offerings.find({'state': 'published'})
+            prov_offerings = offerings.find({'state': 'published'}).sort('_id', 1)
 
     result = []
 
