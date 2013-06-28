@@ -173,6 +173,11 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
                 'content_type': res.content_type
             }
 
+            if res.resource_type == 'download':
+                res_info['type'] = 'Downloadable resource'
+            else:
+                res_info['type'] = 'Backend resource'
+
             if offer['state'] == 'purchased':
                 if res.resource_type == 'download':
                     if res.resource_path != '':
@@ -252,6 +257,11 @@ def get_offering_info(offering, user):
             'description': resource.description,
             'content_type': resource.content_type
         }
+
+        if res.resource_type == 'download':
+            res_info['type'] = 'Downloadable resource'
+        else:
+            res_info['type'] = 'Backend resource'
 
         if state == 'purchased' and resource.resource_type == 'download':
             if resource.resource_path != '':
