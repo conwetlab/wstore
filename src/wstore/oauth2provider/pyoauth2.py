@@ -187,7 +187,7 @@ class AuthorizationProvider(Provider):
 
         :rtype: int
         """
-        return 36000000
+        return 3600
 
     def generate_authorization_code(self):
         """Generate a random authorization code.
