@@ -43,7 +43,10 @@ def register_resource(provider, data, file_=None):
         raise Exception('Invalid version format')
 
     if 'type' in data:
-        resource_type = data['type']
+        if data['type'] == 'download' or data['type'] == 'backend':
+            resource_type = data['type']
+        else:
+            raise Exception('Invalid resource type')
     else:
         resource_type = 'download'
 
