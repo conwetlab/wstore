@@ -272,7 +272,34 @@ class OrganizationCollection(Resource):
 
         try:
             data = json.loads(request.raw_post_data)
-            Organization.objects.create(name=data['name'])
+
+            tax_address = {}
+            if 'tax_address' in data:
+                tax_address = {
+                    'street': data['tax_address']['street'],
+                    'postal': data['tax_address']['postal'],
+                    'city': data['tax_address']['city'],
+                    'country': data['tax_address']['country']
+                }
+
+            payment_info = {}
+            if 'payment_info' in data:
+                if not is_valid_credit_card(data['payment_info']['number']):
+                    raise Exception()
+
+                payment_info = {
+                    'type': data['payment_info']['type'],
+                    'number': data['payment_info']['number'],
+                    'expire_month': data['payment_info']['expire_month'],
+                    'expire_year': data['payment_info']['expire_year'],
+                    'cvv2': data['payment_info']['cvv2']
+                }
+            Organization.objects.create(
+                name=data['name'],
+                notification_url=data['notification_url'],
+                tax_address=tax_address,
+                payment_info=payment_info
+            )
         except:
             return build_error_response(request, 400, 'Inavlid content')
 
@@ -284,6 +311,78 @@ class OrganizationCollection(Resource):
         response = []
 
         for org in Organization.objects.all():
-            response.append(org.name)
+            org_element = {
+                'name': org.name,
+                'notification_url': org.notification_url,
+                'tax_address': org.tax_address
+            }
+            if 'number' in org.payment_info:
+                number = org.payment_info['number']
+                number = 'xxxxxxxxxxxx' + number[-4:]
+                org_element['payment_info'] = {
+                    'number': number,
+                    'type': org.payment_info['type'],
+                    'expire_year': org.payment_info['expire_year'],
+                    'expire_month': org.payment_info['expire_month'],
+                    'cvv2': org.payment_info['cvv2'],
+                }
+
+            response.append(org_element)
 
         return HttpResponse(json.dumps(response), status=200, mimetype='appliacation/json')
+
+
+class OrganizationEntry(Resource):
+
+    def update(self, request, org):
+
+        # Get the organization
+        try:
+            organization = Organization.objects.get(name=org)
+        except:
+            return build_error_response(request, 404, 'Not found')
+
+        try:
+            # Load request data
+            data = json.loads(request.raw_post_data)
+            organization.notification_url = data['notification_url']
+
+            # Load the tax address
+            new_taxaddr = {}
+            if 'tax_address' in data and data['tax_address'] != {}:
+                new_taxaddr = {
+                    'street': data['tax_address']['street'],
+                    'postal': data['tax_address']['postal'],
+                    'city': data['tax_address']['city'],
+                    'country': data['tax_address']['country']
+                }
+
+            organization.tax_address = new_taxaddr
+
+            # Load the payment info
+            new_payment = {}
+            if 'payment_info' in data and data['payment_info'] != {}:
+
+                number = data['payment_info']['number']
+
+                if not is_valid_credit_card(number):
+                    if 'number' in organization.payment_info and \
+                    is_hidden_credit_card(number, organization.payment_info['number']):
+                        number = organization.payment_info['number']
+                    else:
+                        raise Exception('')
+
+                new_payment = {
+                    'type': data['payment_info']['type'],
+                    'number': number,
+                    'expire_year': data['payment_info']['expire_year'],
+                    'expire_month': data['payment_info']['expire_month'],
+                    'cvv2': data['payment_info']['cvv2']
+                }
+
+            organization.payment_info = new_payment
+            organization.save()
+        except:
+            return build_error_response(request, 400, 'Invalid Content')
+
+        return build_error_response(request, 200, 'OK')

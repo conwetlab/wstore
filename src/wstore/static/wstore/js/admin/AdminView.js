@@ -194,7 +194,7 @@
         });
 
         $('.add-org').click(function() {
-            painOrganizationForm();
+            paintOrganizationForm();
         });
 
         $('.add-prof').click(function() {
