@@ -197,3 +197,11 @@ PAYPAL_CHECKOUT_URL='https://www.sandbox.paypal.com/webscr?cmd=_express-checkout
 CRONJOBS = [
     ('0 5 * * *', 'django.core.management.call_command', ['resolve_use_charging']),
 ]
+
+# Hack to ignore `site` instance creation
+# This will prevent site creation on syncdb
+from django.db.models import signals
+from django.contrib.sites.management import create_default_site
+from django.contrib.sites import models as site_app
+
+signals.post_syncdb.disconnect(create_default_site, site_app)
