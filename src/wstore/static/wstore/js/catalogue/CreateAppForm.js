@@ -137,6 +137,21 @@
             request.related_images = screenShots;
         }
 
+        // Get notification URL
+        if ($('#not-opt-2').prop('checked')) {
+            var not_url = $.trim($('#notify').val());
+            if (not_url == '') {
+                error = true;
+                msg = 'Missing notification URL';
+            }
+            request.notification_url = not_url;
+        } else if ($('#not-opt-1').prop('checked')) {
+            request.notification_url = 'default';
+        } else if (!$('#not-opt-3').prop('checked')) {
+            error = true;
+            msg = 'Select and option for notification URL';
+        }
+
         if (!error) {
             $.ajax({
                 headers: {
@@ -224,6 +239,14 @@
 
         $('#screen-shots').change(function(event) {
             handleImageFileSelection(event, 'screenshots');
+        });
+
+        $('[name="notify-select"]').change(function() {
+           if ($(this).val() == 'new') {
+               $('#notify').removeClass('hide');
+           } else {
+               $('#notify').addClass('hide');
+           }
         });
 
         $('#usdl-sel').change(function() {

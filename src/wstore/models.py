@@ -43,6 +43,7 @@ class Context(models.Model):
 class Organization(models.Model):
 
     name = models.CharField(max_length=50, unique=True)
+    notification_url = models.CharField(max_length=300)
     offerings_purchased = ListField()
     payment_info = DictField()
     tax_address = DictField()

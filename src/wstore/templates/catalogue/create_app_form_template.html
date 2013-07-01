@@ -10,6 +10,27 @@
     <input type="file" name="files" id="img-logo"></input>
     <label>Screen shots</label>
     <input type="file" name="files" id="screen-shots" multiple></input>
+    <div class="clear space"></div>
+
+    <div class="control-group">
+        <label class="control-label">Notification URL</label>
+        <div class="controls">
+            <label class="radio">
+                <input type="radio" name="notify-select" id="not-opt-1" value="default"> Use default notification URL (organization).
+            </label>
+            <label class="radio">
+                <input type="radio" name="notify-select" id="not-opt-2" value="new"> Provide a notification URL.
+            </label>
+            <label class="radio">
+                <input type="radio" name="notify-select" id="not-opt-3" value="none"> Not use a notification URL.
+            </label>
+        </div>
+    </div>
+
+    <div class="clear space"></div>
+    <input class="hide" type="text" id="notify" placeholder="Notification URL" />
+    <div class="clear space"></div>
+
     <label>USDL Info</label>
     <select id="usdl-sel">
         <option value="0">-----</option>

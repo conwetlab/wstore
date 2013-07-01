@@ -332,6 +332,17 @@ def create_offering(provider, profile, json_data):
     if existing:
         raise Exception('The offering already exists')
 
+    # Check the URL to notify the provider
+    notification_url = ''
+
+    if 'notification_url' in json_data:
+        if json_data['notification_url'] == 'default':
+            notification_url = profile.organization.notification_url
+            if notification_url == '':
+                raise Exception('No default URL defined for the organization')
+        else:
+            notification_url = json_data['notification_url']
+
     # Create the directory for app media
     dir_name = organization.name + '__' + data['name'] + '__' + data['version']
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
@@ -415,7 +426,7 @@ def create_offering(provider, profile, json_data):
         image_url=data['image_url'],
         related_images=data['related_images'],
         offering_description=json.loads(data['offering_description']),
-        notification_url='http://130.206.82.141:5000/get_accounting'  # FIXME hardcoded
+        notification_url=notification_url
     )
 
     # Load offering document to the search index
