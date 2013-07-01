@@ -63,7 +63,7 @@
             contentType: 'application/json',
             data: JSON.stringify(resSelected),
             success: function (response) {
-                MessageManager.showMessage('Binded', 'The resources have been binded');
+                MessageManager.showMessage('Bound', 'The resources have been bound');
                 refreshAndUpdateDetailsView();
             },
             error: function (xhr) {
@@ -93,7 +93,7 @@
             });
 
             if (!viewOnly) {
-                // Checks if the resource is already binded to the offering
+                // Checks if the resource is already bound to the offering
                 offeringRes = offeringElem.getResources()
                 while(!found && j < offeringRes.length) {
                     if (res.name == offeringRes[j].name && res.version == offeringRes[j].version) {
