@@ -119,21 +119,13 @@
             }
         } else {
             var usdlLink = $.trim($('#usdl-url').val());
-            var contentType = $.trim($('#content-type').val());
 
-            if (usdlLink != '' && contentType == '') {
-                error = true;
-                msg = 'Missing content type';
-                
-            } else if (usdlLink == '' && contentType != '') {
+            if (usdlLink == '') {
                 error = true;
                 msg = 'Missing USDL Link';
 
-            } else if (usdlLink != '' && contentType != '') {
-                request.description_url = {
-                    'link': usdlLink,
-                    'content_type': contentType
-                }
+            } else {
+                request.description_url = usdlLink;
                 provided = true;
             }
         }
@@ -197,9 +189,6 @@
 
     var displayUSDLLinkForm = function displayUSDLLinkForm() {
         $('#usdl-container').empty();
-
-        $('<input></input>').attr('type', 'text').attr('id', 'content-type').attr('placeholder', 'Content type').appendTo('#usdl-container');
-        $('<div></div>').addClass('clear space').appendTo('#usdl-container');
         $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo('#usdl-container');
     };
 

@@ -120,13 +120,9 @@
             request.repository = rep;
         } else {
             var usdlLink = $.trim($('#usdl-url').val());
-            var contentType = $.trim($('#content-type').val());
 
-            if (usdlLink && contentType) {
-                request.description_url = {
-                    'content_type': contentType,
-                    'link': usdlLink
-                }
+            if (usdlLink) {
+                request.description_url = usdlLink;
             } else {
                 error = true;
                 msg = 'USDL info is missing'
@@ -208,9 +204,6 @@
 
     var displayUSDLLinkForm = function displayUSDLLinkForm() {
         $('#usdl-container').empty();
-
-        $('<input></input>').attr('type', 'text').attr('id', 'content-type').attr('placeholder', 'Content type').appendTo('#usdl-container');
-        $('<div></div>').addClass('clear space').appendTo('#usdl-container');
         $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo('#usdl-container');
     };
 

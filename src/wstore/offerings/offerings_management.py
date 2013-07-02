@@ -386,16 +386,22 @@ def create_offering(provider, profile, json_data):
 
         # Check that the link to USDL is unique since could be used to
         # purchase offerings from Marketplace
-        usdl_info = json_data['description_url']
-        off = Offering.objects.filter(description_url=usdl_info['link'])
+        usdl_info = {}
+        usdl_url = json_data['description_url']
+        off = Offering.objects.filter(description_url=usdl_url)
 
         if len(off) != 0:
             raise Exception('The provided USDL description is already registered')
 
         # Download the USDL from the repository
-        repository_adaptor = RepositoryAdaptor(usdl_info['link'])
-        usdl = repository_adaptor.download(content_type=usdl_info['content_type'])
-        data['description_url'] = usdl_info['link']
+        repository_adaptor = RepositoryAdaptor(usdl_url)
+        accept = "text/plain; application/rdf+xml; text/turtle; text/n3"
+
+        usdl = repository_adaptor.download(content_type=accept)
+        usdl_info['content_type'] = usdl['content_type']
+
+        usdl = usdl['data']
+        data['description_url'] = usdl_url
 
     else:
         raise Exception('No USDL description provided')
@@ -494,15 +500,21 @@ def update_offering(offering, data):
 
     # The USDL document has changed in the repository
     elif 'description_url' in data:
-        usdl_info = data['description_url']
+        usdl_info = {}
+        usdl_url = data['description_url']
 
         # Check the link
-        if usdl_info['link'] != offering.description_url:
+        if usdl_url != offering.description_url:
             raise Exception('The provided USDL URL is not valid')
 
         # Download new content
-        repository_adaptor = RepositoryAdaptor(usdl_info['link'])
-        usdl = repository_adaptor.download(content_type=usdl_info['content_type'])
+        repository_adaptor = RepositoryAdaptor(usdl_url)
+        accept = "text/plain; application/rdf+xml; text/turtle; text/n3"
+        usdl = repository_adaptor.download(content_type=accept)
+
+        usdl_info['content_type'] = usdl['content_type']
+        usdl = usdl['data']
+
         new_usdl = True
 
     # If the USDL has changed store the new description
