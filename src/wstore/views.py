@@ -46,7 +46,7 @@ def admin(request):
     if request.user.is_staff:
         return render(request, 'admin/admin.html')
     else:
-        build_response(request, 401, 'Unathorized')
+        build_response(request, 403, 'Forbidden')
 
 
 @login_required

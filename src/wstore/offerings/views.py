@@ -151,7 +151,7 @@ class OfferingEntry(Resource):
         # have purchased the offering to install it if needed
         offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
         if not offering.is_owner(request.user):
-            return build_response(request, 401, 'Unauthorized')
+            return build_response(request, 403, 'Forbidden')
 
         delete_offering(offering)
 
@@ -217,7 +217,7 @@ class PublishEntry(Resource):
             return build_response(request, 404, 'Not found')
 
         if not offering.is_owner(request.user):
-            return build_response(request, 401, 'Unauthorized')
+            return build_response(request, 403, 'Forbidden')
 
         if content_type == 'application/json':
             try:
@@ -258,7 +258,7 @@ class BindEntry(Resource):
             return build_response(request, 404, 'Not found')
 
         if not offering.is_owner(request.user):
-            return build_response(request, 401, 'Unauthorized')
+            return build_response(request, 403, 'Forbidden')
 
         if content_type == 'application/json':
             try:

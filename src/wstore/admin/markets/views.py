@@ -40,7 +40,7 @@ class MarketplaceCollection(Resource):
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
         if not request.user.is_staff:  # Only an admin could register the store in a marketplace
-            return build_response(request, 401, 'Unautorized')
+            return build_response(request, 403, 'Forbidden')
 
         content_type = get_content_type(request)[0]
 
@@ -127,7 +127,7 @@ class MarketplaceEntry(Resource):
     def delete(self, request, market):
 
         if not request.user.is_staff:
-            return build_response(request, 401, 'Unathorized')
+            return build_response(request, 403, 'Forbidden')
 
         try:
             unregister_from_market(market)

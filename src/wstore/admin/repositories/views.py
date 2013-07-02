@@ -39,7 +39,7 @@ class RepositoryCollection(Resource):
     def create(self, request):
 
         if not request.user.is_staff:  # Only an admin could register a new repository
-            return build_response(request, 401, 'Unautorized')
+            return build_response(request, 403, 'Forbidden')
 
         content_type = get_content_type(request)[0]
 
@@ -111,7 +111,7 @@ class RepositoryEntry(Resource):
     def delete(self, request, repository):
 
         if not request.user.is_staff:
-            return build_response(request, 401, 'Unathorized')
+            return build_response(request, 403, 'Forbidden')
 
         try:
             unregister_repository(repository)
