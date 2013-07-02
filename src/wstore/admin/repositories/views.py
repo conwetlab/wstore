@@ -24,7 +24,7 @@ from lxml import etree
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types,\
+from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types,\
 authentication_required
 from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, get_repositories
 
@@ -39,7 +39,7 @@ class RepositoryCollection(Resource):
     def create(self, request):
 
         if not request.user.is_staff:  # Only an admin could register a new repository
-            return build_error_response(request, 401, 'Unautorized')
+            return build_response(request, 401, 'Unautorized')
 
         content_type = get_content_type(request)[0]
 
@@ -54,7 +54,7 @@ class RepositoryCollection(Resource):
                 host = content['host']
             except:
                 msg = "Request body is not valid JSON data"
-                return build_error_response(request, 400, msg)
+                return build_response(request, 400, msg)
 
         else:
 
@@ -64,14 +64,14 @@ class RepositoryCollection(Resource):
                 host = content.xpath('/marketplace/host')[0].text
             except:
                 msg = "Request body is not valid XML data"
-                return build_error_response(request, 400, msg)
+                return build_response(request, 400, msg)
 
         try:
             register_repository(name, host)
         except Exception, e:
-            return build_error_response(request, 400, e.message)
+            return build_response(request, 400, e.message)
 
-        return build_error_response(request, 201, 'Created')  # TODO use a generic method
+        return build_response(request, 201, 'Created')  # TODO use a generic method
 
     @authentication_required
     def read(self, request):
@@ -100,7 +100,7 @@ class RepositoryCollection(Resource):
             mime_type = 'application/xml; charset=UTF-8'
 
         else:
-            return build_error_response(request, 400, 'Invalid requested type')
+            return build_response(request, 400, 'Invalid requested type')
 
         return HttpResponse(response, status=200, mimetype=mime_type)
 
@@ -111,7 +111,7 @@ class RepositoryEntry(Resource):
     def delete(self, request, repository):
 
         if not request.user.is_staff:
-            return build_error_response(request, 401, 'Unathorized')
+            return build_response(request, 401, 'Unathorized')
 
         try:
             unregister_repository(repository)
@@ -121,6 +121,6 @@ class RepositoryEntry(Resource):
             else:
                 code = 400
 
-            return build_error_response(request, code, e.message)
+            return build_response(request, code, e.message)
 
-        return build_error_response(request, 204, 'No content')
+        return build_response(request, 204, 'No content')

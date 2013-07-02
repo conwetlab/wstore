@@ -23,7 +23,7 @@ import json
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 
-from wstore.store_commons.utils.http import build_error_response, supported_request_mime_types, \
+from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
 from wstore.store_commons.resource import Resource
 from wstore.models import UserProfile
@@ -60,7 +60,7 @@ class UserProfileCollection(Resource):
     def read(self, request):
 
         if not request.user.is_staff:
-            return build_error_response(request, 403, 'Forbidden')
+            return build_response(request, 403, 'Forbidden')
 
         response = []
         for user in User.objects.all():
@@ -95,7 +95,7 @@ class UserProfileCollection(Resource):
     def create(self, request):
 
         if not request.user.is_staff:
-            return build_error_response(request, 403, 'Forbidden')
+            return build_response(request, 403, 'Forbidden')
 
         data = json.loads(request.raw_post_data)
         # Create the user
@@ -138,9 +138,9 @@ class UserProfileCollection(Resource):
             user_profile.save()
 
         except:
-            return build_error_response(request, 400, 'Invalid content')
+            return build_response(request, 400, 'Invalid content')
 
-        return build_error_response(request, 201, 'Created')
+        return build_response(request, 201, 'Created')
 
 
 class UserProfileEntry(Resource):
@@ -149,7 +149,7 @@ class UserProfileEntry(Resource):
     def read(self, request, username):
 
         if not request.user.is_staff and not request.user.username == username:
-            return build_error_response(request, 403, 'Forbidden')
+            return build_response(request, 403, 'Forbidden')
 
         user = User.objects.get(username=username)
         user_profile = {}
@@ -190,7 +190,7 @@ class UserProfileEntry(Resource):
     def update(self, request, username):
 
         if not request.user.is_staff and not request.user.username == username:
-            return build_error_response(request, 403, 'Forbidden')
+            return build_response(request, 403, 'Forbidden')
 
         data = json.loads(request.raw_post_data)
         # Create the user
@@ -252,9 +252,9 @@ class UserProfileEntry(Resource):
             user_profile.save()
 
         except:
-            return build_error_response(request, 400, 'Invalid content')
+            return build_response(request, 400, 'Invalid content')
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')
 
     @authentication_required
     def delete(self, request, username):
@@ -268,7 +268,7 @@ class OrganizationCollection(Resource):
     def create(self, request):
 
         if not request.user.is_staff:
-            return build_error_response(request, 403, 'Forbidden')
+            return build_response(request, 403, 'Forbidden')
 
         try:
             data = json.loads(request.raw_post_data)
@@ -301,9 +301,9 @@ class OrganizationCollection(Resource):
                 payment_info=payment_info
             )
         except:
-            return build_error_response(request, 400, 'Inavlid content')
+            return build_response(request, 400, 'Inavlid content')
 
-        return build_error_response(request, 201, 'Created')
+        return build_response(request, 201, 'Created')
 
     @authentication_required
     def read(self, request):
@@ -340,7 +340,7 @@ class OrganizationEntry(Resource):
         try:
             organization = Organization.objects.get(name=org)
         except:
-            return build_error_response(request, 404, 'Not found')
+            return build_response(request, 404, 'Not found')
 
         try:
             # Load request data
@@ -383,6 +383,6 @@ class OrganizationEntry(Resource):
             organization.payment_info = new_payment
             organization.save()
         except:
-            return build_error_response(request, 400, 'Invalid Content')
+            return build_response(request, 400, 'Invalid Content')
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')

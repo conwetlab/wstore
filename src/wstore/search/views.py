@@ -24,7 +24,7 @@ import json
 from django.http import HttpResponse
 from django.conf import settings
 
-from wstore.store_commons.utils.http import build_error_response, authentication_required
+from wstore.store_commons.utils.http import build_response, authentication_required
 from wstore.store_commons.resource import Resource
 from wstore.search.search_engine import SearchEngine
 
@@ -44,7 +44,7 @@ class SearchEntry(Resource):
 
         # Check the filter value
         if filter_ and filter_ != 'published' and filter_ != 'provided' and filter_ != 'purchased':
-            return build_error_response(request, 400, 'Invalid filter')
+            return build_response(request, 400, 'Invalid filter')
 
         if not filter_:
             response = search_engine.full_text_search(request.user, text)
@@ -56,7 +56,7 @@ class SearchEntry(Resource):
             if state != 'all' and state != 'uploaded'\
             and state != 'published' and state != 'deleted':
 
-                return build_error_response(request, 400, 'Invalid state')
+                return build_response(request, 400, 'Invalid state')
 
             response = search_engine.full_text_search(request.user, text, state=state)
 

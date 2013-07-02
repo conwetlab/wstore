@@ -29,7 +29,7 @@ from django.contrib.sites.models import get_current_site
 from django.shortcuts import redirect
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, supported_request_mime_types, \
+from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
 from wstore.models import Purchase, Context
 from wstore.models import UserProfile
@@ -61,10 +61,10 @@ class ServiceRecordCollection(Resource):
             charging_engine = ChargingEngine(purchase)
             charging_engine.include_sdr(data)
         except Exception, e:
-            return build_error_response(request, 400, e.message)
+            return build_response(request, 400, e.message)
 
         # Return response
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')
 
 
 class PayPalConfirmation(Resource):
@@ -165,7 +165,7 @@ class PayPalCancelation(Resource):
             purchase = Purchase.objects.get(pk=reference)
             rollback(purchase)
         except:
-            return build_error_response(request, 400, 'Invalid request')
+            return build_response(request, 400, 'Invalid request')
 
         context = {
             'title': 'Payment Canceled',

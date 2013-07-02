@@ -29,7 +29,7 @@ from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types, \
+from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
 authentication_required
 from wstore.offerings.offerings_management import get_offering_info
 from wstore.contracting.purchases_management import create_purchase
@@ -64,11 +64,11 @@ class PurchaseFormCollection(Resource):
         # Check that the user has not already purchased the offering
         if offering.pk in user_profile.offerings_purchased \
         or offering.pk in user_profile.organization.offerings_purchased:
-            return build_error_response(request, 400, 'You have already purchased the offering')
+            return build_response(request, 400, 'You have already purchased the offering')
 
         # Check that the offering can be purchased
         if offering.state != 'published':
-            return build_error_response(request, 400, 'The offering cannot be purchased')
+            return build_response(request, 400, 'The offering cannot be purchased')
 
         token = offering.pk + request.user.pk
         site = get_current_site(request)
@@ -120,22 +120,22 @@ class PurchaseFormCollection(Resource):
         try:
             offering = Offering.objects.get(pk=id_)
         except:
-            return build_error_response(request, 404, 'The offering not exists')
+            return build_response(request, 404, 'The offering not exists')
         offering_info = get_offering_info(offering, user)
 
         # Check that the user is not the owner of the offering
 
         if offering.owner_admin_user == user:
-            return build_error_response(request, 400, 'You are the owner of the offering')
+            return build_response(request, 400, 'You are the owner of the offering')
 
         # Check that the user has not already purchased the offering
         if offering.pk in user_profile.offerings_purchased \
         or offering.pk in user_profile.organization.offerings_purchased:
-            return build_error_response(request, 400, 'You have already purchased the offering')
+            return build_response(request, 400, 'You have already purchased the offering')
 
         # Check that the offering can be purchased
         if offering.state != 'published':
-            return build_error_response(request, 400, 'The offering cannot be purchased')
+            return build_response(request, 400, 'The offering cannot be purchased')
 
         # Create the context
         context = {
@@ -190,7 +190,7 @@ class PurchaseCollection(Resource):
                         response_info = Purchase.objects.get(customer=request.user, offering=offering)
 
                 if not paid:
-                    return build_error_response(request, 400, 'Invalid json content')
+                    return build_response(request, 400, 'Invalid json content')
 
         response = {}
         # If the value returned by the create_purchase method is a string means that
@@ -268,6 +268,6 @@ class PurchaseEntry(Resource):
             # Refresh the purchase info
             purchase = Purchase.objects.get(ref=reference)
             rollback(purchase)
-            return build_error_response(request, 400, 'Invalid JSON content')
+            return build_response(request, 400, 'Invalid JSON content')
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')

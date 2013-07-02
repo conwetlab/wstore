@@ -23,7 +23,7 @@ import json
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, supported_request_mime_types, \
+from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
 from wstore.models import RSS
 
@@ -49,22 +49,22 @@ class RSSCollection(Resource):
 
         # Only the admin can register new RSS instances
         if not request.user.is_staff:
-            return build_error_response(request, 403, 'Forbidden')
+            return build_response(request, 403, 'Forbidden')
 
         data = json.loads(request.raw_post_data)
 
         if not 'name' in data and not 'host' in data:
-            return build_error_response(request, 400, 'Invalid JSON content')
+            return build_response(request, 400, 'Invalid JSON content')
 
         # Check if the information provided is not already registered
         if len(RSS.objects.filter(name=data['name'])) > 0 or \
         len(RSS.objects.filter(name=data['name'])) > 0:
-            return build_error_response(request, 400, 'Invalid JSON content')
+            return build_response(request, 400, 'Invalid JSON content')
 
         # Create the new entry
         RSS.objects.create(name=data['name'], host=data['host'])
 
-        return build_error_response(request, 201, 'Created')
+        return build_response(request, 201, 'Created')
 
 
 class RSSEntry(Resource):
@@ -79,7 +79,7 @@ class RSSEntry(Resource):
                 'host': rss_model.host
             }
         except:
-            return build_error_response(request, 400, 'Invalid request')
+            return build_response(request, 400, 'Invalid request')
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
@@ -87,12 +87,12 @@ class RSSEntry(Resource):
     def delete(self, request, rss):
 
         if not request.user.is_staff:
-            return build_error_response(request, 403, 'Forbidden')
+            return build_response(request, 403, 'Forbidden')
 
         try:
             rss_model = RSS.objects.get(name=rss)
             rss_model.delete()
         except:
-            return build_error_response(request, 400, 'Invalid request')
+            return build_response(request, 400, 'Invalid request')
 
-        return build_error_response(request, 204, 'No content')
+        return build_response(request, 204, 'No content')

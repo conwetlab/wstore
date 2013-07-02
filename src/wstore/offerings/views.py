@@ -25,7 +25,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types, \
+from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
 authentication_required
 from wstore.models import Offering
 from wstore.models import UserProfile
@@ -57,15 +57,15 @@ class OfferingCollection(Resource):
                     json_data = json.loads(request.raw_post_data)
                     create_offering(user, profile, json_data)
                 except HTTPError:
-                    return build_error_response(request, 502, 'Bad Gateway')
+                    return build_response(request, 502, 'Bad Gateway')
                 except:
-                    return build_error_response(request, 400, 'Invalid content')
+                    return build_response(request, 400, 'Invalid content')
             else:
                 pass  # TODO xml parsed
         else:
             pass
 
-        return build_error_response(request, 201, 'Created')
+        return build_response(request, 201, 'Created')
 
     @authentication_required
     def read(self, request):
@@ -134,15 +134,15 @@ class OfferingEntry(Resource):
             offering = Offering.objects.get(owner_organization=organization, name=name, version=version)
 
             if offering.owner_admin_user != user:
-                return build_error_response(request, 403, 'Forbidden')
+                return build_response(request, 403, 'Forbidden')
 
             data = json.loads(request.raw_post_data)
 
             update_offering(offering, data)
         except Exception, e:
-            return build_error_response(request, 400, e.message)
+            return build_response(request, 400, e.message)
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')
 
     @authentication_required
     def delete(self, request, organization, name, version):
@@ -151,11 +151,11 @@ class OfferingEntry(Resource):
         # have purchased the offering to install it if needed
         offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
         if not offering.is_owner(request.user):
-            return build_error_response(request, 401, 'Unauthorized')
+            return build_response(request, 401, 'Unauthorized')
 
         delete_offering(offering)
 
-        return build_error_response(request, 204, 'No content')
+        return build_response(request, 204, 'No content')
 
 
 class ResourceCollection(Resource):
@@ -176,18 +176,18 @@ class ResourceCollection(Resource):
                     data = json.loads(request.raw_post_data)
                     register_resource(user, data)
                 except:
-                    return build_error_response(request, 400, 'Invalid JSON content')
+                    return build_response(request, 400, 'Invalid JSON content')
             elif content_type == 'multipart/form-data':
                 try:
                     data = json.loads(request.POST['json'])
                     f = request.FILES['file']
                     register_resource(user, data, file_=f)
                 except:
-                    return build_error_response(request, 400, 'Invalid JSON content')
+                    return build_response(request, 400, 'Invalid JSON content')
         else:
             pass
 
-        return build_error_response(request, 201, 'Created')
+        return build_response(request, 201, 'Created')
 
     @authentication_required
     def read(self, request):
@@ -214,19 +214,19 @@ class PublishEntry(Resource):
         try:
             offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
         except:
-            return build_error_response(request, 404, 'Not found')
+            return build_response(request, 404, 'Not found')
 
         if not offering.is_owner(request.user):
-            return build_error_response(request, 401, 'Unauthorized')
+            return build_response(request, 401, 'Unauthorized')
 
         if content_type == 'application/json':
             try:
                 data = json.loads(request.raw_post_data)
                 publish_offering(offering, data)
             except HTTPError:
-                return build_error_response(request, 502, 'Bad gateway')
+                return build_response(request, 502, 'Bad gateway')
             except Exception, e:
-                return build_error_response(request, 400, e.message)
+                return build_response(request, 400, e.message)
 
         # Append the new offering to the newest list
         site = get_current_site(request)
@@ -240,7 +240,7 @@ class PublishEntry(Resource):
 
         context.save()
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')
 
 
 class BindEntry(Resource):
@@ -255,19 +255,19 @@ class BindEntry(Resource):
         try:
             offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
         except:
-            return build_error_response(request, 404, 'Not found')
+            return build_response(request, 404, 'Not found')
 
         if not offering.is_owner(request.user):
-            return build_error_response(request, 401, 'Unauthorized')
+            return build_response(request, 401, 'Unauthorized')
 
         if content_type == 'application/json':
             try:
                 data = json.loads(request.raw_post_data)
                 bind_resources(offering, data, request.user)
             except:
-                build_error_response(request, 400, 'Invalid JSON content')
+                build_response(request, 400, 'Invalid JSON content')
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')
 
 
 class NewestCollection(Resource):

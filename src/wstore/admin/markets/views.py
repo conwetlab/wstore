@@ -25,7 +25,7 @@ from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types,\
+from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types,\
  authentication_required
 from wstore.admin.markets.markets_management import get_marketplaces, register_on_market, unregister_from_market
 
@@ -40,7 +40,7 @@ class MarketplaceCollection(Resource):
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
         if not request.user.is_staff:  # Only an admin could register the store in a marketplace
-            return build_error_response(request, 401, 'Unautorized')
+            return build_response(request, 401, 'Unautorized')
 
         content_type = get_content_type(request)[0]
 
@@ -55,7 +55,7 @@ class MarketplaceCollection(Resource):
                 host = content['host']
             except:
                 msg = "Request body is not valid JSON data"
-                return build_error_response(request, 400, msg)
+                return build_response(request, 400, msg)
 
         else:
 
@@ -65,7 +65,7 @@ class MarketplaceCollection(Resource):
                 host = content.xpath('/marketplace/host')[0].text
             except:
                 msg = "Request body is not a valid XML data"
-                return build_error_response(request, 400, msg)
+                return build_response(request, 400, msg)
 
         try:
             register_on_market(name, host, get_current_site(request).domain)
@@ -77,9 +77,9 @@ class MarketplaceCollection(Resource):
                 code = 400
                 msg = 'Bad request'
 
-            return build_error_response(request, code, msg)
+            return build_response(request, code, msg)
 
-        return build_error_response(request, 201, 'Created')
+        return build_response(request, 201, 'Created')
 
     @authentication_required
     def read(self, request):
@@ -108,7 +108,7 @@ class MarketplaceCollection(Resource):
             mime_type = 'application/xml; charset=UTF-8'
 
         else:
-            return build_error_response(request, 400, 'Invalid requested type')
+            return build_response(request, 400, 'Invalid requested type')
 
         return HttpResponse(response, status=200, mimetype=mime_type)
 
@@ -127,7 +127,7 @@ class MarketplaceEntry(Resource):
     def delete(self, request, market):
 
         if not request.user.is_staff:
-            return build_error_response(request, 401, 'Unathorized')
+            return build_response(request, 401, 'Unathorized')
 
         try:
             unregister_from_market(market)
@@ -143,6 +143,6 @@ class MarketplaceEntry(Resource):
                     code = 400
                     msg = 'Bad request'
 
-            return build_error_response(request, code, msg)
+            return build_response(request, code, msg)
 
-        return build_error_response(request, 204, 'No content')
+        return build_response(request, 204, 'No content')

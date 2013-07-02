@@ -28,7 +28,7 @@ from django.views.static import serve
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 
-from store_commons.utils.http import build_error_response
+from store_commons.utils.http import build_response
 from wstore.store_commons.resource import Resource as API_Resource
 from wstore.models import UserProfile
 from wstore.models import Purchase
@@ -46,7 +46,7 @@ def admin(request):
     if request.user.is_staff:
         return render(request, 'admin/admin.html')
     else:
-        build_error_response(request, 401, 'Unathorized')
+        build_response(request, 401, 'Unathorized')
 
 
 @login_required
@@ -63,7 +63,7 @@ class ServeMedia(API_Resource):
 
     def read(self, request, path, name):
         if request.method != 'GET':
-            return build_error_response(request, 415, 'Method not supported')
+            return build_response(request, 415, 'Method not supported')
 
         dir_path = os.path.join(settings.MEDIA_ROOT, path)
 
@@ -103,7 +103,7 @@ class ServeMedia(API_Resource):
                         break
 
                 if not found:
-                    return build_error_response(request, 404, 'Not found')
+                    return build_response(request, 404, 'Not found')
 
         if dir_path.endswith('bills'):
             user_profile = UserProfile.objects.get(user=request.user)
@@ -112,15 +112,15 @@ class ServeMedia(API_Resource):
             if purchase.organization_owned:
                 user_org = user_profile.organization
                 if not purchase.owner_organization == user_org.name:
-                    return build_error_response(request, 404, 'Not found')
+                    return build_response(request, 404, 'Not found')
             else:
                 if not purchase.customer == request.user:
-                    return build_error_response(request, 404, 'Not found')
+                    return build_response(request, 404, 'Not found')
 
         local_path = os.path.join(dir_path, name)
 
         if not os.path.isfile(local_path):
-            return build_error_response(request, 404, 'Not found')
+            return build_response(request, 404, 'Not found')
 
         if not getattr(settings, 'USE_XSENDFILE', False):
             return serve(request, local_path, document_root='/')
