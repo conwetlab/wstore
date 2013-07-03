@@ -46,6 +46,7 @@
         'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}',
         'PUBLISH_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/publish',
         'BIND_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/bind',
+        'RATING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/rating',
         'SEARCH_ENTRY': '/api/search/${text}',
         'PURCHASE_ENTRY':   '/api/contracting/${ref}'
     }

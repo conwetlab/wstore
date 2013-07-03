@@ -147,7 +147,7 @@
 }
 
 .offering-meta i{
-    font-size: 20px;
+    font-size: 17px;
 }
 
 .details-title {
@@ -174,8 +174,7 @@
 }
 
 .main-info i {
-    font-size: 20px;
-    margin: -4px;
+    font-size: 17px;
 }
 
 .main-info input {
@@ -259,4 +258,18 @@
 .admin-submit {
     margin-top: 10px;
     margin-left: 30px;
+}
+
+.blue-star {
+    color: #3E80AD;
+}
+
+#comment-text {
+    width: 97%;
+    height: 100px;
+}
+
+.comment-rating {
+    display: inline;
+    margin-left: 10px;
 }

@@ -54,7 +54,7 @@
             } else {
                 action = 'Purchase';
             }
-        } else if (offeringElement.getState() == 'purchased') {
+        } else if (offeringElement.getState() == 'purchased' || offeringElement.getState() == 'rated') {
             action = 'Download';
         }
 
@@ -68,6 +68,8 @@
             'updated': offeringElement.getUpdated(),
             'action': action
         }).appendTo(container);
+
+        fillStarsRating(offeringElement.getRating(), $('#details-stars'));
 
         // Load the main info template
         $.template('mainInfoTemplate', $('#main_info_offering_template'));
@@ -85,6 +87,12 @@
             }
             imageDiv.appendTo('.carousel-inner');
         };
+
+        if (offeringElement.getState() != 'uploaded') {
+            paintComments();
+        } else {
+            $('h3:contains(Comments)').addClass('hide');
+        }
 
         // Set listeners
         $('a[href="#int-tab"]').on('shown', function (e) {
@@ -141,8 +149,32 @@
         if (action == 'Download') {
             checkRenovations(offeringElement.getPricing());
         }
+
+        if (offeringElement.getState() == 'purchased') {
+            $('#comment-btn').removeClass('hide').click(function() {
+                paintCommentForm(offeringElement);
+            });
+        }
     };
 
+    var paintComments = function paintComments() {
+        var comments = offElem.getComments();
+
+        for (var i = 0; i < comments.length; i++) {
+            var templ;
+
+            $.template('commentTemplate', $('#comment_template'));
+            templ = $.tmpl('commentTemplate', {
+                'user': comments[i].user,
+                'timestamp': comments[i].timestamp.split(' ')[0],
+                'title': comments[i].title,
+                'comment': comments[i].comment
+            });
+
+            fillStarsRating(comments[i].rating, templ.find('.comment-rating'));
+            templ.appendTo('#comments');
+        }
+    }
     var checkRenovations = function checkRenovations(pricing) {
         var price_plans = pricing.price_plans;
         if (price_plans.length > 0) {

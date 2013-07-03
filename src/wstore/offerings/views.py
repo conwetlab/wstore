@@ -31,7 +31,7 @@ from wstore.models import Offering
 from wstore.models import UserProfile
 from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
-publish_offering, bind_resources, count_offerings, update_offering
+publish_offering, bind_resources, count_offerings, update_offering, comment_offering
 from wstore.offerings.resources_management import register_resource, get_provider_resources
 from django.contrib.sites.models import get_current_site
 
@@ -268,6 +268,29 @@ class BindEntry(Resource):
                 build_response(request, 400, 'Invalid JSON content')
 
         return build_response(request, 200, 'OK')
+
+
+class CommentEntry(Resource):
+
+    @authentication_required
+    @supported_request_mime_types(('application/json', ))
+    def create(self, request, organization, name, version):
+
+        try:
+            offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
+        except:
+            return build_response(request, 404, 'Not found')
+
+        if offering.state != 'published':
+            return build_response(request, 403, 'Forbidden')
+
+        try:
+            data = json.loads(request.raw_post_data)
+            comment_offering(offering, data, request.user)
+        except:
+            return build_response(request, 400, 'Invalid content')
+
+        return build_response(request, 201, 'Created')
 
 
 class NewestCollection(Resource):

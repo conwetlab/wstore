@@ -334,6 +334,8 @@ class OrganizationCollection(Resource):
 
 class OrganizationEntry(Resource):
 
+    @authentication_required
+    @supported_request_mime_types(('application/json',))
     def update(self, request, org):
 
         # Get the organization

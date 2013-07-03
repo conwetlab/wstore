@@ -22,6 +22,25 @@
 
     var nextPage;
 
+    fillStarsRating = function fillStarsRating(rating, container) {
+        // Fill rating stars
+
+        for (var k = 0; k < 5; k ++) {
+            var icon = $('<i></i>');
+
+            if (rating == 0) {
+                icon.addClass('icon-star-empty');
+            } else if (rating > 0 && rating < 1) {
+                icon.addClass('icon-star-half-empty blue-star');
+                rating = 0;
+            } else if (rating >= 1) {
+                icon.addClass('icon-star blue-star');
+                rating = rating - 1;
+            }
+            icon.appendTo(container);
+        }
+    };
+
     getUserOfferings = function getUserOfferings (target, callback, count) {
 
         var filter, offeringsPage;
@@ -63,26 +82,34 @@
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
             var labelClass = "label";
+            var state = offering_elem.getState();
+            var stars, templ;
 
-            if (offering_elem.getState() == 'purchased') {
+            if (state == 'rated') {
+                state = 'purchased';
+            }
+
+            if (state == 'purchased') {
                 labelClass += " label-success";
-            } else if (offering_elem.getState() == 'published') {
+            } else if (state == 'published') {
                 labelClass += " label-info";
-            } else if (offering_elem.getState() == 'deleted') {
+            } else if (state == 'deleted') {
                 labelClass += " label-important";
             }
 
             $.template('miniOfferingTemplate', $('#mini_offering_template'));
-            $.tmpl('miniOfferingTemplate', {
+            templ = $.tmpl('miniOfferingTemplate', {
                 'name': offering_elem.getName(),
                 'organization': offering_elem.getOrganization(),
                 'logo': offering_elem.getLogo(),
-                'state': offering_elem.getState(),
+                'state': state,
                 'rating': offering_elem.getRating(),
                 'description': offering_elem.getShortDescription(),
                 'label_class': labelClass
-            }).appendTo(target).click(paintOfferingDetails.bind(this, offering_elem, paintCatalogue, '#catalogue-container'));
+            }).click(paintOfferingDetails.bind(this, offering_elem, paintCatalogue, '#catalogue-container'));
 
+            fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
+            templ.appendTo(target)
         }
     };
 

@@ -23,6 +23,7 @@ import rdflib
 import re
 import base64
 import os
+from datetime import datetime
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from urlparse import urlparse
@@ -70,7 +71,12 @@ def _get_purchased_offerings(user, db, pagination=None):
     # Load user offerings  to the result
     for offer in user_purchased:
         offer_info = db.wstore_offering.find_one({'_id': ObjectId(offer)})
-        offer_info['state'] = 'purchased'
+
+        if offer in user_profile['rated_offerings']:
+            offer_info['state'] = 'rated'
+        else:
+            offer_info['state'] = 'purchased'
+
         offering = Offering.objects.get(pk=offer)
         try:
             purchase = Purchase.objects.get(offering=offering, customer=user)
@@ -142,8 +148,12 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
                 found = True
 
             if found and filter_ == 'published':
+
                 offer['bill'] = purchase.bill
-                offer['state'] = 'purchased'
+                if not str(offer['_id']) in profile.rated_offerings:
+                    offer['state'] = 'purchased'
+                else:
+                    offer['state'] = 'rated'
 
         # If the offering has been purchased and contains pricing components based on
         # subscriptions the parsed pricing model is replace with the pricing model of the
@@ -178,7 +188,7 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
             else:
                 res_info['type'] = 'Backend resource'
 
-            if offer['state'] == 'purchased':
+            if offer['state'] == 'purchased' or offer['state'] == 'rated':
                 if res.resource_type == 'download':
                     if res.resource_path != '':
                         res_info['link'] = res.resource_path
@@ -232,6 +242,10 @@ def get_offering_info(offering, user):
         state = 'purchased'
         purchase = Purchase.objects.get(offering=offering, owner_organization=user_profile.organization.name)
 
+    if state == 'purchased':
+        if offering.pk in user_profile.rated_offerings:
+            state = 'rated'
+
     # Load offering data
     result = {
         'name': offering.name,
@@ -263,7 +277,7 @@ def get_offering_info(offering, user):
         else:
             res_info['type'] = 'Backend resource'
 
-        if state == 'purchased' and resource.resource_type == 'download':
+        if (state == 'purchased' or state == 'rated') and resource.resource_type == 'download':
             if resource.resource_path != '':
                 res_info['link'] = resource.resource_path
             elif resource.download_link != '':
@@ -275,7 +289,7 @@ def get_offering_info(offering, user):
     parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
     result['offering_description'] = parser.parse()
 
-    if state == 'purchased':
+    if state == 'purchased' or state == 'rated':
         result['bill'] = purchase.bill
 
         # If the offering has been purchased the parsed pricing model is replaced
@@ -559,9 +573,12 @@ def publish_offering(offering, data):
 def delete_offering(offering):
     # If the offering has been purchased it is not deleted
     # it is marked as deleted in order to allow customers that
-    # have purchased the offering to intall it if needed
+    # have purchased the offering to install it if needed
 
     #delete the usdl description from the repository
+    if offering.state == 'deleted':
+        raise Exception('The offering is already deleted')
+
     parsed_url = urlparse(offering.description_url)
     path = parsed_url.path
     host = parsed_url.scheme + '://' + parsed_url.netloc
@@ -630,3 +647,42 @@ def bind_resources(offering, data, provider):
         offering.resources.remove(del_res)
 
     offering.save()
+
+
+def comment_offering(offering, comment, user):
+
+    # Check if the user can comment the offering.
+    if ((not offering.pk in user.userprofile.offerings_purchased) and \
+    (not offering.pk in user.userprofile.organization.offerings_purchased)) or \
+    offering.pk in user.userprofile.rated_offerings:
+        raise Exception('The user cannot comment this offering')
+
+    # Check comment structure
+    if not 'title' in comment or not 'rating' in comment or not 'comment' in comment:
+        raise Exception('Invalid comment')
+
+    # Check rating
+    if comment['rating'] < 0 or comment['rating'] > 5:
+        raise Exception('Invalid rating')
+
+    # Add the comment
+    offering.comments.insert(0, {
+        'user': user.username,
+        'timestamp': str(datetime.now()),
+        'title': comment['title'],
+        'comment': comment['comment'],
+        'rating': comment['rating']
+    })
+
+    # Calculate new offering rate
+    old_rate = offering.rating
+
+    if old_rate == 0:
+        offering.rating = comment['rating']
+    else:
+        offering.rating = ((old_rate*(len(offering.comments) - 1)) + comment['rating']) / len(offering.comments)
+
+    offering.save()
+
+    user.userprofile.rated_offerings.append(offering.pk)
+    user.userprofile.save()

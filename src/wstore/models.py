@@ -56,6 +56,7 @@ class UserProfile(models.Model):
     roles = ListField()
     offerings_purchased = ListField()
     offerings_provided = ListField()
+    rated_offerings = ListField()
     tax_address = DictField()
     complete_name = models.CharField(max_length=100)
     payment_info = DictField()
