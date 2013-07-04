@@ -225,7 +225,7 @@
         $.tmpl('userTemplate').appendTo("#admin-container"); // Render and append the template
 
         for (var i = 0; i < orgs.length; i++) {
-            $('<option></option>').val(orgs[i]).text(orgs[i]).appendTo('#organization');
+            $('<option></option>').val(orgs[i].name).text(orgs[i].name).appendTo('#organization');
         }
 
         if (user) {
