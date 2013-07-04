@@ -68,5 +68,16 @@ def create_user_profile(sender, instance, created, **kwargs):
         default_organization = Organization.objects.get_or_create(name='default')
         profile, created = UserProfile.objects.get_or_create(user=instance, roles=['customer'], organization=default_organization[0])
 
+
+def create_context(sender, instance, created, **kwargs):
+
+    if created:
+        Context.objects.get_or_create(site=instance)
+
+
 #Creates a new user profile when an user is created
 post_save.connect(create_user_profile, sender=User)
+
+
+# Creates a context when the site is created
+post_save.connect(create_context, sender=Site)
