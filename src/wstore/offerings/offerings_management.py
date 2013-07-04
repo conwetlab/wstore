@@ -128,6 +128,8 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
     for offer in prov_offerings:
         offer['owner_admin_user_id'] = User.objects.get(pk=offer['owner_admin_user_id']).username
         offer['_id'] = str(offer['_id'])
+        offer['creation_date'] = str(offer['creation_date'])
+        offer['publication_date'] = str(offer['publication_date'])
         parser = USDLParser(json.dumps(offer['offering_description']), 'application/json')
         offer['offering_description'] = parser.parse()
         resource_content = []
@@ -259,6 +261,8 @@ def get_offering_info(offering, user):
         'tags': offering.tags,
         'image_url': offering.image_url,
         'related_images': offering.related_images,
+        'creation_date': str(offering.creation_date),
+        'publication_date': str(offering.publication_date),
         'resources': []
     }
 
@@ -446,7 +450,8 @@ def create_offering(provider, profile, json_data):
         image_url=data['image_url'],
         related_images=data['related_images'],
         offering_description=json.loads(data['offering_description']),
-        notification_url=notification_url
+        notification_url=notification_url,
+        creation_date=datetime.now()
     )
 
     # Load offering document to the search index
@@ -567,6 +572,7 @@ def publish_offering(offering, data):
         offering.marketplaces.append(m.pk)
 
     offering.state = 'published'
+    offering.publication_date = datetime.now()
     offering.save()
 
 
