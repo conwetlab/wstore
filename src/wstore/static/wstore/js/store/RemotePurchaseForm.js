@@ -33,7 +33,6 @@
         $('#main-action').remove();
         $('h2:contains(Advanced operations)').remove();
         $('#advanced-op').remove();
-        $('h2:contains(Comments)').remove();
         $('#back').remove();
 
         // Display purchase form
