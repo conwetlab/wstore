@@ -40,7 +40,7 @@ from wstore.models import Repository
 from wstore.models import Offering
 from wstore.models import Marketplace
 from wstore.models import Purchase
-from wstore.models import UserProfile
+from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser
 
 
@@ -620,6 +620,30 @@ def delete_offering(offering):
 
         offering.state = 'deleted'
         offering.save()
+
+        context = Context.objects.all()[0]
+        # Check if the offering is in the newest list
+        if offering.pk in context.newest:
+            # Remove the offering from the newest list
+            newest = context.newest
+            newest.remove(offering.pk)
+
+            # Update newest list, If the newest list length is different from 3
+            # means that there were less than 4 offerings in the list, so, there are not
+            # offerings published to replace the deleted one.
+
+            if len(newest) == 3:
+                # Get the 4 newest offerings using the publication date for sorting
+                connection = MongoClient()
+                db = connection[settings.DATABASES['default']['NAME']]
+                offerings = db.wstore_offering
+                newest_off = offerings.find({'state': 'published'}).sort('publication_date', -1).limit(4)
+
+                if newest_off.count() >= 4:
+                    newest.append(str(newest_off[3]['_id']))
+
+            context.newest = newest
+            context.save()
 
 
 def bind_resources(offering, data, provider):
