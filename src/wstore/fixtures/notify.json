@@ -57,7 +57,9 @@
             "resources": ["61000bba8e05ac2116f022f9"],
             "owner_organization": "test_organization",
             "notification_url": "http://notificationurl.com",
-            "offering_description": {}
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
         }
     },
     {

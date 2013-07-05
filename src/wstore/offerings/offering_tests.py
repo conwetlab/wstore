@@ -63,7 +63,10 @@ class FakeRepositoryAdaptor():
         path = os.path.join(settings.BASEDIR, 'wstore/test/')
         f = open(os.path.join(path, 'test_usdl.rdf'), 'rb')
         # Return the content
-        return f.read()
+        return {
+            'content_type': 'application/rdf+xml',
+            'data': f.read()
+        }
 
 
 class FakeMarketAdaptor():
@@ -274,10 +277,7 @@ class OfferingCreationTestCase(TestCase):
                 'data': self._image,
             },
             'related_images': [],
-            'description_url': {
-                'content_type': 'application/rdf+xml',
-                'link': 'http://examplerep/v1/test_usdl'
-            }
+            'description_url': 'http://examplerep/v1/test_usdl'
         }
 
         user = User.objects.get(username='test_user')
@@ -473,10 +473,7 @@ class OfferingUpdateTestCase(TestCase):
     def test_offering_update_from_url(self):
 
         data = {
-            'description_url': {
-                'content_type': 'application/rdf+xml',
-                'link': "http://examplerep/v1/test_usdl"
-            }
+            'description_url':  "http://examplerep/v1/test_usdl"
         }
         offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
 
