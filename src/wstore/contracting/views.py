@@ -228,6 +228,7 @@ class PurchaseCollection(Resource):
         if token in context.user_refs:
             redirect_uri = context.user_refs[token]['redirect_uri']
             del(context.user_refs[token])
+            context.save()
             response['client_redirection_uri'] = redirect_uri
 
         return HttpResponse(json.dumps(response), status=status, mimetype=content_type)
