@@ -46,7 +46,7 @@ from wstore.charging_engine.models import Unit
 from wstore.charging_engine.price_resolver import resolve_price
 from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.contracting.purchase_rollback import rollback
-from wstore.rss_adaptor.rssAdaptor import RSSAdaptor
+from wstore.rss_adaptor.rssAdaptor import RSSAdaptorThread
 from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
 
 
@@ -340,11 +340,8 @@ class ChargingEngine:
                 })
 
         # Send the created CDRs to the Revenue Sharing System
-        try:
-            rss_adaptor = RSSAdaptor(rss.host)
-            rss_adaptor.send_cdr(cdrs)
-        except:
-            pass
+        r = RSSAdaptorThread(rss.host, cdrs)
+        r.start()
 
     def _generate_invoice(self, price, applied_parts, type_):
 
