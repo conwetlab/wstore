@@ -1465,18 +1465,22 @@ class ChargingDaemonTestCase(TestCase):
         self.assertEqual(len(contract.applied_sdrs), 0)
 
 
-class AdaptorWrapper():
+class AdaptorWrapperThread():
 
     _context = None
+    _url = None
+    _cdr = None
 
     def __init__(self, context):
         self._context = context
 
-    def __call__(self, url):
+    def __call__(self, url, cdr):
+        self._url = url
+        self._cdr = cdr
         return self
 
-    def send_cdr(self, cdr):
-        self._context._cdrs = cdr
+    def start(self):
+        self._context._cdrs = self._cdr
 
 
 class CDRGeranationTestCase(TestCase):
@@ -1487,7 +1491,7 @@ class CDRGeranationTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.RSSAdaptor = AdaptorWrapper(cls)
+        charging_engine.RSSAdaptorThread = AdaptorWrapperThread(cls)
         charging_engine.get_country_code = lambda x: '1'
         charging_engine.get_curency_code = lambda x: '1'
         super(CDRGeranationTestCase, cls).setUpClass()
