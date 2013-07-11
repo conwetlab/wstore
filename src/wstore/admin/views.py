@@ -28,6 +28,7 @@ authentication_required
 from wstore.store_commons.resource import Resource
 from wstore.models import UserProfile
 from wstore.models import Organization
+from wstore.models import Purchase
 
 
 def is_hidden_credit_card(number, profile_card):
@@ -259,6 +260,24 @@ class UserProfileEntry(Resource):
     @authentication_required
     def delete(self, request, username):
         pass
+
+
+@authentication_required
+def reset_user(request, username):
+
+    user = User.objects.get(username=username)
+    user.userprofile.offerings_purchased = []
+    user.userprofile.save()
+
+    purchases = Purchase.objects.filter(customer=user)
+    for p in purchases:
+        try:
+            p.contract.delete()
+        except:
+            pass
+        p.delete()
+
+    return build_response(request, 200, 'OK')
 
 
 class OrganizationCollection(Resource):
