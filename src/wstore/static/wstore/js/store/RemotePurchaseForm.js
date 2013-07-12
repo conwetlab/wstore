@@ -62,7 +62,6 @@
             evnt.stopPropagation();
             evnt.preventDefault();
             $('#message-container').empty();
-            $('#back').remove();
         });
     }
 
