@@ -20,6 +20,25 @@
 
 (function() {
 
+    fillStarsRating = function fillStarsRating(rating, container) {
+        // Fill rating stars
+
+        for (var k = 0; k < 5; k ++) {
+            var icon = $('<i></i>');
+
+            if (rating == 0) {
+                icon.addClass('icon-star-empty');
+            } else if (rating > 0 && rating < 1) {
+                icon.addClass('icon-star-half-empty blue-star');
+                rating = 0;
+            } else if (rating >= 1) {
+                icon.addClass('icon-star blue-star');
+                rating = rating - 1;
+            }
+            icon.appendTo(container);
+        }
+    };
+
     var displayPurchaseInfo = function displayPurchaseInfo() {
         var offeringElement;
 
