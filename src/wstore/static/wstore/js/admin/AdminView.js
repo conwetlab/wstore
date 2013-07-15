@@ -178,6 +178,10 @@
             userInfoRequest();
         });
 
+        $('.show-units').click(function() {
+           unitsInfoRequest();
+        });
+
         $('.add-market').click(function() {
             main = true;
             paintForm('MARKET_COLLECTION', 'Marketplace');
@@ -199,6 +203,10 @@
 
         $('.add-prof').click(function() {
             paintUserForm();
+        });
+
+        $('.add-unit').click(function() {
+            paintUnitForm();
         });
     };
 

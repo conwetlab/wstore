@@ -29,6 +29,7 @@ from wstore.store_commons.resource import Resource
 from wstore.models import UserProfile
 from wstore.models import Organization
 from wstore.models import Purchase
+from wstore.charging_engine.models import Unit
 
 
 def is_hidden_credit_card(number, profile_card):
@@ -406,3 +407,50 @@ class OrganizationEntry(Resource):
             return build_response(request, 400, 'Invalid Content')
 
         return build_response(request, 200, 'OK')
+
+
+class UnitCollection(Resource):
+
+    @authentication_required
+    def read(self, request):
+
+        response = []
+        for unit in Unit.objects.all():
+            response.append({
+                'name': unit.name,
+                'defined_model': unit.defined_model
+            })
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json;charset=UTF-8')
+
+    @authentication_required
+    @supported_request_mime_types(('application/json',))
+    def create(self, request):
+
+        # The that the user is an admin
+        if not request.user.is_staff:
+            return build_response(request, 403, 'Forbidden')
+
+        try:
+            unit_data = json.loads(request.raw_post_data)
+        except:
+            return build_response(request, 400, 'Invalid JSON content')
+
+        # Check the content of the request
+        if not 'name' in unit_data or not 'defined_model' in unit_data:
+            return build_response(request, 400, 'Missing required field')
+
+        # Check that the new unit does not exist
+        u = Unit.objects.filter(name=unit_data['name'])
+        if len(u) > 0:
+            return build_response(request, 400, 'The unit already exists')
+
+        # Check the pricing model defined
+        if unit_data['defined_model'].lower() != 'single payment' and \
+        unit_data['defined_model'].lower() != 'subscription' and \
+        unit_data['defined_model'].lower() != 'pay per use':
+            return build_response(request, 400, 'Invalid pricing model')
+
+        Unit.objects.create(name=unit_data['name'], defined_model=unit_data['defined_model'].lower())
+
+        return build_response(request, 201, 'Created')

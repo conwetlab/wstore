@@ -33,7 +33,8 @@
         'OFFERING_COLLECTION': '/api/offering/offerings',
         'PURCHASE_COLLECTION': '/api/contracting',
         'NEWEST_COLLECTION': '/api/offering/offerings/newest',
-        'TOPRATED_COLLECTION': '/api/offering/offerings/newest' // It points to the newest list since rating is not implemented
+        'TOPRATED_COLLECTION': '/api/offering/offerings/newest', // It points to the newest list since rating is not implemented
+        'UNIT_COLLECTION': '/api/administration/units'
     };
 
     // Contains endpoints that depend on variables
