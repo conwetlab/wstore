@@ -262,7 +262,6 @@ class UserProfileEntry(Resource):
         pass
 
 
-@authentication_required
 def reset_user(request, username):
 
     user = User.objects.get(username=username)
