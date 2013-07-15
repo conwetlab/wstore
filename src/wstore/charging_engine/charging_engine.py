@@ -457,7 +457,7 @@ class ChargingEngine:
             invoice_name += '_1'
 
         # Compile the bill file
-        subprocess.call(['/usr/bin/wkhtmltopdf', bill_path, in_name])
+        subprocess.call([settings.BASEDIR + '/create_invoice.sh', bill_path, in_name])
 
         # Remove temporal files
         for file_ in os.listdir(settings.BILL_ROOT):
