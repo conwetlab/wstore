@@ -416,10 +416,15 @@ class UnitCollection(Resource):
 
         response = []
         for unit in Unit.objects.all():
-            response.append({
+            u = {
                 'name': unit.name,
                 'defined_model': unit.defined_model
-            })
+            }
+
+            if unit.defined_model == 'subscription':
+                u['renovation_period'] = unit.renovation_period
+
+            response.append(u)
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json;charset=UTF-8')
 
@@ -451,6 +456,20 @@ class UnitCollection(Resource):
         unit_data['defined_model'].lower() != 'pay per use':
             return build_response(request, 400, 'Invalid pricing model')
 
-        Unit.objects.create(name=unit_data['name'], defined_model=unit_data['defined_model'].lower())
+        # Check the renovation period
+        if unit_data['defined_model'].lower() == 'subscription' and \
+        not 'renovation_period' in unit_data:
+            return build_response(request, 400, 'Missing renovation period')
+
+        # Create the unit
+        if 'renovation_period' in unit_data:
+            Unit.objects.create(
+                name=unit_data['name'],
+                defined_model=unit_data['defined_model'].lower(),
+                renovation_period=unit_data['renovation_period'])
+        else:
+            Unit.objects.create(
+                name=unit_data['name'],
+                defined_model=unit_data['defined_model'].lower())
 
         return build_response(request, 201, 'Created')

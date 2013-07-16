@@ -4,9 +4,39 @@
 
     var makeCreateUnitRequest = function makeCreateUnitRequest() {
         var csrfToken = $.cookie('csrftoken');
-        var name = $.trim($('#unit-name').val());
+        var request, msg, error = false;
 
-        if (name != '') {
+        var name = $.trim($('#unit-name').val());
+        var model = $('#defined-model').val();
+
+        // Check unit name
+        if (name == '') {
+            error = true;
+            msg = "Name field is required";
+        }
+
+        // Check renovation period
+        if (model == 'subscription') {
+            if ($.trim($('#ren-period').val()) == ''){
+                error = true;
+                msg = 'The reovation period is required';
+            }
+        }
+
+        // Id the form is correctly filled make the request
+        if (!error) {
+
+            // Load data
+            request = {
+                'name': name,
+                'defined_model': model
+            };
+
+            // Add the renovation period if needed
+            if (model == 'subscription') {
+                request.renovation_period = $.trim($('#ren-period').val());
+            }
+
             $.ajax({
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -15,10 +45,7 @@
                 url: EndpointManager.getEndpoint('UNIT_COLLECTION'),
                 dataType: 'json',
                 contentType: 'application/json',
-                data: JSON.stringify({
-                    'name': name,
-                    'defined_model': $('#defined-model').val()
-                }),
+                data: JSON.stringify(request),
                 success: function (response) {
                     unitsInfoRequest();
                 },
@@ -29,7 +56,7 @@
                 }
             })
         } else {
-            MessageManager.showMessage('Error', 'Name field is required');
+            MessageManager.showMessage('Error', msg);
         }
     };
 
@@ -45,6 +72,17 @@
                 paintElementTable();
             } else {
                 unitsInfoRequest();
+            }
+        });
+
+        // Listener for renovation period
+        $('#defined-model').change(function() {
+            if ($(this).val() == 'subscription') {
+                $('#ren-period').removeClass('hide');
+                $('label:contains(Renovation Period)').removeClass('hide');
+            } else {
+                $('#ren-period').addClass('hide');
+                $('label:contains(Renovation Period)').addClass('hide');
             }
         });
 

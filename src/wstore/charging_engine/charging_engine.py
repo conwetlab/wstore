@@ -520,20 +520,13 @@ class ChargingEngine:
 
     def _calculate_renovation_date(self, unit):
 
-        renovation_date = None
+        unit_model = Unit.objects.get(name=unit)
 
         now = datetime.now()
         # Transform now date into seconds
         now = time.mktime(now.timetuple())
 
-        if unit.lower() == 'per week':
-            renovation_date = now + 604800  # 7 days
-        elif unit.lower() == 'per month':
-            renovation_date = now + 2592000  # 30 days
-        elif unit.lower() == 'per year':
-            renovation_date = now + 31536000  # 365 days
-        else:
-            raise Exception('Invalid unit')
+        renovation_date = now + (unit_model.renovation_period * 86400)  # Seconds in a day
 
         renovation_date = datetime.fromtimestamp(renovation_date)
         return renovation_date

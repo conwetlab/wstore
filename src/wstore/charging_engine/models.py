@@ -48,3 +48,5 @@ class Unit(models.Model):
     name = models.CharField(max_length=50)
     # Type of price model defined by the unit
     defined_model = models.CharField(max_length=50)
+    # Period of time defined by the unit for subscription models
+    renovation_period = models.IntegerField(null=True, blank=True)
