@@ -175,7 +175,7 @@ class PurchaseCollection(Resource):
                 if 'credit_card' in data['payment']:
                     payment_info['credit_card'] = data['payment']['credit_card']
 
-                response_info = create_purchase(user, offering, data['organization_owned'], payment_info)
+                response_info = create_purchase(user, offering, data.get('organization_owned', False), payment_info)
             except:
                 # Check if the offering has been paid before the exception has been raised
                 paid = False
