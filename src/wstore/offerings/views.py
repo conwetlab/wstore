@@ -307,3 +307,19 @@ class NewestCollection(Resource):
             response.append(get_offering_info(offering, request.user))
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
+
+
+class TopRatedCollection(Resource):
+
+    @authentication_required
+    def read(self, request):
+
+        site = get_current_site(request)
+        context = Context.objects.get(site=site)
+
+        response = []
+        for off in context.top_rated:
+            offering = Offering.objects.get(pk=off)
+            response.append(get_offering_info(offering, request.user))
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json;charset=UTF-8')

@@ -533,23 +533,41 @@ def delete_offering(offering):
         if offering.pk in context.newest:
             # Remove the offering from the newest list
             newest = context.newest
-            newest.remove(offering.pk)
 
-            # Update newest list, If the newest list length is different from 3
-            # means that there were less than 4 offerings in the list, so, there are not
-            # offerings published to replace the deleted one.
-
-            if len(newest) == 3:
+            if len(newest) < 4:
+                newest.remove(offering.pk)
+            else:
                 # Get the 4 newest offerings using the publication date for sorting
                 connection = MongoClient()
                 db = connection[settings.DATABASES['default']['NAME']]
                 offerings = db.wstore_offering
                 newest_off = offerings.find({'state': 'published'}).sort('publication_date', -1).limit(4)
 
-                if newest_off.count() >= 4:
-                    newest.append(str(newest_off[3]['_id']))
+                newest = []
+                for n in newest_off:
+                    newest.append(str(n['_id']))
 
             context.newest = newest
+            context.save()
+
+        # Check if the offering is in the top rated list
+        if offering.pk in context.top_rated:
+            # Remove the offering from the top rated list
+            top_rated = context.top_rated
+            if len(top_rated) < 4:
+                top_rated.remove(offering.pk)
+            else:
+                # Get the 4 top rated offerings
+                connection = MongoClient()
+                db = connection[settings.DATABASES['default']['NAME']]
+                offerings = db.wstore_offering
+                top_off = offerings.find({'state': 'published', 'rating': {'$gt': 0}}).sort('rating', -1).limit(4)
+
+                top_rated = []
+                for t in top_off:
+                    top_rated.append(str(t['_id']))
+
+            context.top_rated = top_rated
             context.save()
 
 
@@ -623,3 +641,34 @@ def comment_offering(offering, comment, user):
 
     user.userprofile.rated_offerings.append(offering.pk)
     user.userprofile.save()
+
+    # Check the top rated structure
+    context = Context.objects.all()[0]
+
+    top_rated = context.top_rated
+
+    # If there is a place append the offering
+    if len(top_rated) < 4:
+        top_rated.append(offering.pk)
+        context.top_rated = sorted(top_rated, key=lambda off: Offering.objects.get(pk=off).rating, reverse=True)
+        context.save()
+    else:
+
+        pos = None
+        i = 0
+        found = False
+
+        # Check if the new rating is bigger than any top rated
+        while i < len(top_rated) and not found:
+            if Offering.objects.get(pk=top_rated[i]).rating < offering.rating:
+                pos = i
+                found = True
+            else:
+                i += 1
+
+        # If the new rating is a top rating append the offering
+        if pos != None:
+            top_rated.insert(pos, offering.pk)
+            top_rated.remove(top_rated[-1])
+            context.top_rated = top_rated
+            context.save()
