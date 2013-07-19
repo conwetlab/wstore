@@ -81,7 +81,11 @@
             'msg': msg
         }).appendTo('#message-container');
 
-        $('#btn-yes').click(handler);
+        $('#btn-yes').click(function() {
+            $('#message').modal('hide');
+            handler();
+        });
+
         $('#btn-no').click(function  () {
             $('#message').modal('hide');
         });
