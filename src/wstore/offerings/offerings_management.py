@@ -573,6 +573,10 @@ def delete_offering(offering):
 
 def bind_resources(offering, data, provider):
 
+    # Check that the offering supports binding
+    if offering.state != 'uploaded':
+        raise Exception('This offering cannot be modified')
+
     added_resources = []
     offering_resources = []
     for of_res in offering.resources:
