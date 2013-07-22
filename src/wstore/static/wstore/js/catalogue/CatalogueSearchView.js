@@ -41,7 +41,7 @@
         }
     };
 
-    getUserOfferings = function getUserOfferings (target, callback, count) {
+    getUserOfferings = function getUserOfferings (target, callback, endpoint, count) {
 
         var filter, offeringsPage;
 
@@ -62,7 +62,7 @@
         }
         $.ajax({
             type: "GET",
-            url: EndpointManager.getEndpoint('OFFERING_COLLECTION') + filter,
+            url: endpoint + filter,
             dataType: 'json',
             success: function(response) {
                 callback(target, response);

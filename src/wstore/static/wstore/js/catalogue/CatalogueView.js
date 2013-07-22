@@ -24,14 +24,29 @@
     var currentPage = 1;
     var numberOfPages = 1;
 
+    var searchParams = {
+        'keyword': '',
+        'searching': false
+    };
+
     var getNextUserOfferings = function getNextUserOfferings (nextPage) {
+        var endpoint;
+
         // Set the pagination values in catalogue search view
         setNextPage(nextPage);
         // refresh pagination element
         refreshPagination(nextPage);
         currentPage = nextPage;
+
         // make get offerings request
-        getUserOfferings(currentTab, paintProvidedOfferings);
+        // Calculate the endpoint of the request
+        if (searchParams.searching) {
+            endpoint = EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': searchParams.keyword});
+        } else {
+            endpoint = EndpointManager.getEndpoint('OFFERING_COLLECTION')
+        }
+
+        getUserOfferings(currentTab, paintProvidedOfferings, endpoint);
     };
 
     var refreshPagination = function refreshPagination (nextPage) {
@@ -150,9 +165,22 @@
         getNextUserOfferings(1);
     };
 
-    var changeTab = function changeTab (tab) {
+    var changeTab = function changeTab (tab, changeMode) {
+        var endpoint;
+
         currentTab = tab;
-        getUserOfferings(tab, setPaginationParams, true);
+
+        if (changeMode) {
+            searchParams.keyword = '';
+            searchParams.searching = false;
+        }
+
+        if (searchParams.searching) {
+            endpoint = EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': searchParams.keyword})
+        } else {
+            endpoint = EndpointManager.getEndpoint('OFFERING_COLLECTION')
+        }
+        getUserOfferings(tab, setPaginationParams, endpoint, true);
     };
 
     paintCatalogue = function paintCatalogue() {
@@ -176,11 +204,24 @@
 
         // Load data into the tabs on show
         $('a[data-toggle="tab"]').on('shown', function (e) {
-            changeTab(e.target.hash);
+            changeTab(e.target.hash, true);
         });
 
         $('#number-offerings').change(function() {
             changeTab(currentTab);
+        });
+
+        $('#cat-search').click(function() {
+            var keyword = $.trim($('#cat-search-input').val());
+            if (keyword != ''){
+                searchParams.keyword = keyword;
+                searchParams.searching = true;
+                changeTab(currentTab);
+            }
+        });
+
+        $('#cat-all').click(function() {
+            changeTab(currentTab, true);
         });
 
         changeTab('#purchased-tab');
