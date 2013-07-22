@@ -41,13 +41,34 @@ class SearchEntry(Resource):
         search_engine = SearchEngine(index_path)
 
         filter_ = request.GET.get('filter', None)
+        action = request.GET.get('action', None)
+        start = request.GET.get('start', None)
+        limit = request.GET.get('limit', None)
 
         # Check the filter value
         if filter_ and filter_ != 'published' and filter_ != 'provided' and filter_ != 'purchased':
             return build_response(request, 400, 'Invalid filter')
 
+        count = False
+        pagination = None
+        # Check if the action is count
+        if action != None:
+            if action == 'count':
+                count = True
+            else:
+                return build_response(request, 400, 'Invalid action')
+        else:
+            # Check pagination params (Only when action is none)
+            if start != None and limit != None:
+                pagination = {
+                    'start': int(start),
+                    'limit': int(limit)
+                }
+            elif (start != None and limit == None) or (start == None and limit != None):
+                return build_response(request, 400, 'Missing pagination param')
+
         if not filter_:
-            response = search_engine.full_text_search(request.user, text)
+            response = search_engine.full_text_search(request.user, text, count=count, pagination=pagination)
 
         elif filter_ == 'provided':
 
@@ -58,9 +79,9 @@ class SearchEntry(Resource):
 
                 return build_response(request, 400, 'Invalid state')
 
-            response = search_engine.full_text_search(request.user, text, state=state)
+            response = search_engine.full_text_search(request.user, text, state=state, count=count, pagination=pagination)
 
         elif filter_ == 'purchased':
-            response = search_engine.full_text_search(request.user, text, state='purchased')
+            response = search_engine.full_text_search(request.user, text, state='purchased', count=count, pagination=pagination)
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
