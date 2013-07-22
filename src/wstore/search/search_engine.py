@@ -53,7 +53,7 @@ class SearchEngine():
     def create_index(self, offering):
 
         # initialize java VM for lucene
-        lucene.initVM()
+        lucene.getVMEnv().attachCurrentThread()
 
         # Check if the index already exists to avoid overwrite it
         create = False
@@ -91,7 +91,7 @@ class SearchEngine():
             raise Exception('The index not exist')
 
         # Get the index reader
-        lucene.initVM()
+        lucene.getVMEnv().attachCurrentThread()
         index = SimpleFSDirectory(File(self._index_path))
         analyzer = StandardAnalyzer(Version.LUCENE_CURRENT)
         lucene_searcher = IndexSearcher(index)

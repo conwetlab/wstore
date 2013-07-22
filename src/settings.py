@@ -205,3 +205,7 @@ from django.contrib.sites.management import create_default_site
 from django.contrib.sites import models as site_app
 
 signals.post_syncdb.disconnect(create_default_site, site_app)
+
+import lucene
+
+lucene.initVM(lucene.CLASSPATH)
