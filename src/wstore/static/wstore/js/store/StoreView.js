@@ -39,30 +39,10 @@
         }
     };
 
-    searchOfferings = function searchOfferings () {
-        var text = $('#text-search').val();
-
-        if (text != '') {
-            $.ajax({
-                type: "GET",
-                url: EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': text}),
-                dataType: 'json',
-                success: function(response) {
-                    paintSearchView(response);
-                },
-                error: function(xhr) {
-                    var resp = xhr.responseText;
-                    var msg = JSON.parse(resp).message;
-                    MessageManager.showMessage('Error', msg);
-                }
-            });
-        }
-    };
-
     getOfferings = function getOfferings(endpoint, container, callback) {
          $.ajax({
             type: "GET",
-            url: EndpointManager.getEndpoint(endpoint),
+            url: endpoint,
             dataType: 'json',
             success: function(response) {
                 if (callback) {
@@ -128,14 +108,18 @@
         $.template('homePageTemplate', $('#home_page_template'));
         $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
 
-        // Set search listeners
-        $('#search').click(searchOfferings);
+        $('#search').click(function() {
+            if ($.trim($('#text-search').val()) != '') {
+                initSearchView('SEARCH_ENTRY');
+            }
+        });
         $('#all').click(function() {
-            getOfferings('OFFERING_COLLECTION', '', paintSearchView);
+            initSearchView('OFFERING_COLLECTION');
         })
+
         // Get initial offerings
-        getOfferings('NEWEST_COLLECTION', $('#newest-container'));
-        getOfferings('TOPRATED_COLLECTION', $('#top-rated-container'));
+        getOfferings(EndpointManager.getEndpoint('NEWEST_COLLECTION'), $('#newest-container'));
+        getOfferings(EndpointManager.getEndpoint('TOPRATED_COLLECTION'), $('#top-rated-container'));
     };
 
     $(document).ready(paintHomePage);
