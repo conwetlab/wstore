@@ -74,7 +74,13 @@ class OfferingCollection(Resource):
         # Read the query string in order to know the filter and the page
         filter_ = request.GET.get('filter', 'published')
         user = User.objects.get(username=request.user)
-        action = request.GET.get('action', 'none')
+        action = request.GET.get('action', None)
+        sort = request.GET.get('sort', None)
+
+        # Check sorting values
+        if sort != None:
+            if sort != 'date' and sort != 'rating' and sort != 'name':
+                return build_response(request, 400, 'Invalid sorting')
 
         pagination = {
             'skip': request.GET.get('start', None),
@@ -84,22 +90,22 @@ class OfferingCollection(Resource):
         if action != 'count':
             if pagination['skip'] and pagination['limit']:
                 if filter_ == 'provided':
-                    result = get_offerings(user, request.GET.get('state'), owned=True, pagination=pagination)
+                    result = get_offerings(user, request.GET.get('state'), owned=True, pagination=pagination, sort=sort)
 
                 elif filter_ == 'published':
-                    result = get_offerings(user, pagination=pagination)
+                    result = get_offerings(user, pagination=pagination, sort=sort)
 
                 elif filter_ == 'purchased':
-                    result = get_offerings(user, 'purchased', owned=True, pagination=pagination)
+                    result = get_offerings(user, 'purchased', owned=True, pagination=pagination, sort=sort)
             else:
                 if filter_ == 'provided':
-                    result = get_offerings(user, request.GET.get('state'), owned=True)
+                    result = get_offerings(user, request.GET.get('state'), owned=True, sort=sort)
 
                 elif filter_ == 'published':
-                    result = get_offerings(user)
+                    result = get_offerings(user, sort=sort)
 
                 elif filter_ == 'purchased':
-                    result = get_offerings(user, 'purchased', owned=True)
+                    result = get_offerings(user, 'purchased', owned=True, sort=sort)
 
         else:
             if filter_ == 'provided':

@@ -132,7 +132,7 @@ def get_offering_info(offering, user):
     return result
 
 
-def _get_purchased_offerings(user, db, pagination=None):
+def _get_purchased_offerings(user, db, pagination=None, sort=None):
 
     # Get the user profile purchased offerings
     user_profile = db.wstore_userprofile.find_one({'user_id': ObjectId(user.pk)})
@@ -147,6 +147,17 @@ def _get_purchased_offerings(user, db, pagination=None):
         if not offer in user_purchased:
             user_purchased.append(offer)
 
+    # Check sorting
+
+    if sort == 'creation_date':
+        user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).creation_date, reverse=True)
+    elif sort == 'publication_date':
+        user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).publication_date, reverse=True)
+    elif sort == 'name':
+        user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).name)
+    elif sort == 'rating':
+        user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).rating, reverse=True)
+
     # If pagination has been defined take the offerings corresponding to the page
     if pagination:
         skip = int(pagination['skip']) - 1
@@ -159,10 +170,22 @@ def _get_purchased_offerings(user, db, pagination=None):
 
 
 # Gets a set of offerings depending on filter value
-def get_offerings(user, filter_='published', owned=False, pagination=None):
+def get_offerings(user, filter_='published', owned=False, pagination=None, sort=None):
 
     if pagination and (not int(pagination['skip']) > 0 or not int(pagination['limit']) > 0):
         raise Exception('Invalid pagination limits')
+
+    # Set sorting values
+    order = -1
+    if sort == None or sort == 'date':
+        if not owned and  filter_ == 'published':
+            sorting = 'publication_date'
+        else:
+            sorting = 'creation_date'
+    else:
+        sorting = sort
+        if sorting == 'name':
+            order = 1
 
     # Get all the offerings owned by the provider using raw mongodb access
     connection = MongoClient()
@@ -171,21 +194,21 @@ def get_offerings(user, filter_='published', owned=False, pagination=None):
     # Pagination: define the first element and the number of elements
     if owned:
         if  filter_ == 'uploaded':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'}).sort('_id', 1)
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'}).sort(sorting, order)
         elif filter_ == 'all':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id)}).sort('_id', 1)
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id)}).sort(sorting, order)
         elif  filter_ == 'published':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'published'}).sort('_id', 1)
+            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'published'}).sort(sorting, order)
         elif filter_ == 'purchased':
             if pagination:
-                prov_offerings = _get_purchased_offerings(user, db, pagination)
+                prov_offerings = _get_purchased_offerings(user, db, pagination, sort=sorting)
                 pagination = None
             else:
-                prov_offerings = _get_purchased_offerings(user, db)
+                prov_offerings = _get_purchased_offerings(user, db, sort=sorting)
 
     else:
         if  filter_ == 'published':
-            prov_offerings = offerings.find({'state': 'published'}).sort('_id', 1)
+            prov_offerings = offerings.find({'state': 'published'}).sort(sorting, order)
 
     if pagination:
         prov_offerings = prov_offerings.skip(int(pagination['skip']) - 1).limit(int(pagination['limit']))

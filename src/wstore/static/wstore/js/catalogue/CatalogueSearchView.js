@@ -59,6 +59,10 @@
             filter += '&limit=' + offeringsPage;
             // Set the first element
             filter += '&start=' + ((offeringsPage * (nextPage - 1)) + 1);
+
+            if ($('#sorting').val() != '') {
+                filter += '&sort=' + $('#sorting').val();
+            }
         }
         $.ajax({
             type: "GET",

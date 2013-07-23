@@ -44,6 +44,7 @@ class SearchEntry(Resource):
         action = request.GET.get('action', None)
         start = request.GET.get('start', None)
         limit = request.GET.get('limit', None)
+        sort = request.GET.get('sort', None)
 
         # Check the filter value
         if filter_ and filter_ != 'published' and filter_ != 'provided' and filter_ != 'purchased':
@@ -67,8 +68,13 @@ class SearchEntry(Resource):
             elif (start != None and limit == None) or (start == None and limit != None):
                 return build_response(request, 400, 'Missing pagination param')
 
+            # Check sorting values
+            if sort != None:
+                if sort != 'date' and sort != 'rating' and sort != 'name':
+                    return build_response(request, 400, 'Invalid sorting')
+
         if not filter_:
-            response = search_engine.full_text_search(request.user, text, count=count, pagination=pagination)
+            response = search_engine.full_text_search(request.user, text, count=count, pagination=pagination, sort=sort)
 
         elif filter_ == 'provided':
 
@@ -79,9 +85,9 @@ class SearchEntry(Resource):
 
                 return build_response(request, 400, 'Invalid state')
 
-            response = search_engine.full_text_search(request.user, text, state=state, count=count, pagination=pagination)
+            response = search_engine.full_text_search(request.user, text, state=state, count=count, pagination=pagination, sort=sort)
 
         elif filter_ == 'purchased':
-            response = search_engine.full_text_search(request.user, text, state='purchased', count=count, pagination=pagination)
+            response = search_engine.full_text_search(request.user, text, state='purchased', count=count, pagination=pagination, sort=sort)
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')

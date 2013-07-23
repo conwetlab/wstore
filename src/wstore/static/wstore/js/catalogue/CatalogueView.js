@@ -211,6 +211,10 @@
             changeTab(currentTab);
         });
 
+        $('#sorting').change(function() {
+            changeTab(currentTab);
+        });
+
         $('#cat-search').click(function() {
             var keyword = $.trim($('#cat-search-input').val());
             if (keyword != ''){

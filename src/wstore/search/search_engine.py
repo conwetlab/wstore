@@ -85,7 +85,7 @@ class SearchEngine():
         # Close the index
         index_writer.close()
 
-    def full_text_search(self, user, text, state=None, count=False, pagination=None):
+    def full_text_search(self, user, text, state=None, count=False, pagination=None, sort=None):
 
         if not os.path.exists(self._index_path) or os.listdir(self._index_path) == []:
             raise Exception('The index not exist')
@@ -150,10 +150,21 @@ class SearchEngine():
             if pagination['start'] > len(result):
                 raise Exception('Invalid page')
 
-            # Check complete page
-            if len(result[pagination['start'] - 1:]) > pagination['limit']:
-                result = result[pagination['start'] - 1: pagination['limit']]
-            else:
-                result = result[pagination['start'] - 1:]
+            result = result[pagination['start'] - 1: (pagination['limit'] + (pagination['start'] - 1))]
+
+        # Check if is needed to sort the result
+        rev = True
+        if not count and sort:
+            if sort == 'name':
+                rev = False
+
+            if sort == 'date':
+                if state != 'all' or state != 'purchased':
+                    sort = 'creation_date'
+                else:
+                    sort = 'publication_date'
+
+            # Sort the result
+            result = sorted(result, key=lambda off: off[sort], reverse=rev)
 
         return result

@@ -42,8 +42,15 @@
 
         } else {
             var offeringsPage = $('#number-offerings').val();
+
+            // Set pagination params
             var filter = '?start=' + ((offeringsPage * (nextPage - 1)) + 1);
             filter = filter + '&limit=' + offeringsPage;
+
+            // Set sorting params
+            if ($('#sorting').val() != '') {
+                filter += '&sort=' + $('#sorting').val();
+            }
 
             if (searchParams.searching) {
                 endpoint = EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': searchParams.keyword});
@@ -194,6 +201,13 @@
 
         // Set listener for number of offerings select
         $('#number-offerings').change((function(endPoint) {
+            return function() {
+                getOfferings(endP, '', setPaginationParams);
+            };
+        })(endP));
+
+        // Set listener for sorting select
+        $('#sorting').change((function(endPoint) {
             return function() {
                 getOfferings(endP, '', setPaginationParams);
             };
