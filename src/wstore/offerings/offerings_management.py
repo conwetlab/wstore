@@ -591,7 +591,7 @@ def bind_resources(offering, data, provider):
             offering_resources.remove(ObjectId(resource.pk))
 
     # added_resources contains the resources to be added to the offering
-    # and offering_resources the resurces to be deleted from the offering
+    # and offering_resources the resources to be deleted from the offering
 
     for add_res in added_resources:
         resource = Resource.objects.get(pk=add_res)
