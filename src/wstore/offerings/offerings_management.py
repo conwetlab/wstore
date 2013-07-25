@@ -55,7 +55,7 @@ def get_offering_info(offering, user):
         purchase = Purchase.objects.get(offering=offering, customer=user)
     elif offering.pk in user_profile.organization.offerings_purchased:
         state = 'purchased'
-        purchase = Purchase.objects.get(offering=offering, owner_organization=user_profile.organization.name)
+        purchase = Purchase.objects.get(offering=offering, owner_organization=user_profile.organization)
 
     if state == 'purchased':
         if offering.pk in user_profile.rated_offerings:
@@ -64,7 +64,7 @@ def get_offering_info(offering, user):
     # Load offering data
     result = {
         'name': offering.name,
-        'owner_organization': offering.owner_organization,
+        'owner_organization': offering.owner_organization.name,
         'owner_admin_user_id': offering.owner_admin_user.username,
         'version': offering.version,
         'state': state,
@@ -273,7 +273,7 @@ def create_offering(provider, profile, json_data):
     existing = True
 
     try:
-        Offering.objects.get(name=data['name'], owner_organization=organization.name, version=data['version'])
+        Offering.objects.get(name=data['name'], owner_organization=organization, version=data['version'])
     except:
         existing = False
 
@@ -285,7 +285,7 @@ def create_offering(provider, profile, json_data):
 
     if 'notification_url' in json_data:
         if json_data['notification_url'] == 'default':
-            notification_url = profile.organization.notification_url
+            notification_url = organization.notification_url
             if notification_url == '':
                 raise Exception('No default URL defined for the organization')
         else:
@@ -369,7 +369,7 @@ def create_offering(provider, profile, json_data):
     # Create the offering
     offering = Offering.objects.create(
         name=data['name'],
-        owner_organization=organization.name,
+        owner_organization=organization,
         owner_admin_user=provider,
         version=data['version'],
         state='uploaded',
@@ -400,7 +400,7 @@ def update_offering(offering, data):
     if offering.state != 'uploaded':
         raise Exception('The offering cannot be edited')
 
-    dir_name = offering.owner_organization + '__' + offering.name + '__' + offering.version
+    dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
 
     # Update the logo
@@ -529,7 +529,7 @@ def delete_offering(offering):
 
         if offering.related_images or offering.resources:
             # If the offering has media files delete them
-            dir_name = offering.owner_organization + '__' + offering.name + '__' + offering.version
+            dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
             path = os.path.join(settings.MEDIA_ROOT, dir_name)
             files = os.listdir(path)
 

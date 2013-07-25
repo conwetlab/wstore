@@ -23,17 +23,18 @@ from urllib2 import HTTPError
 
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.contrib.sites.models import get_current_site
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
 authentication_required
-from wstore.models import Offering
+from wstore.models import Offering, Organization
 from wstore.models import UserProfile
 from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
 publish_offering, bind_resources, count_offerings, update_offering, comment_offering
 from wstore.offerings.resources_management import register_resource, get_provider_resources
-from django.contrib.sites.models import get_current_site
+
 
 
 class OfferingCollection(Resource):
@@ -126,8 +127,16 @@ class OfferingEntry(Resource):
     @authentication_required
     def read(self, request, organization, name, version):
         user = request.user
-        offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
-        result = get_offering_info(offering, user)
+        try:
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
+        except:
+            return build_response(request, 404, 'Not found')
+
+        try:
+            result = get_offering_info(offering, user)
+        except Exception, e:
+            return build_response(request, 400, e.message)
 
         return HttpResponse(json.dumps(result), status=200, mimetype='application/json; charset=UTF-8')
 
@@ -136,9 +145,15 @@ class OfferingEntry(Resource):
     def update(self, request, organization, name, version):
 
         user = request.user
+        # Get the offering
         try:
-            offering = Offering.objects.get(owner_organization=organization, name=name, version=version)
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(owner_organization=org, name=name, version=version)
+        except:
+            return build_response(request, 404, 'Not found')
 
+        # Update the offering
+        try:
             if offering.owner_admin_user != user:
                 return build_response(request, 403, 'Forbidden')
 
@@ -155,18 +170,30 @@ class OfferingEntry(Resource):
         # If the offering has been purchased it is not deleted
         # it is marked as deleted in order to allow customers that
         # have purchased the offering to install it if needed
-        offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
+
+        # Get the offering
+        try:
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
+        except:
+            return build_response(request, 404, 'Not found')
+
+        # Check if the user can delete the offering
         if not offering.is_owner(request.user):
             return build_response(request, 403, 'Forbidden')
 
-        delete_offering(offering)
+        # Delete the offering
+        try:
+            delete_offering(offering)
+        except Exception, e:
+            return build_response(request, 400, e.message)
 
         return build_response(request, 204, 'No content')
 
 
 class ResourceCollection(Resource):
 
-    # Creates a new resource asociated with an user
+    # Creates a new resource associated with an user
     @supported_request_mime_types(('application/json', 'multipart/form-data'))
     @authentication_required
     def create(self, request):
@@ -218,10 +245,12 @@ class PublishEntry(Resource):
         offering = None
         content_type = get_content_type(request)[0]
         try:
-            offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
         except:
             return build_response(request, 404, 'Not found')
 
+        # Check that the user can publish the offering
         if not offering.is_owner(request.user):
             return build_response(request, 403, 'Forbidden')
 
@@ -259,10 +288,12 @@ class BindEntry(Resource):
         offering = None
         content_type = get_content_type(request)[0]
         try:
-            offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
         except:
             return build_response(request, 404, 'Not found')
 
+        # Check that the user can bind resources to the offering
         if not offering.is_owner(request.user):
             return build_response(request, 403, 'Forbidden')
 
@@ -282,14 +313,18 @@ class CommentEntry(Resource):
     @supported_request_mime_types(('application/json', ))
     def create(self, request, organization, name, version):
 
+        # Get the offering
         try:
-            offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
         except:
             return build_response(request, 404, 'Not found')
 
+        # Check offering state
         if offering.state != 'published':
             return build_response(request, 403, 'Forbidden')
 
+        # Comment the offering
         try:
             data = json.loads(request.raw_post_data)
             comment_offering(offering, data, request.user)

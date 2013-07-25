@@ -28,8 +28,6 @@ from djangotoolbox.fields import DictField
 from wstore.admin.markets.models import *
 from wstore.admin.repositories.models import *
 from wstore.admin.rss.models import *
-from wstore.offerings.models import *
-from wstore.contracting.models import *
 
 
 class Context(models.Model):
@@ -47,6 +45,11 @@ class Organization(models.Model):
     offerings_purchased = ListField()
     payment_info = DictField()
     tax_address = DictField()
+
+
+from wstore.offerings.models import Offering
+from wstore.offerings.models import Resource
+from wstore.contracting.models import Purchase
 
 
 class UserProfile(models.Model):

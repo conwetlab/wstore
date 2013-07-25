@@ -24,6 +24,7 @@ from djangotoolbox.fields import DictField
 from djangotoolbox.fields import ListField
 
 from wstore.models import Offering
+from wstore.models import Organization
 
 
 class Purchase(models.Model):
@@ -31,7 +32,7 @@ class Purchase(models.Model):
     ref = models.CharField(max_length=50)
     customer = models.ForeignKey(User)
     organization_owned = models.BooleanField()
-    owner_organization = models.CharField(max_length=100)
+    owner_organization = models.ForeignKey(Organization, null=True, blank=True)
     date = models.DateTimeField()
     offering = models.ForeignKey(Offering)
     state = models.CharField(max_length=50)

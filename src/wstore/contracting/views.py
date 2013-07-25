@@ -25,8 +25,9 @@ from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.models import User
-from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
@@ -38,8 +39,7 @@ from wstore.models import Offering, Organization, Context
 from wstore.models import Purchase
 from wstore.models import Resource as store_resource
 from wstore.contracting.purchase_rollback import rollback
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
+
 
 
 class PurchaseFormCollection(Resource):
@@ -53,11 +53,16 @@ class PurchaseFormCollection(Resource):
         user_profile = request.user.userprofile
 
         # Get the offering
-        if isinstance(data['offering'], dict):
-            id_ = data['offering']
-            offering = Offering.objects.get(owner_organization=id_['organization'], name=id_['name'], version=id_['version'])
-        else:
-            offering = Offering.objects.get(description_url=data['offering'])
+        try:
+            if isinstance(data['offering'], dict):
+                id_ = data['offering']
+                org = Organization.objects.get(name=id_['organization'])
+                offering = Offering.objects.get(owner_organization=org, name=id_['name'], version=id_['version'])
+            else:
+                offering = Offering.objects.get(description_url=data['offering'])
+
+        except:
+            return build_response(request, 404, 'Not found')
 
         redirect_uri = data['redirect_uri']
 
@@ -120,7 +125,7 @@ class PurchaseFormCollection(Resource):
         try:
             offering = Offering.objects.get(pk=id_)
         except:
-            return build_response(request, 404, 'The offering not exists')
+            return build_response(request, 404, 'Not found')
         offering_info = get_offering_info(offering, user)
 
         # Check that the user is not the owner of the offering
@@ -163,7 +168,8 @@ class PurchaseCollection(Resource):
 
                 if isinstance(data['offering'], dict):
                     id_ = data['offering']
-                    offering = Offering.objects.get(owner_organization=id_['organization'], name=id_['name'], version=id_['version'])
+                    org = Organization.objects.get(name=id_['organization'])
+                    offering = Offering.objects.get(owner_organization=org, name=id_['name'], version=id_['version'])
                 else:
                     offering = Offering.objects.get(description_url=data['offering'])
 
@@ -176,21 +182,21 @@ class PurchaseCollection(Resource):
                     payment_info['credit_card'] = data['payment']['credit_card']
 
                 response_info = create_purchase(user, offering, data.get('organization_owned', False), payment_info)
-            except:
+            except Exception, e:
                 # Check if the offering has been paid before the exception has been raised
                 paid = False
 
                 if data['organization_owned']:
                     if offering.pk in request.user.userprofile.organization.offerings_purchased:
                         paid = True
-                        response_info = Purchase.objects.get(owner_organization=request.user.userprofile.organization.name, offering=offering)
+                        response_info = Purchase.objects.get(owner_organization=request.user.userprofile.organization, offering=offering)
                 else:
                     if offering.pk in request.user.userprofile.offerings_purchased:
                         paid = True
                         response_info = Purchase.objects.get(customer=request.user, offering=offering)
 
                 if not paid:
-                    return build_response(request, 400, 'Invalid json content')
+                    return build_response(request, 400, e.message)
 
         response = {}
         # If the value returned by the create_purchase method is a string means that
@@ -258,8 +264,7 @@ class PurchaseEntry(Resource):
                     credit_card = data['credit_card']
                 else:
                     if purchase.organization_owned:
-                        org = Organization.objects.get(name=purchase.owner_organization)
-                        credit_card = org.payment_info
+                        credit_card = purchase.owner_organization.payment_info
                     else:
                         credit_card = purchase.customer.userprofile.payment_info
                 charging_engine = ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)

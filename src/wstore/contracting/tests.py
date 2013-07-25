@@ -146,7 +146,7 @@ class PurchasesCreationTestCase(TestCase):
 
         self.assertEqual(purchase.customer.username, 'test_user')
         self.assertEqual(purchase.organization_owned, True)
-        self.assertEqual(purchase.owner_organization, 'test_organization')
+        self.assertEqual(purchase.owner_organization.name, 'test_organization')
         self.assertEqual(purchase.offering_id, offering.pk)
         self.assertEqual(purchase.tax_address['street'], 'test street')
         self.assertEqual(purchase.tax_address['postal'], '28000')

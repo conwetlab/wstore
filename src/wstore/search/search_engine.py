@@ -88,7 +88,7 @@ class SearchEngine():
     def full_text_search(self, user, text, state=None, count=False, pagination=None, sort=None):
 
         if not os.path.exists(self._index_path) or os.listdir(self._index_path) == []:
-            raise Exception('The index not exist')
+            raise Exception('The index does not exist')
 
         # Get the index reader
         lucene.getVMEnv().attachCurrentThread()

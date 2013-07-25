@@ -55,7 +55,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "51000aba8e05ac2135f122ff",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -77,7 +77,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "51000aba8e05ac2135f122ff",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -99,7 +99,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "51000aba8e05ac2135f122ff",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -135,7 +135,7 @@
             "ref": "61005aba8e05ac2115f022f0",
             "customer": "51070aba8e05cc2115f022f9",
             "organization_owned": true,
-            "owner_organization": "test_organization1",
+            "owner_organization": "51000aba8e05a777777122ff",
             "date": "2013-02-05 17:06:46",
             "offering": "11000aba8e05ac2115f022f9",
             "state": "paid",
@@ -184,7 +184,7 @@
             "ref": "61006aba8e05ac2115f022f0",
             "customer": "51000aba8e05cc2110f022f9",
             "organization_owned": true,
-            "owner_organization": "test_organization1",
+            "owner_organization": "51000aba8e05a777777122ff",
             "date": "2013-02-05 17:06:46",
             "offering": "21000aba8e05ac2115f022ff",
             "state": "paid",
@@ -224,6 +224,22 @@
                 "concept": "initial"
             }],
             "purchase": "61006aba8e05ac2115f022f0"
+        }
+    },
+    {
+        "pk": "51000aba8e05ac2135f122ff",
+        "model": "wstore.Organization",
+        "fields": {
+            "name": "test_organization",
+            "offerings_purchased": []
+        }
+    },
+    {
+        "pk": "51000aba8e05a777777122ff",
+        "model": "wstore.Organization",
+        "fields": {
+            "name": "test_organization1",
+            "offerings_purchased": []
         }
     }
 ]

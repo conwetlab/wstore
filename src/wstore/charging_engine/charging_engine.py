@@ -36,7 +36,7 @@ from django.template import loader, Context
 from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
 
-from wstore.models import Resource
+from wstore.models import Resource, Organization
 from wstore.models import UserProfile
 from wstore.models import Purchase
 from wstore.models import Offering
@@ -218,14 +218,14 @@ class ChargingEngine:
                 service_name = node[dc_tag + ':title']['@value']
 
         # Get the provider (Organization)
-        provider = self._purchase.offering.owner_organization
+        provider = self._purchase.offering.owner_organization.name
 
         # Set offering ID
         offering = self._purchase.offering.name + ' ' + self._purchase.offering.version
 
         # Get the customer
         if self._purchase.organization_owned:
-            customer = self._purchase.owner_organization
+            customer = self._purchase.owner_organization.name
         else:
             customer = self._purchase.customer.username
 
@@ -365,7 +365,7 @@ class ChargingEngine:
             bill_template = loader.get_template('contracting/bill_template_initial.html')
 
         elif type_ == 'renovation':
-            # If renovation can only contain subscription
+            # If renovation, can only contain subscription
             for part in applied_parts['subscription']:
                 parts.append((part['title'], part['value'], part['currency'], part['unit'], str(part['renovation_date'])))
 
@@ -373,7 +373,7 @@ class ChargingEngine:
             bill_template = loader.get_template('contracting/bill_template_renovation.html')
 
         elif type_ == 'use':
-            # If use can only contain pay per use parts
+            # If use, can only contain pay per use parts
             for part in applied_parts['pay_per_use']:
                 parts.append((part['applied_part']['title'], part['applied_part']['value'],
                               part['applied_part']['currency'], part['applied_part']['unit'],
@@ -408,7 +408,7 @@ class ChargingEngine:
         context = {
             'BASEDIR': settings.BASEDIR,
             'offering_name': offering.name,
-            'off_organization': offering.owner_organization,
+            'off_organization': offering.owner_organization.name,
             'off_version': offering.version,
             'ref': self._purchase.ref,
             'date': date,
@@ -534,7 +534,8 @@ class ChargingEngine:
     def include_sdr(self, sdr):
         # Check the offering and customer
         off_data = sdr['offering']
-        offering = Offering.objects.get(name=off_data['name'], owner_organization=off_data['organization'], version=off_data['version'])
+        org = Organization.objects.get(name=off_data['organization'])
+        offering = Offering.objects.get(name=off_data['name'], owner_organization=org, version=off_data['version'])
 
         if offering != self._purchase.offering:
             raise Exception('The offering defined in the SDR is not the purchase offering')
@@ -544,7 +545,7 @@ class ChargingEngine:
         if self._purchase.organization_owned:
             # Check if the user belongs to the organization
             profile = UserProfile.objects.get(user=customer)
-            if profile.organization.name != self._purchase.owner_organization:
+            if profile.organization != self._purchase.owner_organization:
                 raise Exception('The user not belongs to the owner organization')
         else:
             # Check if the user has purchased the offering

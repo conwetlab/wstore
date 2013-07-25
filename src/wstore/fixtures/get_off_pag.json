@@ -39,7 +39,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": [],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46"
         }
@@ -60,7 +60,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1",
             "resources": [],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46"
         }
@@ -81,7 +81,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -103,7 +103,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -125,7 +125,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -147,7 +147,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -169,7 +169,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -191,7 +191,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -213,7 +213,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -235,7 +235,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -262,6 +262,15 @@
             "download_link": "",
             "resource_path": "/media/resources/test_user__test_resource__1.0",
             "offerings": ["61000aba8e05ac2115f022f0"]
+        }
+    },
+    {
+        "pk": "91000aba8e06ac2115f022f0",
+        "model": "wstore.Organization",
+        "fields": {
+            "name": "test_organization",
+            "offerings_purchased": [],
+            "payment_info": {}
         }
     }
 ]

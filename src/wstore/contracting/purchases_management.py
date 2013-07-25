@@ -91,11 +91,15 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
         customer=user,
         date=datetime.now(),
         offering=offering,
-        owner_organization=org,
         organization_owned=org_owned,
         state='pending',
         tax_address=tax
     )
+
+    # Include the owner organization if needed
+    if org_owned:
+        purchase.owner_organization = organization
+
     # Load ref
     purchase.ref = purchase.pk
     purchase.save()

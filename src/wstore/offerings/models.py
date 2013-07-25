@@ -23,13 +23,14 @@ from django.db import models
 from djangotoolbox.fields import ListField, DictField
 
 from wstore.models import Marketplace
+from wstore.models import Organization
 
 
 # An application is an offering composed by some
 # backend comopents and some resources
 class Offering(models.Model):
     name = models.CharField(max_length=50)
-    owner_organization = models.CharField(max_length=50)
+    owner_organization = models.ForeignKey(Organization)
     owner_admin_user = models.ForeignKey(User)
     # support_organization
     # support_admin_user

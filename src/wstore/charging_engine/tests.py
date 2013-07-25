@@ -1634,7 +1634,7 @@ class CDRGeranationTestCase(TestCase):
         purchase.offering.save()
 
         purchase.organization_owned = True
-        purchase.owner_organization = 'test_organization'
+        purchase.owner_organization = Organization.objects.get(name='test_organization')
         purchase.save()
 
         charging = charging_engine.ChargingEngine(purchase)

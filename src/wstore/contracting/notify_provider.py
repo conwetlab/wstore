@@ -27,7 +27,7 @@ from wstore.store_commons.utils.method_request import MethodRequest
 
 def notify_provider(purchase):
     """
-        This method is use to notify the service provider
+        This method is used to notify the service provider
         that his offering has been purchased
     """
     notification_url = purchase.offering.notification_url
@@ -37,7 +37,7 @@ def notify_provider(purchase):
 
         data = {
             'offering': {
-                'organization': purchase.offering.owner_organization,
+                'organization': purchase.offering.owner_organization.name,
                 'name': purchase.offering.name,
                 'version': purchase.offering.version
             },

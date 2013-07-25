@@ -55,7 +55,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -77,7 +77,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -99,7 +99,7 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -329,7 +329,7 @@
             "ref": "61004aba5e05acc115f022f0",
             "customer": "51070aba8e05cc2115f022f9",
             "organization_owned": true,
-            "owner_organization": "test_organization1",
+            "owner_organization": "90000ab08e06a02115602200",
             "date": "2013-02-05 17:06:46",
             "offering": "61000aba8e05ac2115f022f9",
             "state": "paid",

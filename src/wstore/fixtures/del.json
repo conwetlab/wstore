@@ -55,7 +55,7 @@
             "related_images": [],
             "description_url": "http://testrepository.com/v1/rep/storeOfferingsCollection/test_organization__test_offering__1.0",
             "resources": [],
-            "owner_organization": "test_organization",
+            "owner_organization": "51000aba8e05ac2115f123ff",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46"
         }
@@ -76,7 +76,7 @@
             "related_images": [],
             "description_url": "http://testrepository.com/v1/rep/storeOfferingsCollection/test_organization__test_offering2__1.0",
             "resources": [],
-            "owner_organization": "test_organization",
+            "owner_organization": "51000aba8e05ac2115f123ff",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
@@ -98,7 +98,7 @@
             "related_images": [],
             "description_url": "http://testrepository.com/v1/rep/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": [],
-            "owner_organization": "test_organization",
+            "owner_organization": "51000aba8e05ac2115f123ff",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"

@@ -25,13 +25,11 @@ from bson import ObjectId
 
 from django.conf import settings
 from django.shortcuts import render
-from django.contrib.sites.models import get_current_site
-from django.shortcuts import redirect
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
-from wstore.models import Purchase, Context
+from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.models import Organization
 from wstore.charging_engine.charging_engine import ChargingEngine
@@ -94,7 +92,7 @@ class PayPalConfirmation(Resource):
 
             pp = paypal.PayPal(settings.PAYPAL_USER, settings.PAYPAL_PASSWD, settings.PAYPAL_SIGNATURE, settings.PAYPAL_URL)
 
-            purchase = Purchase.objects.get(pk=reference)
+            purchase = Purchase.objects.get(ref=reference)
 
             # If the purchase state value is different from pending means that
             # the timeout function has completely ended before acquire the resource
@@ -133,7 +131,7 @@ class PayPalConfirmation(Resource):
             user_profile.save()
 
             if purchase.organization_owned:
-                org = Organization.objects.get(name=purchase.owner_organization)
+                org = purchase.owner_organization
                 org.offerings_purchased.append(purchase.offering.pk)
                 org.save()
 

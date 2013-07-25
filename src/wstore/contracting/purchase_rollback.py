@@ -47,7 +47,7 @@ def rollback(purchase):
         if to_del:
             # Check organization owned
             if purchase.organization_owned:
-                org = Organization.objects.get(name=purchase.owner_organization)
+                org = purchase.owner_organization
                 if purchase.offering.pk in org.offerings_purchased:
                     org.offerings_purchased.remove(purchase.offering.pk)
                     org.save()
@@ -68,7 +68,7 @@ def rollback(purchase):
     # offerings purchased list
     else:
         if purchase.organization_owned:
-            org = Organization.objects.get(name=purchase.owner_organization)
+            org = purchase.owner_organization
             if not purchase.offering.pk in org.offerings_purchased:
                 org.offerings_purchased.append(purchase.offering.pk)
                 org.save()
@@ -98,7 +98,7 @@ class PurchaseRollback():
                 # Get the purchase
                 if org_owned:
                     user_profile = UserProfile.objects.get(user=user)
-                    purchase = Purchase.objects.get(owner_organization=user_profile.organization.name, offering=offering)
+                    purchase = Purchase.objects.get(owner_organization=user_profile.organization, offering=offering)
                 else:
                     purchase = Purchase.objects.get(customer=user, offering=offering)
                 rollback(purchase)

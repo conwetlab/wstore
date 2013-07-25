@@ -235,4 +235,4 @@ class FullTextSearchTestCase(TestCase):
             msg = e.message
 
         self.assertTrue(error)
-        self.assertEqual(msg, 'The index not exist')
+        self.assertEqual(msg, 'The index does not exist')

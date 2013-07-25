@@ -48,7 +48,7 @@ def rollback(provider, profile, json_data, msg):
         os.rmdir(path)
 
     # Check if the offering has been created
-    offering = Offering.objects.filter(owner_organization=profile.organization.name, name=json_data['name'], version=json_data['version'])
+    offering = Offering.objects.filter(owner_organization=profile.organization, name=json_data['name'], version=json_data['version'])
 
     remove = False
     if len(offering) > 0:

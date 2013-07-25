@@ -601,7 +601,7 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         user = User.objects.get(username='test_user2')
         profile = UserProfile.objects.get(user=user)
         profile.offerings_purchased = ['11000aba8e05ac2115f022f9']
-        org = Organization.objects.create(name='test_organization1')
+        org = Organization.objects.get(name='test_organization1')
         org.offerings_purchased = ['21000aba8e05ac2115f022ff', '11000aba8e05ac2115f022f9']
         org.save()
         profile.organization = org
@@ -642,7 +642,7 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         user = User.objects.get(username='test_user2')
         profile = UserProfile.objects.get(user=user)
         profile.offerings_purchased = ['11000aba8e05ac2115f022f9']
-        org = Organization.objects.create(name='test_organization1')
+        org = Organization.objects.get(name='test_organization1')
         org.offerings_purchased = ['21000aba8e05ac2115f022ff', '11000aba8e05ac2115f022f9']
         org.save()
         profile.organization = org
@@ -800,7 +800,7 @@ class PurchasedOfferingPaginationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         profile.offerings_purchased = ['11000aba8e05ac2115f022f9', '21000aba8e05ac2115f022ff', '31000aba8e05ac2115f022f0']
-        org = Organization.objects.create(name='test_organization1')
+        org = Organization.objects.get(name='test_organization1')
         org.offerings_purchased = ['41000aba8e05ac2115f022f0', '51100aba8e05ac2115f022f0']
         org.save()
         profile.organization = org
