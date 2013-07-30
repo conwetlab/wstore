@@ -46,11 +46,20 @@
         <script type="text/x-jquery-tmpl" id="modal_template">{% include "modal_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_info_template">{% include "alert_info_template.html" %}</script>
+        {% if oil %}
+            <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
+        {% endif %}
 
     </head>
     <body>
-        <div class="container-fluid">
+    {% if oil %}
+        <div id="oil-bar">
+        {% include "oil/header.html" %}
+        </div>
+    {% endif %}
+        <div class="container-fluid bread-container">
             <div class="row-fluid">
+            {% if not oil %}
                 <div>
                     <img id="logo" src="{{ STATIC_URL }}assets/img/logo.png" />
                 </div>
@@ -58,6 +67,7 @@
                     <h1>FI-ware</h1>
                     <h2>WStore</h2>
                 </div>
+             {% endif %}
                 <div class="navigation">
                     <ul class="nav nav-pills main-menu">
                         <li ><a href="/">Store</a>
@@ -68,6 +78,7 @@
                             <a href="#">Administration</a>
                         </li>
                     </ul>
+                    {% if not oil %}
                     <div class="btn btn-success float-right dropdown">
                         <div href="#" class="dropdown-toggle" data-toggle="dropdown">
                             <i class="icon-user icon-white"></i>
@@ -79,6 +90,7 @@
                             <li><a href="/logout">Logout</a></li>
                         </ul>
                     </div>
+                    {% endif %}
                 </div>
             </div>
             <div class="row-fluid title_wrapper">

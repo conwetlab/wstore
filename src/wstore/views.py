@@ -38,23 +38,31 @@ from wstore.models import Offering
 
 @login_required
 def home(request):
-    return render(request, 'index.html')
+    context = {
+        'oil': settings.OILAUTH
+    }
+    return render(request, 'index.html', context)
 
 
 @login_required
 def admin(request):
     if request.user.is_staff:
-        return render(request, 'admin/admin.html')
+        context = {
+            'oil': settings.OILAUTH
+        }
+        return render(request, 'admin/admin.html', context)
     else:
         build_response(request, 403, 'Forbidden')
 
 
 @login_required
 def catalogue(request):
+
     profile = UserProfile.objects.get(user=request.user)
     context = {
         'roles': profile.roles,
-        'usdl_editor': settings.USDL_EDITOR_URL
+        'usdl_editor': settings.USDL_EDITOR_URL,
+        'oil': settings.OILAUTH
     }
     return render(request, 'catalogue/catalogue.html', context)
 
