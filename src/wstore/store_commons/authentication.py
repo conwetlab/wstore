@@ -20,6 +20,7 @@
 
 from django.contrib.auth import logout as django_logout
 from django.http import HttpResponseRedirect
+from django.conf import settings
 
 class Http403(Exception):
     pass
@@ -27,4 +28,8 @@ class Http403(Exception):
 def logout(request):
 
     django_logout(request)
-    return HttpResponseRedirect('/login?next=/')
+    if settings.OILAUTH:
+        url = 'https://idm.lab.fi-ware.eu/users/sign_out'
+    else:
+        url = '/login?next=/'
+    return HttpResponseRedirect(url)
