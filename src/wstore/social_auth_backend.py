@@ -105,10 +105,10 @@ def fill_internal_user_info(*arg, **kwargs):
     roles = response['roles']
     wstore_roles = []
 
-    for app in roles:
-        if app['id'] == 106:
-            wstore_roles.append(app['name'])
+    for role in roles:
+        wstore_roles.append(role['name'])
 
+    # Check if the user is an admin
     if 'Manager' in wstore_roles and not kwargs['user'].is_staff:
         kwargs['user'].is_staff = True
         kwargs['user'].save()
@@ -117,7 +117,15 @@ def fill_internal_user_info(*arg, **kwargs):
         kwargs['user'].is_staff = False
         kwargs['user'].save()
 
-    # Check the provider
+    # Check if the user is a provider
+    if 'Provider' in wstore_roles and not 'provider' in kwargs['user'].userprofile.roles:
+        kwargs['user'].userprofile.roles.append('provider')
+        kwargs['user'].userprofile.save()
+
+    if not 'Provider' in wstore_roles and 'provider' in kwargs['user'].userprofile.roles:
+        kwargs['user'].userprofile.roles.remove('provider')
+        kwargs['user'].userprofile.save()
+
     # Check organizations info
 
 
