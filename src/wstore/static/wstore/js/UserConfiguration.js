@@ -358,6 +358,7 @@
             data: JSON.stringify(request),
             success: function (response) {
                 // Update user info
+                ORGANIZATION = $('#org-select').val();
                 organizationChanged = true;
                 getUserInfo();
             },

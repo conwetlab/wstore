@@ -211,8 +211,6 @@
     };
 
     refreshView = function refreshView() {
-        $('#admin-container').empty();
-        paintElementTable();
     };
 
     // Set initial listeners
