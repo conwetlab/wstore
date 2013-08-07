@@ -165,7 +165,7 @@ def fill_internal_user_info(*arg, **kwargs):
         if len(org_model) == 0:
             # Create the organization
             org_model = Organization.objects.create(
-                name=org['name'],
+                name=org['displayName'],
                 private=False,
                 actor_id=org['actorId']
             )
