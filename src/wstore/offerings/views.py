@@ -19,6 +19,7 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
+import urllib2
 from urllib2 import HTTPError
 
 from django.contrib.auth.models import User
@@ -34,6 +35,7 @@ from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
 publish_offering, bind_resources, count_offerings, update_offering, comment_offering
 from wstore.offerings.resources_management import register_resource, get_provider_resources
+from wstore.store_commons.utils.method_request import MethodRequest
 
 
 
@@ -50,12 +52,8 @@ class OfferingCollection(Resource):
         profile = UserProfile.objects.get(user=user)
         content_type = get_content_type(request)[0]
 
-        roles = []
         # Get the provider roles in the current organization
-        for org in profile.organizations:
-            if org['organization'] == profile.current_organization.pk:
-                roles = org['roles']
-                break
+        roles = profile.get_current_roles()
 
         # Checks the provider role
         if 'provider' in roles:
@@ -381,29 +379,34 @@ class ApplicationCollection(Resource):
     @authentication_required
     def read(self, request):
 
-        # Make idm request
-        # Call idm
-        # Make the response
-        applications = [{
-            'id': 1, 
-            'name': 'app1',
-            'url': 'http://app1url.com'
-        },{
-            'id': 2, 
-            'name': 'app2',
-            'url': 'http://app2url.com'
-        },{
-            'id': 3, 
-            'name': 'app3',
-            'url': 'http://app3url.com'
-        },{
-            'id': 4, 
-            'name': 'app4',
-            'url': 'http://app4url.com'
-        },{
-            'id': 5, 
-            'name': 'app5',
-            'url': 'http://app5url.com'
-        }]
+        # Check user roles
+        if not 'provider' in request.user.userprofile.get_current_roles():
+            return build_response(request, 403, 'Forbidden')
 
-        return HttpResponse(json.dumps(applications), status=200, mimetype='application/json;charset=UTF-8')
+        # Make idm request
+        url = 'https://idm.lab.fi-ware.eu/applications.json'
+
+        if request.user.userprofile.is_user_org():
+            actor_id = request.user.userprofile.actor_id
+        else:
+            actor_id = request.user.userprofile.current_organization.actor_id
+
+        token = request.user.userprofile.access_token
+
+        url += '?actor_id=' + str(actor_id)
+        url += '&access_token=' + token
+
+        request = MethodRequest('GET', url)
+
+        # Call idm
+        opener = urllib2.build_opener()
+
+        try:
+            response = opener.open(request)
+        except:
+            return build_response(request, 502, 'The idM returned an error code')
+
+        # Make the response
+        resp = response.read()
+        return HttpResponse(resp, status=200, mimetype='application/json;charset=UTF-8')
+

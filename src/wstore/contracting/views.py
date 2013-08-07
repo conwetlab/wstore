@@ -161,10 +161,9 @@ class PurchaseCollection(Resource):
                     payment_info['credit_card'] = data['payment']['credit_card']
 
                 # Check if the user is purchasing for an organization
-                current_organization = user.userprofile.current_organization
 
                 org_owned = True
-                if current_organization.name == user.username:
+                if user.userprofile.is_user_org():
                     org_owned = False
 
                 # Check if the user has the customer role for the organization

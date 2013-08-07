@@ -63,7 +63,7 @@ def catalogue(request):
     context = {
         'roles': profile.get_current_roles(),
         'usdl_editor': settings.USDL_EDITOR_URL,
-	'organization': profile.current_organization.name
+	    'organization': profile.current_organization.name,
         'oil': settings.OILAUTH
     }
     return render(request, 'catalogue/catalogue.html', context)

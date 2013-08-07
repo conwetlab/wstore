@@ -20,6 +20,11 @@
 
 (function () {
 
+    refreshView = function refreshView() {
+        $('home-container').empty();
+        paintHomePage();
+    };
+
     fillStarsRating = function fillStarsRating(rating, container) {
         // Fill rating stars
 

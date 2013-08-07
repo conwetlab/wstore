@@ -108,7 +108,7 @@
             url: EndpointManager.getEndpoint('OFFERING_COLLECTION'),
             dataType: 'json',
             contentType: 'application/json',
-            data: JSON.stringify(request),
+            data: JSON.stringify(offeringInfo),
             success: function (response) {
                 $('#message').modal('hide');
                 MessageManager.showMessage('Created', 'The offering has been created')
@@ -156,6 +156,7 @@
     };
 
     var showUSDLForm = function showUSDLForm(repositories) {
+        var footBtn;
         $('.modal-body').empty();
 
         // Create the form
@@ -178,7 +179,9 @@
         });
 
         // Listener for application selection
-        $('.modal-footer > .btn').click(function(event) {
+        $('.modal-footer').empty();
+        footBtn = $('<input></input>').addClass('btn btn-classic').attr('type', 'button').val('Next').appendTo('.modal-footer');
+        footBtn.click(function(event) {
             var msg, error = false;
 
             event.preventDefault();
@@ -227,6 +230,7 @@
     };
 
     var showApplicationsForm = function showApplicationsForm(applications) {
+        var footBtn;
         $('.modal-body').empty();
 
         // Create the form
@@ -238,8 +242,9 @@
         $.tmpl('appCheckTemplate', applications).appendTo('#applications');
 
         // Set button listener
-        $('.modal-footer > .btn').text('Accept');
-        $('.modal-footer > .btn').click(function(evnt) {
+        $('.modal-footer').empty();
+        footBtn = $('<input></input>').addClass('btn btn-classic').attr('type', 'button').val('Accept').appendTo('.modal-footer');
+        footBtn.click(function(evnt) {
             var applications = [];
             evnt.preventDefault();
             evnt.stopPropagation();
@@ -256,7 +261,7 @@
             });
 
             // Make the request
-            if (applications.lenght > 0) {
+            if (applications.length > 0) {
                 offeringInfo.applications = applications;
                 makeCreateOfferingRequest();
             } else {

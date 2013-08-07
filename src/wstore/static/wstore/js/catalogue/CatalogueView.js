@@ -236,5 +236,10 @@
         return currentTab;
     };
 
+    refreshView = function refreshView() {
+        $('#catalogue-container').empty();
+        paintCatalogue();
+    };
+
     $(document).ready(paintCatalogue);
 })();

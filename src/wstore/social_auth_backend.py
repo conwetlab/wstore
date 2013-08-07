@@ -38,13 +38,14 @@ from django.conf import settings
 
 from social_auth.utils import dsa_urlopen
 from social_auth.backends import BaseOAuth2, OAuthBackend
+from wstore.models import Organization
 
 
 # idm configuration
 FIWARE_AUTHORIZATION_URL = 'https://idm.lab.fi-ware.eu/authorize'
 FIWARE_ACCESS_TOKEN_URL = 'https://idm.lab.fi-ware.eu/token'
 FIWARE_USER_DATA_URL = 'https://idm.lab.fi-ware.eu/user'
-FIWARE_NOTIFICATION_URL = 'https://idm.lab.fi-ware.eu/'
+FIWARE_NOTIFICATION_URL = 'https://idm.lab.fi-ware.eu/purchases'
 
 
 
@@ -101,6 +102,8 @@ def fill_internal_user_info(*arg, **kwargs):
 
     # Update user info
     response = kwargs['response']
+
+    # This roles will be user organization roles
     roles = response['roles']
     wstore_roles = []
 
@@ -112,34 +115,84 @@ def fill_internal_user_info(*arg, **kwargs):
 
     kwargs['user'].userprofile.save()
 
+    # Get user private organization
+    user_org = Organization.objects.filter(actor_id=kwargs['user'].userprofile.actor_id)
+    if len(user_org) == 0:
+        user_org = Organization.objects.get(name=kwargs['user'].username)
+        user_org.actor_id = kwargs['user'].userprofile.actor_id
+        user_org.save()
+    else:
+        user_org = user_org[0]
+
+    kwargs['user'].userprofile.current_organization = user_org
+    kwargs['user'].userprofile.save()
+
+    # Include new roles in the private organization
     for role in roles:
         wstore_roles.append(role['name'])
 
     # Check if the user is an admin
-    if 'Manager' in wstore_roles and not kwargs['user'].is_staff:
+    if 'Provider' in wstore_roles and not kwargs['user'].is_staff:
         kwargs['user'].is_staff = True
         kwargs['user'].save()
 
-    elif not 'Manager' in wstore_roles and kwargs['user'].is_staff:
+    elif not 'Provider' in wstore_roles and kwargs['user'].is_staff:
         kwargs['user'].is_staff = False
         kwargs['user'].save()
 
-    # Check if the user is a provider
-    if 'Provider' in wstore_roles and not 'provider' in kwargs['user'].userprofile.roles:
-        kwargs['user'].userprofile.roles.append('provider')
-        kwargs['user'].userprofile.save()
+    organizations = []
+    user_roles = ['customer']
 
-    if not 'Provider' in wstore_roles and 'provider' in kwargs['user'].userprofile.roles:
-        kwargs['user'].userprofile.roles.remove('provider')
-        kwargs['user'].userprofile.save()
+    # Check if the user is a provider
+    if 'Offering Provider' in wstore_roles:
+        user_roles.append('provider')
+
+    organizations.append({
+        'organization': user_org.pk,
+        'roles': user_roles
+    })
 
     # Check organizations info
-    # Get idM user organization
-    # Check if the organization exist
-    # Create the organization
-    # Check user organization
-    # Append new organization
-    # Check organization roles
+    idm_organizations = []
+    if 'organizations' in response:
+        idm_organizations = response['organizations']
+
+    for org in idm_organizations:
+
+        # Check if the organization exist
+        org_model = Organization.objects.filter(actor_id=org['actorId'])
+
+        if len(org_model) == 0:
+            # Create the organization
+            org_model = Organization.objects.create(
+                name=org['name'],
+                private=False,
+                actor_id=org['actorId']
+            )
+        else:
+            org_model = org_model[0]
+
+        # Check organization roles
+        idm_org_roles = org['roles']
+        org_roles = []
+
+        for role in idm_org_roles:
+            if role['name'] == 'Owner':
+                if not kwargs['user'].pk in org_model.managers:
+                    org_model.managers.append(kwargs['user'].pk)
+            elif role['name'] == 'Offering Provider':
+                org_roles.append('provider')
+            elif role['name'] == 'Offering Customer':
+                org_roles.append('customer')
+
+        organizations.append({
+            'organization': org_model.pk,
+            'roles': org_roles
+        })
+
+    kwargs['user'].userprofile.organizations = organizations
+    kwargs['user'].userprofile.save()
+
 
 # Backend definition
 BACKENDS = {

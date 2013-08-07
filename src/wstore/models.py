@@ -41,7 +41,7 @@ class Context(models.Model):
 class Organization(models.Model):
 
     name = models.CharField(max_length=50, unique=True)
-    notification_url = models.CharField(max_length=300)
+    notification_url = models.CharField(max_length=300, null=True, blank=True)
     offerings_purchased = ListField()
     private = models.BooleanField(default=True)
     payment_info = DictField()
@@ -65,7 +65,7 @@ class UserProfile(models.Model):
     rated_offerings = ListField()
     tax_address = DictField()
     complete_name = models.CharField(max_length=100)
-    payment_info = DictField(),
+    payment_info = DictField()
     actor_id = models.IntegerField(unique=True, null=True, blank=True)
     access_token = models.CharField(max_length=150, null=True, blank=True)
 
@@ -77,6 +77,20 @@ class UserProfile(models.Model):
                 break
 
         return roles
+
+    def is_user_org(self):
+
+        result = False
+        # Use the actor_id for identify the user organization
+        # in order to avoid problems with nickname changes
+        if self.actor_id and self.current_organization.actor_id:
+            if self.actor_id == self.current_organization.actor_id:
+                result = True
+        else:
+            if self.user.username == self.current_organization.username:
+                result = True
+
+        return result
 
 
 def create_user_profile(sender, instance, created, **kwargs):

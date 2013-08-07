@@ -51,7 +51,7 @@ def get_offering_info(offering, user):
     state = offering.state
 
     # Check if the current organization is the user organization
-    if user.username == user.userprofile.current_organization.name:
+    if user_profile.is_user_org():
 
         if offering.pk in user_profile.offerings_purchased:
             state = 'purchased'
@@ -144,7 +144,7 @@ def _get_purchased_offerings(user, db, pagination=None, sort=None):
     # Get the user organization purchased offerings
     organization = db.wstore_organization.find_one({'_id': user_profile['current_organization_id']})
 
-    if user.userprofile.current_organization.name != user.username:
+    if not user.userprofile.is_user_org():
         user_purchased = organization['offerings_purchased']
 
     else:
@@ -263,7 +263,7 @@ def count_offerings(user, filter_='published', owned=False):
             count = Offering.objects.filter(owner_admin_user=user, state='published', owner_organization=current_org).count()
         elif filter_ == 'purchased':
             count = len(current_org.offerings_purchased)
-            if current_org.name == user.username:
+            if user.userprofile.is_user_org():
                 count += len(user.userprofile.offerings_purchased)
 
     else:

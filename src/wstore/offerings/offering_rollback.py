@@ -66,7 +66,7 @@ def rollback(provider, profile, json_data, msg):
         if 'offerings_description' in json_data:
             repository = Repository.objects.get(name=json_data['repository'])
             repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
-            offering_id = profile.organization.name + '__' + json_data['name'] + '__' + json_data['version']
+            offering_id = profile.current_organization.name + '__' + json_data['name'] + '__' + json_data['version']
 
             uploaded = True
             try:

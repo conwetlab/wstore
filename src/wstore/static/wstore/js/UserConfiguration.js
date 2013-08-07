@@ -27,6 +27,7 @@
     var userFormDisplayed;
     var addrFormDisplayed;
     var paymentFormDisplayed;
+    var organizationChanged = false;
 
     var makeUpdateProfileRequest = function makeUpdateProfileRequest(username) {
         var filled, msg, error = false;
@@ -171,7 +172,13 @@
         // Set edit listener
         $('#user-edit').click(function() {
             displayEditProfileForm(userInfo);
-        })
+        });
+        $('#message').on('hidden', function() {
+            if (organizationChanged) {
+                organizationChanged = false;
+                refreshView();
+            }
+        });
     };
 
     var displayEditProfileForm = function displayEditProfileForm(userInfo) {
@@ -316,12 +323,12 @@
             $.template('userInfoConfTemplate', $('#user_info_conf_template'));
             $.tmpl('userInfoConfTemplate', context).appendTo('#userinfo-tab');
 
-	    // Include organizations
+            // Include organizations
             for (var i = 0; i < userInfo.organizations.length; i++) {
                 var org;
                 org = $('<option></option>').attr('value', userInfo.organizations[i].name);
                 org.text(userInfo.organizations[i].name);
-		org.appendTo('#org-select');
+                org.appendTo('#org-select');
             }
 
 	    // Set initial value for the org select
@@ -329,8 +336,9 @@
             // Set listener for oranization change
             $('#org-select').change(function() {
                 changeOrganization();
-            }); 
-	}
+            });
+        }
+
     };
 
     var changeOrganization = function changeOrganization() {
@@ -350,6 +358,7 @@
             data: JSON.stringify(request),
             success: function (response) {
                 // Update user info
+                organizationChanged = true;
                 getUserInfo();
             },
             error: function (xhr) {
