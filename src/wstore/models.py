@@ -43,8 +43,10 @@ class Organization(models.Model):
     name = models.CharField(max_length=50, unique=True)
     notification_url = models.CharField(max_length=300)
     offerings_purchased = ListField()
+    private = models.BooleanField(default=True)
     payment_info = DictField()
     tax_address = DictField()
+    managers = ListField()
 
 
 from wstore.offerings.models import Offering
@@ -55,8 +57,8 @@ from wstore.contracting.models import Purchase
 class UserProfile(models.Model):
 
     user = models.OneToOneField(User)
-    organization = models.ForeignKey(Organization, blank=True, null=True)  # an user could belong to more than one organization FIXME
-    roles = ListField()
+    organizations = ListField()
+    current_organization = models.ForeignKey(Organization)
     offerings_purchased = ListField()
     offerings_provided = ListField()
     rated_offerings = ListField()
@@ -64,12 +66,32 @@ class UserProfile(models.Model):
     complete_name = models.CharField(max_length=100)
     payment_info = DictField()
 
+    def get_current_roles(self):
+        roles = []
+        for o in self.organizations:
+            if o['organization'] == self.current_organization.pk:
+                roles = o['roles']
+                break
+
+        return roles
+
 
 def create_user_profile(sender, instance, created, **kwargs):
 
     if created:
-        default_organization = Organization.objects.get_or_create(name='default')
-        profile, created = UserProfile.objects.get_or_create(user=instance, roles=['customer'], organization=default_organization[0])
+        # Create a private organization for the user
+        default_organization = Organization.objects.get_or_create(name=instance.username)
+        default_organization[0].managers.append(instance.pk)
+        default_organization[0].save()
+
+        profile, created = UserProfile.objects.get_or_create(
+            user=instance, 
+            organizations=[{
+                'organization': default_organization[0].pk,
+                'roles': ['customer']
+            }],
+            current_organization=default_organization[0]
+        )
 
 
 def create_context(sender, instance, created, **kwargs):

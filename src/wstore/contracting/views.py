@@ -50,8 +50,6 @@ class PurchaseFormCollection(Resource):
 
         data = json.loads(request.raw_post_data)
 
-        user_profile = request.user.userprofile
-
         # Get the offering
         try:
             if isinstance(data['offering'], dict):
@@ -60,16 +58,10 @@ class PurchaseFormCollection(Resource):
                 offering = Offering.objects.get(owner_organization=org, name=id_['name'], version=id_['version'])
             else:
                 offering = Offering.objects.get(description_url=data['offering'])
-
         except:
             return build_response(request, 404, 'Not found')
 
         redirect_uri = data['redirect_uri']
-
-        # Check that the user has not already purchased the offering
-        if offering.pk in user_profile.offerings_purchased \
-        or offering.pk in user_profile.organization.offerings_purchased:
-            return build_response(request, 400, 'You have already purchased the offering')
 
         # Check that the offering can be purchased
         if offering.state != 'published':
@@ -115,11 +107,7 @@ class PurchaseFormCollection(Resource):
 
         id_ = info['offering']
 
-        # Remove the context entry
-        # del(context.user_refs[token])
         context.save()
-
-        user_profile = user.userprofile
 
         # Load the offering info
         try:
@@ -127,16 +115,6 @@ class PurchaseFormCollection(Resource):
         except:
             return build_response(request, 404, 'Not found')
         offering_info = get_offering_info(offering, user)
-
-        # Check that the user is not the owner of the offering
-
-        if offering.owner_admin_user == user:
-            return build_response(request, 400, 'You are the owner of the offering')
-
-        # Check that the user has not already purchased the offering
-        if offering.pk in user_profile.offerings_purchased \
-        or offering.pk in user_profile.organization.offerings_purchased:
-            return build_response(request, 400, 'You have already purchased the offering')
 
         # Check that the offering can be purchased
         if offering.state != 'published':
@@ -157,6 +135,7 @@ class PurchaseCollection(Resource):
     @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
+
         user = request.user
         content_type = get_content_type(request)[0]
 
@@ -181,19 +160,33 @@ class PurchaseCollection(Resource):
                 if 'credit_card' in data['payment']:
                     payment_info['credit_card'] = data['payment']['credit_card']
 
-                response_info = create_purchase(user, offering, data.get('organization_owned', False), payment_info)
+                # Check if the user is purchasing for an organization
+                current_organization = user.userprofile.current_organization
+
+                org_owned = True
+                if current_organization.name == user.username:
+                    org_owned = False
+
+                # Check if the user has the customer role for the organization
+                if org_owned:
+                    roles = user.userprofile.get_current_roles()
+
+                    if not 'customer' in roles:
+                        return build_response(request, 403, 'Forbidden')
+
+                response_info = create_purchase(user, offering, org_owned=org_owned, payment_info=payment_info)
             except Exception, e:
                 # Check if the offering has been paid before the exception has been raised
                 paid = False
 
-                if data['organization_owned']:
-                    if offering.pk in request.user.userprofile.organization.offerings_purchased:
+                if org_owned:
+                    if offering.pk in request.user.userprofile.current_organization.offerings_purchased:
                         paid = True
-                        response_info = Purchase.objects.get(owner_organization=request.user.userprofile.organization, offering=offering)
+                        response_info = Purchase.objects.get(owner_organization=request.user.userprofile.current_organization, offering=offering)
                 else:
                     if offering.pk in request.user.userprofile.offerings_purchased:
                         paid = True
-                        response_info = Purchase.objects.get(customer=request.user, offering=offering)
+                        response_info = Purchase.objects.get(customer=request.user, offering=offering, organization_owned=False)
 
                 if not paid:
                     return build_response(request, 400, e.message)
@@ -214,7 +207,7 @@ class PurchaseCollection(Resource):
                 r = store_resource.objects.get(pk=res)
 
                 if r.resource_type == 'download':
-                    # Check if the resource has been uploaded to the store or is
+                    # Check if the resource has been uploaded to the store or if is
                     # in an external applications server
                     if r.resource_path != '':
                         response['resources'].append(r.resource_path)

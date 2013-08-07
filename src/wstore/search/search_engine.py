@@ -131,13 +131,15 @@ class SearchEngine():
                         i += 1
 
             elif state == 'all':
-                if offering.owner_admin_user == user:
+                if (offering.owner_admin_user == user) and \
+                (offering.owner_organization == user.userprofile.current_organization):
                     if not count:
                         result.append(offering_info)
                     else:
                         i += 1
             else:
-                if offering.owner_admin_user == user and offering_info['state'] == state:
+                if (offering.owner_admin_user == user) and (offering_info['state'] == state) \
+                and (offering.owner_organization == user.userprofile.current_organization):
                     if not count:
                         result.append(offering_info)
                     else:

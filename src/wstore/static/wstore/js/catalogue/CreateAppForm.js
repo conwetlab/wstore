@@ -162,7 +162,7 @@
                     $('#message').modal('hide');
                     MessageManager.showMessage('Created', 'The offering has been created')
                     if (getCurrentTab() == '#provided-tab') {
-                        getUserOfferings('#provided-tab', paintProvidedOfferings, false);
+                        getUserOfferings('#provided-tab', paintProvidedOfferings, EndpointManager.getEndpoint('OFFERING_COLLECTION'), false);
                     }
                 },
                 error: function (xhr) {

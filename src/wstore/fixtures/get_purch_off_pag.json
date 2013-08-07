@@ -423,7 +423,8 @@
         "fields": {
             "name": "test_organization",
             "offerings_purchased": [],
-            "payment_info": {}
+            "payment_info": {},
+            "managers": []
         }
     },
     {
@@ -432,7 +433,8 @@
         "fields": {
             "name": "test_organization1",
             "offerings_purchased": [],
-            "payment_info": {}
+            "payment_info": {},
+            "managers": []
         }
     }
 ]

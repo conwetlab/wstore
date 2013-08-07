@@ -315,7 +315,50 @@
 
             $.template('userInfoConfTemplate', $('#user_info_conf_template'));
             $.tmpl('userInfoConfTemplate', context).appendTo('#userinfo-tab');
+
+	    // Include organizations
+            for (var i = 0; i < userInfo.organizations.length; i++) {
+                var org;
+                org = $('<option></option>').attr('value', userInfo.organizations[i].name);
+                org.text(userInfo.organizations[i].name);
+		org.appendTo('#org-select');
+            }
+
+	    // Set initial value for the org select
+            $('#org-select').val(userInfo.organization);
+            // Set listener for oranization change
+            $('#org-select').change(function() {
+                changeOrganization();
+            }); 
+	}
+    };
+
+    var changeOrganization = function changeOrganization() {
+        var csrfToken = $.cookie('csrftoken');
+        var request = {
+            'organization': $('#org-select').val()
         }
+
+        $.ajax({
+            headers: {
+                'X-CSRFToken': csrfToken,
+            },
+            type: 'PUT',
+            url: EndpointManager.getEndpoint('CHANGE_ORGANIZATION'),
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(request),
+            success: function (response) {
+                // Update user info
+                getUserInfo();
+            },
+            error: function (xhr) {
+                var resp = xhr.responseText;
+                var msg = JSON.parse(resp).message;
+                $('#message').modal('hide');
+                MessageManager.showMessage('Error', msg);
+            }
+        });
     };
 
     var paintAddressInfo = function paintAddressInfo(taxAddr) {

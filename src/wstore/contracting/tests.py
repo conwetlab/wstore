@@ -128,7 +128,11 @@ class PurchasesCreationTestCase(TestCase):
         org = Organization.objects.get(name='test_organization')
         org.tax_address = tax_address
         org.save()
-        user_profile.organization = org
+        user_profile.current_organization = org
+        user_profile.organizations = [{
+            'organization': org.pk,
+            'roles': ['customer']
+        }]
         user_profile.save()
 
         payment_info = {
@@ -249,46 +253,6 @@ class PurchasesCreationTestCase(TestCase):
         user_profile = UserProfile.objects.get(user=user)
         user_profile.offerings_purchased = ['81000aba8e05ac2115f022f0']
         org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
-        user_profile.save()
-
-        payment_info = {
-            'payment_method': 'credit_card',
-            'credit_card': {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            },
-            'tax_address': {
-                'street': 'test street',
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }
-
-        error = False
-        msg = None
-
-        try:
-            purchases_management.create_purchase(user, offering, payment_info=payment_info)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, "The offering has been already purchased")
-
-    def test_purchase_already_purchased_org(self):
-
-        user = User.objects.get(username='test_user')
-        offering = Offering.objects.get(name='test_offering3')
-        user_profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        org.offerings_purchased = ['81000aba8e05ac2115f022f0']
-        org.save()
         user_profile.organization = org
         user_profile.save()
 

@@ -36,7 +36,7 @@ def rollback(provider, profile, json_data, msg):
         return
 
     # Check files
-    dir_name = profile.organization.name + '__' + json_data['name'] + '__' + json_data['version']
+    dir_name = profile.current_organization.name + '__' + json_data['name'] + '__' + json_data['version']
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
 
     if os.path.exists(path):
@@ -48,14 +48,14 @@ def rollback(provider, profile, json_data, msg):
         os.rmdir(path)
 
     # Check if the offering has been created
-    offering = Offering.objects.filter(owner_organization=profile.organization, name=json_data['name'], version=json_data['version'])
+    offering = Offering.objects.filter(owner_organization=profile.current_organization, name=json_data['name'], version=json_data['version'])
 
     remove = False
     if len(offering) > 0:
         offering = offering[0]
 
         # If the offerings has been created means that the USDL is
-        # uploded in the repository
+        # uploaded in the repository
         if 'offering_description' in json_data:
             remove = True
             url = offering.description_url

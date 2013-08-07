@@ -20,7 +20,7 @@
 
 (function(){
 
-    var taxAddr, orgOwned;
+    var taxAddr;
 
     var makePurchaseRequest = function makePurchaseRequest(offeringElement) {
         var csrfToken = $.cookie('csrftoken');
@@ -34,7 +34,6 @@
                 'name': offeringElement.getName(),
                 'version': offeringElement.getVersion()
             },
-            'organization_owned': orgOwned
         }
 
         // If a tax address has been provided include it to the request
@@ -213,7 +212,7 @@
             if ($('#pay-method').val() == 'credit_card') {
                 var checked = false;
 
-                $('<label></label>').attr('for', 'curr-card').text('Use user profile credit card').appendTo('#method-cont');
+                $('<label></label>').attr('for', 'curr-card').text('Use registered credit card').appendTo('#method-cont');
                 $('<input></input>').attr('type', 'checkbox').attr('value', 'curr-card').attr('id', 'curr-card').appendTo('#method-cont');
                 $('<div></div>').attr('id', 'card-form').appendTo('#method-cont');
 
@@ -264,7 +263,7 @@
         $('<div></div>').attr('id', 'purchase-error').appendTo('.modal-body');
         $('<div></div>').addClass('space clear').appendTo('.modal-body');
 
-        $('<label></label>').attr('for', 'tax_addr').text('Use user profile tax address').appendTo('.modal-body');
+        $('<label></label>').attr('for', 'tax_addr').text('Use registered tax address').appendTo('.modal-body');
         $('<input></input>').attr('type', 'checkbox').attr('value', 'tax_addr').attr('id', 'tax_addr').appendTo('.modal-body');
         $('<div></div>').attr('id', 'addr_cont').appendTo('.modal-body');
 
@@ -283,9 +282,6 @@
                 checked = true;
             }
         });
-
-        $('<label></label>').attr('for', 'owned').text('Make the offering available to the whole organization').appendTo('.modal-body');
-        $('<input></input>').attr('type', 'checkbox').attr('value', 'owned').attr('id', 'owned').appendTo('.modal-body');
 
         // Set listeners
         $('.modal-footer').empty();
@@ -318,7 +314,6 @@
                 }
             }
             if(!error) {
-                orgOwned = $('#owned').prop('checked');
                 showPaymentInfoForm(offeringElement);
             } else {
                 var msg = 'A tax address must be provided';

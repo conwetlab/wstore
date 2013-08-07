@@ -20,7 +20,6 @@
 
 from wstore.models import Purchase
 from wstore.models import UserProfile
-from wstore.models import Organization
 
 
 def rollback(purchase):
@@ -28,7 +27,7 @@ def rollback(purchase):
     # so the models must not be deleted
     if purchase.state != 'paid':
 
-        # Check the payment has been made
+        # Check that the payment has been made
         contract = True
         try:
             contr = purchase.contract
@@ -98,9 +97,9 @@ class PurchaseRollback():
                 # Get the purchase
                 if org_owned:
                     user_profile = UserProfile.objects.get(user=user)
-                    purchase = Purchase.objects.get(owner_organization=user_profile.organization, offering=offering)
+                    purchase = Purchase.objects.get(owner_organization=user_profile.current_organization, offering=offering)
                 else:
-                    purchase = Purchase.objects.get(customer=user, offering=offering)
+                    purchase = Purchase.objects.get(customer=user, offering=offering, organization_owned=False)
                 rollback(purchase)
 
             raise e

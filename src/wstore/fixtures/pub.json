@@ -29,7 +29,8 @@
         "fields": {
             "name": "test_organization",
             "offerings_purchased": [],
-            "payment_info": {}
+            "payment_info": {},
+            "managers": ["51000aba8e05ac2115f022f9"]
         }
     },
     {

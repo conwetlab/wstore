@@ -756,7 +756,11 @@ class PayPerUseChargingTestCase(TestCase):
         user = User.objects.get(username='test_user2')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization1')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations = [{
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        }]
         profile.save()
 
         purchase = Purchase.objects.get(pk='61004a9a5e95ac9115902290')

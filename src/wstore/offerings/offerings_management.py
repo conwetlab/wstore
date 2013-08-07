@@ -34,7 +34,7 @@ from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.market_adaptor.marketadaptor import MarketAdaptor
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
-from wstore.models import Resource
+from wstore.models import Resource, Organization
 from wstore.models import Repository
 from wstore.models import Offering
 from wstore.models import Marketplace
@@ -50,12 +50,17 @@ def get_offering_info(offering, user):
     # Check if the user has purchased the offering
     state = offering.state
 
-    if offering.pk in user_profile.offerings_purchased:
-        state = 'purchased'
-        purchase = Purchase.objects.get(offering=offering, customer=user)
-    elif offering.pk in user_profile.organization.offerings_purchased:
-        state = 'purchased'
-        purchase = Purchase.objects.get(offering=offering, owner_organization=user_profile.organization)
+    # Check if the current organization is the user organization
+    if user.username == user.userprofile.current_organization.name:
+
+        if offering.pk in user_profile.offerings_purchased:
+            state = 'purchased'
+            purchase = Purchase.objects.get(offering=offering, customer=user, organization_owned=False)
+
+    else:
+        if offering.pk in user_profile.current_organization.offerings_purchased:
+            state = 'purchased'
+            purchase = Purchase.objects.get(offering=offering, owner_organization=user_profile.current_organization)
 
     if state == 'purchased':
         if offering.pk in user_profile.rated_offerings:
@@ -137,15 +142,21 @@ def _get_purchased_offerings(user, db, pagination=None, sort=None):
     # Get the user profile purchased offerings
     user_profile = db.wstore_userprofile.find_one({'user_id': ObjectId(user.pk)})
     # Get the user organization purchased offerings
-    organization = db.wstore_organization.find_one({'_id': user_profile['organization_id']})
+    organization = db.wstore_organization.find_one({'_id': user_profile['current_organization_id']})
 
-    # Load user and organization purchased offerings
-    user_purchased = user_profile['offerings_purchased']
+    if user.userprofile.current_organization.name != user.username:
+        user_purchased = organization['offerings_purchased']
 
-    # Remove user offerings from organization offerings
-    for offer in organization['offerings_purchased']:
-        if not offer in user_purchased:
-            user_purchased.append(offer)
+    else:
+        # If the current organization is the user organization, load
+        # all user offerings
+
+        user_purchased = user_profile['offerings_purchased']
+
+        # Append user offerings from organization offerings
+        for offer in organization['offerings_purchased']:
+            if not offer in user_purchased:
+                user_purchased.append(offer)
 
     # Check sorting
 
@@ -191,20 +202,29 @@ def get_offerings(user, filter_='published', owned=False, pagination=None, sort=
     connection = MongoClient()
     db = connection[settings.DATABASES['default']['NAME']]
     offerings = db.wstore_offering
+
     # Pagination: define the first element and the number of elements
-    if owned:
+    if owned and filter_ != 'purchased':
+        current_organization = user.userprofile.current_organization
+        query = {
+            'owner_admin_user_id': ObjectId(user.id),
+            'owner_organization_id': ObjectId(current_organization.id)
+        }   
+
         if  filter_ == 'uploaded':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'}).sort(sorting, order)
-        elif filter_ == 'all':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id)}).sort(sorting, order)
+            query['state'] = 'uploaded'
+
         elif  filter_ == 'published':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'published'}).sort(sorting, order)
-        elif filter_ == 'purchased':
-            if pagination:
-                prov_offerings = _get_purchased_offerings(user, db, pagination, sort=sorting)
-                pagination = None
-            else:
-                prov_offerings = _get_purchased_offerings(user, db, sort=sorting)
+            query['state'] = 'published'
+
+        prov_offerings = offerings.find(query).sort(sorting, order)
+
+    elif owned and filter_ == 'purchased':
+        if pagination:
+            prov_offerings = _get_purchased_offerings(user, db, pagination, sort=sorting)
+            pagination = None
+        else:
+            prov_offerings = _get_purchased_offerings(user, db, sort=sorting)
 
     else:
         if  filter_ == 'published':
@@ -231,16 +251,20 @@ def get_offerings(user, filter_='published', owned=False, pagination=None, sort=
 def count_offerings(user, filter_='published', owned=False):
 
     if owned:
+        current_org = user.userprofile.current_organization
+
+        # If the current organization is not the user organization
+        # get only the offerings owned by that organization
         if  filter_ == 'uploaded':
-            count = Offering.objects.filter(owner_admin_user=user, state='uploaded').count()
+            count = Offering.objects.filter(owner_admin_user=user, state='uploaded', owner_organization=current_org).count()
         elif filter_ == 'all':
-            count = Offering.objects.filter(owner_admin_user=user).count()
+            count = Offering.objects.filter(owner_admin_user=user, owner_organization=current_org).count()
         elif  filter_ == 'published':
-            count = Offering.objects.filter(owner_admin_user=user, state='published').count()
+            count = Offering.objects.filter(owner_admin_user=user, state='published', owner_organization=current_org).count()
         elif filter_ == 'purchased':
-            user_profile = UserProfile.objects.get(user=user)
-            count = len(user_profile.offerings_purchased)
-            count += len(user_profile.organization.offerings_purchased)
+            count = len(current_org.offerings_purchased)
+            if current_org.name == user.username:
+                count += len(user.userprofile.offerings_purchased)
 
     else:
         if  filter_ == 'published':
@@ -267,7 +291,7 @@ def create_offering(provider, profile, json_data):
     data['related_images'] = []
 
     # Get organization
-    organization = profile.organization
+    organization = profile.current_organization
 
     # Check if the offering already exists
     existing = True
@@ -634,10 +658,21 @@ def bind_resources(offering, data, provider):
 def comment_offering(offering, comment, user):
 
     # Check if the user can comment the offering.
-    if ((not offering.pk in user.userprofile.offerings_purchased) and \
-    (not offering.pk in user.userprofile.organization.offerings_purchased)) or \
-    offering.pk in user.userprofile.rated_offerings:
+    if offering.pk in user.userprofile.rated_offerings:
         raise Exception('The user cannot comment this offering')
+
+    elif (not offering.pk in user.userprofile.offerings_purchased):
+
+        # Check if the offering is purchased by an organization
+        org_purchased = False
+        for org in user.userprofile.organizations:
+            o = Organization.objects.get(pk=org['organization'])
+            if offering.pk in o.offerings_purchased:
+                org_purchased = True
+                break
+
+        if not org_purchased:
+            raise Exception('The user cannot comment this offering')
 
     # Check comment structure
     if not 'title' in comment or not 'rating' in comment or not 'comment' in comment:

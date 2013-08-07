@@ -34,7 +34,8 @@
         'PURCHASE_COLLECTION': '/api/contracting',
         'NEWEST_COLLECTION': '/api/offering/offerings/newest',
         'TOPRATED_COLLECTION': '/api/offering/offerings/toprated',
-        'UNIT_COLLECTION': '/api/administration/units'
+        'UNIT_COLLECTION': '/api/administration/units',
+        'CHANGE_ORGANIZATION': '/api/administration/organizations/change'
     };
 
     // Contains endpoints that depend on variables

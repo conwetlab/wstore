@@ -191,157 +191,160 @@ class ChargingEngine:
         cdrs = []
 
         # Take the first RSS registered
-        rss = RSS.objects.all()[0]
+        rss_collection = RSS.objects.all()
 
-        # Create connection for raw database access
-        connection = MongoClient()
-        db = connection[settings.DATABASES['default']['NAME']]
+        if len(rss_collection) > 0:
+            rss = RSS.objects.all()[0]
 
-        # Get the service name using direct access to the stored
-        # JSON USDL description
+            # Create connection for raw database access
+            connection = MongoClient()
+            db = connection[settings.DATABASES['default']['NAME']]
 
-        offering_description = self._purchase.offering.offering_description
+            # Get the service name using direct access to the stored
+            # JSON USDL description
 
-        # Get the used tag for RDF properties
-        service_tag = ''
-        dc_tag = ''
-        for k, v in offering_description['@context'].iteritems():
-            if v == 'http://www.linked-usdl.org/ns/usdl-core#':
-                service_tag = k
-            if v == 'http://purl.org/dc/terms/':
-                dc_tag = k
+            offering_description = self._purchase.offering.offering_description
 
-        # Get the service name
-        service_name = ''
-        for node in offering_description['@graph']:
-            if node['@type'] == service_tag + ':Service':
-                service_name = node[dc_tag + ':title']['@value']
+            # Get the used tag for RDF properties
+            service_tag = ''
+            dc_tag = ''
+            for k, v in offering_description['@context'].iteritems():
+                if v == 'http://www.linked-usdl.org/ns/usdl-core#':
+                    service_tag = k
+                if v == 'http://purl.org/dc/terms/':
+                    dc_tag = k
 
-        # Get the provider (Organization)
-        provider = self._purchase.offering.owner_organization.name
+            # Get the service name
+            service_name = ''
+            for node in offering_description['@graph']:
+                if node['@type'] == service_tag + ':Service':
+                    service_name = node[dc_tag + ':title']['@value']
 
-        # Set offering ID
-        offering = self._purchase.offering.name + ' ' + self._purchase.offering.version
+            # Get the provider (Organization)
+            provider = self._purchase.offering.owner_organization.name
 
-        # Get the customer
-        if self._purchase.organization_owned:
-            customer = self._purchase.owner_organization.name
-        else:
-            customer = self._purchase.customer.username
+            # Set offering ID
+            offering = self._purchase.offering.name + ' ' + self._purchase.offering.version
 
-        # Get the country code
-        country_code = self._get_country_code(self._purchase.tax_address['country'])
-        country_code = get_country_code(country_code)
+            # Get the customer
+            if self._purchase.organization_owned:
+                customer = self._purchase.owner_organization.name
+            else:
+                customer = self._purchase.customer.username
 
-        # Check the type of the applied parts
-        if 'single_payment' in applied_parts:
+            # Get the country code
+            country_code = self._get_country_code(self._purchase.tax_address['country'])
+            country_code = get_country_code(country_code)
 
-            # A cdr is generated for every price part
-            for part in applied_parts['single_payment']:
+            # Check the type of the applied parts
+            if 'single_payment' in applied_parts:
 
-                # Take and increment the correlation number using
-                # the mongoDB atomic access in order to avoid race
-                # problems
-                corr_number = db.wstore_rss.find_and_modify(
-                    query={'_id': ObjectId(rss.pk)},
-                    update={'$inc': {'correlation_number': 1}}
-                )['correlation_number']
+                # A cdr is generated for every price part
+                for part in applied_parts['single_payment']:
 
-                # Set the description
-                description = 'Single payment: ' + part['value'] + ' ' + part['currency']
-                currency = get_curency_code(part['currency'])
+                    # Take and increment the correlation number using
+                    # the mongoDB atomic access in order to avoid race
+                    # problems
+                    corr_number = db.wstore_rss.find_and_modify(
+                        query={'_id': ObjectId(rss.pk)},
+                        update={'$inc': {'correlation_number': 1}}
+                    )['correlation_number']
 
-                cdrs.append({
-                    'provider': provider,
-                    'service': service_name,
-                    'defined_model': 'Single payment event',
-                    'correlation': str(corr_number),
-                    'purchase': self._purchase.pk,
-                    'offering': offering,
-                    'product_class': 'SaaS',
-                    'description': description,
-                    'cost_currency': currency,
-                    'cost_value': part['value'],
-                    'tax_currency': '1',
-                    'tax_value': '0.0',
-                    'source': '1',
-                    'operator': '1',
-                    'country': country_code,
-                    'time_stamp': time_stamp,
-                    'customer': customer,
-                })
+                    # Set the description
+                    description = 'Single payment: ' + part['value'] + ' ' + part['currency']
+                    currency = get_curency_code(part['currency'])
 
-        if 'subscription' in applied_parts:
+                    cdrs.append({
+                        'provider': provider,
+                        'service': service_name,
+                        'defined_model': 'Single payment event',
+                        'correlation': str(corr_number),
+                        'purchase': self._purchase.pk,
+                        'offering': offering,
+                        'product_class': 'SaaS',
+                        'description': description,
+                        'cost_currency': currency,
+                        'cost_value': part['value'],
+                        'tax_currency': '1',
+                        'tax_value': '0.0',
+                        'source': '1',
+                        'operator': '1',
+                        'country': country_code,
+                        'time_stamp': time_stamp,
+                        'customer': customer,
+                    })
 
-            # A cdr is generated by price part
-            for part in applied_parts['subscription']:
+            if 'subscription' in applied_parts:
 
-                corr_number = db.wstore_rss.find_and_modify(
-                    query={'_id': ObjectId(rss.pk)},
-                    update={'$inc': {'correlation_number': 1}}
-                )['correlation_number']
+                # A cdr is generated by price part
+                for part in applied_parts['subscription']:
 
-                # Set the description
-                description = 'Subscription: ' + part['value'] + ' ' + part['currency'] + ' ' + part['unit']
-                currency = get_curency_code(part['currency'])
+                    corr_number = db.wstore_rss.find_and_modify(
+                        query={'_id': ObjectId(rss.pk)},
+                        update={'$inc': {'correlation_number': 1}}
+                    )['correlation_number']
 
-                cdrs.append({
-                    'provider': provider,
-                    'service': service_name,
-                    'defined_model': 'Subscription event',
-                    'correlation': str(corr_number),
-                    'purchase': self._purchase.pk,
-                    'offering': offering,
-                    'product_class': 'SaaS',
-                    'description': description,
-                    'cost_currency': currency,
-                    'cost_value': part['value'],
-                    'tax_currency': '1',
-                    'tax_value': '0.0',
-                    'source': '1',
-                    'operator': '1',
-                    'country': country_code,
-                    'time_stamp': time_stamp,
-                    'customer': customer,
-                })
+                    # Set the description
+                    description = 'Subscription: ' + part['value'] + ' ' + part['currency'] + ' ' + part['unit']
+                    currency = get_curency_code(part['currency'])
 
-        if 'pay_per_use' in applied_parts:
+                    cdrs.append({
+                        'provider': provider,
+                        'service': service_name,
+                        'defined_model': 'Subscription event',
+                        'correlation': str(corr_number),
+                        'purchase': self._purchase.pk,
+                        'offering': offering,
+                        'product_class': 'SaaS',
+                        'description': description,
+                        'cost_currency': currency,
+                        'cost_value': part['value'],
+                        'tax_currency': '1',
+                        'tax_value': '0.0',
+                        'source': '1',
+                        'operator': '1',
+                        'country': country_code,
+                        'time_stamp': time_stamp,
+                        'customer': customer,
+                    })
 
-            # A cdr is generated by price part
-            for part in applied_parts['pay_per_use']:
+            if 'pay_per_use' in applied_parts:
 
-                corr_number = db.wstore_rss.find_and_modify(
-                    query={'_id': ObjectId(rss.pk)},
-                    update={'$inc': {'correlation_number': 1}}
-                )['correlation_number']
+                # A cdr is generated by price part
+                for part in applied_parts['pay_per_use']:
 
-                # Set the description
-                description = 'Fee per ' + part['unit'] + ', Consumption: ' + str(part['value'])
-                currency = get_curency_code(part['applied_part']['currency'])
+                    corr_number = db.wstore_rss.find_and_modify(
+                        query={'_id': ObjectId(rss.pk)},
+                        update={'$inc': {'correlation_number': 1}}
+                    )['correlation_number']
 
-                cdrs.append({
-                    'provider': provider,
-                    'service': service_name,
-                    'defined_model': 'Pay per use event',
-                    'correlation': str(corr_number),
-                    'purchase': self._purchase.pk,
-                    'offering': offering,
-                    'product_class': 'SaaS',
-                    'description': description,
-                    'cost_currency': currency,
-                    'cost_value': str(part['price']),
-                    'tax_currency': '1',
-                    'tax_value': '0.0',
-                    'source': '1',
-                    'operator': '1',
-                    'country': country_code,
-                    'time_stamp': time_stamp,
-                    'customer': customer,
-                })
+                    # Set the description
+                    description = 'Fee per ' + part['unit'] + ', Consumption: ' + str(part['value'])
+                    currency = get_curency_code(part['applied_part']['currency'])
 
-        # Send the created CDRs to the Revenue Sharing System
-        r = RSSAdaptorThread(rss.host, cdrs)
-        r.start()
+                    cdrs.append({
+                        'provider': provider,
+                        'service': service_name,
+                        'defined_model': 'Pay per use event',
+                        'correlation': str(corr_number),
+                        'purchase': self._purchase.pk,
+                        'offering': offering,
+                        'product_class': 'SaaS',
+                        'description': description,
+                        'cost_currency': currency,
+                        'cost_value': str(part['price']),
+                        'tax_currency': '1',
+                        'tax_value': '0.0',
+                        'source': '1',
+                        'operator': '1',
+                        'country': country_code,
+                        'time_stamp': time_stamp,
+                        'customer': customer,
+                    })
+
+            # Send the created CDRs to the Revenue Sharing System
+            r = RSSAdaptorThread(rss.host, cdrs)
+            r.start()
 
     def _generate_invoice(self, price, applied_parts, type_):
 
@@ -412,7 +415,7 @@ class ChargingEngine:
             'off_version': offering.version,
             'ref': self._purchase.ref,
             'date': date,
-            'organization': customer_profile.organization.name,
+            'organization': customer_profile.current_organization.name, # FIXME this line does not make sense for multilpe organizations
             'customer': customer_profile.complete_name,
             'address': tax.get('street'),
             'postal': tax.get('postal'),
@@ -545,7 +548,14 @@ class ChargingEngine:
         if self._purchase.organization_owned:
             # Check if the user belongs to the organization
             profile = UserProfile.objects.get(user=customer)
-            if profile.organization != self._purchase.owner_organization:
+            belongs = False
+
+            for org in profile.organizations:
+                if org['organization'] == self._purchase.owner_organization.pk:
+                    belongs = True
+                    break
+
+            if not belongs:
                 raise Exception('The user not belongs to the owner organization')
         else:
             # Check if the user has purchased the offering

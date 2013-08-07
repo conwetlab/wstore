@@ -31,6 +31,7 @@ from wstore.search.search_engine import SearchEngine
 from wstore.models import UserProfile
 from wstore.models import Organization
 from wstore.models import Offering
+from wstore.contracting.models import Purchase
 
 
 __test__ = False
@@ -120,6 +121,12 @@ class FullTextSearchTestCase(TestCase):
         document.add(Field("content", "purchased", Field.Store.YES, Field.Index.ANALYZED))
         document.add(Field("id", "61000a0a8905ac2115f022f0", Field.Store.YES, Field.Index.NOT_ANALYZED))
         index_writer.addDocument(document)
+
+        document = Document()
+        document.add(Field("content", "multiple", Field.Store.YES, Field.Index.ANALYZED))
+        document.add(Field("id", "6108888a8905ac2115f022f0", Field.Store.YES, Field.Index.NOT_ANALYZED))
+        index_writer.addDocument(document)
+
         index_writer.optimize()
         index_writer.close()
 
@@ -143,7 +150,11 @@ class FullTextSearchTestCase(TestCase):
         user_profile = UserProfile.objects.get(user=user)
 
         org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
+        user_profile.current_organization = org
+        user_profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['provider', 'customer']
+        })
         user_profile.save()
 
         se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
@@ -158,7 +169,11 @@ class FullTextSearchTestCase(TestCase):
         user_profile = UserProfile.objects.get(user=user)
 
         org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
+        user_profile.current_organization = org
+        user_profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['provider', 'customer']
+        })
         user_profile.save()
 
         se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
@@ -175,7 +190,11 @@ class FullTextSearchTestCase(TestCase):
         user_profile = UserProfile.objects.get(user=user)
 
         org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
+        user_profile.current_organization = org
+        user_profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['provider', 'customer']
+        })
         user_profile.save()
 
         se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
@@ -188,7 +207,11 @@ class FullTextSearchTestCase(TestCase):
         user_profile = UserProfile.objects.get(user=user)
 
         org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
+        user_profile.current_organization = org
+        user_profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['provider', 'customer']
+        })
         user_profile.save()
 
         se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
@@ -200,13 +223,23 @@ class FullTextSearchTestCase(TestCase):
         self.assertEqual(result[0]['state'], 'uploaded')
 
     def test_search_for_purchased_offerings(self):
+
         user = User.objects.get(username='test_user')
         user_profile = UserProfile.objects.get(user=user)
 
         org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
-        user_profile.offerings_purchased = ["61000a0a8905ac2115f022f0"]
+        user_profile.current_organization = org
+        user_profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['provider', 'customer']
+        })
         user_profile.save()
+        org.offerings_purchased = ["61000a0a8905ac2115f022f0"]
+        org.save()
+        purchase = Purchase.objects.all()[0]
+        purchase.organization_owned = True
+        purchase.owner_organization = org
+        purchase.save()
 
         se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
         result = se.full_text_search(user, 'purchased', state='purchased')
@@ -216,12 +249,62 @@ class FullTextSearchTestCase(TestCase):
         self.assertEqual(result[0]['version'], '1.0')
         self.assertEqual(result[0]['state'], 'purchased')
 
+    def test_search_for_purchased_offerings_user(self):
+
+        user = User.objects.get(username='test_user')
+        user_profile = UserProfile.objects.get(user=user)
+
+        org = Organization.objects.get(name='test_organization')
+        user_profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['provider', 'customer']
+        })
+        user_profile.offerings_purchased = ["61000a0a8905ac2115f022f0"]
+        user_profile.save()
+        org.save()
+
+        se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
+        result = se.full_text_search(user, 'purchased', state='purchased')
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['name'], 'purchased_offering')
+        self.assertEqual(result[0]['version'], '1.0')
+        self.assertEqual(result[0]['state'], 'purchased')
+
+    def test_search_for_purchased_offerings_multiple(self):
+
+        user = User.objects.get(username='test_user')
+        user_profile = UserProfile.objects.get(user=user)
+
+        org = Organization.objects.get(name='test_organization1')
+        user_profile.current_organization = org
+        user_profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['provider', 'customer']
+        })
+        user_profile.offerings_purchased = ["61000a0a8905ac2115f022f0"]
+        user_profile.save()
+        org.offerings_purchased = ["6108888a8905ac2115f022f0"]
+        org.save()
+
+        se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
+        result = se.full_text_search(user, 'multiple', state='purchased')
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['name'], 'purchased_offering3')
+        self.assertEqual(result[0]['version'], '1.1')
+        self.assertEqual(result[0]['state'], 'purchased')
+
     def test_search_not_existing_index(self):
         user = User.objects.get(username='test_user')
         user_profile = UserProfile.objects.get(user=user)
 
         org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
+        user_profile.current_organization = org
+        user_profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['provider', 'customer']
+        })
         user_profile.save()
 
         se = SearchEngine(settings.BASEDIR + '/wstore/test/no_index')

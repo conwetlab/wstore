@@ -22,6 +22,7 @@ import json
 
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods
 
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
@@ -30,6 +31,7 @@ from wstore.models import UserProfile
 from wstore.models import Organization
 from wstore.models import Purchase
 from wstore.charging_engine.models import Unit
+from django.contrib.auth.decorators import login_required
 
 
 def is_hidden_credit_card(number, profile_card):
@@ -72,9 +74,19 @@ class UserProfileCollection(Resource):
             user_profile['last_name'] = user.last_name
 
             profile = UserProfile.objects.get(user=user)
-            user_profile['organization'] = profile.organization.name
+            user_profile['organization'] = profile.current_organization.name
+
+            # Append organizations
+            user_profile['organizations'] = []
+
+            # Include organizations name
+            for o in profile.organizations:
+                user_profile['organizations'].append({
+                    'name': Organization.objects.get(pk=o['organization']).name
+                })
+
             user_profile['tax_address'] = profile.tax_address
-            user_profile['roles'] = profile.roles
+            user_profile['roles'] = profile.get_current_roles()
 
             if user.is_staff:
                 user_profile['roles'].append('admin')
@@ -111,12 +123,15 @@ class UserProfileCollection(Resource):
 
             # Get the user profile
             user_profile = UserProfile.objects.get(user=user)
-            org = Organization.objects.get(name=data['organization'])
-
-            user_profile.organization = org
 
             if 'provider' in data['roles']:
-                user_profile.roles.append('provider')
+                # Append the provider role to the user organization
+                # The user profile is just created so only the private organization exists
+
+                org = user_profile.organizations[0]
+                org['roles'].append('provider')
+                user_profile.save()
+                user_profile.organizations = [org]
 
             if 'tax_address' in data:
                 user_profile.tax_address = {
@@ -160,7 +175,14 @@ class UserProfileEntry(Resource):
         user_profile['last_name'] = user.last_name
 
         profile = UserProfile.objects.get(user=user)
-        user_profile['organization'] = profile.organization.name
+        user_profile['organization'] = profile.current_organization.name
+        user_profile['organizations'] = []
+
+        # Include organizations name
+        for o in profile.organizations:
+            user_profile['organizations'].append({
+                'name': Organization.objects.get(pk=o['organization']).name
+            })
 
         if 'street' in profile.tax_address:
             user_profile['tax_address'] = {
@@ -170,7 +192,7 @@ class UserProfileEntry(Resource):
                 'country': profile.tax_address['country']
             }
 
-        user_profile['roles'] = profile.roles
+        user_profile['roles'] = profile.get_current_roles()
 
         if user.is_staff:
             user_profile['roles'].append('admin')
@@ -210,12 +232,22 @@ class UserProfileEntry(Resource):
 
             # Get the user profile
             user_profile = UserProfile.objects.get(user=user)
-            org = Organization.objects.get(name=data['organization'])
 
-            user_profile.organization = org
+            if 'provider' in data['roles']:
+                # Append the provider role to the user organization
+                orgs = []
+                for o in user_profile.organizations:
+                    if Organization.objects.get(pk=o['organization']).name == user.username:
+                        new_org = o
 
-            if 'provider' in data['roles'] and (not 'provider' in user_profile.roles):
-                user_profile.roles.append('provider')
+                    if not 'provider' in new_org['roles']:
+                        new_org.append('provider')
+                        orgs.append(new_org)
+
+                    else:
+                        orgs.append(o)
+
+                user_profile.organizations = orgs
 
             if 'tax_address' in data:
                 user_profile.tax_address = {
@@ -317,7 +349,8 @@ class OrganizationCollection(Resource):
                 name=data['name'],
                 notification_url=data['notification_url'],
                 tax_address=tax_address,
-                payment_info=payment_info
+                payment_info=payment_info,
+		private=False
             )
         except:
             return build_response(request, 400, 'Inavlid content')
@@ -330,23 +363,24 @@ class OrganizationCollection(Resource):
         response = []
 
         for org in Organization.objects.all():
-            org_element = {
-                'name': org.name,
-                'notification_url': org.notification_url,
-                'tax_address': org.tax_address
-            }
-            if 'number' in org.payment_info:
-                number = org.payment_info['number']
-                number = 'xxxxxxxxxxxx' + number[-4:]
-                org_element['payment_info'] = {
-                    'number': number,
-                    'type': org.payment_info['type'],
-                    'expire_year': org.payment_info['expire_year'],
-                    'expire_month': org.payment_info['expire_month'],
-                    'cvv2': org.payment_info['cvv2'],
+            if not org.private:
+                org_element = {
+                    'name': org.name,
+                    'notification_url': org.notification_url,
+                    'tax_address': org.tax_address
                 }
+                if 'number' in org.payment_info:
+                    number = org.payment_info['number']
+                    number = 'xxxxxxxxxxxx' + number[-4:]
+                    org_element['payment_info'] = {
+                        'number': number,
+                        'type': org.payment_info['type'],
+                        'expire_year': org.payment_info['expire_year'],
+                        'expire_month': org.payment_info['expire_month'],
+                        'cvv2': org.payment_info['cvv2'],
+                    }
 
-            response.append(org_element)
+                response.append(org_element)
 
         return HttpResponse(json.dumps(response), status=200, mimetype='appliacation/json')
 
@@ -362,6 +396,9 @@ class OrganizationEntry(Resource):
             organization = Organization.objects.get(name=org)
         except:
             return build_response(request, 404, 'Not found')
+
+        if not request.user.is_staff or not request.user.pk in organization.managers:
+            return build_response(request, 403, 'Forbidden')
 
         try:
             # Load request data
@@ -473,3 +510,31 @@ class UnitCollection(Resource):
                 defined_model=unit_data['defined_model'].lower())
 
         return build_response(request, 201, 'Created')
+
+
+@login_required
+@require_http_methods(['PUT'])
+def change_current_organization(request):
+
+    # Get the requested organization
+    data = json.loads(request.raw_post_data)
+    try:
+        org = Organization.objects.get(name=data['organization'])
+    except:
+        return build_response(request, 404, 'Not found')
+
+    # Check that the user belongs to the organization
+    found = False
+    for o in request.user.userprofile.organizations:
+        if o['organization'] == org.pk:
+            found = True
+            break
+
+    if not found:
+        return build_response(request, 403, 'Forbidden')
+
+    # Change the current organization
+    request.user.userprofile.current_organization = org
+    request.user.userprofile.save()
+
+    return build_response(request, 200, 'OK')

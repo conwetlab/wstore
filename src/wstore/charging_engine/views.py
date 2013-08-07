@@ -125,15 +125,16 @@ class PayPalConfirmation(Resource):
 
         # Check if is the first payment
         if len(purchase.contract.charges) == 1:
-            # Add the offering to the user profile
-            user_profile = UserProfile.objects.get(user=purchase.customer)
-            user_profile.offerings_purchased.append(purchase.offering.pk)
-            user_profile.save()
 
             if purchase.organization_owned:
                 org = purchase.owner_organization
                 org.offerings_purchased.append(purchase.offering.pk)
                 org.save()
+            else:
+                # Add the offering to the user profile
+                user_profile = UserProfile.objects.get(user=purchase.customer)
+                user_profile.offerings_purchased.append(purchase.offering.pk)
+                user_profile.save()
 
             notify_provider(purchase)
 

@@ -49,7 +49,7 @@
         if (offeringElement.getState() == 'uploaded') {
             action = 'Publish';
         } else if (offeringElement.getState() == 'published') {
-            if (USERNAME == offeringElement.getProvider()) {
+            if ((USERNAME == offeringElement.getProvider()) && (ORGANIZATION == offeringElement.getOrganization())) {
                 action = 'Delete';
             } else {
                 action = 'Purchase';
@@ -121,7 +121,8 @@
         });
 
         // Set advanced operations
-        if(USERNAME == offeringElement.getProvider()) {
+        if((USERNAME == offeringElement.getProvider()) && 
+          (ORGANIZATION == offeringElement.getOrganization())) {
             $('<input></input>').attr('type', 'button').attr('value', 'Delete offering').addClass('btn btn-danger btn-advanced').appendTo('#advanced-op').click(function() {
                 var msg = "Are you sure that you want to delete the offering";
                 MessageManager.showYesNoWindow(msg, function() {
@@ -133,7 +134,9 @@
             getServiceModel(offeringElement);
         });
 
-        if(USERNAME == offeringElement.getProvider() && offeringElement.getState() == 'uploaded') {
+        if((USERNAME == offeringElement.getProvider()) && 
+          (ORGANIZATION == offeringElement.getOrganization()) && 
+          (offeringElement.getState() == 'uploaded')) {
             $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
                 bindResourcesForm(offeringElement);
             });

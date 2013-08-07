@@ -38,7 +38,8 @@ from wstore.models import Offering
 
 @login_required
 def home(request):
-    return render(request, 'index.html')
+    return render(request, 'index.html', {
+        'organization': request.user.userprofile.current_organization.name})
 
 
 @login_required
@@ -53,8 +54,9 @@ def admin(request):
 def catalogue(request):
     profile = UserProfile.objects.get(user=request.user)
     context = {
-        'roles': profile.roles,
-        'usdl_editor': settings.USDL_EDITOR_URL
+        'roles': profile.get_current_roles(),
+        'usdl_editor': settings.USDL_EDITOR_URL,
+	'organization': profile.current_organization.name
     }
     return render(request, 'catalogue/catalogue.html', context)
 
@@ -91,7 +93,7 @@ class ServeMedia(API_Resource):
 
             if not found:
                 # Check if the user organization has an offering with the resource
-                for off in user_profile.organization.offerings_purchased:
+                for off in user_profile.current_organization.offerings_purchased:
                     o = Offering.objects.get(pk=off)
 
                     for res in o.resources:
@@ -110,8 +112,8 @@ class ServeMedia(API_Resource):
             purchase = Purchase.objects.get(ref=name[:24])
 
             if purchase.organization_owned:
-                user_org = user_profile.organization
-                if not purchase.owner_organization == user_org.name:
+                user_org = user_profile.current_organization
+                if not purchase.owner_organization.name == user_org.name:
                     return build_response(request, 404, 'Not found')
             else:
                 if not purchase.customer == request.user:

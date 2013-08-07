@@ -36,16 +36,8 @@
         "model": "wstore.Organization",
         "fields": {
             "name": "test_organization",
-            "offerings_purchased": []
-        }
-    },
-    {
-        "pk": "51000aba8e05ac2115f122ff",
-        "model": "wstore.UserProfile",
-        "fields": {
-            "user": "51000aba8e05ac2115f022f9",
-            "organization": "51000aba8e05ac2135f122ff",
-            "roles": ["customer", "provider"]
+            "offerings_purchased": [],
+            "managers": []
         }
     },
     {

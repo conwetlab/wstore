@@ -50,8 +50,15 @@ class OfferingCollection(Resource):
         profile = UserProfile.objects.get(user=user)
         content_type = get_content_type(request)[0]
 
+        roles = []
+        # Get the provider roles in the current organization
+        for org in profile.organizations:
+            if org['organization'] == profile.current_organization.pk:
+                roles = org['roles']
+                break
+
         # Checks the provider role
-        if 'provider' in profile.roles:
+        if 'provider' in roles:
 
             if content_type == 'application/json':
                 try:
@@ -154,7 +161,9 @@ class OfferingEntry(Resource):
 
         # Update the offering
         try:
-            if offering.owner_admin_user != user:
+            # Check if the user is the owner of the offering or if is a manager of the
+            # owner organization
+            if not offering.is_owner(user) and user.pk not in org.managers:
                 return build_response(request, 403, 'Forbidden')
 
             data = json.loads(request.raw_post_data)
@@ -179,7 +188,7 @@ class OfferingEntry(Resource):
             return build_response(request, 404, 'Not found')
 
         # Check if the user can delete the offering
-        if not offering.is_owner(request.user):
+        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
             return build_response(request, 403, 'Forbidden')
 
         # Delete the offering
@@ -202,7 +211,7 @@ class ResourceCollection(Resource):
         profile = UserProfile.objects.get(user=user)
         content_type = get_content_type(request)[0]
 
-        if 'provider' in profile.roles:
+        if 'provider' in profile.get_current_roles():
 
             if content_type == 'application/json':
                 try:
@@ -225,7 +234,7 @@ class ResourceCollection(Resource):
     @authentication_required
     def read(self, request):
         profile = UserProfile.objects.get(user=request.user)
-        if 'provider' in profile.roles:
+        if 'provider' in profile.get_current_roles():
             response = get_provider_resources(request.user)
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
@@ -251,7 +260,7 @@ class PublishEntry(Resource):
             return build_response(request, 404, 'Not found')
 
         # Check that the user can publish the offering
-        if not offering.is_owner(request.user):
+        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
             return build_response(request, 403, 'Forbidden')
 
         if content_type == 'application/json':
@@ -294,7 +303,7 @@ class BindEntry(Resource):
             return build_response(request, 404, 'Not found')
 
         # Check that the user can bind resources to the offering
-        if not offering.is_owner(request.user):
+        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
             return build_response(request, 403, 'Forbidden')
 
         if content_type == 'application/json':

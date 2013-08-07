@@ -113,7 +113,8 @@
         "model": "wstore.Organization",
         "fields": {
             "name": "test_organization",
-            "offerings_purchased": []
+            "offerings_purchased": [],
+            "managers": []
         }
     }
 ]

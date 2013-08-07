@@ -199,7 +199,11 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
         offerings_management.create_offering(user, profile, data)
@@ -248,7 +252,11 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
         offerings_management.create_offering(user, profile, data)
@@ -283,7 +291,11 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
         offerings_management.create_offering(user, profile, data)
@@ -316,7 +328,11 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
         error = False
         try:
@@ -349,7 +365,11 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
         error = False
         try:
@@ -380,7 +400,11 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
         error = False
         try:
@@ -409,7 +433,11 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
         error = False
@@ -548,41 +576,98 @@ class OfferingRetrievingTestCase(TestCase):
 
     def test_get_all_provider_offerings(self):
         user = User.objects.get(username='test_user')
+        user_org = Organization.objects.get(name=user.username)
+
+        for off in Offering.objects.all():
+            off.owner_organization = user_org
+            off.save()
+
         offerings = offerings_management.get_offerings(user, 'all', owned=True)
         self.assertEqual(len(offerings), 3)
 
         # Check published offering
-        self.assertEqual(offerings[2]['name'], 'test_offering3')
-        self.assertEqual(offerings[2]['version'], '1.0')
-        self.assertEqual(offerings[2]['state'], 'published')
-        self.assertEqual(offerings[2]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[2]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[2]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
+        for off in offerings:
+            if off['name'] == 'test_offering3':
+                self.assertEqual(off['name'], 'test_offering3')
+                self.assertEqual(off['version'], '1.0')
+                self.assertEqual(off['state'], 'published')
+                self.assertEqual(off['owner_organization'], 'test_user')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
 
-        self.assertEqual(len(offerings[2]['resources']), 1)
-        resource = offerings[2]['resources'][0]
+                self.assertEqual(len(off['resources']), 1)
+                resource = off['resources'][0]
+
+                self.assertEqual(resource['name'], 'test_resource')
+                self.assertEqual(resource['description'], 'Example resource')
+
+        
+    def test_get_all_provider_offerings_org(self):
+        user = User.objects.get(username='test_user')
+        user_org = Organization.objects.get(name=user.username)
+
+        org = Organization.objects.get(name='test_organization')
+        user.userprofile.current_organization = org
+        user.userprofile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
+        user.userprofile.save()
+
+        off1 = Offering.objects.get(name='test_offering1')
+        off1.owner_organization = user_org
+        off1.save()
+
+        off2 = Offering.objects.get(name='test_offering2')
+        off2.owner_organization = user_org
+        off2.save()
+
+        offerings = offerings_management.get_offerings(user, 'all', owned=True)
+        self.assertEqual(len(offerings), 1)
+
+        # Check published offering
+        self.assertEqual(offerings[0]['name'], 'test_offering3')
+        self.assertEqual(offerings[0]['version'], '1.0')
+        self.assertEqual(offerings[0]['state'], 'published')
+        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
+        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
+        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
+
+        self.assertEqual(len(offerings[0]['resources']), 1)
+        resource = offerings[0]['resources'][0]
 
         self.assertEqual(resource['name'], 'test_resource')
         self.assertEqual(resource['description'], 'Example resource')
 
     def test_get_provider_uploaded_offerings(self):
+
         user = User.objects.get(username='test_user')
+        org = Organization.objects.get(name='test_organization')
+        user.userprofile.current_organization = org
+        user.userprofile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
+        user.userprofile.save()
+
         offerings = offerings_management.get_offerings(user, 'uploaded', owned=True)
         self.assertEqual(len(offerings), 2)
 
-        self.assertEqual(offerings[0]['name'], 'test_offering1')
-        self.assertEqual(offerings[0]['version'], '1.0')
-        self.assertEqual(offerings[0]['state'], 'uploaded')
-        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
-
-        self.assertEqual(offerings[1]['name'], 'test_offering2')
-        self.assertEqual(offerings[1]['version'], '1.1')
-        self.assertEqual(offerings[1]['state'], 'uploaded')
-        self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+        for off in offerings:
+            if off['name'] == 'test_offering1':
+                self.assertEqual(off['name'], 'test_offering1')
+                self.assertEqual(off['version'], '1.0')
+                self.assertEqual(off['state'], 'uploaded')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
+            else:
+                self.assertEqual(off['name'], 'test_offering2')
+                self.assertEqual(off['version'], '1.1')
+                self.assertEqual(off['state'], 'uploaded')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
 
 
 class PurchasedOfferingRetrievingTestCase(TestCase):
@@ -604,39 +689,46 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         org = Organization.objects.get(name='test_organization1')
         org.offerings_purchased = ['21000aba8e05ac2115f022ff', '11000aba8e05ac2115f022f9']
         org.save()
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
         offerings = offerings_management.get_offerings(user, 'purchased', owned=True)
 
         self.assertEqual(len(offerings), 2)
-        self.assertEqual(offerings[0]['name'], 'test_offering1')
-        self.assertEqual(offerings[0]['version'], '1.0')
-        self.assertEqual(offerings[0]['state'], 'purchased')
-        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
-        self.assertEqual(len(offerings[0]['bill']), 1)
-        self.assertEqual(offerings[0]['bill'][0], '/media/bills/61005aba8e05ac2115f022f0.pdf')
-        components = offerings[0]['offering_description']['pricing']['price_plans'][0]['price_components']
-        self.assertEqual(components[0]['title'], 'price component 1')
-        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
-        self.assertEqual(components[1]['title'], 'price component 2')
-        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
+        for off in offerings:
+            if off['name'] == 'test_offering1':
+                self.assertEqual(off['name'], 'test_offering1')
+                self.assertEqual(off['version'], '1.0')
+                self.assertEqual(off['state'], 'purchased')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
+                self.assertEqual(len(off['bill']), 1)
+                self.assertEqual(off['bill'][0], '/media/bills/61005aba8e05ac2115f022f0.pdf')
+                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
+                self.assertEqual(components[0]['title'], 'price component 1')
+                self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
+                self.assertEqual(components[1]['title'], 'price component 2')
+                self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
+            else:
 
-        self.assertEqual(offerings[1]['name'], 'test_offering2')
-        self.assertEqual(offerings[1]['version'], '1.1')
-        self.assertEqual(offerings[1]['state'], 'purchased')
-        self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
-        self.assertEqual(len(offerings[1]['bill']), 1)
-        self.assertEqual(offerings[1]['bill'][0], '/media/bills/61006aba8e05ac2115f022f0.pdf')
-        components = offerings[1]['offering_description']['pricing']['price_plans'][0]['price_components']
-        self.assertEqual(components[0]['title'], 'price component 1')
-        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
-        self.assertEqual(components[1]['title'], 'price component 2')
-        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
+                self.assertEqual(off['name'], 'test_offering2')
+                self.assertEqual(off['version'], '1.1')
+                self.assertEqual(off['state'], 'purchased')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+                self.assertEqual(len(off['bill']), 1)
+                self.assertEqual(off['bill'][0], '/media/bills/61006aba8e05ac2115f022f0.pdf')
+                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
+                self.assertEqual(components[0]['title'], 'price component 1')
+                self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
+                self.assertEqual(components[1]['title'], 'price component 2')
+                self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
 
     def test_get_published_offerings(self):
         user = User.objects.get(username='test_user2')
@@ -645,7 +737,11 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         org = Organization.objects.get(name='test_organization1')
         org.offerings_purchased = ['21000aba8e05ac2115f022ff', '11000aba8e05ac2115f022f9']
         org.save()
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
         offerings = offerings_management.get_offerings(user)
@@ -701,6 +797,13 @@ class OfferingPaginationTestCase(TestCase):
         }
 
         user = User.objects.get(username='test_user')
+        org = Organization.objects.get(name='test_organization')
+        user.userprofile.current_organization = org
+        user.userprofile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
+        user.userprofile.save()
         offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
 
         self.assertEqual(len(offerings), 3)
@@ -725,19 +828,27 @@ class OfferingPaginationTestCase(TestCase):
         self.assertEqual(offerings[4]['name'], 'test_offering8')
 
     def test_retrieving_pagination_half_page(self):
+
         pagination = {
             'skip': '8',
             'limit': '10'
         }
 
         user = User.objects.get(username='test_user')
-        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
+        org = Organization.objects.get(name='test_organization')
+        user.userprofile.current_organization = org
+        user.userprofile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
+        user.userprofile.save()
+        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination, sort='name')
 
         self.assertEqual(len(offerings), 3)
 
-        self.assertEqual(offerings[0]['name'], 'test_offering8')
-        self.assertEqual(offerings[1]['name'], 'test_offering9')
-        self.assertEqual(offerings[2]['name'], 'test_offering10')
+        self.assertEqual(offerings[0]['name'], 'test_offering7')
+        self.assertEqual(offerings[1]['name'], 'test_offering8')
+        self.assertEqual(offerings[2]['name'], 'test_offering9')
 
     def test_retrieving_pagination_invalid_limit(self):
         pagination = {
@@ -803,28 +914,19 @@ class PurchasedOfferingPaginationTestCase(TestCase):
         org = Organization.objects.get(name='test_organization1')
         org.offerings_purchased = ['41000aba8e05ac2115f022f0', '51100aba8e05ac2115f022f0']
         org.save()
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
-        offerings = offerings_management.get_offerings(user, filter_='purchased', owned=True, pagination=pagination)
+        offerings = offerings_management.get_offerings(user, filter_='purchased', owned=True, pagination=pagination, sort='name')
 
         self.assertEqual(len(offerings), 2)
 
-        self.assertEqual(offerings[0]['name'], 'test_offering1')
-        self.assertEqual(offerings[1]['name'], 'test_offering2')
-
-        pagination = {
-            'skip': '3',
-            'limit': '5'
-        }
-
-        offerings = offerings_management.get_offerings(user, filter_='purchased', owned=True, pagination=pagination)
-
-        self.assertEqual(len(offerings), 3)
-
-        self.assertEqual(offerings[0]['name'], 'test_offering3')
-        self.assertEqual(offerings[1]['name'], 'test_offering4')
-        self.assertEqual(offerings[2]['name'], 'test_offering5')
+        self.assertEqual(offerings[0]['name'], 'test_offering4')
+        self.assertEqual(offerings[1]['name'], 'test_offering5')
 
 
 class OfferingPublicationTestCase(TestCase):
