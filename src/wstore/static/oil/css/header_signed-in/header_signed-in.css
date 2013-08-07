@@ -1,0 +1,94 @@
+#oil-nav .dropdown-submenu a:hover{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu a:focus{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu a:active{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu .active a{
+  background-color: #049cdb;
+}
+
+#oil-nav .dropdown-submenu .active a:focus{
+  background-color: #049cdb;
+}
+
+#oil-nav .dropdown-submenu li a:hover{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu li a:focus{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu li a:active{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav ul.nav li a img{
+  width: 24px;
+}
+
+#oil-nav ul.nav li a span{
+  box-shadow: none
+}
+
+#oil-nav ul.nav li.dropdown.open>.dropdown-toggle, #oil-nav .navbar .nav li.dropdown.active>.dropdown-toggle, #oil-nav .navbar .nav li.dropdown.open.active>.dropdown-toggle {
+  background-color: transparent !important;
+}
+
+#oil-nav .dropdown-menu>li>a:hover, #oil-nav .dropdown-menu>li>a:focus, #oil-nav .dropdown-submenu:hover>a, #oil-nav .dropdown-submenu:focus>a {
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  background-color: #049cdb;
+  background-image: none !important;
+}
+
+#oil-nav li.dropdown a{
+  padding: 10px 6px !important;
+}
+#oil-nav .dropdown-menu .divider {
+  height: 1px;
+  margin: 4px;
+}
+#oil-nav .dropdown-menu{
+  margin-top: -7px;
+  -webkit-border: 1px solid rgba(0,0,0,0.1);
+  -moz-border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.1);
+  -webkit-box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+  -moz-box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+  box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+}
+
+#oil-nav ul.nav span.name{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  width: 70px;
+}
+
+#oil-nav ul.nav li a{
+  padding: 10px 0 10px 1px !important;
+}
+
+
+

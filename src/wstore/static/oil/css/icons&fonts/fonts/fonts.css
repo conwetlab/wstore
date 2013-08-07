@@ -1,0 +1,23 @@
+/************* typography*******/
+
+@font-face {
+  font-family: "OpensansRegular";
+  src: url(opensans-regular-webfont.ttf) format('truetype');
+  src: url(opensans-regular-webfont.svg);
+  src: url(opensans-regular-webfont.eot);
+  src: url(opensans-regular-webfont.woff);
+}
+
+@font-face {
+  font-family: "Comfortaa";
+  src: url(comfortaa_regular-webfont.ttf) format('truetype');
+  src: url(comfortaa_regular-webfont.svg);
+  src: url(comfortaa_regular-webfont.eot);
+  src: url(comfortaa_regular-webfont.woff);
+}
+
+@font-face {
+  font-family: "DsignesRegular";
+  src: url(DsignesRegular.ttf);
+  src: url(DsignesRegular.otf);
+}

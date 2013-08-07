@@ -1,0 +1,32 @@
+.bread-container {
+  margin-top: 170px;
+}
+
+.navigation {
+  top: 60px;
+  right: -105px;
+}
+
+.app-icon {
+  height: 40px;
+  float: left;
+}
+
+.app-info {
+  margin-left: 10px;
+  float: left;
+}
+
+.app-info p {
+  margin-bottom: 3px;
+}
+
+#applications {
+  list-style: none;
+  display: inline;
+}
+
+#applications input[type="checkbox"] {
+  float: right;
+  margin: 15px 15px 0px 0px;
+}

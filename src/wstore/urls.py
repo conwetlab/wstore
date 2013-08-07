@@ -18,7 +18,7 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls.defaults import patterns, url, include
 
 import wstore.oauth2provider.urls
 from wstore import views
@@ -60,6 +60,7 @@ urlpatterns = patterns('',
     url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/bind?$', offering_views.BindEntry(permitted_methods=('POST',))),
     url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/rating?$', offering_views.CommentEntry(permitted_methods=('POST',))),
     url(r'^api/offering/resources/?$', offering_views.ResourceCollection(permitted_methods=('GET', 'POST'))),
+    url(r'^api/offering/applications?$', offering_views.ApplicationCollection(permitted_methods=('GET',))),
     url(r'^api/contracting/?$', contracting_views.PurchaseCollection(permitted_methods=('POST',))),
     url(r'^api/contracting/form/?$', contracting_views.PurchaseFormCollection(permitted_methods=('GET', 'POST',))),
     url(r'^api/contracting/(?P<reference>[\w]+)/?$', contracting_views.PurchaseEntry(permitted_methods=('GET', 'PUT'))),
@@ -67,6 +68,7 @@ urlpatterns = patterns('',
     url(r'^api/contracting/(?P<reference>[\w]+)/cancel?$', charging_views.PayPalCancelation(permitted_methods=('GET',))),
     url(r'^api/contracting/(?P<reference>[\w]+)/accounting?$', charging_views.ServiceRecordCollection(permitted_methods=('POST',))),
     url(r'^api/search/(?P<text>[\w -]+)/?$', search_views.SearchEntry(permitted_methods=('GET',))),
+    url(r'', include('social_auth.urls')),
 )
 
 urlpatterns += wstore.oauth2provider.urls.urlpatterns

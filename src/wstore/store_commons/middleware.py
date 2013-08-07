@@ -19,7 +19,6 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 from django.contrib.auth import get_user
-from django.core.exceptions import MiddlewareNotUsed
 from django.utils.importlib import import_module
 from django.utils.functional import SimpleLazyObject
 from django.utils.http import http_date, parse_http_date_safe
@@ -127,9 +126,32 @@ class URLMiddleware(object):
 def get_api_user(request):
 
     from wstore.oauth2provider.models import Token
+    from django.contrib.auth.models import User, AnonymousUser
+    from django.conf import settings
+    from wstore.social_auth_backend import FiwareAuth, fill_internal_user_info
 
     token = request.META['HTTP_AUTHORIZATION'].split(' ', 1)[1]
-    return Token.objects.get(token=token).user
+
+    if settings.OILAUTH:
+        # If using the idM to authenticate users get the user info
+        fiware_auth = FiwareAuth()
+        user_info = fiware_auth.user_data(token)
+
+        if user_info:
+            # Try to get an internal user
+            user = User.objects.get_or_create(username=user_info['nickName'])
+
+            # Fill the user info
+            info = {
+                'response': user_info,
+                'user': user
+            }
+            fill_internal_user_info((), info)
+        else:
+            user = AnonymousUser()
+        return user
+    else:
+        return Token.objects.get(token=token).user
 
 
 class AuthenticationMiddleware(object):

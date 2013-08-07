@@ -25,7 +25,13 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MessageManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CreateAppForm.js"></script>
+
+        {% if oil %}
+            <script type="text/javascript" src="{{ STATIC_URL }}oil/js/CreateOfferingForm.js"></script>
+        {% else %}
+            <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CreateAppForm.js"></script>
+        {% endif %}
+
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/RegisterResForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/PublishOffering.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/BindResources.js"></script>
@@ -47,7 +53,16 @@
         <script type="text/x-jquery-tmpl" id="payment_info_form_template">{% include "payment_info_form_template.html" %}</script>
 
         <script type="text/x-jquery-tmpl" id="catalogue_search_template">{% include "catalogue/catalogue_search_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="create_app_form_template">{% include "catalogue/create_app_form_template.html" %}</script>
+
+        {% if oil %}
+            <script type="text/x-jquery-tmpl" id="create_off_form_template">{% include "oil/create_off_form_template.html" %}</script>
+            <script type="text/x-jquery-tmpl" id="select_usdl_form_template">{% include "oil/select_usdl_form_template.html" %}</script>
+            <script type="text/x-jquery-tmpl" id="select_application_form_template">{% include "oil/select_application_form_template.html" %}</script>
+            <script type="text/x-jquery-tmpl" id="application_select_template">{% include "oil/application_select_template.html" %}</script>
+        {% else %}
+            <script type="text/x-jquery-tmpl" id="create_app_form_template">{% include "catalogue/create_app_form_template.html" %}</script>
+        {% endif %}
+
         <script type="text/x-jquery-tmpl" id="upload_usdl_form_template">{% include "catalogue/upload_usdl_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="register_res_form_template">{% include "catalogue/register_res_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="radio_template">{% include "catalogue/radio_template.html" %}</script>
@@ -72,11 +87,19 @@
         <script type="text/x-jquery-tmpl" id="credit_card_template">{% include "store/credit_card_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_info_template">{% include "alert_info_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
-
+	    {% if oil %}
+            <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
+        {% endif %}
     </head>
     <body>
-        <div class="container-fluid">
+    {% if oil %}
+        <div id="oil-bar">
+        {% include "oil/header.html" %}
+        </div>
+    {% endif %}
+        <div class="container-fluid bread-container">
             <div class="row-fluid">
+            {% if not oil %}
                 <div>
                     <img id="logo" src="{{ STATIC_URL }}assets/img/logo.png" />
                 </div>
@@ -84,6 +107,7 @@
                     <h1>FI-ware</h1>
                     <h2>WStore</h2>
                 </div>
+            {% endif %}
                 <div class="navigation">
                     <ul class="nav nav-pills main-menu">
                         <li ><a href="/">Store</a>
@@ -95,6 +119,7 @@
                             <li><a href="/administration">Administration</a></li>
                         {% endif %}
                     </ul>
+                   {% if not oil %}
                    <div class="btn btn-success float-right dropdown">
                        <div href="#" class="dropdown-toggle" data-toggle="dropdown">
                            <i class="icon-user icon-white"></i>
@@ -106,6 +131,7 @@
                            <li><a href="/logout">Logout</a></li>
                        </ul>
                    </div>
+                   {% endif %}
                 </div>
             </div>
             <div class="row-fluid title_wrapper">
