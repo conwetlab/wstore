@@ -32,20 +32,19 @@ By default account id and token expiration time are stored in extra_data
 field, check OAuthBackend class for details on how to extend it.
 """
 from urllib import urlencode
-from urllib2 import HTTPError
 
 from django.utils import simplejson
 from django.conf import settings
 
 from social_auth.utils import dsa_urlopen
 from social_auth.backends import BaseOAuth2, OAuthBackend
-from social_auth.exceptions import AuthFailed
 
 
-# GitHub configuration
+# idm configuration
 FIWARE_AUTHORIZATION_URL = 'https://idm.lab.fi-ware.eu/authorize'
 FIWARE_ACCESS_TOKEN_URL = 'https://idm.lab.fi-ware.eu/token'
 FIWARE_USER_DATA_URL = 'https://idm.lab.fi-ware.eu/user'
+FIWARE_NOTIFICATION_URL = 'https://idm.lab.fi-ware.eu/'
 
 
 
@@ -60,7 +59,7 @@ class FiwareBackend(OAuthBackend):
     def get_user_id(self, details, response):
         """Return the user id, FI-WARE IdM only provides username as a unique
         identifier"""
-        return response['nickName']
+        return response['actorId']
 
     def get_user_details(self, response):
         """Return user details from FI-WARE account"""
@@ -105,6 +104,14 @@ def fill_internal_user_info(*arg, **kwargs):
     roles = response['roles']
     wstore_roles = []
 
+    # Include the user actor id
+    kwargs['user'].userprofile.actor_id = response['actorId']
+
+    # Save the current access token for future calls
+    kwargs['user'].userprofile.access_token = response['access_token']
+
+    kwargs['user'].userprofile.save()
+
     for role in roles:
         wstore_roles.append(role['name'])
 
@@ -127,7 +134,12 @@ def fill_internal_user_info(*arg, **kwargs):
         kwargs['user'].userprofile.save()
 
     # Check organizations info
-
+    # Get idM user organization
+    # Check if the organization exist
+    # Create the organization
+    # Check user organization
+    # Append new organization
+    # Check organization roles
 
 # Backend definition
 BACKENDS = {

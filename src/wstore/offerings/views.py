@@ -364,3 +364,37 @@ class TopRatedCollection(Resource):
             response.append(get_offering_info(offering, request.user))
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json;charset=UTF-8')
+
+
+class ApplicationCollection(Resource):
+
+    # Get idm applications
+    @authentication_required
+    def read(self, request):
+
+        # Make idm request
+        # Call idm
+        # Make the response
+        applications = [{
+            'id': 1, 
+            'name': 'app1',
+            'url': 'http://app1url.com'
+        },{
+            'id': 2, 
+            'name': 'app2',
+            'url': 'http://app2url.com'
+        },{
+            'id': 3, 
+            'name': 'app3',
+            'url': 'http://app3url.com'
+        },{
+            'id': 4, 
+            'name': 'app4',
+            'url': 'http://app4url.com'
+        },{
+            'id': 5, 
+            'name': 'app5',
+            'url': 'http://app5url.com'
+        }]
+
+        return HttpResponse(json.dumps(applications), status=200, mimetype='application/json;charset=UTF-8')

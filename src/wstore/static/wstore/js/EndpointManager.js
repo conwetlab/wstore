@@ -31,6 +31,7 @@
         'ORGANIZATION_COLLECTION': '/api/administration/organizations',
         'RESOURCE_COLLECTION': '/api/offering/resources',
         'OFFERING_COLLECTION': '/api/offering/offerings',
+        'APPLICATION_COLLECTION': '/api/offering/applications',
         'PURCHASE_COLLECTION': '/api/contracting',
         'NEWEST_COLLECTION': '/api/offering/offerings/newest',
         'TOPRATED_COLLECTION': '/api/offering/offerings/toprated',

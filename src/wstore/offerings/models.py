@@ -48,6 +48,7 @@ class Offering(models.Model):
     notification_url = models.CharField(max_length=100)
     creation_date = models.DateTimeField()
     publication_date = models.DateTimeField(null=True, blank=True)
+    applications = ListField()
 
     def is_owner(self, user):
         return self.owner_admin_user == user

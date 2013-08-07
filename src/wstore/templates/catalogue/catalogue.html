@@ -24,7 +24,13 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MessageManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CreateAppForm.js"></script>
+
+        {% if oil %}
+            <script type="text/javascript" src="{{ STATIC_URL }}oil/js/CreateOfferingForm.js"></script>
+        {% else %}
+            <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CreateAppForm.js"></script>
+        {% endif %}
+
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/RegisterResForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/PublishOffering.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/BindResources.js"></script>
@@ -46,7 +52,16 @@
         <script type="text/x-jquery-tmpl" id="payment_info_form_template">{% include "payment_info_form_template.html" %}</script>
 
         <script type="text/x-jquery-tmpl" id="catalogue_search_template">{% include "catalogue/catalogue_search_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="create_app_form_template">{% include "catalogue/create_app_form_template.html" %}</script>
+
+        {% if oil %}
+            <script type="text/x-jquery-tmpl" id="create_off_form_template">{% include "oil/create_off_form_template.html" %}</script>
+            <script type="text/x-jquery-tmpl" id="select_usdl_form_template">{% include "oil/select_usdl_form_template.html" %}</script>
+            <script type="text/x-jquery-tmpl" id="select_application_form_template">{% include "oil/select_application_form_template.html" %}</script>
+            <script type="text/x-jquery-tmpl" id="application_select_template">{% include "oil/application_select_template.html" %}</script>
+        {% else %}
+            <script type="text/x-jquery-tmpl" id="create_app_form_template">{% include "catalogue/create_app_form_template.html" %}</script>
+        {% endif %}
+
         <script type="text/x-jquery-tmpl" id="upload_usdl_form_template">{% include "catalogue/upload_usdl_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="register_res_form_template">{% include "catalogue/register_res_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="radio_template">{% include "catalogue/radio_template.html" %}</script>

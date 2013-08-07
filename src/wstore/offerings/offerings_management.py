@@ -264,6 +264,22 @@ def create_offering(provider, profile, json_data):
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise Exception('Invalid version format')
 
+    # If using the idm, get the applications from the request
+    if settings.OILAUTH:
+
+        # Validate application structure
+        data['applications'] = []
+
+        for app in json_data['applications']:
+            data['applications'].append({
+                'name': app['name'],
+                'url': app['url'],
+                'id': app['id']
+            })
+
+        if len(data['applications']) == 0:
+            raise Exception('No applications included')
+
     data['related_images'] = []
 
     # Get organization
@@ -383,6 +399,10 @@ def create_offering(provider, profile, json_data):
         notification_url=notification_url,
         creation_date=datetime.now()
     )
+
+    if settings.OILAUTH:
+        offering.applications = data['applications']
+        offering.save()
 
     # Load offering document to the search index
     index_path = os.path.join(settings.BASEDIR, 'wstore')
