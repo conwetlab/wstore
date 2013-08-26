@@ -28,6 +28,7 @@
     var slaLoaded;
     var interLoaded;
     var resLoaded;
+    var appLoaded
 
     paintOfferingDetails = function paintOfferingDetails (offeringElement, backAction, container) {
         var screen, action;
@@ -40,6 +41,7 @@
         slaLoaded = false;
         interLoaded = false;
         resLoaded = false;
+        appLoaded = false
         // Create the details view
 
         // Clean the container
@@ -113,6 +115,10 @@
 
         $('a[href="#res-tab"]').on('shown', function (e) {
             paintResources(offeringElement.getResources());
+        });
+
+        $('a[href="#app-tab"]').on('shown', function (e) {
+            paintApplications(offeringElement.getApplications());
         });
 
         $('#back').click(function (e) {
@@ -500,6 +506,33 @@
         }
     };
 
+    var paintApplications = function paintApplications (applications) {
+        if(!appLoaded) {
+            appLoaded = true;
+            $('<h2></h2>').text('Applications').appendTo('#app-tab');
+            if (applications.length > 0) {
+                for (var i = 0; i < applications.length; i++) {
+                    var cont = $('<div></div>');
+                    var p;
+                    p = $('<p></p>').appendTo(cont);
+                    p.append('<b>Name: </b>');
+                    p.append(applications[i].name);
+
+                    p = $('<p></p>').appendTo(cont);
+                    p.append('<b>URL: </b>');
+                    p.append(applications[i].url);
+
+                    p = $('<p></p>').appendTo(cont);
+                    p.append('<b>Description: </b>');
+                    p.append(applications[i].description);
+
+                    cont.appendTo('#app-tab');
+                }
+            } else {
+                $('<p></p>').text('The offering has no applications').appendTo('#app-tab');
+            }
+        }
+    };
 
     refreshAndUpdateDetailsView = function refreshAndUpdateDetailsView () {
         $.ajax({

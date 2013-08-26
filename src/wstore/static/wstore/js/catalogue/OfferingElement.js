@@ -49,6 +49,11 @@
             if (this.state == 'purchased') {
                 this.bill = offeringData.bill;
             }
+            if (offeringData.applications) {
+                this.applications = offeringData.applications;
+            } else {
+                this.applications = [];
+            }
             // Add the usdl information
         }
 
@@ -138,6 +143,10 @@
 
         OfferingElement.prototype.getBillPath = function getBillPath () {
             return this.bill;
+        };
+
+        OfferingElement.prototype.getApplications = function getApplications() {
+            return this.applications;
         };
 
         OfferingElement.prototype.setState = function setState (state) {

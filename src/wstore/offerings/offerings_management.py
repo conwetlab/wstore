@@ -102,6 +102,10 @@ def get_offering_info(offering, user):
 
         result['resources'].append(res_info)
 
+    if settings.OILAUTH:
+        result['applications'] = offering.applications
+
+    # Load applications
     # Load offering description
     parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
     result['offering_description'] = parser.parse()
