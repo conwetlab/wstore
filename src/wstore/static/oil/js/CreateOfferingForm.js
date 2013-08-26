@@ -240,7 +240,7 @@
     };
 
     var showApplicationsForm = function showApplicationsForm(applications) {
-        var footBtn;
+        var footBtn, apps = {};
         $('.modal-body').empty();
 
         // Create the form
@@ -250,7 +250,22 @@
         // Include applications
         if (applications.length > 0) {
             $.template('appCheckTemplate', $('#application_select_template'));
-            $.tmpl('appCheckTemplate', applications).appendTo('#applications');
+            // Fill applications structure
+            for (var i = 0; i < applications.length; i++) {
+                var url = applications[i].url;
+                apps[applications[i]['id']] = applications[i];
+
+                // Check URL size
+                if (applications[i].url.length > 50) {
+                    url = url.substr(0, 50) + '...';
+                }
+
+                $.tmpl('appCheckTemplate', {
+                    'name': applications[i].name,
+                    'url': url,
+                    'id': applications[i].id
+                }).appendTo('#applications');
+            }
         } else {
             var msg = "You don't have any applications available for access control. Go to the next window to bind some downloadable resources";
             MessageManager.showAlertInfo('No Applications', msg, $('#applications'));
@@ -267,11 +282,12 @@
             // Check tha selected applications
             $('input[type="checkbox"]').each(function() {
                 if ($(this).prop('checked')) {
+                    var app = apps[$(this).attr('id')];
                     appsSelected.push({
-                        'name': $(this).attr('name'),
-                        'url': $('#' + $(this).attr('id') + '-url').attr('href'),
-                        'id': $(this).attr('id'),
-                        'description': $(this).attr('description')
+                        'name': app.name,
+                        'url': app.url,
+                        'id': app.id,
+                        'description': app.description
                     });
                 }
             });
