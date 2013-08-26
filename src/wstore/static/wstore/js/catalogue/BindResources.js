@@ -22,7 +22,7 @@
 
     var offeringElem;
 
-    var getUserResources = function getUserResources (callback, viewOnly) {
+    getUserResources = function getUserResources (callback, viewOnly) {
         $.ajax({
             type: "GET",
             url: EndpointManager.getEndpoint('RESOURCE_COLLECTION'),

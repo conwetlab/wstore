@@ -25,6 +25,12 @@
     var logo = [];
     var offeringInfo = {};
 
+    /**
+     * Handles the selection of images, including the validation and
+     * encoding
+     * @param evnt Event thrown by the file input
+     * @param type Type of image (Logo or screenshot)
+     */
     var handleImageFileSelection = function handleImageFileSelection(evnt, type) {
         var files = evnt.target.files;
         var imagesList = [];
@@ -66,6 +72,10 @@
         readImages(imagesList);
     };
 
+    /**
+     * Handles the uploading of an USDL document
+     * @param evnt Event thrown by the file input
+     */
     var handleUSDLFileSelection = function handleUSDLFileSelection(evnt) {
         var f = evnt.target.files[0];
         var reader = new FileReader();
@@ -113,7 +123,7 @@
                 $('#message').modal('hide');
                 MessageManager.showMessage('Created', 'The offering has been created')
                 if (getCurrentTab() == '#provided-tab') {
-                    getUserOfferings('#provided-tab', paintProvidedOfferings, false);
+                    getUserOfferings('#provided-tab', paintProvidedOfferings, EndpointManager.getEndpoint('OFFERING_COLLECTION'), false);
                 }
             },
             error: function (xhr) {
@@ -238,21 +248,26 @@
         $.tmpl('offDescTemplate').appendTo('.modal-body');
 
         // Include applications
-        $.template('appCheckTemplate', $('#application_select_template'));
-        $.tmpl('appCheckTemplate', applications).appendTo('#applications');
+        if (applications.length > 0) {
+            $.template('appCheckTemplate', $('#application_select_template'));
+            $.tmpl('appCheckTemplate', applications).appendTo('#applications');
+        } else {
+            var msg = "You don't have any applications available for access control. Go to the next window to bind some downloadable resources";
+            MessageManager.showAlertInfo('No Appliations', msg, $('#applications'));
+        }
 
         // Set button listener
         $('.modal-footer').empty();
-        footBtn = $('<input></input>').addClass('btn btn-classic').attr('type', 'button').val('Accept').appendTo('.modal-footer');
+        footBtn = $('<input></input>').addClass('btn btn-classic').attr('type', 'button').val('Next').appendTo('.modal-footer');
         footBtn.click(function(evnt) {
-            var applications = [];
+            var appsSelected = [];
             evnt.preventDefault();
             evnt.stopPropagation();
 
             // Check tha selected applications
             $('input[type="checkbox"]').each(function() {
                 if ($(this).prop('checked')) {
-                    applications.push({
+                    appsSelected.push({
                         'name': $(this).attr('name'),
                         'url': $('#' + $(this).attr('id') + '-url').attr('href'),
                         'id': $(this).attr('id')
@@ -261,13 +276,47 @@
             });
 
             // Make the request
-            if (applications.length > 0) {
-                offeringInfo.applications = applications;
-                makeCreateOfferingRequest();
-            } else {
-                MessageManager.showAlertError('Error', 'No applications selected', $('#error-message'));
-            }
+            offeringInfo.applications = appsSelected;
+            getUserResources(showResourcesForm);
         })
+    };
+
+    var showResourcesForm = function showResourcesForm(resources) {
+        $('.modal-body').empty();
+        $('.modal-footer').empty()
+
+        $('<label></label>').text('Resources').appendTo('.modal-body');
+        $('<div></div>').attr('id', 'resources').appendTo('.modal-body');
+
+        // Apend the provider resources
+        for (var i = 0; i < resources.length; i++) {
+            var res = resources[i];
+            var found = false;
+            var j = 0;
+
+            res.number = i;
+            $.template('resourceTemplate', $('#resource_template'));
+            $.tmpl('resourceTemplate', res).appendTo('#resources').on('hover', function(e) {
+                $(e.target).popover('show');
+            });
+        }
+
+        // Append the Accept button
+        $('<input></input>').attr('type', 'button').addClass('btn btn-clasic').attr('value', 'Accept').click(function() {
+            var resSelected = [];
+
+            for (var i = 0; i < resources.length; i++) {
+                if ($('#check-' + i).prop("checked")) {
+                    resSelected.push({
+                        'name': resources[i].name,
+                        'version': resources[i].version
+                    })
+                }
+            }
+            offeringInfo.resources = resSelected;
+
+            makeCreateOfferingRequest();
+        }).appendTo('.modal-footer');
     };
 
     showCreateAppForm = function showCreateAppForm(repositories) {

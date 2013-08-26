@@ -423,6 +423,9 @@ def create_offering(provider, profile, json_data):
         offering.applications = data['applications']
         offering.save()
 
+    if 'resources' in json_data and len(json_data['resources']) > 0:
+        bind_resources(offering, json_data['resources'], profile.user)
+
     # Load offering document to the search index
     index_path = os.path.join(settings.BASEDIR, 'wstore')
     index_path = os.path.join(index_path, 'search')
