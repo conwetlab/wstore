@@ -253,7 +253,7 @@
             $.tmpl('appCheckTemplate', applications).appendTo('#applications');
         } else {
             var msg = "You don't have any applications available for access control. Go to the next window to bind some downloadable resources";
-            MessageManager.showAlertInfo('No Appliations', msg, $('#applications'));
+            MessageManager.showAlertInfo('No Applications', msg, $('#applications'));
         }
 
         // Set button listener
