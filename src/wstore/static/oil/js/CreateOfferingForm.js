@@ -270,7 +270,8 @@
                     appsSelected.push({
                         'name': $(this).attr('name'),
                         'url': $('#' + $(this).attr('id') + '-url').attr('href'),
-                        'id': $(this).attr('id')
+                        'id': $(this).attr('id'),
+                        'description': $(this).attr('description')
                     });
                 }
             });

@@ -293,7 +293,8 @@ def create_offering(provider, profile, json_data):
             data['applications'].append({
                 'name': app['name'],
                 'url': app['url'],
-                'id': app['id']
+                'id': app['id'],
+                'description': app['description']
             })
 
         if len(data['applications']) == 0:
