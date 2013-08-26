@@ -49,14 +49,12 @@
          description = $.trim($('[name="res-description"]').val());
 
          if (name && version) {
-             if ($('[name="res-type"]').val() == 'download') {
-                 request.content_type = contentType
-             }
+
+             request.content_type = contentType
              csrfToken = $.cookie('csrftoken');
              request.name = name;
              request.version = version;
              request.description = description;
-             request.type = $('[name="res-type"]').val();
 
              if (resource) {
                  request.content = resource;
@@ -103,24 +101,23 @@
         //Set listeners
         $('#upload-help').on('hover', function () {
             $('#upload-help').popover('show');
-        })
+        });
+
         $('#link-help').on('hover', function () {
             $('#link-help').popover('show');
-        })
+        });
 
-        $('[name="res-type"]').on('change', function() {
-            if ($(this).val() == 'api') {
-                $('[name="res-content-type"]').addClass('hide');
-                $('#upload').addClass('hide');
-                $('label:contains(Content type)').addClass('hide');
-                $('label:contains(Upload resource)').addClass('hide');
-                $('#upload-help').addClass('hide');
-            } else {
-                $('[name="res-content-type"]').removeClass('hide');
+        $('#res-type').on('change', function() {
+            if ($(this).val() == 'upload') {
                 $('#upload').removeClass('hide');
-                $('label:contains(Content type)').removeClass('hide');
-                $('label:contains(Upload resource)').removeClass('hide');
                 $('#upload-help').removeClass('hide');
+                $('[name="res-link"]').addClass('hide');
+                $('#link-help').addClass('hide');
+            } else {
+                $('#upload').addClass('hide');
+                $('#upload-help').addClass('hide');
+                $('[name="res-link"]').removeClass('hide');
+                $('#link-help').removeClass('hide');
             }
         });
 

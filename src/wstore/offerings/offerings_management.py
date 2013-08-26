@@ -94,12 +94,7 @@ def get_offering_info(offering, user):
             'content_type': resource.content_type
         }
 
-        if resource.resource_type == 'download':
-            res_info['type'] = 'Downloadable resource'
-        else:
-            res_info['type'] = 'Backend resource'
-
-        if (state == 'purchased' or state == 'rated') and resource.resource_type == 'download':
+        if (state == 'purchased' or state == 'rated'):
             if resource.resource_path != '':
                 res_info['link'] = resource.resource_path
             elif resource.download_link != '':

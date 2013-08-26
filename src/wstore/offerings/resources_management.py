@@ -42,24 +42,12 @@ def register_resource(provider, data, file_=None):
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise Exception('Invalid version format')
 
-    if 'type' in data:
-        if data['type'] == 'download' or data['type'] == 'backend':
-            resource_type = data['type']
-        else:
-            raise Exception('Invalid resource type')
-    else:
-        resource_type = 'download'
-
     resource_data = {
         'name': data['name'],
         'version': data['version'],
-        'type': resource_type,
         'description': data['description'],
-        'content_type': ''
+        'content_type': data['content_type']
     }
-
-    if resource_type == 'download':
-        resource_data['content_type'] = data['content_type']
 
     if file_ is None:
         if 'content' in data:
@@ -96,7 +84,6 @@ def register_resource(provider, data, file_=None):
         name=resource_data['name'],
         provider=provider,
         version=resource_data['version'],
-        resource_type=resource_data['type'],
         description=resource_data['description'],
         download_link=resource_data['link'],
         resource_path=resource_data['content_path'],
@@ -114,10 +101,6 @@ def get_provider_resources(provider):
             'description': res.description,
             'content_type': res.content_type
         }
-        if res.resource_type == 'download':
-            resource_info['type'] = 'Downloadable resource'
-        else:
-            resource_info['type'] = 'Backend resource'
 
         response.append(resource_info)
 
