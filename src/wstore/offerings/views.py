@@ -384,7 +384,7 @@ class ApplicationCollection(Resource):
             return build_response(request, 403, 'Forbidden')
 
         # Make idm request
-        url = 'https://idm.lab.fi-ware.eu/applications.json'
+        url = 'https://account.lab.fi-ware.eu/applications.json'
 
         if request.user.userprofile.is_user_org():
             actor_id = request.user.userprofile.actor_id
