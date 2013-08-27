@@ -42,10 +42,10 @@ from wstore.models import Organization
 
 
 # idm configuration
-FIWARE_AUTHORIZATION_URL = 'https://idm.lab.fi-ware.eu/authorize'
-FIWARE_ACCESS_TOKEN_URL = 'https://idm.lab.fi-ware.eu/token'
-FIWARE_USER_DATA_URL = 'https://idm.lab.fi-ware.eu/user'
-FIWARE_NOTIFICATION_URL = 'https://idm.lab.fi-ware.eu/purchases'
+FIWARE_AUTHORIZATION_URL = 'https://account.lab.fi-ware.eu/authorize'
+FIWARE_ACCESS_TOKEN_URL = 'https://account.lab.fi-ware.eu/token'
+FIWARE_USER_DATA_URL = 'https://account.lab.fi-ware.eu/user'
+FIWARE_NOTIFICATION_URL = 'https://account.lab.fi-ware.eu/purchases'
 
 
 
