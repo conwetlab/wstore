@@ -29,7 +29,7 @@ def logout(request):
 
     django_logout(request)
     if settings.OILAUTH:
-        url = 'https://idm.lab.fi-ware.eu/users/sign_out'
+        url = 'https://account.lab.fi-ware.eu/users/sign_out'
     else:
         url = '/login?next=/'
     return HttpResponseRedirect(url)
