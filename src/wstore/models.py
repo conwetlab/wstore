@@ -68,6 +68,7 @@ class UserProfile(models.Model):
     payment_info = DictField()
     actor_id = models.IntegerField(unique=True, null=True, blank=True)
     access_token = models.CharField(max_length=150, null=True, blank=True)
+    refresh_token = models.CharField(max_length=150, null=True, blank=True)
 
     def get_current_roles(self):
         roles = []

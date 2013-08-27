@@ -112,6 +112,7 @@ def fill_internal_user_info(*arg, **kwargs):
 
     # Save the current access token for future calls
     kwargs['user'].userprofile.access_token = response['access_token']
+    kwargs['user'].userprofile.refresh_token = response['refresh_token']
 
     kwargs['user'].userprofile.save()
 
