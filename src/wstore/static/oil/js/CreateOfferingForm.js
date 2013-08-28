@@ -267,7 +267,7 @@
                 }).appendTo('#applications');
             }
         } else {
-            var msg = "You don't have any applications available for access control. Go to the next window to bind some downloadable resources";
+            var msg = "You don't have any application available for access control. Go to the next window to bind some downloadable resources";
             MessageManager.showAlertInfo('No Applications', msg, $('#applications'));
         }
 
@@ -305,17 +305,22 @@
         $('<label></label>').text('Resources').appendTo('.modal-body');
         $('<div></div>').attr('id', 'resources').appendTo('.modal-body');
 
-        // Apend the provider resources
-        for (var i = 0; i < resources.length; i++) {
-            var res = resources[i];
-            var found = false;
-            var j = 0;
+        if (resources.length > 0) {
+         // Apend the provider resources
+            for (var i = 0; i < resources.length; i++) {
+                var res = resources[i];
+                var found = false;
+                var j = 0;
 
-            res.number = i;
-            $.template('resourceTemplate', $('#resource_template'));
-            $.tmpl('resourceTemplate', res).appendTo('#resources').on('hover', function(e) {
-                $(e.target).popover('show');
-            });
+                res.number = i;
+                $.template('resourceTemplate', $('#resource_template'));
+                $.tmpl('resourceTemplate', res).appendTo('#resources').on('hover', function(e) {
+                    $(e.target).popover('show');
+                });
+            }
+        } else {
+            var msg = "You don't have any resource registered. Press accept to create the offering without resources (You can bind resources later, before publishing the offering).";
+            MessageManager.showAlertInfo('No Resources', msg, $('#resources'));
         }
 
         // Append the Accept button
