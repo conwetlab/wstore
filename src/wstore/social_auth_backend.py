@@ -117,9 +117,9 @@ def fill_internal_user_info(*arg, **kwargs):
     if 'refresh_token' in response:
         kwargs['user'].userprofile.refresh_token = response['refresh_token']
 
-    social = kwargs['user'].social_auth.filter(provider='fiware')[0]
-    social.extra_data['refresh_token'] = response['refresh_token']
-    social.save()
+        social = kwargs['user'].social_auth.filter(provider='fiware')[0]
+        social.extra_data['refresh_token'] = response['refresh_token']
+        social.save()
 
     kwargs['user'].userprofile.save()
 
