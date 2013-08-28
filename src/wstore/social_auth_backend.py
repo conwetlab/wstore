@@ -46,6 +46,7 @@ FIWARE_AUTHORIZATION_URL = 'https://account.lab.fi-ware.eu/authorize'
 FIWARE_ACCESS_TOKEN_URL = 'https://account.lab.fi-ware.eu/token'
 FIWARE_USER_DATA_URL = 'https://account.lab.fi-ware.eu/user'
 FIWARE_NOTIFICATION_URL = 'https://account.lab.fi-ware.eu/purchases'
+FIWARE_APPLICATIONS_URL = 'https://account.lab.fi-ware.eu/applications.json'
 
 
 
@@ -112,7 +113,13 @@ def fill_internal_user_info(*arg, **kwargs):
 
     # Save the current access token for future calls
     kwargs['user'].userprofile.access_token = response['access_token']
-    kwargs['user'].userprofile.refresh_token = response['refresh_token']
+
+    if 'refresh_token' in response:
+        kwargs['user'].userprofile.refresh_token = response['refresh_token']
+
+    social = kwargs['user'].social_auth.filter(provider='fiware')[0]
+    social.extra_data['refresh_token'] = response['refresh_token']
+    social.save()
 
     kwargs['user'].userprofile.save()
 
