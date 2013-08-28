@@ -79,7 +79,8 @@
                 makePublishRequest(offeringElement, markets);
             })
         } else {
-            $('<p></p>').text('No marketplaces where publish the offering have been registered');
+            var msg = "There aren't Marketplaces registered. Press accept if you want to publish your offering only in WStore";
+            MessageManager.showAlertInfo('No Marketplaces', msg, $('.modal-body'));
         }
     };
 
