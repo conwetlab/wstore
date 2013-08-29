@@ -403,3 +403,59 @@ class USDLParser(object):
             raise Exception('No services included')
 
         return result
+
+
+def validate_usdl(usdl, mimetype):
+
+    valid = True
+    reason = ''
+    # Parse the USDL document
+    try:
+        parser = USDLParser(usdl, mimetype)
+        parsed_document = parser.parse()
+    except:
+        valid = False
+        reason = 'Malformed USDL'
+
+    # Check that it contains only a service
+    if valid:
+        if len(parsed_document['services_included']) != 1:
+            valid = False
+            reason = 'Only a Service included in the offering is supported'
+
+    # Check that there are not more than one price plan
+    if valid:
+        if len(parsed_document['pricing']['price_plans']) != 1:
+            valid = False
+            reason = 'Only a price plan is supported'
+
+    # Validate price components
+    if valid and 'price_components' in parsed_document['pricing']['price_plans'][0]:
+        price_components = parsed_document['pricing']['price_plans'][0]['price_components']
+
+        from wstore.charging_engine.models import Unit
+
+        for component in price_components:
+
+            # Validate currency
+            if component['currency'] != 'EUR' and component['currency'] != 'GBP':
+                valid = False
+                reason = 'A price component contains and invalid or unsupported currency'
+                break
+
+            # Validate unit
+            units = Unit.objects.filter(name=component['unit'].lower())
+            if len(units) == 0:
+                valid = False
+                reason = 'A price component contains an unsupported unit'
+                break
+
+            # Validate value
+            try:
+                float(component['value'])
+            except:
+                valid = False
+                reason = 'A price component contains an invalid value'
+                break
+
+    return (valid, reason)

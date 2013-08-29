@@ -40,7 +40,7 @@ from wstore.models import Offering
 from wstore.models import Marketplace
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
-from wstore.store_commons.utils.usdlParser import USDLParser
+from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 
 
 def get_offering_info(offering, user):
@@ -391,6 +391,12 @@ def create_offering(provider, profile, json_data):
     else:
         raise Exception('No USDL description provided')
 
+    # Validate the USDL
+    valid = validate_usdl(usdl, usdl_info['content_type'])
+
+    if not valid[0]:
+        raise Exception(valid[1])
+
     # Serialize and store USDL info in json-ld format
     graph = rdflib.Graph()
     rdf_format = usdl_info['content_type']
@@ -513,6 +519,12 @@ def update_offering(offering, data):
     # If the USDL has changed store the new description
     # in the offering model
     if new_usdl:
+        # Validate the USDL
+        valid = validate_usdl(usdl, usdl_info['content_type'])
+
+        if not valid[0]:
+            raise Exception(valid[1])
+
         # Serialize and store USDL info in json-ld format
         graph = rdflib.Graph()
 
