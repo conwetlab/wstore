@@ -287,6 +287,13 @@ class USDLValidationTestCase(TestCase):
         self.assertFalse(valid[0])
         self.assertEquals(valid[1], 'A price component contains and invalid or unsupported currency')
 
+    def test_validate_multiple_currencies(self):
+        f = open('./wstore/store_commons/test/val_mul_curr.ttl', 'rb')
+        valid = validate_usdl(f.read(), 'text/turtle')
+
+        self.assertFalse(valid[0])
+        self.assertEquals(valid[1], 'All price components must use the same currency')
+
     def test_validate_invalid_unit(self):
         f = open('./wstore/store_commons/test/val_unit.ttl', 'rb')
         valid = validate_usdl(f.read(), 'text/turtle')

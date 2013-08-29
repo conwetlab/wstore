@@ -435,6 +435,7 @@ def validate_usdl(usdl, mimetype):
 
         from wstore.charging_engine.models import Unit
 
+        currencies = []
         for component in price_components:
 
             # Validate currency
@@ -442,6 +443,13 @@ def validate_usdl(usdl, mimetype):
                 valid = False
                 reason = 'A price component contains and invalid or unsupported currency'
                 break
+            else:
+                # Check that all price components has the same currency
+                if len(currencies) != 0 and (not component['currency'] in currencies):
+                    valid = False
+                    reason = 'All price components must use the same currency'
+                else:
+                    currencies.append(component['currency'])
 
             # Validate unit
             units = Unit.objects.filter(name=component['unit'].lower())
