@@ -64,8 +64,8 @@ class OfferingCollection(Resource):
                     create_offering(user, profile, json_data)
                 except HTTPError:
                     return build_response(request, 502, 'Bad Gateway')
-                except:
-                    return build_response(request, 400, 'Invalid content')
+                except Exception, e:
+                    return build_response(request, 400, e.message)
             else:
                 pass  # TODO xml parsed
         else:
