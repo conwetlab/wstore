@@ -301,9 +301,6 @@ def create_offering(provider, profile, json_data):
                 'description': app['description']
             })
 
-        if len(data['applications']) == 0:
-            raise Exception('No applications included')
-
     data['related_images'] = []
 
     # Get organization
