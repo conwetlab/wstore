@@ -171,8 +171,7 @@ class UserProfileEntry(Resource):
         user = User.objects.get(username=username)
         user_profile = {}
         user_profile['username'] = user.username
-        user_profile['first_name'] = user.first_name
-        user_profile['last_name'] = user.last_name
+        user_profile['complete_name'] = user.userprofile.complete_name
 
         profile = UserProfile.objects.get(user=user)
         user_profile['organization'] = profile.current_organization.name
@@ -220,34 +219,33 @@ class UserProfileEntry(Resource):
         # Create the user
         try:
             user = User.objects.get(username=username)
-
-            if 'admin' in data['roles'] and request.user.is_staff:
-                user.is_staff = True
-
-            if 'password' in data:
-                user.set_password(data['password'])
-
-            user.first_name = data['first_name']
-            user.last_name = data['last_name']
-
             # Get the user profile
             user_profile = UserProfile.objects.get(user=user)
 
-            if 'provider' in data['roles']:
-                # Append the provider role to the user organization
-                orgs = []
-                for o in user_profile.organizations:
-                    if Organization.objects.get(pk=o['organization']).name == user.username:
-                        new_org = o
+            from django.conf import settings
 
-                    if not 'provider' in new_org['roles']:
-                        new_org.append('provider')
-                        orgs.append(new_org)
+            if not settings.OILAUTH:
+                if 'admin' in data['roles'] and request.user.is_staff:
+                    user.is_staff = True
 
-                    else:
-                        orgs.append(o)
+                if 'password' in data:
+                    user.set_password(data['password'])
 
-                user_profile.organizations = orgs
+                if 'provider' in data['roles']:
+                    # Append the provider role to the user organization
+                    orgs = []
+                    for o in user_profile.organizations:
+                        if Organization.objects.get(pk=o['organization']).name == user.username:
+                            new_org = o
+
+                        if not 'provider' in new_org['roles']:
+                            new_org.append('provider')
+                            orgs.append(new_org)
+
+                        else:
+                            orgs.append(o)
+
+                    user_profile.organizations = orgs
 
             if 'tax_address' in data:
                 user_profile.tax_address = {

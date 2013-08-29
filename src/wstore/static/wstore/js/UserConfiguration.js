@@ -35,10 +35,10 @@
 
         // Load user info
         request.username = username;
-        request.first_name = $.trim($('#first-name').val());
-        request.last_name = $.trim($('#last-name').val());
+        request.complete_name = $.trim($('#complete-name').val());
         request.organization = $('#org-name').text();
         request.roles = []
+
 
         if ($('#admin').prop('checked')) {
             request.roles.push('admin');
@@ -46,11 +46,6 @@
 
         if ($('#provider').prop('checked')) {
             request.roles.push('provider');
-        }
-
-        if (request.first_name == '' || request.last_name == '') {
-            error = true;
-            msg = 'Missing required field';
         }
 
         // Load tax address
@@ -131,6 +126,7 @@
                 }
             });
         } else {
+            $('#message').modal('hide');
             MessageManager.showMessage('Error', msg);
         }
     };
@@ -223,8 +219,7 @@
             // Load the user info
             context = {
                 'username': userInfo.username,
-                'first_name': userInfo.first_name,
-                'last_name': userInfo.last_name,
+                'complete_name': userInfo.complete_name
             }
 
             $.template('userInfoFormTemplate', $('#user_info_form_template'));
@@ -314,8 +309,7 @@
             // Load the user info
             context = {
                 'username': userInfo.username,
-                'first_name': userInfo.first_name,
-                'last_name': userInfo.last_name,
+                'complete_name': userInfo.complete_name,
                 'roles': roles,
                 'organization': userInfo.organization
             }
@@ -358,7 +352,7 @@
             data: JSON.stringify(request),
             success: function (response) {
                 // Update user info
-                ORGANIZATION = $('#org-select').val();
+                ORGANIZATION = $('#org-select').val(); 
                 organizationChanged = true;
                 getUserInfo();
             },
