@@ -123,7 +123,7 @@ class ChargingEngine:
 
         return country_code
 
-    def _charge_client(self, price, concept):
+    def _charge_client(self, price, concept, currency):
 
         # Call payment gateway (paypal)
         # Configure paypal credentials
@@ -154,7 +154,7 @@ class ChargingEngine:
                     countrycode=country_code,
                     zip=self._purchase.tax_address['postal'],
                     amt=price,
-                    currencycode='EUR'
+                    currencycode=currency
                 )
             except Exception, e:
                 raise Exception('Error while creating payment: ' + e.value[0])
@@ -170,7 +170,7 @@ class ChargingEngine:
                 resp = pp.SetExpressCheckout(
                     paymentrequest_0_paymentaction='Sale',
                     paymentrequest_0_amt=price,
-                    paymentrequest_0_currencycode='EUR',
+                    paymentrequest_0_currencycode=currency,
                     returnurl=url + 'api/contracting/' + self._purchase.ref + '/accept',
                     cancelurl=url + 'api/contracting/' + self._purchase.ref + '/cancel',
                 )
@@ -349,7 +349,7 @@ class ChargingEngine:
     def _generate_invoice(self, price, applied_parts, type_):
 
         parts = []
-
+        currency = self._purchase.contract.pricing_model['general_currency']
         if type_ == 'initial':
             # If initial can only contain single payments and subscriptions
             parts = {
@@ -368,7 +368,7 @@ class ChargingEngine:
             bill_template = loader.get_template('contracting/bill_template_initial.html')
 
         elif type_ == 'renovation':
-            # If renovation, can only contain subscription
+            # If renovation, can only contain subscriptions
             for part in applied_parts['subscription']:
                 parts.append((part['title'], part['value'], part['currency'], part['unit'], str(part['renovation_date'])))
 
@@ -415,7 +415,7 @@ class ChargingEngine:
             'off_version': offering.version,
             'ref': self._purchase.ref,
             'date': date,
-            'organization': customer_profile.current_organization.name, # FIXME this line does not make sense for multilpe organizations
+            'organization': customer_profile.current_organization.name,
             'customer': customer_profile.complete_name,
             'address': tax.get('street'),
             'postal': tax.get('postal'),
@@ -426,7 +426,7 @@ class ChargingEngine:
             'tax': '0',
             'total': price,
             'resources': resources,
-            'cur': 'euros'  # General currency of the invoice
+            'cur': currency  # General currency of the invoice
         }
 
         # Include the corresponding parts
@@ -487,30 +487,43 @@ class ChargingEngine:
         price_model = {}
 
         if 'price_components' in usdl_pricing:
+
+            currency_loaded = False
             for comp in usdl_pricing['price_components']:
 
+                # Check price component unit
                 try:
                     unit = Unit.objects.get(name=comp['unit'])
                 except:
                     raise(Exception, 'Unsupported unit in price plan model')
 
+                # The price component defines a single payment
                 if unit.defined_model == 'single payment':
                     if not 'single_payment' in price_model:
                         price_model['single_payment'] = []
 
                     price_model['single_payment'].append(comp)
 
+                # The price component defines a subscription
                 elif unit.defined_model == 'subscription':
                     if not 'subscription' in price_model:
                         price_model['subscription'] = []
 
                     price_model['subscription'].append(comp)
 
+                # The price component defines a pay per user
                 elif unit.defined_model == 'pay per use':
                     if not 'pay_per_use' in price_model:
                         price_model['pay_per_use'] = []
 
                     price_model['pay_per_use'].append(comp)
+
+                # Save the general currency of the offering
+                if not currency_loaded:
+                    price_model['general_currency'] = comp['currency']
+                    currency_loaded = True
+        else:
+            price_model['general_currency'] = 'EUR'
 
         # Create the contract entry
         Contract.objects.create(
@@ -628,7 +641,7 @@ class ChargingEngine:
             contract.charges.append({
                 'date': time_stamp,
                 'cost': price,
-                'currency': 'EUR',  # FIXME allow any currency
+                'currency': contract.pricing_model['general_currency'],
                 'concept': concept
             })
 
@@ -711,7 +724,7 @@ class ChargingEngine:
                 # Call the price resolver
                 price = resolve_price(related_model)
                 # Make the charge
-                redirect_url = self._charge_client(price, 'initial charge')
+                redirect_url = self._charge_client(price, 'initial charge', self._price_model['general_currency'])
             else:
                 # If it is not necessary to charge the customer the state is set to paid
                 self._purchase.state = 'paid'
@@ -755,7 +768,7 @@ class ChargingEngine:
                         unmodified.append(s)
 
                 price = resolve_price(related_model)
-                redirect_url = self._charge_client(price, 'Renovation')
+                redirect_url = self._charge_client(price, 'Renovation', self._price_model['general_currency'])
 
                 if len(unmodified) > 0:
                     related_model['unmodified'] = unmodified
@@ -792,7 +805,7 @@ class ChargingEngine:
                     related_model['pay_per_use'].append(pend_sdr)
 
                 # Charge the client
-                redirect_url = self._charge_client(price, 'Pay per use')
+                redirect_url = self._charge_client(price, 'Pay per use', self._price_model['general_currency'])
 
                 if self._purchase.state == 'paid':
                     self.end_charging(price, 'pay per use', related_model)
