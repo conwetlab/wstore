@@ -74,14 +74,14 @@
             };
 
             formContent.appendTo('.modal-body');
-            // Set listeners
-            $('.modal-footer > .btn').click(function() {
-                makePublishRequest(offeringElement, markets);
-            })
         } else {
             var msg = "There aren't Marketplaces registered. Press accept if you want to publish your offering only in WStore";
             MessageManager.showAlertInfo('No Marketplaces', msg, $('.modal-body'));
         }
+        // Set listeners
+        $('.modal-footer > .btn').click(function() {
+            makePublishRequest(offeringElement, markets);
+        })
     };
 
     publishOffering = function publishOffering(offeringElement) {
