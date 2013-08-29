@@ -121,6 +121,7 @@ def fill_internal_user_info(*arg, **kwargs):
         social.extra_data['refresh_token'] = response['refresh_token']
         social.save()
 
+    kwargs['user'].userprofile.complete_name = response['displayName']
     kwargs['user'].userprofile.save()
 
     # Get user private organization
