@@ -30,3 +30,29 @@
   float: right;
   margin: 15px 15px 0px 0px;
 }
+
+a {
+  color: rgb(0, 43, 103);
+}
+
+a:hover {
+  color: rgb(96, 193, 207);
+}
+
+h2 {
+  color: rgb(0, 43, 103);
+}
+
+.btn-blue {
+  background-color: rgb(0, 43, 103);
+  border-color: rgb(0, 43, 103);
+}
+
+.btn-blue:hover {
+  background-color: rgb(0, 43, 103);
+}
+
+.nav-pills > .active > a, .nav-pills > .active > a:hover {
+  color: rgb(255, 255, 255);
+  background-color: rgb(0, 43, 103);
+}

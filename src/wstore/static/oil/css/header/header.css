@@ -4,7 +4,7 @@ body{
 }
 
 a:hover{
-  color: #049cdb;
+  color: rgb(96, 193, 207);
   text-decoration: none;
 }
 
@@ -49,8 +49,8 @@ nav.navbar-inner .logo-header{
   float: left;
   margin: 12px 0 0 3px;
   font-size: 23px;
-  color: #555;
-  font-family: "DsignesRegular";
+  color: rgb(96, 193, 207);
+  font-family: OpenSans, Arial, sans-serif;
   display: inline-block;
   text-shadow: rgb(255, 255, 255) 0px 1px 0px;
   line-height: 20px;
@@ -58,7 +58,10 @@ nav.navbar-inner .logo-header{
 
 .logo-header .brand a{
   font-size: 34px;
-  color: #555;
+}
+
+.logo-header a.brand span {
+  color: rgb(0, 45, 103);
 }
 
 .logo-header .brand a:hover{
@@ -103,7 +106,7 @@ ul.oil-portal li a{
 }
 
 ul.oil-portal li a:hover{
-  color: #049cdb;
+  color: rgb(96, 193, 207);
 }
 
 ul.oil-portal li.active{
@@ -115,7 +118,7 @@ ul.oil-portal li.active{
 }
 
 ul.oil-portal li.active a{
-  color: #049cdb;
+  color: rgb(96, 193, 207);
 }
 
 ul.pull-right {
