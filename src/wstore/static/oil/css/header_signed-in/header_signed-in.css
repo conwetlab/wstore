@@ -43,7 +43,7 @@
 }
 
 #oil-nav ul.nav li a img{
-  width: 24px;
+  width: 20px;
 }
 
 #oil-nav ul.nav li a span{
@@ -86,9 +86,13 @@
   width: 70px;
 }
 
-#oil-nav ul.nav li a{
-  padding: 10px 0 10px 1px !important;
+.navbar .nav.pull-right {
+  margin-right: -10px;
+  margin-left: 0px;
+  line-height: 21px;
+  height: 40px;
 }
+
 
 
 
