@@ -37,7 +37,8 @@
 
             this.shortDescription = this.servicesOffered[0].short_description;
             this.updated = this.servicesOffered[0].modified;
-            this.created = this.servicesOffered[0].created;
+            this.created = offeringData.creation_date;
+            this.published = offeringData.publication_date;
             this.description = this.servicesOffered[0].long_description;
             this.offeringDescriptionURL = offeringData.description_url;
             this.legal = this.servicesOffered[0].legal;
@@ -115,6 +116,10 @@
 
         OfferingElement.prototype.getCreated = function getCreated () {
             return this.created;
+        };
+
+        OfferingElement.prototype.getPublication = function getPublication () {
+            return this.published;
         };
 
         OfferingElement.prototype.getDescription = function getDescription () {

@@ -67,7 +67,7 @@
             'organization': offeringElement.getOrganization(),
             'owner': offeringElement.getProvider(),
             'version': offeringElement.getVersion(),
-            'updated': offeringElement.getUpdated(),
+            'updated': offeringElement.getPublication(),
             'action': action
         }).appendTo(container);
 
