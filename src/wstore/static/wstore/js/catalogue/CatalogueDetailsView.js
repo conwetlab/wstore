@@ -58,6 +58,8 @@
             }
         } else if (offeringElement.getState() == 'purchased' || offeringElement.getState() == 'rated') {
             action = 'Download';
+        } else {
+            action = null;
         }
 
         $.template('detailsTemplate', $('#details_offering_template'));
@@ -71,6 +73,9 @@
             'action': action
         }).appendTo(container);
 
+        if (action == null) {
+            $('#main-action').remove();
+        }
         fillStarsRating(offeringElement.getRating(), $('#details-stars'));
 
         // Load the main info template
@@ -128,7 +133,9 @@
 
         // Set advanced operations
         if((USERNAME == offeringElement.getProvider()) && 
-          (ORGANIZATION == offeringElement.getOrganization())) {
+          (ORGANIZATION == offeringElement.getOrganization()) &&
+          (offeringElement.getState() != 'deleted')) {
+
             $('<input></input>').attr('type', 'button').attr('value', 'Delete offering').addClass('btn btn-danger btn-advanced').appendTo('#advanced-op').click(function() {
                 var msg = "Are you sure that you want to delete the offering";
                 MessageManager.showYesNoWindow(msg, function() {
@@ -136,6 +143,7 @@
                 });
             });
         }
+
         $('<input></input>').attr('type', 'button').attr('value', 'Download service model').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
             getServiceModel(offeringElement);
         });
