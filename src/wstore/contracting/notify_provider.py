@@ -64,7 +64,7 @@ def notify_provider(purchase):
             pass
 
     # if the oil authentication is enabled, notify the idM the new purchase
-    if settings.OILAUTH:
+    if settings.OILAUTH and len(purchase.offering.applications) > 0:
         data['applications'] = purchase.offering.applications
 
         # Get the customer id for the idm
