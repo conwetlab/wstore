@@ -21,6 +21,7 @@
 (function(){
 
     var taxAddr;
+    var free;
 
     var makePurchaseRequest = function makePurchaseRequest(offeringElement) {
         var csrfToken = $.cookie('csrftoken');
@@ -41,37 +42,41 @@
             request.tax_address = taxAddr;
         }
 
-        // Add payment info
         request.payment = {};
-        if ($('#pay-method').val() == 'credit_card') {
-            var cvv2 = $.trim($('#cvv2').val());
+        // Add payment info
+        if (!free) {
+            if ($('#pay-method').val() == 'credit_card') {
+                var cvv2 = $.trim($('#cvv2').val());
 
-            request.payment.method = 'credit_card';
+                request.payment.method = 'credit_card';
 
-            if (!$('#curr-card').prop('checked')) {
-                var number, year;
+                if (!$('#curr-card').prop('checked')) {
+                    var number, year;
 
-                number = $.trim($('#number').val());
-                year = $.trim($('#expire-year').val());
+                    number = $.trim($('#number').val());
+                    year = $.trim($('#expire-year').val());
 
-                if (!(number == '') && !(year == '') && !(cvv2 == '')) {
-                    request.payment.credit_card = {
-                        'number': number,
-                        'type': $('#type').val(),
-                        'expire_month': $('#expire-month').val(),
-                        'expire_year': year,
-                        'cvv2': cvv2
+                    if (!(number == '') && !(year == '') && !(cvv2 == '')) {
+                        request.payment.credit_card = {
+                            'number': number,
+                            'type': $('#type').val(),
+                            'expire_month': $('#expire-month').val(),
+                            'expire_year': year,
+                            'cvv2': cvv2
+                        }
+                    } else {
+                        error = true;
+                        msg = 'Missing required field';
                     }
-                } else {
-                    error = true;
-                    msg = 'Missing required field';
                 }
+            } else if ($('#pay-method').val() == 'paypal'){
+                request.payment.method = 'paypal';
+            } else {
+                error = true;
+                msg = 'Please select a payment method';
             }
-        } else if ($('#pay-method').val() == 'paypal'){
-            request.payment.method = 'paypal';
         } else {
-            error = true;
-            msg = 'Please select a payment method';
+            request.payment.method = 'paypal';
         }
 
         if (!error) {
@@ -254,8 +259,9 @@
     };
 
     purchaseOffering = function purchaseOffering(offeringElement) {
-        var nextButton, cancelButton;
+        var nextButton, cancelButton, pricing, action;
         var checked = false;
+        free = true;
 
         // Create the modal
         MessageManager.showMessage('Purchase offering', '');
@@ -285,8 +291,32 @@
 
         // Set listeners
         $('.modal-footer').empty();
+        pricing = offeringElement.getPricing()
+
+        // Check if the offering is free in order to avoid the selection of
+        // payment method form
+        if (pricing.price_plans && pricing.price_plans.length > 0) {
+            var plan = pricing.price_plans[0]
+            if (plan.price_components && plan.price_components.length > 0) {
+                free = false;
+            }
+        }
+
         nextButton = $('<button></button>').attr('class', 'btn btn-basic').appendTo('.modal-footer');
-        nextButton.text('Next');
+        if (!free) {
+            nextButton.text('Next');
+
+            action = showPaymentInfoForm;
+            // Append cancel button
+            cancelButton = $('<button></button>').attr('class', 'btn btn-danger').text('Cancel');
+            cancelButton.appendTo('.modal-footer');
+            cancelButton.click(function() {
+                $('#message').modal('hide');
+            });
+        } else {
+            nextButton.text('Accept');
+            action = makePurchaseRequest;
+        }
 
         nextButton.click(function(evt) {
             var error = false;
@@ -314,19 +344,12 @@
                 }
             }
             if(!error) {
-                showPaymentInfoForm(offeringElement);
+                action(offeringElement);
             } else {
                 var msg = 'A tax address must be provided';
                 MessageManager.showAlertError('Error', msg, $('#purchase-error'));
             }
         });
-
-        // Append cancel button
-        cancelButton = $('<button></button>').attr('class', 'btn btn-danger').text('Cancel');
-        cancelButton.appendTo('.modal-footer');
-        cancelButton.click(function() {
-            $('#message').modal('hide');
-        })
     };
 
 })();
