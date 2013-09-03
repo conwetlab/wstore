@@ -73,8 +73,9 @@ def notify_provider(purchase):
         else:
             data['customer'] = purchase.customer.userprofile.actor_id
 
+        token = purchase.customer.userprofile.access_token
         body = json.dumps(data)
-        headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + purchase.customer.userprofile.access_token}
+        headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
 
         from wstore.social_auth_backend import FIWARE_NOTIFICATION_URL
 
@@ -84,5 +85,28 @@ def notify_provider(purchase):
 
         try:
             response = opener.open(request)
-        except:
-            pass
+        except Exception , e:
+            if e.code == 401:
+                try:
+                    # Try to refresh the access_token
+                    social = purchase.customer.social_auth.filter(provider='fiware')[0]
+                    social.refresh_token()
+
+                    # update user information
+                    social = purchase.customer.social_auth.filter(provider='fiware')[0]
+                    new_credentials = social.extra_data
+
+                    purchase.customer.userprofile.access_token = new_credentials['access_token']
+                    purchase.customer.userprofile.refresh_token = new_credentials['refresh_token']
+                    purchase.customer.userprofile.save()
+                    token = purchase.customer.userprofile.access_token
+
+                    # Make the request
+                    headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
+                    request = MethodRequest('POST', FIWARE_NOTIFICATION_URL, body, headers)
+
+                    opener.open(request)
+                except:
+                    pass
+            else:
+                pass

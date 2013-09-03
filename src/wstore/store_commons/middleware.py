@@ -169,6 +169,13 @@ def get_api_user(request):
                     social.refresh_token()
 
                     # Try to get user info with the new access token
+                    social = user.social_auth.filter(provider='fiware')[0]
+                    new_credentials = social.extra_data
+
+                    user.userprofile.access_token = new_credentials['access_token']
+                    user.userprofile.refresh_token = new_credentials['refresh_token']
+                    user.userprofile.save()
+
                     token = user.userprofile.access_token
                     url = FIWARE_USER_DATA_URL + '?access_token=' + token
                     request = MethodRequest('GET', url)
@@ -178,6 +185,7 @@ def get_api_user(request):
                     raise(e)
 
             user_info['access_token'] = token
+            user_info['refresh_token'] = user.userprofile.refresh_token
             fill_internal_user_info((), response=user_info, user=user)
 
         except Exception, e:
