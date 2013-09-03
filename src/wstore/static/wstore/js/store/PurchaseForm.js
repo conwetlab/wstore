@@ -21,7 +21,7 @@
 (function(){
 
     var taxAddr;
-    var free;
+    var free = true;
 
     var makePurchaseRequest = function makePurchaseRequest(offeringElement) {
         var csrfToken = $.cookie('csrftoken');
@@ -295,12 +295,13 @@
 
         // Check if the offering is free in order to avoid the selection of
         // payment method form
+        /*
         if (pricing.price_plans && pricing.price_plans.length > 0) {
             var plan = pricing.price_plans[0]
             if (plan.price_components && plan.price_components.length > 0) {
                 free = false;
             }
-        }
+        }*/
 
         nextButton = $('<button></button>').attr('class', 'btn btn-basic').appendTo('.modal-footer');
         if (!free) {

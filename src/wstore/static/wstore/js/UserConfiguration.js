@@ -73,7 +73,7 @@
         }
 
         // Load Payment info
-        filled = 0;
+        /*filled = 0;
 
         $('.payment-input').each(function() {
             if ($.trim($(this).val()).length != 0) {
@@ -95,7 +95,7 @@
                     'cvv2': $.trim($('#cvv2').val())
                 };
             }
-        }
+        }*/
 
         // If not error occurred
         if (!error) {
