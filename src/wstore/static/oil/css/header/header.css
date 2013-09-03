@@ -40,6 +40,7 @@ nav.navbar-inner .logo-header{
   width: 60px;
   padding-top: 0;
   float: left;
+  margin-top: -6px;
 
 }
 
@@ -47,10 +48,10 @@ nav.navbar-inner .logo-header{
   padding: 0;
   width: auto;
   float: left;
-  margin: 12px 0 0 3px;
+  margin: 15px 0 0 3px;
   font-size: 23px;
   color: rgb(96, 193, 207);
-  font-family: OpenSans, Arial, sans-serif;
+  font-family: NeoTech;
   display: inline-block;
   text-shadow: rgb(255, 255, 255) 0px 1px 0px;
   line-height: 20px;
