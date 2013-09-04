@@ -120,9 +120,12 @@ class PurchaseFormCollection(Resource):
         if offering.state != 'published':
             return build_response(request, 400, 'The offering cannot be purchased')
 
+        from django.conf import settings
+
         # Create the context
         context = {
-            'offering_info': mark_safe(json.dumps(offering_info))
+            'offering_info': mark_safe(json.dumps(offering_info)),
+            'oil': settings.OILAUTH
         }
 
         # Return the form to purchase the offering

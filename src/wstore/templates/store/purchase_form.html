@@ -10,6 +10,9 @@
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/font-awesome.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/js/google-code-prettify/prettify.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
+        {% if oil %}
+            <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
+        {% endif %}
 
         <script type="text/javascript">
             OFFERING_INFO = {{ offering_info }};
@@ -44,6 +47,7 @@
         <script type="text/x-jquery-tmpl" id="int_template">{% include "catalogue/int_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="int_param_template">{% include "catalogue/int_param_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="purchase_form_template">{% include "store/purchase_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="comment_template">{% include "catalogue/comment_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="credit_card_template">{% include "store/credit_card_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="yes_no_window_template">{% include "yes_no_window_template.html" %}</script>
@@ -52,7 +56,11 @@
         <div class="container-fluid">
             <div class="row-fluid">
                 <div>
-                    <img id="logo" src="{{ STATIC_URL }}assets/img/logo.png" />
+                    {% if oil %}
+                        <img id="logo" src="{{ STATIC_URL }}oil/img/header-logo.png" />
+                    {% else %}
+                        <img id="logo" src="{{ STATIC_URL }}assets/img/logo.png" />
+                    {% endif %}
                 </div>
                 <div class="store_title">
                     <h1>Fi-ware</h1>
