@@ -168,7 +168,7 @@
                                 if ('client_redirection_uri' in response) {
                                     // The window has been opened from an external source
                                     $('#back').remove();
-                                    $('<input></input>').attr('id', 'back').addClass('btn btn-basic').attr('type', 'button').attr('value', 'End purchase').click(function() {
+                                    $('<input></input>').attr('id', 'back').addClass('btn btn-blue').attr('type', 'button').attr('value', 'End purchase').click(function() {
                                         window.location = response.client_redirection_uri;
                                     }).appendTo('[class="nav nav-tabs"]');
                                 }
