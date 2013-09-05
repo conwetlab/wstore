@@ -4,7 +4,9 @@
 
 .navigation {
   top: 60px;
-  right: -105px;
+  right: -0px;
+  width: 280px;
+
 }
 
 .app-icon {
@@ -60,6 +62,7 @@ h2 {
 footer {
   color: #8C8C8C;
   margin-left: 20px;
-  position: fixed;
+  margin-top: 20px;
+  position: absolute;
   bottom: 0;
 }
