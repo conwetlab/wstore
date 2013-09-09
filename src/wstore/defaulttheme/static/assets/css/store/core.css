@@ -273,3 +273,11 @@
     display: inline;
     margin-left: 10px;
 }
+
+.table i:hover {
+  cursor: pointer;
+}
+
+a:hover {
+  cursor: pointer;
+}
