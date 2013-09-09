@@ -23,6 +23,7 @@ import json
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
+from django.conf import settings
 
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
@@ -70,11 +71,15 @@ class UserProfileCollection(Resource):
         for user in User.objects.all():
             user_profile = {}
             user_profile['username'] = user.username
-            user_profile['first_name'] = user.first_name
-            user_profile['last_name'] = user.last_name
+            user_profile['complete_name'] = user.userprofile.complete_name
+
+            if not settings.OILAUTH:
+                user_profile['first_name'] = user.first_name
+                user_profile['last_name'] = user.last_name
 
             profile = UserProfile.objects.get(user=user)
             user_profile['organization'] = profile.current_organization.name
+            user_profile['notification_url'] = profile.current_organization.notification_url
 
             # Append organizations
             user_profile['organizations'] = []
@@ -108,13 +113,25 @@ class UserProfileCollection(Resource):
     @supported_request_mime_types(('application/json',))
     def create(self, request):
 
+        if settings.OILAUTH:
+            return build_response(request, 403, 'It is not possible to create users (use Account enabler instead)')
+
         if not request.user.is_staff:
             return build_response(request, 403, 'Forbidden')
 
         data = json.loads(request.raw_post_data)
+
+        # Validate Info
+        if (not 'roles' in data) or (not 'username' in data) or (not 'first_name') in data \
+        or (not 'last_name' in data) or (not 'password' in data):
+            return build_response(request, 400, 'Missing required field')
+
         # Create the user
         try:
             user = User.objects.create(username=data['username'], first_name=data['first_name'], last_name=data['last_name'])
+
+            # Create the password
+            user.set_password(data['password'])
 
             if 'admin' in data['roles']:
                 user.is_staff = True
@@ -123,6 +140,11 @@ class UserProfileCollection(Resource):
 
             # Get the user profile
             user_profile = UserProfile.objects.get(user=user)
+            user_profile.complete_name = data['first_name'] + ' ' + data['last_name']
+
+            if 'notification_url' in data:
+                user_profile.current_organization.notification_url = data['notification_url']
+                user_profile.current_organization.save()
 
             if 'provider' in data['roles']:
                 # Append the provider role to the user organization
@@ -173,9 +195,14 @@ class UserProfileEntry(Resource):
         user_profile['username'] = user.username
         user_profile['complete_name'] = user.userprofile.complete_name
 
+        if not settings.OILAUTH:
+            user_profile['first_name'] = user.first_name
+            user_profile['last_name'] = user.last_name
+
         profile = UserProfile.objects.get(user=user)
         user_profile['organization'] = profile.current_organization.name
         user_profile['organizations'] = []
+        user_profile['notification_url'] = profile.current_organization.notification_url
 
         # Include organizations name
         for o in profile.organizations:
@@ -216,13 +243,15 @@ class UserProfileEntry(Resource):
             return build_response(request, 403, 'Forbidden')
 
         data = json.loads(request.raw_post_data)
-        # Create the user
+        # Update the user
         try:
             user = User.objects.get(username=username)
             # Get the user profile
             user_profile = UserProfile.objects.get(user=user)
 
-            from django.conf import settings
+            if 'notification_url' in data:
+                user_profile.current_organization.notification_url = data['notification_url']
+                user_profile.current_organization.save()
 
             if not settings.OILAUTH:
                 if 'admin' in data['roles'] and request.user.is_staff:
@@ -239,13 +268,17 @@ class UserProfileEntry(Resource):
                             new_org = o
 
                         if not 'provider' in new_org['roles']:
-                            new_org.append('provider')
+                            new_org['roles'].append('provider')
                             orgs.append(new_org)
 
                         else:
                             orgs.append(o)
 
                     user_profile.organizations = orgs
+                if 'first_name' in data and 'last_name' in data:
+                    user.first_name = data['first_name']
+                    user.last_name = data['last_name']
+                    user_profile.complete_name = data['first_name'] + ' ' + data['last_name']
 
             if 'tax_address' in data:
                 user_profile.tax_address = {
