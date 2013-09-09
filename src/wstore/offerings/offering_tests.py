@@ -130,6 +130,7 @@ class OfferingCreationTestCase(TestCase):
         connection = pymongo.MongoClient()
         cls._db = connection.test_database
 
+        settings.OILAUTH = False
         # Capture repository calls
         offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
         offerings_management.SearchEngine = FakeSearchEngine

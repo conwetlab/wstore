@@ -68,7 +68,6 @@
             "name": "test_resource",
             "version": "1.0",
             "provider": "51000aba8e05ac2115f022f9",
-            "resource_type": "download",
             "description": "Example resource",
             "state": "uploaded",
             "download_link": "",
@@ -174,7 +173,8 @@
                     "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [],
             "charges": [{
@@ -203,7 +203,8 @@
                     "currency": "EUR",
                     "value": "5",
                     "renovation_date": "2020-04-01 00:00:00"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [],
             "charges": [{
@@ -224,7 +225,8 @@
                     "unit": "single_payment",
                     "currency": "EUR",
                     "value": "5"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [],
             "charges": [{

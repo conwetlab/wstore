@@ -112,7 +112,6 @@
             "name": "test_resource",
             "version": "1.0",
             "provider": "51000aba8e05ac2115f022f9",
-            "resource_type": "download",
             "description": "Example resource",
             "state": "uploaded",
             "download_link": "",
@@ -150,7 +149,8 @@
                     "value": "1",
                     "unit": "invocation",
                     "currency": "EUR"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [],
             "pending_sdrs": [],
@@ -188,7 +188,8 @@
                     "value": "1",
                     "unit": "invocation",
                     "currency": "EUR"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [{
                 "offering": {
@@ -257,7 +258,8 @@
                     "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [],
             "pending_sdrs": [],
@@ -295,7 +297,8 @@
                     "value": "1",
                     "unit": "invocation",
                     "currency": "EUR"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [],
             "pending_sdrs": [{
@@ -386,7 +389,8 @@
         "fields": {
             "name": "test_organization",
             "offerings_purchased": [],
-            "managers": []
+            "managers": [],
+            "private": false
         }
     },
     {
@@ -395,7 +399,8 @@
         "fields": {
             "name": "test_organization1",
             "offerings_purchased": [],
-            "managers": []
+            "managers": [],
+            "private": false
         }
     }
 ]

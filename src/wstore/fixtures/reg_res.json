@@ -22,7 +22,6 @@
             "name": "Existing",
             "version": "1.0",
             "provider": "51000aba8e05ac2115f022f9",
-            "resource_type": "download",
             "description": "Example resource",
             "state": "uploaded",
             "download_link": "",

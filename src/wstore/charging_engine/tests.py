@@ -117,6 +117,7 @@ class SinglePaymentChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        settings.OILAUTH = False
         super(SinglePaymentChargingTestCase, cls).setUpClass()
 
     def setUp(self):
@@ -574,6 +575,7 @@ class PayPerUseChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        settings.OILAUTH = False
         super(PayPerUseChargingTestCase, cls).setUpClass()
 
     def setUp(self):
@@ -636,6 +638,8 @@ class PayPerUseChargingTestCase(TestCase):
     test_basic_sdr_feeding.tags = ('fiware-ut-14',)
 
     def test_sdr_feeding_some_applied(self):
+
+        settings.OILAUTH = False
 
         sdr = {
             'offering': {
@@ -858,6 +862,7 @@ class PayPerUseChargingTestCase(TestCase):
 
     def test_sdr_feeding_invalid_timestamp(self):
 
+        settings.OILAUTH = False
         sdr = {
             'offering': {
                 'name': 'test_offering',

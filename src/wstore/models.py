@@ -47,7 +47,7 @@ class Organization(models.Model):
     payment_info = DictField()
     tax_address = DictField()
     managers = ListField()
-    actor_id = models.IntegerField(unique=True, null=True, blank=True)
+    actor_id = models.IntegerField(null=True, blank=True)
 
 
 from wstore.offerings.models import Offering
@@ -66,7 +66,7 @@ class UserProfile(models.Model):
     tax_address = DictField()
     complete_name = models.CharField(max_length=100)
     payment_info = DictField()
-    actor_id = models.IntegerField(unique=True, null=True, blank=True)
+    actor_id = models.IntegerField(null=True, blank=True)
     access_token = models.CharField(max_length=150, null=True, blank=True)
     refresh_token = models.CharField(max_length=150, null=True, blank=True)
 
@@ -88,7 +88,7 @@ class UserProfile(models.Model):
             if self.actor_id == self.current_organization.actor_id:
                 result = True
         else:
-            if self.user.username == self.current_organization.username:
+            if self.user.username == self.current_organization.name:
                 result = True
 
         return result

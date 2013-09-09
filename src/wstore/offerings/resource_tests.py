@@ -37,25 +37,6 @@ class ResourceRegisteringTestCase(TestCase):
     tags = ('fiware-ut-3',)
     fixtures = ['reg_res.json']
 
-    def test_resource_registering_backend(self):
-
-        data = {
-            'name': 'History Mod',
-            'version': '1.0',
-            'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'backend',
-            'link': 'https://historymod.com'
-        }
-
-        provider = User.objects.get(username='test_user')
-        register_resource(provider, data)
-
-        res = Resource.objects.get(name='History Mod')
-
-        self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_type, 'backend')
-        self.assertEqual(res.download_link, 'https://historymod.com')
-
     def test_resource_registering_download_encoded(self):
 
         f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
@@ -65,7 +46,6 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'Download',
             'version': '1.0',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
             'content': {
                 'name': 'test_usdl.rdf',
                 'data': encoded 
@@ -78,7 +58,6 @@ class ResourceRegisteringTestCase(TestCase):
 
         res = Resource.objects.get(name='Download')
         self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_type, 'download')
         self.assertEqual(res.resource_path, '/media/resources/test_user__Download__1.0__test_usdl.rdf')
 
         res_path = settings.BASEDIR + res.resource_path
@@ -105,7 +84,6 @@ class ResourceRegisteringTestCase(TestCase):
 
         res = Resource.objects.get(name='Download')
         self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_type, 'download')
         self.assertEqual(res.resource_path, '/media/resources/test_user__Download__1.0__test_usdl.rdf')
 
         res_path = settings.BASEDIR + res.resource_path
@@ -128,7 +106,6 @@ class ResourceRegisteringTestCase(TestCase):
         res = Resource.objects.get(name='History Mod')
 
         self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_type, 'download')
         self.assertEqual(res.download_link, 'https://historymod.com/download')
         self.assertEqual(res.content_type, 'text/plain')
 
