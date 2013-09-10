@@ -167,6 +167,13 @@
         $('#org-name').val(org.name).prop('readonly', true);
         $('#notify-url').val(org.notification_url);
 
+        $('#org-user-btn').removeClass('hide');
+
+        // Set add users button listener
+        $('#org-user-btn').click(function() {
+            displayOrganizationUsersForm(org.name);
+        });
+
         if (org.payment_info) {
             credit_card = org.payment_info
             $('#type').val(credit_card.type);

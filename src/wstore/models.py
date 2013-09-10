@@ -79,6 +79,25 @@ class UserProfile(models.Model):
 
         return roles
 
+    def get_user_roles(self):
+        from django.conf import settings
+        roles = []
+
+        for o in self.organizations:
+            org = Organization.objects.get(pk=o['organization'])
+
+            if settings.OILAUTH:
+                # Check actor_id
+                if org.actor_id == self.actor_id:
+                    roles = o['roles']
+                    break
+            else:
+                # Check organization name
+                if org.name == self.user.username:
+                    roles = o['roles']
+                    break
+        return roles
+
     def is_user_org(self):
 
         result = False
@@ -103,7 +122,7 @@ def create_user_profile(sender, instance, created, **kwargs):
         default_organization[0].save()
 
         profile, created = UserProfile.objects.get_or_create(
-            user=instance, 
+            user=instance,
             organizations=[{
                 'organization': default_organization[0].pk,
                 'roles': ['customer']
@@ -120,7 +139,6 @@ def create_context(sender, instance, created, **kwargs):
 
 #Creates a new user profile when an user is created
 post_save.connect(create_user_profile, sender=User)
-
 
 # Creates a context when the site is created
 post_save.connect(create_context, sender=Site)

@@ -46,6 +46,7 @@
         'RSS_ENTRY': '/api/administration/rss/${name}',
         'USERPROFILE_ENTRY': '/api/administration/profiles/${username}',
         'ORGANIZATION_ENTRY': '/api/administration/organizations/${org}',
+        'ORGANIZATION_USER_ENTRY': '/api/administration/organizations/${org}/user',
         'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}',
         'PUBLISH_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/publish',
         'BIND_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/bind',

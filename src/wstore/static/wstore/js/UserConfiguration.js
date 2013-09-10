@@ -300,10 +300,24 @@
     var paintUserInfo = function paintUserInfo(userInfo) {
         if (!userDisplayed) {
             var context, roles = '';
+            var orgsSelect = $('<select></select>').attr('id', 'org-select');
             userDisplayed = true;
 
-            for (var i = 0; i < userInfo.roles.length; i++) {
-                roles += (' ' + userInfo.roles[i] + ',');
+            // Load organizations info
+            for (var i = 0; i < userInfo.organizations.length; i++) {
+                var org;
+                org = $('<option></option>').attr('value', userInfo.organizations[i].name);
+                org.text(userInfo.organizations[i].name);
+                org.appendTo(orgsSelect);
+
+                // Get roles for the current organization
+                if (userInfo.organizations[i].name == userInfo.current_organization) {
+                    orgRoles = userInfo.organizations[i].roles;
+                }
+            }
+
+            for (var i = 0; i < orgRoles.length; i++) {
+                roles += (' ' + orgRoles[i] + ',');
             }
 
             // Load the user info
@@ -311,23 +325,17 @@
                 'username': userInfo.username,
                 'complete_name': userInfo.complete_name,
                 'roles': roles,
-                'organization': userInfo.organization
+                'organization': userInfo.current_organization
             }
 
             $.template('userInfoConfTemplate', $('#user_info_conf_template'));
             $.tmpl('userInfoConfTemplate', context).appendTo('#userinfo-tab');
 
-            // Include organizations
-            for (var i = 0; i < userInfo.organizations.length; i++) {
-                var org;
-                org = $('<option></option>').attr('value', userInfo.organizations[i].name);
-                org.text(userInfo.organizations[i].name);
-                org.appendTo('#org-select');
-            }
+            orgsSelect.appendTo('#org-info');
 
-	    // Set initial value for the org select
-            $('#org-select').val(userInfo.organization);
-            // Set listener for oranization change
+            // Set initial value for the org select
+            $('#org-select').val(userInfo.current_organization);
+            // Set listener for organization change
             $('#org-select').change(function() {
                 changeOrganization();
             });

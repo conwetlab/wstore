@@ -69,29 +69,45 @@ class UserProfileCollection(Resource):
 
         response = []
         for user in User.objects.all():
+
+            profile = UserProfile.objects.get(user=user)
             user_profile = {}
             user_profile['username'] = user.username
-            user_profile['complete_name'] = user.userprofile.complete_name
+            user_profile['complete_name'] = profile.complete_name
 
             if not settings.OILAUTH:
                 user_profile['first_name'] = user.first_name
                 user_profile['last_name'] = user.last_name
+                user_org = Organization.objects.get(name=user.username)
+            else:
+                user_org = Organization.objects.get(actor_id=profile.actor_id)
 
-            profile = UserProfile.objects.get(user=user)
-            user_profile['organization'] = profile.current_organization.name
-            user_profile['notification_url'] = profile.current_organization.notification_url
+            user_profile['current_organization'] = profile.current_organization.name
+
+            # Include user notification URL
+            user_profile['notification_url'] = user_org.notification_url
 
             # Append organizations
             user_profile['organizations'] = []
 
-            # Include organizations name
+            # Include organizations info
             for o in profile.organizations:
-                user_profile['organizations'].append({
-                    'name': Organization.objects.get(pk=o['organization']).name
-                })
+                org = Organization.objects.get(pk=o['organization'])
+
+                org_info = {
+                    'name': org.name,
+                    'roles': o['roles']
+                }
+
+                if 'provider' in o['roles']:
+                    org_info['notification_url'] = org.notification_url
+
+                user_profile['organizations'].append(org_info)
 
             user_profile['tax_address'] = profile.tax_address
-            user_profile['roles'] = profile.get_current_roles()
+
+            # Include user roles
+            user_profile['roles'] = profile.get_user_roles()
 
             if user.is_staff:
                 user_profile['roles'].append('admin')
@@ -190,25 +206,42 @@ class UserProfileEntry(Resource):
         if not request.user.is_staff and not request.user.username == username:
             return build_response(request, 403, 'Forbidden')
 
+        # Get user info
         user = User.objects.get(username=username)
+        profile = UserProfile.objects.get(user=user)
+
         user_profile = {}
         user_profile['username'] = user.username
-        user_profile['complete_name'] = user.userprofile.complete_name
+        user_profile['complete_name'] = profile.complete_name
 
         if not settings.OILAUTH:
             user_profile['first_name'] = user.first_name
             user_profile['last_name'] = user.last_name
+            user_org = Organization.objects.get(name=user.username)
+        else:
+            user_org = Organization.objects.get(actor_id=profile.actor_id)
 
-        profile = UserProfile.objects.get(user=user)
-        user_profile['organization'] = profile.current_organization.name
+        # Include user organizations info
+        user_profile['current_organization'] = profile.current_organization.name
         user_profile['organizations'] = []
-        user_profile['notification_url'] = profile.current_organization.notification_url
+
+        # Include notification URL for the user
+        
+        user_profile['notification_url'] = user_org.notification_url
 
         # Include organizations name
         for o in profile.organizations:
-            user_profile['organizations'].append({
-                'name': Organization.objects.get(pk=o['organization']).name
-            })
+            org = Organization.objects.get(pk=o['organization'])
+
+            org_info = {
+                'name': org.name,
+                'roles': o['roles']
+            }
+
+            if 'provider' in o['roles']:
+                org_info['notification_url'] = org.notification_url
+
+            user_profile['organizations'].append(org_info)
 
         if 'street' in profile.tax_address:
             user_profile['tax_address'] = {
@@ -218,7 +251,8 @@ class UserProfileEntry(Resource):
                 'country': profile.tax_address['country']
             }
 
-        user_profile['roles'] = profile.get_current_roles()
+        # Include roles for the user
+        user_profile['roles'] = profile.get_user_roles()
 
         if user.is_staff:
             user_profile['roles'].append('admin')
@@ -249,10 +283,8 @@ class UserProfileEntry(Resource):
             # Get the user profile
             user_profile = UserProfile.objects.get(user=user)
 
-            if 'notification_url' in data:
-                user_profile.current_organization.notification_url = data['notification_url']
-                user_profile.current_organization.save()
-
+            # If WStore is not integrated with the accounts enabler
+            # update user info and roles
             if not settings.OILAUTH:
                 if 'admin' in data['roles'] and request.user.is_staff:
                     user.is_staff = True
@@ -261,24 +293,43 @@ class UserProfileEntry(Resource):
                     user.set_password(data['password'])
 
                 if 'provider' in data['roles']:
-                    # Append the provider role to the user organization
+                    # Append the provider role to the user
                     orgs = []
                     for o in user_profile.organizations:
                         if Organization.objects.get(pk=o['organization']).name == user.username:
-                            new_org = o
 
-                        if not 'provider' in new_org['roles']:
-                            new_org['roles'].append('provider')
-                            orgs.append(new_org)
-
+                            if not 'provider' in o['roles']:
+                                o['roles'].append('provider')
+                                orgs.append(o)
                         else:
                             orgs.append(o)
 
                     user_profile.organizations = orgs
+
+                elif not 'provider' in data['roles'] and 'provider' in user_profile.get_user_roles():
+                    # Remove the provider role from the user info
+                    orgs = []
+                    for o in user_profile.organizations:
+
+                        if Organization.objects.get(pk=o['organization']).name == user.username:
+                            o['roles'].remove('provider')
+                            orgs.append(o)
+                        else:
+                            orgs.append(o)
+
+                    user_profile.organizations = orgs
+
+                if 'notification_url' in data and 'provider' in user_profile.get_user_roles():
+                    user_org = Organization.objects.get(name=user.username)
+                    user_org.notification_url = data['notification_url']
+                    user_org.save()
+
                 if 'first_name' in data and 'last_name' in data:
                     user.first_name = data['first_name']
                     user.last_name = data['last_name']
                     user_profile.complete_name = data['first_name'] + ' ' + data['last_name']
+            else:
+                pass
 
             if 'tax_address' in data:
                 user_profile.tax_address = {
@@ -569,3 +620,61 @@ def change_current_organization(request):
     request.user.userprofile.save()
 
     return build_response(request, 200, 'OK')
+
+
+class OrganizationUserCollection(Resource):
+
+    @authentication_required
+    @supported_request_mime_types(('application/json',))
+    def create(self, request, org):
+
+        if settings.OILAUTH:
+            return build_response(request, 403, 'It is not possible to modify organizations (use Account enabler instead)')
+
+        try:
+            organization = Organization.objects.get(name=org)
+        except:
+            return build_response(request, 404, 'Organization not found')
+
+        # Check if the organization is private
+        if organization.private:
+            return build_response(request, 403, 'Forbidden')
+    
+        # Check if the user can include users in the organization
+        if not request.user.is_staff and not request.user.pk in organization.managers:
+            return build_response(request, 403, 'Forbidden')
+
+        # Get the user
+        try:
+            data = json.loads(request.raw_post_data)
+            user = User.objects.get(username=data['user'])
+
+            if not 'roles' in data:
+                raise Exception('')
+        except:
+            return build_response(request, 400, 'Invalid JSON content')
+
+        org_roles = []
+        if 'provider' in data['roles']:
+            org_roles.append('provider')
+
+        if 'customer' in data['roles']:
+            org_roles.append('customer')
+
+        # Check if the user already belongs to the organization
+        belongs = False
+        for o in user.userprofile.organizations:
+            if o['organization'] == organization.pk:
+                belongs = True
+
+        if belongs == True:
+            return build_response(request, 400, 'The user already belongs to the organization')
+
+        # Include the new user
+        user.userprofile.organizations.append({
+            'organization': organization.pk,
+            'roles': org_roles
+        })
+        user.userprofile.save()
+
+        return build_response(request, 200, 'OK')
