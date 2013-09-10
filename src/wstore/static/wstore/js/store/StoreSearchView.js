@@ -169,6 +169,14 @@
                     initSearchView('SEARCH_ENTRY');
                 }
             });
+            // Set listener for enter key
+            $('#text-search').keypress(function(e) {
+                if (e.which == 13 && $.trim($(this).val()) != '') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    initSearchView('SEARCH_ENTRY');
+                }
+            });
             $('#all').click(function() {
                 initSearchView('OFFERING_COLLECTION');
             })

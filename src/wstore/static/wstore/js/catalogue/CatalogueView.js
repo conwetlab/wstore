@@ -224,12 +224,23 @@
             }
         });
 
+        // Set listener for enter key
+        $('#cat-search-input').keypress(function(e) {
+            var keyword = $.trim($('#cat-search-input').val());
+
+            if (e.which == 13 && keyword != '') {
+                e.preventDefault();
+                e.stopPropagation();
+                searchParams.keyword = keyword;
+                searchParams.searching = true;
+                changeTab(currentTab);
+            }
+        });
         $('#cat-all').click(function() {
             changeTab(currentTab, true);
         });
 
         changeTab('#purchased-tab');
-
     };
 
     getCurrentTab = function getCurrentTab () {
