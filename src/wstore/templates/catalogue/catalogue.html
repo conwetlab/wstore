@@ -29,7 +29,7 @@
         {% if oil %}
             <script type="text/javascript" src="{{ STATIC_URL }}oil/js/CreateOfferingForm.js"></script>
         {% else %}
-            <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CreateAppForm.js"></script>
+            <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CreateOfferingForm.js"></script>
         {% endif %}
 
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/RegisterResForm.js"></script>
@@ -54,9 +54,10 @@
 
         <script type="text/x-jquery-tmpl" id="catalogue_search_template">{% include "catalogue/catalogue_search_template.html" %}</script>
 
+        <script type="text/x-jquery-tmpl" id="create_off_form_template">{% include "oil/create_off_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="select_usdl_form_template">{% include "oil/select_usdl_form_template.html" %}</script>
+
         {% if oil %}
-            <script type="text/x-jquery-tmpl" id="create_off_form_template">{% include "oil/create_off_form_template.html" %}</script>
-            <script type="text/x-jquery-tmpl" id="select_usdl_form_template">{% include "oil/select_usdl_form_template.html" %}</script>
             <script type="text/x-jquery-tmpl" id="select_application_form_template">{% include "oil/select_application_form_template.html" %}</script>
             <script type="text/x-jquery-tmpl" id="application_select_template">{% include "oil/application_select_template.html" %}</script>
         {% endif %}
@@ -92,11 +93,12 @@
         {% endif %}
     </head>
     <body>
+        <div id="wrapper">
     {% if oil %}
         <div id="oil-bar">
         {% include "oil/header.html" %}
         </div>
-    {% endif %}
+        {% endif %}
         <div class="container-fluid bread-container">
             <div class="row-fluid">
             {% if not oil %}
@@ -144,6 +146,7 @@
             </div>
             <div class="row-fluid" id="catalogue-container">
             </div>
+        </div>
         </div>
         {% if oil %}
         <footer>
