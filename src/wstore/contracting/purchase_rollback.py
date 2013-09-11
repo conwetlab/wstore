@@ -92,7 +92,8 @@ class PurchaseRollback():
             result = self._funct(user, offering, org_owned, payment_info)
         except Exception, e:
             if e.message != "This offering can't be purchased" and e.message != 'The offering has been already purchased'\
-             and e.message != 'Invalid payment method' and e.message != 'Invalid credit card info':
+             and e.message != 'Invalid payment method' and e.message != 'Invalid credit card info'\
+             and e.message != 'The customer does not have a tax address' and e.message != 'The customer does not have payment info':
 
                 # Get the purchase
                 if org_owned:
