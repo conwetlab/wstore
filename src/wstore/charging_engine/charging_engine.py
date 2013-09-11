@@ -23,6 +23,7 @@ from __future__ import absolute_import
 import os
 import json
 import time
+import codecs
 import subprocess
 import threading
 from pymongo import MongoClient
@@ -449,7 +450,7 @@ class ChargingEngine:
         # Create the bill code file
         invoice_name = self._purchase.ref + '_' + date
         bill_path = os.path.join(settings.BILL_ROOT, invoice_name + '.html')
-        f = open(bill_path, 'wb')
+        f = codecs.open(bill_path, 'wb', 'utf-8')
         f.write(bill_code)
         f.close()
 
