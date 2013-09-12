@@ -297,12 +297,10 @@ class UserProfileEntry(Resource):
                     orgs = []
                     for o in user_profile.organizations:
                         if Organization.objects.get(pk=o['organization']).name == user.username:
-
                             if not 'provider' in o['roles']:
                                 o['roles'].append('provider')
-                                orgs.append(o)
-                        else:
-                            orgs.append(o)
+
+                        orgs.append(o)
 
                     user_profile.organizations = orgs
 
