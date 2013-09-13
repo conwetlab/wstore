@@ -148,6 +148,12 @@ MIDDLEWARE_CLASSES = (
     'wstore.store_commons.middleware.URLMiddleware',
 )
 
+WSTOREMAILUSER = '<mail_user'
+WSTOREMAIL = '<email>'
+WSTOREMAILPASS = '<email_passwd>'
+
+WSTOREPROVIDERREQUEST = '<provider_requests_email>'
+
 URL_MIDDLEWARE_CLASSES = {
     'default': (
         'django.middleware.common.CommonMiddleware',

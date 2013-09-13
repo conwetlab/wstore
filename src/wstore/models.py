@@ -69,6 +69,7 @@ class UserProfile(models.Model):
     actor_id = models.IntegerField(null=True, blank=True)
     access_token = models.CharField(max_length=150, null=True, blank=True)
     refresh_token = models.CharField(max_length=150, null=True, blank=True)
+    provider_requested = models.BooleanField(default=False)
 
     def get_current_roles(self):
         roles = []

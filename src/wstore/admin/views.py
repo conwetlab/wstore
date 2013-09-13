@@ -267,6 +267,9 @@ class UserProfileEntry(Resource):
             user_profile['payment_info']['expire_month'] = profile.payment_info['expire_month']
             user_profile['payment_info']['cvv2'] = profile.payment_info['cvv2']
 
+        if profile.provider_requested:
+            user_profile['provider_request'] = True
+
         return HttpResponse(json.dumps(user_profile), status=200, mimetype='application/json')
 
     @authentication_required

@@ -22,6 +22,15 @@
         this.roles = userInfo.roles;
         this.organizations = userInfo.organizations;
         this.currentOrganization = userInfo.current_organization;
+
+        if (userInfo.provider_request) {
+            this.providerRequest = userInfo.provider_request;
+        } else {
+            this.providerRequest = false;
+        }
+
+        // Notify the views that the userprofile is created
+        refreshView();
     }
     UserProfile.prototype.getUsername = function getUsername() {
         return this.username;
@@ -51,6 +60,9 @@
         return this.roles;
     };
 
+    UserProfile.prototype.providerRequested = function providerRequested() {
+        return this.providerRequest;
+    };
     UserProfile.prototype.getCurrentRoles = function getCurrentRoles() {
         var orgRoles;
 

@@ -19,6 +19,8 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import os
+import json
+import smtplib
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
@@ -28,9 +30,10 @@ from django.views.static import serve
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 
-from store_commons.utils.http import build_response
+from store_commons.utils.http import build_response, authentication_required, \
+supported_request_mime_types
 from wstore.store_commons.resource import Resource as API_Resource
-from wstore.models import UserProfile
+from wstore.models import UserProfile, Organization
 from wstore.models import Purchase
 from wstore.models import Resource
 from wstore.models import Offering
@@ -67,6 +70,53 @@ def catalogue(request):
         'oil': settings.OILAUTH
     }
     return render(request, 'catalogue/catalogue.html', context)
+
+
+class ProviderRequest(API_Resource):
+
+    @authentication_required
+    @supported_request_mime_types(('application/json',))
+    def create(self, request):
+
+        # Get user info
+        try:
+            data = json.loads(request.raw_post_data)
+            if not 'username' in data or not 'message' in data:
+                raise Exception('')
+        except:
+            return build_response(request, 400, 'Invalid Json content')
+
+        try:
+            user = User.objects.get(username=data['username'])
+        except:
+            return build_response(request, 400, 'Invalid user')
+
+        try:
+            # Send email
+            fromaddr = settings.WSTOREMAIL
+            toaddrs = settings.WSTOREPROVIDERREQUEST
+            msg = 'Subject: Provider request: ' + user.username + '\n'
+            msg += user.userprofile.complete_name + '\n'
+            msg += data['message']
+
+            # Credentials (if needed)
+            username = settings.WSTOREMAILUSER
+            password = settings.WSTOREMAILPASS
+
+            # The mail is sent
+            server = smtplib.SMTP('smtp.gmail.com:587')
+            server.starttls()
+            server.login(username, password)
+            server.sendmail(fromaddr, toaddrs, msg)
+            server.quit()
+        except:
+            return build_response(request, 400, 'Problem sending the email')
+
+        user.userprofile.provider_requested = True
+
+        user.userprofile.save()
+
+        return build_response(request, 200, 'OK')
 
 
 class ServeMedia(API_Resource):

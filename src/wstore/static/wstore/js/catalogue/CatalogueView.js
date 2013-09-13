@@ -188,6 +188,33 @@
         $.template('catalogueTemplate', $('#catalogue_search_template'));
         $.tmpl('catalogueTemplate', {}).appendTo('#catalogue-container');
 
+        // If the user is a provider, append provider buttons
+        if (USERPROFILE.getCurrentRoles().indexOf('provider') != -1) {
+            var div;
+            $.template('providerTabsTemplate', $('#provider_tabs_template'));
+            $.tmpl('providerTabsTemplate', {}).appendTo('.nav-tabs');
+
+            div = $('<div></div>').addClass('tab-pane').attr('id', 'provided-tab');
+            $('<div></div>').attr('id', 'provided-content').appendTo(div);
+            div.appendTo('.tab-content');
+        } else {
+            // Include the 'become a provider' button if needed
+            if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
+                var provBtn = $('<input></input>').addClass('btn btn-blue').attr('type', 'button').attr('id', 'become-prov');
+                if (!USERPROFILE.providerRequested()) {
+                    var requestForm = new ProviderRequestForm(USERPROFILE);
+
+                    provBtn.val('Become a provider');
+                    provBtn.click(function() {
+                        requestForm.display();
+                    })
+                } else {
+                    provBtn.val('Request pending');
+                }
+                provBtn.appendTo('.nav-tabs');
+            }
+        }
+
         if ($('#create-app').length > 0) {
             $('#create-app').click(function () {
                 getRepositories(showCreateAppForm);
@@ -252,5 +279,5 @@
         paintCatalogue();
     };
 
-    $(document).ready(paintCatalogue);
+    //$(document).ready(paintCatalogue);
 })();

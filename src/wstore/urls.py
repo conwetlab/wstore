@@ -69,6 +69,7 @@ urlpatterns = patterns('',
     url(r'^api/contracting/(?P<reference>[\w]+)/cancel?$', charging_views.PayPalCancelation(permitted_methods=('GET',))),
     url(r'^api/contracting/(?P<reference>[\w]+)/accounting?$', charging_views.ServiceRecordCollection(permitted_methods=('POST',))),
     url(r'^api/search/(?P<text>[\w -]+)/?$', search_views.SearchEntry(permitted_methods=('GET',))),
+    url(r'^api/provider/?$', views.ProviderRequest(permitted_methods=('POST',))),
     url(r'', include('social_auth.urls')),
 )
 

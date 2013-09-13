@@ -28,29 +28,12 @@
     <div class="tabbable catalogue-elem"> 
         <ul class="nav nav-tabs">
             <li class="active"><a href="#purchased-tab" data-toggle="tab">Purchased</a></li>
-            {% if 'provider' in roles %}
-            <li><a href="#provided-tab" data-toggle="tab">Provided</a></li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Options<b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                    <li><a id="create-app">Create offering</a></li>
-                    <li><a id="register-res">Register resource</a></li>
-                    <li><a id="view-res">View resources</a></li>
-                </ul>
-            </li>
-            {% endif %}
        </ul>
        <div class="tab-content">
            <div class="tab-pane active" id="purchased-tab">
               <div id="purchased-content">
               </div>
            </div>
-           {% if 'provider' in roles %}
-           <div class="tab-pane" id="provided-tab">
-              <div id="provided-content">
-              </div>
-           </div>
-           {% endif %}
        </div>
    </div>
 </div>

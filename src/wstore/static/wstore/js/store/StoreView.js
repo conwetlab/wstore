@@ -137,5 +137,5 @@
         getOfferings(EndpointManager.getEndpoint('TOPRATED_COLLECTION'), $('#top-rated-container'));
     };
 
-    $(document).ready(paintHomePage);
+    //$(document).ready(paintHomePage);
 })();

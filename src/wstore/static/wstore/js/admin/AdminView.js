@@ -211,8 +211,9 @@
     };
 
     refreshView = function refreshView() {
+        paintElementTable();
     };
 
     // Set initial listeners
-    $(document).ready(paintElementTable); 
+    //$(document).ready(); 
 })()
