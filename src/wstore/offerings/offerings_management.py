@@ -545,9 +545,6 @@ def publish_offering(offering, data):
 
     for market in data['marketplaces']:
 
-        if not len(offering.resources) > 0:
-            raise Exception('It is not possible to publish an offering without resources')
-
         m = Marketplace.objects.get(name=market)
         market_adaptor = MarketAdaptor(m.host)
         info = {
