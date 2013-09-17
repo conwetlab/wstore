@@ -1,10 +1,24 @@
 (function() {
 
+    /**
+     * Constructor for provider requests modal form
+     * @param userProfile object with the user info
+     * @returns {ProviderRequestForm}
+     */
     ProviderRequestForm = function ProviderRequestForm(userProfile) {
-        this.modalDisplayed = false;
         this.userProfile = userProfile
     };
 
+    /**
+     * ProviderRequestForm is a subclass of ModalForm
+     */
+    ProviderRequestForm.prototype = new ModalForm('Become a provider', '#provider_request_template');
+
+    ProviderRequestForm.prototype.constuctor = ProviderRequestForm;
+
+    /**
+     * Makes the user request
+     */
     ProviderRequestForm.prototype.makeProviderRequest = function makeProviderRequest() {
         var csrfToken = $.cookie('csrftoken');
         var request = {
@@ -32,7 +46,7 @@
                     var resp = xhr.responseText;
                     var msg = JSON.parse(resp).message;
                     $('#message').modal('hide');
-                    this.modalDisplayed = false;
+                    this.modalCreated = false;
                     MessageManager.showMessage('Error', msg);
                 }).bind(this)
             });
@@ -42,27 +56,23 @@
         }
     };
 
-    ProviderRequestForm.prototype.display = function display() {
+    /**
+     * Implementation of the method defined in ModalForm
+     */
+    ProviderRequestForm.prototype.includeContents = function includeContents() {
         var msg = 'A request will be sent to a WStore admin in order to give you the Offering Provider role'
 
-        // Create the modal if it is not displayed
-        if(!this.modalDisplayed) {
-            MessageManager.showMessage('Become a provider', '');
-            this.modalDisplayed = true;
-        }
-        $('.modal-body').empty();
-
         // Append the informative message
-        $('<div></div>').attr('id', 'alert-container').appendTo('.modal-body');
         MessageManager.showAlertInfo('Note', msg, $('#alert-container'));
+    };
 
-        $('<div></div>').addClass('space clear').appendTo('.modal-body');
-        $('<p></p>').text('Write a message').appendTo('.modal-body');
-        $('<textarea></textarea>').attr('id', 'msg').addClass('span8').css('height', '100px').appendTo('.modal-body');
-
-        // Set the hidden listeners
+    /**
+     * Implementation of the method defined in ModalForm
+     */
+    ProviderRequestForm.prototype.setListeners = function setListeners() {
+     // Set the hidden listeners
         $('#message').on('hidden', (function() {
-            this.modalDisplayed = false;
+            this.modalCreated = false;
         }).bind(this));
 
         // Set the button listener

@@ -26,7 +26,6 @@
      */
     UserConfForm = function UserConfForm(userProfile) {
         this.userProfile = userProfile;
-        this.modalCreated = false;
         this.userDisplayed = false;
         this.addrDisplayed = false;
         this.paymentDisplayed = false;
@@ -34,6 +33,13 @@
         this.addrFormDisplayed = false;
         this.paymentFormDisplayed = false;
     };
+
+    /**
+     * UserConfForm is a subclass of ModalForm
+     */
+    UserConfForm.prototype = new ModalForm('Configuration',  '#user_conf_template');
+
+    UserConfForm.prototype.constructor = UserConfForm;
 
     /**
      * Update the user profile with edit forms info
@@ -350,21 +356,10 @@
 
     };
 
-    /**
-     * Shows the form with user info configuration
+    /** 
+     * Implements the method defined in ModalForm
      */
-    UserConfForm.prototype.display = function display() {
-        if (!this.modalCreated) {
-            MessageManager.showMessage('Configuration', '');
-            this.modalCreated = true;
-        }
-
-        $('.modal-body').empty();
-
-        // Append the template
-        $.template('userConfTemplate', $('#user_conf_template'));
-        $.tmpl('userConfTemplate').appendTo('.modal-body');
-
+    UserConfForm.prototype.includeContents = function includeContents() {
         // Reset main button
         $('.modal-footer').empty();
         $('<a></a>').addClass('btn btn-basic').attr('data-dismiss','modal').attr('href', '#').text('Accept').appendTo('.modal-footer');
@@ -373,8 +368,13 @@
         this.paintUserInfo();
         this.paintAddressInfo();
         this.paintPaymentInfo();
+    };
 
-        // Set edit listener
+    /**
+     * Implements the method defined in ModalForm
+     */
+    UserConfForm.prototype.setListeners = function setListeners() {
+     // Set edit listener
         $('#user-edit').click((function() {
             this.displayEditProfileForm();
         }).bind(this));
