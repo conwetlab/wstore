@@ -215,7 +215,8 @@
 
             // If the USDL is loaded go to the final step, application selection
             if (!error) {
-                getUserResources(showResourcesForm);
+                var userForm = new BindResourcesForm({});
+                userForm.getUserResources(showResourcesForm);
             } else {
                 MessageManager.showAlertError('Error', msg, $('#error-message'));
             }

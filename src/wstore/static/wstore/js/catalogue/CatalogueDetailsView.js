@@ -152,7 +152,8 @@
           (ORGANIZATION == offeringElement.getOrganization()) && 
           (offeringElement.getState() == 'uploaded')) {
             $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
-                bindResourcesForm(offeringElement);
+                var resForm = new BindResourcesForm(offeringElement);
+                resForm.display();
             });
             $('<input></input>').attr('type', 'button').attr('value', 'Edit').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
                 editOfferingForm(offeringElement);

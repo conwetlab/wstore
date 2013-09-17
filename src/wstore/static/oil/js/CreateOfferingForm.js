@@ -240,7 +240,7 @@
     };
 
     var showApplicationsForm = function showApplicationsForm(applications) {
-        var footBtn, apps = {};
+        var userForm, footBtn, apps = {};
         $('.modal-body').empty();
 
         // Create the form
@@ -294,7 +294,8 @@
 
             // Make the request
             offeringInfo.applications = appsSelected;
-            getUserResources(showResourcesForm);
+            userForm = new BindResourcesForm({});
+            userForm.getUserResources(showResourcesForm);
         })
     };
 

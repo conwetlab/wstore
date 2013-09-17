@@ -221,11 +221,12 @@
             });
             $('#register-res').click(showRegisterResourceForm);
             $('#view-res').click(function() {
-                var offElem = {}
+                var resForm, offElem = {}
                 offElem.getResources = function() {
                     return [];
                 }
-                bindResourcesForm(offElem, true);
+                resForm = new BindResourcesForm(offElem, true);
+                resForm.display();
             });
         }
 

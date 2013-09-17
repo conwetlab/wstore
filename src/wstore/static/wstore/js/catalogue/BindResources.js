@@ -20,15 +20,39 @@
 
 (function() {
 
-    var offeringElem;
+    /**
+     * Constructor for the resources binding ModalForm
+     * @param offeringElement Offering object used in requests
+     * @param vOnly Indicates if the window is in view only mode
+     * @returns {BindResourcesForm}
+     */
+    BindResourcesForm = function BindResourcesForm (offeringElement, vOnly) {
+        if (vOnly) {
+            this.viewOnly = true;
+        } else {
+            this.viewOnly = false;
+        }
+        this.offeringElem = offeringElement;
+        
+    };
 
-    getUserResources = function getUserResources (callback, viewOnly) {
+    /**
+     * BindResourcesForm is a subclass of ModalForm
+     */
+    BindResourcesForm.prototype = new ModalForm('User resources', '#bind_resources_template');
+
+    BindResourcesForm.prototype.constructor = BindResourcesForm;
+
+    /**
+     * Gets the user resources
+     */
+    BindResourcesForm.prototype.getUserResources = function getUserResources (callback) {
         $.ajax({
             type: "GET",
             url: EndpointManager.getEndpoint('RESOURCE_COLLECTION'),
             dataType: 'json',
             success: function (response) {
-                callback(response, viewOnly);
+                callback(response);
             },
             error: function (xhr) {
                 var resp = xhr.responseText;
@@ -38,13 +62,17 @@
         });
     };
 
-    var bindResources = function bindResources (resources) {
+    /**
+     * Makes the resource binding request
+     * @param resources: Resources to be bound
+     */
+    BindResourcesForm.prototype.bindResources = function bindResources () {
         var resSelected = [];
-        for (var i = 0; i < resources.length; i++) {
+        for (var i = 0; i < this.resources.length; i++) {
             if ($('#check-' + i).prop("checked")) {
                 resSelected.push({
-                    'name': resources[i].name,
-                    'version': resources[i].version
+                    'name': this.resources[i].name,
+                    'version': this.resources[i].version
                 })
             }
         }
@@ -55,9 +83,9 @@
             },
             type: "POST",
             url: EndpointManager.getEndpoint('BIND_ENTRY', {
-                'organization': offeringElem.getOrganization(),
-                'name': offeringElem.getName(),
-                'version': offeringElem.getVersion()
+                'organization': this.offeringElem.getOrganization(),
+                'name': this.offeringElem.getName(),
+                'version': this.offeringElem.getVersion()
             }),
             dataType: 'json',
             contentType: 'application/json',
@@ -74,13 +102,21 @@
         });
     };
 
-    var paintResources = function paintResources (resources, viewOnly) {
-        MessageManager.showMessage('User resources', '');
-        // Create the form
-        $.template('bindResourcesTemplate', $('#bind_resources_template'));
-        $.tmpl('bindResourcesTemplate' , {}).appendTo('.modal-body');
+    /**
+     * Implements the method defined in ModalForm
+     */
+    BindResourcesForm.prototype.includeContents = function includeContents() {
+        this.getUserResources(this.paintResources.bind(this));
+    };
 
-        // Apend the provider resources
+    /**
+     * Paints the resources
+     * @param resources Resources to be painted
+     */
+    BindResourcesForm.prototype.paintResources = function paintResources (resources) {
+        this.resources = resources;
+
+        // Append the provider resources
         for (var i = 0; i < resources.length; i++) {
             var res = resources[i];
             var found = false;
@@ -92,9 +128,9 @@
                 $(e.target).popover('show');
             });
 
-            if (!viewOnly) {
+            if (!this.viewOnly) {
                 // Checks if the resource is already bound to the offering
-                offeringRes = offeringElem.getResources()
+                offeringRes = this.offeringElem.getResources()
                 while(!found && j < offeringRes.length) {
                     if (res.name == offeringRes[j].name && res.version == offeringRes[j].version) {
                         found = true;
@@ -105,23 +141,14 @@
             }
         }
 
-        if(!viewOnly) {
+        if(!this.viewOnly) {
             // Set listener
-            $('.modal-footer > .btn').click(function () {
-                bindResources(resources);
-            });
+            $('.modal-footer > .btn').click((function () {
+                this.bindResources();
+            }).bind(this));
         } else {
             $('[type="checkbox"]').remove();
         }
-    };
-
-    bindResourcesForm = function bindResourcesForm (offeringElement, vOnly) {
-        var viewOnly = false;
-        if (vOnly) {
-            viewOnly = true;
-        }
-        offeringElem = offeringElement;
-        getUserResources(paintResources, viewOnly);
     };
 
 })();
