@@ -46,7 +46,8 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CatalogueView.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CommentForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/ProviderRequest.js"></script>
-       
+
+        <script type="text/x-jquery-tmpl" id="footer_template">{% include "footer_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_conf_template">{% include "user_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="address_conf_template">{% include "address_conf_template.html" %}</script>
@@ -153,18 +154,6 @@
             </div>
         </div>
         </div>
-        {% if oil %}
-        <footer>
-            <div>
-                2013 &#169;
-            <a href="http://fi-ware.eu/">FI-WARE</a>
-            Usage of FI-LAB services subject to acceptance of
-            <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Terms_and_Conditions">Terms and conditions</a>
-            and
-            <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Personal_Data_Protection_Policy">Personal Data Protection Policy</a>
-            </div>
-        </footer>
-        {% endif %}
     </body>
 </html>
 

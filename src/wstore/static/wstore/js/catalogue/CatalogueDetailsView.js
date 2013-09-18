@@ -173,6 +173,7 @@
                 paintCommentForm(offeringElement);
             });
         }
+        setFooter();
     };
 
     var paintComments = function paintComments() {

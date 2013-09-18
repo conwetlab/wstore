@@ -115,6 +115,7 @@
             fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
             templ.appendTo(target)
         }
+        setFooter();
     };
 
     setNextPage = function setNextPage (nextPag) {
