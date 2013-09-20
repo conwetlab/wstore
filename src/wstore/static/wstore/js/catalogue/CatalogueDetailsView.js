@@ -85,15 +85,20 @@
         }).appendTo('#main-tab');
 
         screen = offeringElement.getScreenshots();
-        for (var i = 0; i < screen.length; i++) {
-            var imageDiv = $('<div></div>').addClass('item');
-            imageDiv.append($('<img src="' + screen[i] +'" alt />'));
+        if (screen.length > 0) {
+            for (var i = 0; i < screen.length; i++) {
+                var imageDiv = $('<div></div>').addClass('item');
+                imageDiv.append($('<img src="' + screen[i] +'" alt />'));
 
-            if (i == 0) {
-                imageDiv.addClass('active');
-            }
-            imageDiv.appendTo('.carousel-inner');
-        };
+                if (i == 0) {
+                    imageDiv.addClass('active');
+                }
+                imageDiv.appendTo('.carousel-inner');
+            };
+        } else {
+            $('h2:contains(Screenshots)').remove();
+            $('#screenshots-car').remove();
+        }
 
         if (offeringElement.getState() != 'uploaded') {
             paintComments();
