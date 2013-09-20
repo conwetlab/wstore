@@ -339,7 +339,7 @@
 
             pricingLoaded = true;
 
-            $('<h2></h2>').text('Pricing Infomation').appendTo('#pricing-tab');
+            $('<h2></h2>').text('Pricing Information').appendTo('#pricing-tab');
 
             if (price_plans.length > 0){
                 $.template('pricingTemplate', $('#pricing_template'));
