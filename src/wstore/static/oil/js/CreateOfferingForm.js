@@ -123,8 +123,9 @@
             contentType: 'application/json',
             data: JSON.stringify(offeringInfo),
             success: function (response) {
+                var msg = 'Your offering has been created. You have to publish your offering before making it available to third parties.';
                 $('#message').modal('hide');
-                MessageManager.showMessage('Created', 'The offering has been created')
+                MessageManager.showMessage('Created', msg);
                 if (getCurrentTab() == '#provided-tab') {
                     getUserOfferings('#provided-tab', paintProvidedOfferings, EndpointManager.getEndpoint('OFFERING_COLLECTION'), false);
                 }
@@ -314,6 +315,9 @@
         });
     };
 
+    /**
+     * Obtains the idm applications of an user
+     */
     var getApplications = function getApplications () {
         $.ajax({
             type: "GET",
