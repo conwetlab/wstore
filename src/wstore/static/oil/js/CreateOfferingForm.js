@@ -102,6 +102,9 @@
         reader.readAsText(f);
     };
 
+    /**
+     * Make the request for creating the offering using the provided info
+     */
     var makeCreateOfferingRequest = function makeCreateOfferingRequest(evnt) {
         var csrfToken = $.cookie('csrftoken');
         offeringInfo.image = logo[0];
@@ -135,9 +138,14 @@
         });
     };
 
+    /**
+     * Displays the form for uploading a USDL document
+     */
     var displayUploadUSDLForm = function displayUploadUSDLForm(repositories) {
         var i, repLength = repositories.length;
+        var helpMsg = "Upload an USDL document containing the offering info";
 
+        $('#upload-help').attr('data-content', helpMsg);
         $('#usdl-container').empty();
         $.template('usdlFormTemplate', $('#upload_usdl_form_template'));
         $.tmpl('usdlFormTemplate', {}).appendTo('#usdl-container');
@@ -160,11 +168,50 @@
         });
     };
 
+    /**
+     * Displays the form for providing a URL pointing to an USDL
+     */
     var displayUSDLLinkForm = function displayUSDLLinkForm() {
+        var helpMsg = "Provide an URL of an USDL document uploaded in a Repository";
+
+        $('#upload-help').attr('data-content', helpMsg);
         $('#usdl-container').empty();
         $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo('#usdl-container');
     };
 
+    /**
+     * Displays the form for creating a simple USDL document
+     */
+    var displayCreateUSDLForm = function displayCreateUSDLForm(repositories) {
+        var i, repLength = repositories.length;
+        var helpMsg = "Create a basic USDL for your offering. This method only supports free or single payment as price models";
+
+        $('#upload-help').attr('data-content', helpMsg);
+        $('#usdl-container').empty();
+        $.template('usdlFormTemplate', $('#create_usdl_form_template'));
+        $.tmpl('usdlFormTemplate', {}).appendTo('#usdl-container');
+
+        for(i=0; i<repLength; i+=1) {
+            $.template('radioTemplate', $('#radio_template'));
+            $.tmpl('radioTemplate', {
+                'name': 'rep-radio',
+                'id': 'rep-radio' + i,
+                'value': repositories[i].name,
+                'text': repositories[i].name}).appendTo('#repositories');
+        }
+        // Set listeners
+        $('#pricing-select').change(function() {
+            if ($(this).val() == 'free') {
+                $('#price').addClass('hide');
+            } else {
+                $('#price').removeClass('hide');
+            }
+        });
+    };
+
+    /**
+     * Displays the form for providing the USDL info
+     */
     var showUSDLForm = function showUSDLForm(repositories) {
         var footBtn;
         $('.modal-body').empty();
@@ -173,9 +220,14 @@
         $.template('usdlTemplate', $('#select_usdl_form_template'));
         $.tmpl('usdlTemplate').appendTo('.modal-body');
 
+        // The create USDL form is displayed by default
+        displayCreateUSDLForm(repositories);
+
         // Listener for USDL field
         $('#usdl-sel').change(function() {
-            if($(this).val() == "1") {
+            if($(this).val() == "0") {
+                displayCreateUSDLForm(repositories);
+            } else if($(this).val() == "1") {
                 displayUploadUSDLForm(repositories);
             } else if ($(this).val() == "2") {
                 displayUSDLLinkForm();
@@ -202,6 +254,46 @@
                 var rep = $('#repositories').val();
                 offeringInfo.offering_description = usdl;
                 offeringInfo.repository = rep;
+            } else if ($('#pricing-select').length > 0) {
+                var description;
+                var pricing = {};
+                var legal = {};
+                var rep = $('#repositories').val();
+                // Check provided info
+                description = $.trim($('#description').val());
+
+                if (description == '') {
+                    error = true;
+                    msg = 'The description is required';
+                }
+                pricing.price_model = $('#pricing-select').val();
+
+                // If a payment model is selected the price is required
+                if (pricing.price_model == 'single_payment') {
+                    var price = $.trim($('#price-input').val());
+                    if (price == '') {
+                        error = true;
+                        msg = 'The price is required for a single payment model';
+                    } else if (!$.isNumeric(price)){
+                        error = true;
+                        msg = 'The price must be a number';
+                    } else {
+                        pricing.price = price;
+                    }
+                }
+                legal.title = $.trim($('#legal-title').val());
+                legal.text = $.trim($('#legal-text').val());
+
+                // Include the info
+                offeringInfo.offering_info = {
+                    'description': description,
+                    'pricing': pricing
+                }
+                offeringInfo.repository = rep;
+                // Include the legal info if conpleted
+                if (legal.title && legal.text) {
+                    offeringInfo.offering_info.legal = legal
+                }
             } else {
                 var usdlLink = $.trim($('#usdl-url').val());
 
@@ -239,6 +331,9 @@
         })
     };
 
+    /**
+     * Display the form for the selection of idM applications
+     */
     var showApplicationsForm = function showApplicationsForm(applications) {
         var userForm, footBtn, apps = {};
         $('.modal-body').empty();
@@ -299,6 +394,9 @@
         })
     };
 
+    /**
+     * Displays the form for the selection of resources
+     */
     var showResourcesForm = function showResourcesForm(resources) {
         $('.modal-body').empty();
         $('.modal-footer').empty()
@@ -342,6 +440,9 @@
         }).appendTo('.modal-footer');
     };
 
+    /**
+     * Displays the form for providing the basic info of the offering
+     */
     showCreateAppForm = function showCreateAppForm(repositories) {
         var i, repLength = repositories.length;
 

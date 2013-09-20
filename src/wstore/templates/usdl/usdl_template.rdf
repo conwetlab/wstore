@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+    xmlns:foaf="http://xmlns.com/foaf/0.1/" 
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" 
+    xmlns:msm="http://cms-wg.sti2.org/ns/minimal-service-model#" 
+    xmlns:owl="http://www.w3.org/2002/07/owl#" 
+    xmlns:dcterms="http://purl.org/dc/terms/" 
+    xmlns:usdl="http://www.linked-usdl.org/ns/usdl-core#" 
+    xmlns:legal="http://www.linked-usdl.org/ns/usdl-legal#" 
+    xmlns:price="http://www.linked-usdl.org/ns/usdl-pricing#" 
+    xmlns:sla="http://www.linked-usdl.org/ns/usdl-sla#" 
+    xmlns:sec="http://www.linked-usdl.org/ns/usdl-sec#" 
+    xmlns:blueprint="http://bizweb.sap.com/TR/blueprint#" 
+    xmlns:vcard="http://www.w3.org/2006/vcard/ns#" 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#" 
+    xmlns:ctag="http://commontag.org/ns#" 
+    xmlns:org="http://www.w3.org/ns/org#" 
+    xmlns:skos="http://www.w3.org/2004/02/skos/core#" 
+    xmlns:time="http://www.w3.org/2006/time#" 
+    xmlns:gr="http://purl.org/goodrelations/v1#" 
+    xmlns:doap="http://usefulinc.com/ns/doap#">
+
+    <skos:Concept xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ba0">
+        <skos:inScheme rdf:resource="http://bizweb.sap.com/TR/blueprint#SolutionType"/>
+        <rdfs:label>Business Solution</rdfs:label>
+    </skos:Concept>
+
+    <usdl:Service xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ base_uri }}{{ fixed_name }}#bUvq9oTgNStSwDnuT">
+        <dcterms:subject rdf:nodeID="ba0"/>
+        <dcterms:subject rdf:nodeID="ba1"/>
+        <dcterms:subject rdf:nodeID="ba2"/>
+        <dcterms:subject rdf:nodeID="ba3"/>
+        <foaf:depiction rdf:resource="{{ image_url }}"/>
+        <dcterms:title xml:lang="en">{{ name }}</dcterms:title>
+        <dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">{{ created }}</dcterms:created>
+        <dcterms:abstract xml:lang="en">{{ description }}</dcterms:abstract>
+        <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">{{ created }}</dcterms:modified>
+        <dcterms:description xml:lang="en">{{ description }}</dcterms:description>
+        {% if legal %}
+        <usdl:hasLegalCondition rdf:resource="{{ base_uri }}{{ fixed_name }}#EcCfJjMlQ5p0wQWs9"/>
+        {% endif %}
+        <foaf:thumbnail rdf:resource="{{ image_url }}" />
+        <usdl:versionInfo>{{ version }}</usdl:versionInfo>
+    </usdl:Service>
+
+    <skos:Concept xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ba1">
+        <skos:inScheme rdf:resource="http://bizweb.sap.com/TR/blueprint#PlatformType"/>
+        <rdfs:label>Android</rdfs:label>
+    </skos:Concept>
+
+    <skos:Concept xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ba2">
+        <skos:inScheme rdf:resource="http://bizweb.sap.com/TR/blueprint#BusinessArea"/>
+        <rdfs:label>Services</rdfs:label>
+    </skos:Concept>
+
+    <skos:Concept xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ba3">
+        <skos:inScheme rdf:resource="http://bizweb.sap.com/TR/blueprint#Industry"/>
+        <rdfs:label>Other services</rdfs:label>
+    </skos:Concept>
+
+    <usdl:ServiceOffering xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ base_uri }}{{ fixed_name }}#Xo9ZQS2Qa3yX8fDfm">
+        <dcterms:description xml:lang="en">{{ description }}</dcterms:description>
+        <usdl:validFrom rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime"></usdl:validFrom>
+        <usdl:validThrough rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime"></usdl:validThrough>
+        <usdl:includes rdf:resource="{{ base_uri }}{{ fixed_name }}#bUvq9oTgNStSwDnuT"/>
+        <dcterms:title xml:lang="en">{{ name }}</dcterms:title>
+        <usdl:hasPricePlan rdf:resource="{{ base_uri }}{{ fixed_name }}#NMTecgiP49qlfU90V"/>
+        <usdl:hasServiceLevelProfile rdf:resource="{{ base_uri }}{{ fixed_name }}#KmhtiqmYXHT7L0vlu"/>
+    </usdl:ServiceOffering>
+
+    {% if free %}
+    <price:PricePlan xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ base_uri }}{{ fixed_name }}#NMTecgiP49qlfU90V">
+        <dcterms:title xml:lang="en">Free use</dcterms:title>
+        <dcterms:description xml:lang="en">This offering can be acquired for free</dcterms:description>
+    </price:PricePlan>
+    {% else %}
+    <price:PricePlan xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ base_uri }}{{ fixed_name }}#NMTecgiP49qlfU90V">
+        <dcterms:title xml:lang="en">Single payment</dcterms:title>
+        <dcterms:description xml:lang="en">This price plan defines a single payment</dcterms:description>
+        <price:hasPriceComponent rdf:resource="{{ base_uri }}{{ fixed_name }}#7jnovpSvDceyPlJxE" />
+    </price:PricePlan>
+
+    <price:PriceComponent rdf:about="{{ base_uri }}{{ fixed_name }}#7jnovpSvDceyPlJxE">
+        <dcterms:title xml:lang="en" xmlns:xml="http://www.w3.org/XML/1998/namespace">Single payment</dcterms:title>
+        <gr:hasCurrency>EUR</gr:hasCurrency>
+        <gr:hasCurrencyValue rdf:datatype="http://www.w3.org/2001/XMLSchema#float">{{ price }}</gr:hasCurrencyValue>
+        <gr:hasUnitOfMeasurement>single payment</gr:hasUnitOfMeasurement>
+        <dcterms:description xml:lang="en" xmlns:xml="http://www.w3.org/XML/1998/namespace">This component defines a single payment</dcterms:description>
+    </price:PriceComponent>
+    {% endif %}
+
+    {% if legal %}
+    <legal:TermsAndConditions xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ base_uri }}{{ fixed_name }}#EcCfJjMlQ5p0wQWs9">
+        <dcterms:title xml:lang="en">Terms and conditions</dcterms:title>
+        <dcterms:description xml:lang="en">Description of the terms and conditions aplied to this widget</dcterms:description>
+        <legal:hasClause rdf:resource="{{ base_uri }}{{ fixed_name }}#u67RUEHYQVBOK10VT"/>
+    </legal:TermsAndConditions>
+
+    <legal:Clause xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ base_uri }}{{ fixed_name }}#u67RUEHYQVBOK10VT">
+        <legal:name>{{ legal_title }}</legal:name>
+        <legal:text xml:lang="en">{{ legal_text }}</legal:text>
+    </legal:Clause>
+    {% endif %}
+</rdf:RDF>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

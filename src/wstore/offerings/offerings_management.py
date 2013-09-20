@@ -29,6 +29,8 @@ from bson.objectid import ObjectId
 from urlparse import urlparse
 
 from django.conf import settings
+from django.template import loader
+from django.template import Context as TmplContext
 
 from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.market_adaptor.marketadaptor import MarketAdaptor
@@ -272,6 +274,52 @@ def count_offerings(user, filter_='published', owned=False):
     return {'number': count}
 
 
+def _create_basic_usdl(usdl_info):
+
+    # Get the template
+    usdl_template = loader.get_template('usdl/usdl_template.rdf')
+    # Create the context
+
+    if usdl_info['base_uri'].endswith('/'):
+        usdl_info['base_uri'] = usdl_info['base_uri'] + 'storeOfferingCollection/'
+    else:
+        usdl_info['base_uri'] = usdl_info['base_uri'] + '/storeOfferingCollection/'
+
+    site = Context.objects.all()[0].site.domain
+
+    if site.endswith('/'):
+        site = site[:-1]
+
+    image_url = site + usdl_info['image_url']
+
+    free = False
+    if usdl_info['pricing']['price_model'] == 'free':
+        free = True
+
+    context = {
+        'base_uri': usdl_info['base_uri'],
+        'name': usdl_info['name'],
+        'fixed_name': usdl_info['name'].replace(' ', ''),
+        'image_url': image_url,
+        'description': usdl_info['description'],
+        'created': str(datetime.now()),
+        'free': free
+    }
+
+    if not free:
+        context['price'] = usdl_info['pricing']['price']
+
+    if 'legal' in usdl_info:
+        context['legal'] = True
+        context['legal_title'] = usdl_info['legal']['title']
+        context['legal_text'] = usdl_info['legal']['text']
+
+    # Render the template
+    usdl = usdl_template.render(TmplContext(context))
+    # Return the USDL document
+    return usdl
+
+
 # Creates a new offering including the media files and
 # the repository uploads
 @OfferingRollback
@@ -388,6 +436,29 @@ def create_offering(provider, profile, json_data):
         usdl = usdl['data']
         data['description_url'] = usdl_url
 
+    # If the USDL is going to be created
+    elif 'offering_info' in json_data:
+
+        # Validate USDL info
+        if not 'description' in json_data['offering_info'] or not 'pricing' in json_data['offering_info']:
+            raise Exception('Invalid USDL info')
+
+        offering_info = json_data['offering_info']
+        offering_info['image_url'] = data['image_url']
+        offering_info['name'] = data['name']
+
+        repository = Repository.objects.get(name=json_data['repository'])
+
+        offering_info['base_uri'] = repository.host
+
+        usdl = _create_basic_usdl(offering_info)
+        usdl_info = {
+            'content_type': 'application/rdf+xml'
+        }
+
+        repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
+        offering_id = organization.name + '__' + data['name'] + '__' + data['version']
+        data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl, name=offering_id)
     else:
         raise Exception('No USDL description provided')
 
