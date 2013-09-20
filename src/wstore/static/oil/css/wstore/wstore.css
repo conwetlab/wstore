@@ -23,9 +23,20 @@
   margin-bottom: 3px;
 }
 
+#app-help {
+  float: left;
+  position: relative;
+  top: -23px;
+  left: 115px;
+}
+
 #applications {
   list-style: none;
   display: inline;
+  float: left;
+  margin-left: -18px;
+  width: 100%;
+  margin-top: 20px;
 }
 
 #applications input[type="checkbox"] {

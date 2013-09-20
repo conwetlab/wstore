@@ -77,6 +77,38 @@
     float: left;
 }
 
+.icon-question-sign:hover {
+    cursor: pointer;
+}
+
+#notification-help {
+    float: left;
+    position: relative;
+    top: -23px;
+    left: 100px;
+}
+
+#resources-help {
+    float: left;
+    position: relative;
+    top: -23px;
+    left: 112px;
+}
+
+.question-sing-sel {
+    color: rgb(96, 193, 207);
+}
+
+.notify-controls {
+    float: left;
+    margin-left: -17px;
+}
+
+#sel-resources {
+    float: left;
+    width: 100%;
+}
+
 .catalogue-elem {
     margin-top: 50px;
 }

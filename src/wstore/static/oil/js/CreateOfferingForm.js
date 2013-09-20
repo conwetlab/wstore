@@ -235,10 +235,25 @@
             } else {
                 $('#usdl-container').empty()
             }
+            // Quit the help menu if needed
+            if ($('#upload-help').prop('displayed')) {
+                $('#upload-help').popover('hide');
+                $('#upload-help').prop('displayed', false);
+                $('#upload-help').removeClass('question-sing-sel');
+            }
         });
 
-        $('#upload-help').on('hover', function () {
-            $('#upload-help').popover('show');
+        $('#upload-help').popover({'trigger': 'manual'});
+        $('#upload-help').click(function () {
+            if ($(this).prop('displayed')) {
+                $(this).popover('hide');
+                $(this).prop('displayed', false);
+                $(this).removeClass('question-sing-sel');
+            } else {
+                $(this).popover('show');
+                $(this).prop('displayed', true);
+                $(this).addClass('question-sing-sel');
+            }
         });
 
         // Listener for application selection
@@ -346,6 +361,18 @@
         $.template('offDescTemplate', $('#select_application_form_template'));
         $.tmpl('offDescTemplate').appendTo('.modal-body');
 
+        $('#app-help').popover({'trigger': 'manual'});
+        $('#app-help').click(function () {
+            if ($(this).prop('displayed')) {
+                $(this).popover('hide');
+                $(this).prop('displayed', false);
+                $(this).removeClass('question-sing-sel');
+            } else {
+                $(this).popover('show');
+                $(this).prop('displayed', true);
+                $(this).addClass('question-sing-sel');
+            }
+        });
         // Include applications
         if (applications.length > 0) {
             $.template('appCheckTemplate', $('#application_select_template'));
@@ -405,9 +432,21 @@
         $('.modal-body').empty();
         $('.modal-footer').empty()
 
-        $('<label></label>').text('Resources').appendTo('.modal-body');
-        $('<div></div>').attr('id', 'resources').appendTo('.modal-body');
+        $.template('selectResourcesTemplate', $('#resources_form_template'));
+        $.tmpl('selectResourcesTemplate').appendTo('.modal-body');
 
+        $('#resources-help').popover({'trigger': 'manual'});
+        $('#resources-help').click(function () {
+            if ($(this).prop('displayed')) {
+                $(this).popover('hide');
+                $(this).prop('displayed', false);
+                $(this).removeClass('question-sing-sel');
+            } else {
+                $(this).popover('show');
+                $(this).prop('displayed', true);
+                $(this).addClass('question-sing-sel');
+            }
+        });
         if (resources.length > 0) {
          // Apend the provider resources
             for (var i = 0; i < resources.length; i++) {
@@ -417,13 +456,13 @@
 
                 res.number = i;
                 $.template('resourceTemplate', $('#resource_template'));
-                $.tmpl('resourceTemplate', res).appendTo('#resources').on('hover', function(e) {
+                $.tmpl('resourceTemplate', res).appendTo('#sel-resources').on('hover', function(e) {
                     $(e.target).popover('show');
                 });
             }
         } else {
             var msg = "You don't have any resource registered. Press accept to create the offering without resources (You can bind resources later, before publishing the offering).";
-            MessageManager.showAlertInfo('No Resources', msg, $('#resources'));
+            MessageManager.showAlertInfo('No Resources', msg, $('#sel-resources'));
         }
 
         // Append the Accept button
@@ -474,6 +513,19 @@
             handleImageFileSelection(event, 'screenshots');
         });
 
+        $('#notification-help').popover({'trigger': 'manual'});
+
+        $('#notification-help').click(function () {
+            if ($(this).prop('displayed')) {
+                $(this).popover('hide');
+                $(this).prop('displayed', false);
+                $(this).removeClass('question-sing-sel');
+            } else {
+                $(this).popover('show');
+                $(this).prop('displayed', true);
+                $(this).addClass('question-sing-sel');
+            }
+        });
         $('[name="notify-select"]').change(function() {
            if ($(this).val() == 'new') {
                $('#notify').removeClass('hide');
