@@ -177,6 +177,7 @@
 
         $('#upload-help').attr('data-content', helpMsg);
         $('#usdl-container').empty();
+        $('<label></label>').text('USDL URL').appendTo('#usdl-container');
         $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo('#usdl-container');
     };
 
@@ -203,9 +204,9 @@
         // Set listeners
         $('#pricing-select').change(function() {
             if ($(this).val() == 'free') {
-                $('#price').addClass('hide');
+                $('#price-input').prop('disabled', true);
             } else {
-                $('#price').removeClass('hide');
+                $('#price-input').prop('disabled', false);
             }
         });
     };
@@ -265,6 +266,11 @@
             event.preventDefault();
             event.stopPropagation();
 
+            if ($('#upload-help').prop('displayed')) {
+                $('#upload-help').popover('hide');
+                $('#upload-help').prop('displayed', false);
+                $('#upload-help').removeClass('question-sing-sel');
+            }
             // Get usdl info
             if (usdl && ($('#usdl-doc').length > 0)) {
                 var rep = $('#repositories').val();
@@ -405,6 +411,12 @@
             evnt.preventDefault();
             evnt.stopPropagation();
 
+            if ($('#app-help').prop('displayed')) {
+                $('#app-help').popover('hide');
+                $('#app-help').prop('displayed', false);
+                $('#app-help').removeClass('question-sing-sel');
+            }
+
             // Check tha selected applications
             $('input[type="checkbox"]').each(function() {
                 if ($(this).prop('checked')) {
@@ -468,6 +480,12 @@
         // Append the Accept button
         $('<input></input>').attr('type', 'button').addClass('btn btn-clasic').attr('value', 'Accept').click(function() {
             var resSelected = [];
+
+            if ($('#resources-help').prop('displayed')) {
+                $('#resources-help').popover('hide');
+                $('#resources-help').prop('displayed', false);
+                $('#resources-help').removeClass('question-sing-sel');
+            }
 
             for (var i = 0; i < resources.length; i++) {
                 if ($('#check-' + i).prop("checked")) {
@@ -534,6 +552,11 @@
            }
         });
 
+        // set hidden listener
+        $('#message').on('hide', function() {
+            $('.popover').remove();
+        });
+
         $('.modal-footer > .btn').text('Next');
         $('.modal-footer > .btn').click(function(event) {
             var name, version;
@@ -541,6 +564,13 @@
 
             event.preventDefault();
             event.stopPropagation();
+
+            if ($('#notification-help').prop('displayed')) {
+                $('#notification-help').popover('hide');
+                $('#notification-help').prop('displayed', false);
+                $('#notification-help').removeClass('question-sing-sel');
+            }
+
             // Check if the manadatory fields are properly filled
             name = $.trim($('[name="app-name"]').val());
             version = $.trim($('[name="app-version"]').val());

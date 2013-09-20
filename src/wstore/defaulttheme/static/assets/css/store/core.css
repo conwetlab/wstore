@@ -107,6 +107,13 @@
 #sel-resources {
     float: left;
     width: 100%;
+    max-height: 345px;
+    overflow-y: auto;
+}
+
+#usdl-container {
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .catalogue-elem {
