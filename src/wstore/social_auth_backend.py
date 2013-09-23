@@ -150,11 +150,7 @@ def fill_internal_user_info(*arg, **kwargs):
         kwargs['user'].save()
 
     organizations = []
-    user_roles = ['customer']
-
-    # Check if the user is a provider
-    if 'Offering Provider' in wstore_roles:
-        user_roles.append('provider')
+    user_roles = ['customer', 'provider']
 
     organizations.append({
         'organization': user_org.pk,
