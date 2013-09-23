@@ -53,6 +53,7 @@
         request.complete_name = $.trim($('#complete-name').val());
         request.organization = $('#org-name').text();
         request.roles = []
+        request.notification_url = $.trim($('#not-input').val());
 
 
         if ($('#admin').prop('checked')) {
@@ -114,13 +115,16 @@
 
         // If not error occurred
         if (!error) {
-            this.userProfile.updateProfile(request, this.display.bind(this));
+            this.userProfile.updateProfile(request, this.display.bind(this), this.manageError.bind(this));
         } else {
             MessageManager.showAlertError('Error', msg, $('#error-message'));
             $('#error-message .close').remove();
         }
     };
 
+    UserConfForm.prototype.manageError = function manageError() {
+        this.modalCreated = false;
+    };
     /**
      * Displays the form for updating the user info
      */
@@ -141,6 +145,8 @@
             $.template('userInfoFormTemplate', $('#user_info_form_template'));
             $.tmpl('userInfoFormTemplate', context).appendTo('#main-info');
 
+            $('#not-url').remove();
+            $('<input></input>').attr('type', 'text').val(this.userProfile.getCurrentNotification()).attr('id', 'not-input').appendTo('#org-info');
             if (this.userProfile.getUserRoles().indexOf('admin') != -1) {
                 $('#admin').prop('checked', true);
             }
@@ -270,7 +276,8 @@
                 'username': this.userProfile.getUsername(),
                 'complete_name': this.userProfile.getCompleteName(),
                 'roles': roles,
-                'organization': this.userProfile.getCurrentOrganization()
+                'organization': this.userProfile.getCurrentOrganization(),
+                'url': this.userProfile.getCurrentNotification()
         }
 
         $.template('userInfoConfTemplate', $('#user_info_conf_template'));

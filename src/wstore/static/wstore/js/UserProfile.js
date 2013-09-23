@@ -63,6 +63,20 @@
     UserProfile.prototype.providerRequested = function providerRequested() {
         return this.providerRequest;
     };
+    UserProfile.prototype.getCurrentNotification = function getCurrentNotification() {
+        var found = false;
+        var url = '';
+        for (var i = 0; i < this.organizations.length && !found; i++) {
+            if (this.currentOrganization == this.organizations[i].name) {
+                found = true;
+                if (this.organizations[i].notification_url) {
+                    url = this.organizations[i].notification_url;
+                }
+            }
+        }
+        return url;
+    };
+
     UserProfile.prototype.getCurrentRoles = function getCurrentRoles() {
         var orgRoles;
 
@@ -105,7 +119,7 @@
         });
     };
 
-    UserProfile.prototype.updateProfile = function updateProfile(userInfo, callback) {
+    UserProfile.prototype.updateProfile = function updateProfile(userInfo, callback, errorCallback) {
         var csrfToken = $.cookie('csrftoken');
 
         // Make PUT request
@@ -125,6 +139,7 @@
             error: function (xhr) {
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
+                errorCallback();
                 $('#message').modal('hide');
                 MessageManager.showMessage('Error', msg);
             }

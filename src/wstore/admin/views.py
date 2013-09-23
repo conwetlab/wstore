@@ -330,7 +330,13 @@ class UserProfileEntry(Resource):
                     user.last_name = data['last_name']
                     user_profile.complete_name = data['first_name'] + ' ' + data['last_name']
             else:
-                pass
+                if 'notification_url' in data and 'provider' in user_profile.get_current_roles():
+                    user_org = user_profile.current_organization;
+                    if user.pk in user_org.managers:
+                        user_org.notification_url = data['notification_url']
+                        user_org.save()
+                    else:
+                        return build_response(request, 401, 'You do not have permission to modify the notification URL of you current organization')
 
             if 'tax_address' in data:
                 user_profile.tax_address = {
