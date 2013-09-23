@@ -586,6 +586,40 @@ def update_offering(offering, data):
         usdl = usdl['data']
 
         new_usdl = True
+    elif 'offering_info' in data:
+        usdl_info = {
+            'content_type': 'application/rdf+xml'
+        }
+        # Validate USDL info
+        if not 'description' in data['offering_info'] or not 'pricing' in data['offering_info']:
+            raise Exception('Invalid USDL info')
+
+        offering_info = data['offering_info']
+        offering_info['image_url'] = offering.image_url
+
+        offering_info['name'] = offering.name
+
+        splited_desc_url = offering.description_url.split('/')
+
+        base_uri = splited_desc_url[0] + '//'
+        splited_desc_url.remove(splited_desc_url[0])
+        splited_desc_url.remove(splited_desc_url[0])
+        splited_desc_url.remove(splited_desc_url[-1])
+        splited_desc_url.remove(splited_desc_url[-1])
+
+        for p in splited_desc_url:
+            base_uri += (p + '/')
+
+        offering_info['base_uri'] = base_uri
+
+        usdl = _create_basic_usdl(offering_info)
+        usdl_info = {
+            'content_type': 'application/rdf+xml'
+        }
+
+        repository_adaptor = RepositoryAdaptor(offering.description_url)
+        repository_adaptor.upload(usdl_info['content_type'], usdl)
+        new_usdl = True
 
     # If the USDL has changed store the new description
     # in the offering model
