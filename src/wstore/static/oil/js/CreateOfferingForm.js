@@ -102,6 +102,23 @@
         reader.readAsText(f);
     };
 
+    var helpHandler = function helpHandler(evnt) {
+        var helpId = evnt.target;
+        if (!$(helpId).prop('displayed')) {
+            $(helpId).popover('show');
+            $(helpId).prop('displayed', true);
+            $(helpId).addClass('question-sing-sel');
+            // Add document even
+            event.stopPropagation();
+            $(document).click(function() {
+                $(helpId).popover('hide');
+                $(helpId).prop('displayed', false);
+                $(helpId).removeClass('question-sing-sel');
+                $(document).unbind('click');
+            });
+        }
+    };
+
     /**
      * Make the request for creating the offering using the provided info
      */
@@ -245,17 +262,7 @@
         });
 
         $('#upload-help').popover({'trigger': 'manual'});
-        $('#upload-help').click(function () {
-            if ($(this).prop('displayed')) {
-                $(this).popover('hide');
-                $(this).prop('displayed', false);
-                $(this).removeClass('question-sing-sel');
-            } else {
-                $(this).popover('show');
-                $(this).prop('displayed', true);
-                $(this).addClass('question-sing-sel');
-            }
-        });
+        $('#upload-help').click(helpHandler);
 
         // Listener for application selection
         $('.modal-footer').empty();
@@ -270,6 +277,7 @@
                 $('#upload-help').popover('hide');
                 $('#upload-help').prop('displayed', false);
                 $('#upload-help').removeClass('question-sing-sel');
+                $(document).unbind('click');
             }
             // Get usdl info
             if (usdl && ($('#usdl-doc').length > 0)) {
@@ -368,17 +376,7 @@
         $.tmpl('offDescTemplate').appendTo('.modal-body');
 
         $('#app-help').popover({'trigger': 'manual'});
-        $('#app-help').click(function () {
-            if ($(this).prop('displayed')) {
-                $(this).popover('hide');
-                $(this).prop('displayed', false);
-                $(this).removeClass('question-sing-sel');
-            } else {
-                $(this).popover('show');
-                $(this).prop('displayed', true);
-                $(this).addClass('question-sing-sel');
-            }
-        });
+        $('#app-help').click(helpHandler);
         // Include applications
         if (applications.length > 0) {
             $.template('appCheckTemplate', $('#application_select_template'));
@@ -415,6 +413,7 @@
                 $('#app-help').popover('hide');
                 $('#app-help').prop('displayed', false);
                 $('#app-help').removeClass('question-sing-sel');
+                $(document).unbind('click');
             }
 
             // Check tha selected applications
@@ -448,17 +447,7 @@
         $.tmpl('selectResourcesTemplate').appendTo('.modal-body');
 
         $('#resources-help').popover({'trigger': 'manual'});
-        $('#resources-help').click(function () {
-            if ($(this).prop('displayed')) {
-                $(this).popover('hide');
-                $(this).prop('displayed', false);
-                $(this).removeClass('question-sing-sel');
-            } else {
-                $(this).popover('show');
-                $(this).prop('displayed', true);
-                $(this).addClass('question-sing-sel');
-            }
-        });
+        $('#resources-help').click(helpHandler);
         if (resources.length > 0) {
          // Apend the provider resources
             for (var i = 0; i < resources.length; i++) {
@@ -485,6 +474,7 @@
                 $('#resources-help').popover('hide');
                 $('#resources-help').prop('displayed', false);
                 $('#resources-help').removeClass('question-sing-sel');
+                $(document).unbind('click');
             }
 
             for (var i = 0; i < resources.length; i++) {
@@ -533,17 +523,8 @@
 
         $('#notification-help').popover({'trigger': 'manual'});
 
-        $('#notification-help').click(function () {
-            if ($(this).prop('displayed')) {
-                $(this).popover('hide');
-                $(this).prop('displayed', false);
-                $(this).removeClass('question-sing-sel');
-            } else {
-                $(this).popover('show');
-                $(this).prop('displayed', true);
-                $(this).addClass('question-sing-sel');
-            }
-        });
+        $('#notification-help').click(helpHandler);
+
         $('[name="notify-select"]').change(function() {
            if ($(this).val() == 'new') {
                $('#notify').removeClass('hide');
@@ -554,6 +535,7 @@
 
         // set hidden listener
         $('#message').on('hide', function() {
+            $(document).unbind('click');
             $('.popover').remove();
         });
 
@@ -569,6 +551,7 @@
                 $('#notification-help').popover('hide');
                 $('#notification-help').prop('displayed', false);
                 $('#notification-help').removeClass('question-sing-sel');
+                $(document).unbind('click');
             }
 
             // Check if the manadatory fields are properly filled
