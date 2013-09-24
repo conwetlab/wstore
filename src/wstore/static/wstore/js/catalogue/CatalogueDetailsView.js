@@ -106,30 +106,7 @@
             $('h3:contains(Comments)').addClass('hide');
         }
 
-        // Set listeners
-        $('a[href="#int-tab"]').on('shown', function (e) {
-            paintInteractionProtocols(offeringElement.getInteractions());
-        });
-
-        $('a[href="#legal-tab"]').on('shown', function (e) {
-            paintLegal(offeringElement.getLegal());
-        });
-
-        $('a[href="#pricing-tab"]').on('shown', function (e) {
-            paintPricing(offeringElement.getPricing());
-        });
-
-        $('a[href="#sla-tab"]').on('shown', function (e) {
-            paintSla(offeringElement.getSla());
-        });
-
-        $('a[href="#res-tab"]').on('shown', function (e) {
-            paintResources(offeringElement.getResources());
-        });
-
-        $('a[href="#app-tab"]').on('shown', function (e) {
-            paintApplications(offeringElement.getApplications());
-        });
+        buildTabs();
 
         $('#back').click(function (e) {
             $(container).empty();
@@ -279,6 +256,111 @@
         window.open(offeringElement.getOfferingDescriptionURL());
     };
 
+    var buildTabs = function buildTabs() {
+        // Check which tabs to include
+        // Interactions
+        if (offElem.getInteractions().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Interactions').attr('href', '#int-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'int-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#int-tab"]').on('shown', function (e) {
+                paintInteractionProtocols(offElem.getInteractions());
+            });
+        }
+
+        // Legal conditions
+        if (offElem.getLegal().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Legal').attr('href', '#legal-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'legal-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#legal-tab"]').on('shown', function (e) {
+                paintLegal(offElem.getLegal());
+            });
+        }
+
+        // Pricing
+        if (offElem.getPricing().price_plans.length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Pricing').attr('href', '#pricing-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'pricing-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#pricing-tab"]').on('shown', function (e) {
+                paintPricing(offElem.getPricing());
+            });
+        }
+
+        // Service level agreement
+        if (offElem.getSla().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Service Level Agreement').attr('href', '#sla-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'sla-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#sla-tab"]').on('shown', function (e) {
+                paintSla(offElem.getSla());
+            });
+        }
+
+        // Resources
+        if (offElem.getResources().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Offering Resources').attr('href', '#res-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'res-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#res-tab"]').on('shown', function (e) {
+                paintResources(offElem.getResources());
+            });
+        }
+
+        // Applications
+        if (offElem.getApplications().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Applications').attr('href', '#app-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'app-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#app-tab"]').on('shown', function (e) {
+                paintApplications(offElem.getApplications());
+            });
+        }
+    };
+
     var paintLegalClauses = function paintLegalClauses (clauses, dom) {
         if (clauses.length > 0) {
             $('<h3></h3>').text('Clauses').appendTo('.clauses');
@@ -290,26 +372,21 @@
     var paintLegal = function paintLegal (legal) {
         if (!legalLoaded) {
             legalLoaded = true;
-
+            // Create the tab for legal conditions
             $('<h2></h2>').text('Legal conditions').appendTo('#legal-tab');
+            $.template('legalTemplate', $('#legal_template'));
 
-            if (legal.length > 0) {
-                $.template('legalTemplate', $('#legal_template'));
+            for (var i = 0; i < legal.length; i++) {
+                var dom;
 
-                for (var i = 0; i < legal.length; i++) {
-                    var dom;
-
-                    dom = $.tmpl('legalTemplate', {
-                        'name': legal[i].name,
-                        'description': legal[i].description
-                    })
-                    dom.appendTo('#legal-tab');
-                    if('clauses' in legal[i]) {
-                        paintLegalClauses(legal[i].clauses, dom.find('.clauses'));
-                    }
+                dom = $.tmpl('legalTemplate', {
+                    'name': legal[i].name,
+                    'description': legal[i].description
+                })
+                dom.appendTo('#legal-tab');
+                if('clauses' in legal[i]) {
+                    paintLegalClauses(legal[i].clauses, dom.find('.clauses'));
                 }
-            } else {
-                $('<p></p>').text('No legal conditions have been defined').appendTo('#legal-tab');
             }
         }
     };
@@ -346,26 +423,22 @@
 
             $('<h2></h2>').text('Pricing Information').appendTo('#pricing-tab');
 
-            if (price_plans.length > 0){
-                $.template('pricingTemplate', $('#pricing_template'));
+            $.template('pricingTemplate', $('#pricing_template'));
 
-                for (var i = 0; i < price_plans.length; i++) {
-                    var dom;
-                    dom = $.tmpl('pricingTemplate', {
-                        'title': price_plans[i].title,
-                        'description': price_plans[i].description
-                    });
-                    dom.appendTo('#pricing-tab');
-                    if ('price_components' in price_plans[i]) {
-                        paintPriceElement(price_plans[i].price_components, dom.find('.price-components'), 'components');
-                    }
-
-                    if ('taxes' in price_plans[i]) {
-                        paintPriceElement(price_plans[i].taxes, dom.find('.taxes'), 'taxes');
-                    }
+            for (var i = 0; i < price_plans.length; i++) {
+                var dom;
+                dom = $.tmpl('pricingTemplate', {
+                    'title': price_plans[i].title,
+                    'description': price_plans[i].description
+                });
+                dom.appendTo('#pricing-tab');
+                if ('price_components' in price_plans[i]) {
+                    paintPriceElement(price_plans[i].price_components, dom.find('.price-components'), 'components');
                 }
-            } else {
-                $('<p></p>').text('No pricing information has been defined. This offering is free').appendTo('#pricing-tab');
+
+                if ('taxes' in price_plans[i]) {
+                    paintPriceElement(price_plans[i].taxes, dom.find('.taxes'), 'taxes');
+                }
             }
         }
     };
@@ -412,24 +485,20 @@
             slaLoaded = true;
             $('<h2></h2>').text('Service level agreement information').appendTo('#sla-tab');
 
-            if (sla.length > 0) {
-                $.template('slaTemplate', $('#sla_template'));
+            $.template('slaTemplate', $('#sla_template'));
 
-                for (var i = 0; i < sla.length; i++) {
-                    var dom;
-                    dom = $.tmpl('slaTemplate', {
-                        'title': sla[i].title,
-                        'description': sla[i].description,
-                        'obligated': sla[i].obligatedParty.substring(sla[i].obligatedParty.indexOf('#') + 1)
-                    });
-                    dom.appendTo('#sla-tab');
-                    if('slaExpresions' in sla[i]){
-                        paintSlaExpresions(sla[i].slaExpresions, dom.find('.expresions'));
-                    }
-                };
-            } else {
-                $('<p></p>').text('No service level agreement has been defined').appendTo('#sla-tab');
-            }
+            for (var i = 0; i < sla.length; i++) {
+                var dom;
+                dom = $.tmpl('slaTemplate', {
+                    'title': sla[i].title,
+                    'description': sla[i].description,
+                    'obligated': sla[i].obligatedParty.substring(sla[i].obligatedParty.indexOf('#') + 1)
+                });
+                dom.appendTo('#sla-tab');
+                if('slaExpresions' in sla[i]){
+                    paintSlaExpresions(sla[i].slaExpresions, dom.find('.expresions'));
+                }
+            };
         }
     };
 
@@ -472,23 +541,19 @@
             interLoaded = true;
             $('<h2></h2>').text('Interaction protocols information').appendTo('#int-tab');
 
-            if(interactions.length > 0) {
-                $.template('intProtTemplate', $('#int_prot_template'));
+            $.template('intProtTemplate', $('#int_prot_template'));
 
-                for (var i = 0; i < interactions.length; i++) {
-                    var prot = $.tmpl('intProtTemplate', {
-                        'title': interactions[i].title,
-                        'description': interactions[i].description,
-                        'technical_interface': interactions[i].technical_interface
-                    });
-                    prot.appendTo('#int-tab');
+            for (var i = 0; i < interactions.length; i++) {
+                var prot = $.tmpl('intProtTemplate', {
+                    'title': interactions[i].title,
+                    'description': interactions[i].description,
+                    'technical_interface': interactions[i].technical_interface
+                });
+                prot.appendTo('#int-tab');
 
-                    if ('interactions' in interactions[i] && interactions[i].interactions.length > 0) {
-                        paintInteractions(interactions[i].interactions, prot.find('.interactions'));
-                    }
+                if ('interactions' in interactions[i] && interactions[i].interactions.length > 0) {
+                    paintInteractions(interactions[i].interactions, prot.find('.interactions'));
                 }
-            } else {
-                $('<p></p>').text('No interaction protocols have been defined').appendTo('#int-tab');
             }
         }
     };
@@ -497,26 +562,22 @@
         if(!resLoaded) {
             resLoaded = true;
             $('<h2></h2>').text('Offering resources').appendTo('#res-tab');
-            if (resources.length > 0) {
-                for (var i = 0; i < resources.length; i++) {
-                    var cont = $('<div></div>');
-                    var p;
-                    p = $('<p></p>').appendTo(cont);
-                    p.append('<b>Name: </b>');
-                    p.append(resources[i].name);
+            for (var i = 0; i < resources.length; i++) {
+                var cont = $('<div></div>');
+                var p;
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Name: </b>');
+                p.append(resources[i].name);
 
-                    p = $('<p></p>').appendTo(cont);
-                    p.append('<b>Version: </b>');
-                    p.append(resources[i].version);
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Version: </b>');
+                p.append(resources[i].version);
 
-                    p = $('<p></p>').appendTo(cont);
-                    p.append('<b>Description: </b>');
-                    p.append(resources[i].description);
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Description: </b>');
+                p.append(resources[i].description);
 
-                    cont.appendTo('#res-tab');
-                }
-            } else {
-                $('<p></p>').text('The offering has no resources').appendTo('#res-tab');
+                cont.appendTo('#res-tab');
             }
         }
     };
@@ -525,26 +586,22 @@
         if(!appLoaded) {
             appLoaded = true;
             $('<h2></h2>').text('Applications').appendTo('#app-tab');
-            if (applications.length > 0) {
-                for (var i = 0; i < applications.length; i++) {
-                    var cont = $('<div></div>');
-                    var p;
-                    p = $('<p></p>').appendTo(cont);
-                    p.append('<b>Name: </b>');
-                    p.append(applications[i].name);
+            for (var i = 0; i < applications.length; i++) {
+                var cont = $('<div></div>');
+                var p;
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Name: </b>');
+                p.append(applications[i].name);
 
-                    p = $('<p></p>').appendTo(cont);
-                    p.append('<b>URL: </b>');
-                    p.append(applications[i].url);
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>URL: </b>');
+                p.append(applications[i].url);
 
-                    p = $('<p></p>').appendTo(cont);
-                    p.append('<b>Description: </b>');
-                    p.append(applications[i].description);
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Description: </b>');
+                p.append(applications[i].description);
 
-                    cont.appendTo('#app-tab');
-                }
-            } else {
-                $('<p></p>').text('The offering has no applications').appendTo('#app-tab');
+                cont.appendTo('#app-tab');
             }
         }
     };
