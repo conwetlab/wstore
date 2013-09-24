@@ -26,7 +26,7 @@
 }
 
 #logo {
-    width: 100px;
+    width: 80px;
 }
 
 .title_wrapper {
@@ -48,10 +48,28 @@
     top: 10px;
 }
 
+.title_wrapper span {
+    position: relative;
+    top: -6px;
+}
+
 .store_title {
     position: relative;
-    left: 110px;
-    top: -80px;
+    left: 89px;
+    top: -50px;
+    color: rgb(96, 193, 207);
+    font-family: NeoTech;
+    font-size: 30px;
+    font-weight: 200;
+    width: 117px;
+}
+
+.store_title span {
+    color: rgb(0, 45, 103);
+}
+
+.store_title h2 {
+    float: right;
 }
 
 .navigation {
@@ -126,12 +144,6 @@
 
 .catalogue-form {
     width: 200px;
-}
-
-.offerings-container {
-    position: absolute;
-    top: 200px;
-    left: 250px;
 }
 
 .search-container {
@@ -321,6 +333,34 @@
   cursor: pointer;
 }
 
+a {
+  color: rgb(0, 43, 103);
+}
+
 a:hover {
+  color: rgb(96, 193, 207);
   cursor: pointer;
 }
+
+h2 {
+  color: rgb(0, 43, 103);
+}
+
+.btn-blue {
+  background-color: rgb(0, 43, 103);
+  border-color: rgb(0, 43, 103);
+}
+
+.btn-blue:hover {
+  background-color: rgb(0, 43, 103);
+}
+
+.nav-pills > .active > a, .nav-pills > .active > a:hover {
+  color: rgb(255, 255, 255);
+  background-color: rgb(0, 43, 103);
+}
+
+.add-on {
+  background-color: rgb(0, 43, 103) !important;
+}
+

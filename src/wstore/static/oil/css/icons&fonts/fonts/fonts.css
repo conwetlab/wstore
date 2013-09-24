@@ -21,11 +21,3 @@
   src: url(DsignesRegular.ttf);
   src: url(DsignesRegular.otf);
 }
-
-@font-face {
-  font-family: 'NeoTech';
-  font-style: normal;
-  font-weight: normal;
-  src: local('Neo Tech'), local('NeoTech'),
-    url("neotech-regular-webfont.otf") format("truetype");
-}
