@@ -39,14 +39,15 @@
         }
     };
 
-    var displayPurchaseInfo = function displayPurchaseInfo() {
+    refreshView = function refreshView() {
         var offeringElement;
+        var offDetailsView;
 
         // Create the offering Element
         offeringElement = new OfferingElement(OFFERING_INFO);
+        offDetailsView = new CatalogueDetailsView(offeringElement, null, '#remote-container')
 
-        // Display offering details view
-        paintOfferingDetails(offeringElement, null, $('#remote-container'));
+        offDetailsView.showView();
 
         // Remove unnecessary buttons and listeners
         $('#main-action').remove();
@@ -55,7 +56,7 @@
         $('#back').remove();
 
         // Display purchase form
-        purchaseOffering(offeringElement);
+        offDetailsView.mainAction('Purchase');
 
         // Replace the event handler in order to remove created components
         $('#message').on('hidden', function(evnt) {
@@ -65,5 +66,22 @@
         });
     }
 
-    $(document).ready(displayPurchaseInfo)
+    setFooter = function setFooter() {
+        // Append the terms and conditions bar
+        // Check if the bar is included
+        if ($('footer').length > 0) {
+            $('footer').remove();
+        }
+        // Create the new footer
+        $.template('footerTemplate', $('#footer_template'));
+        $.tmpl('footerTemplate').appendTo('body');
+        $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
+    }
+
+    $(window).resize(setFooter);
+
+    $(document).ready(function() {
+        USERPROFILE = new UserProfile();
+        USERPROFILE.fillUserInfo()
+    })
 })();

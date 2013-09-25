@@ -85,6 +85,7 @@
         $(target).empty();
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
+            var offDetailsView = new CatalogueDetailsView(offering_elem, paintCatalogue, '#catalogue-container');
             var labelClass = "label";
             var state = offering_elem.getState();
             var stars, templ;
@@ -110,7 +111,11 @@
                 'rating': offering_elem.getRating(),
                 'description': offering_elem.getShortDescription(),
                 'label_class': labelClass
-            }).click(paintOfferingDetails.bind(this, offering_elem, paintCatalogue, '#catalogue-container'));
+            }).click((function(off) {
+                return function() {
+                    off.showView();
+                }
+            })(offDetailsView));
 
             fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
             templ.appendTo(target)

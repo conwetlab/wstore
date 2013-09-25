@@ -1,6 +1,7 @@
 (function() {
 
     var rating = 0;
+    var caller;
 
     var makeCreateCommentRequest = function makeCreateCommentRequest(offElement) {
         var csrfToken = $.cookie('csrftoken');
@@ -31,7 +32,7 @@
                 data: JSON.stringify(request),
                 success: function (response) {
                     $('#message').modal('hide');
-                    refreshAndUpdateDetailsView();
+                    caller.refreshAndUpdateDetailsView();
                 },
                 error: function (xhr) {
                     var resp = xhr.responseText;
@@ -46,9 +47,10 @@
         }
     };
 
-    paintCommentForm = function painCommentForm(offElement) {
+    paintCommentForm = function painCommentForm(offElement, callerObj) {
         var stars;
 
+        caller = callerObj;
         MessageManager.showMessage('Comment', '');
 
         $('<div></div>').attr('id', 'error-message').appendTo('.modal-body');

@@ -75,6 +75,7 @@
 
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
+            var offDetailsView = new CatalogueDetailsView(offering_elem, action, '#home-container')
             var state = offering_elem.getState();
             var labelClass = "label";
             var stars, templ;
@@ -100,7 +101,11 @@
                 'rating': offering_elem.getRating(),
                 'description': offering_elem.getShortDescription(),
                 'label_class': labelClass
-            }).click(paintOfferingDetails.bind(this, offering_elem, action, '#home-container'));
+            }).click((function(off) {
+                return function() {
+                    off.showView();
+                };
+            })(offDetailsView));
 
             fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
 

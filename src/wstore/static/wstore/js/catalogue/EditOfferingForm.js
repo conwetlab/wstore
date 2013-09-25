@@ -22,6 +22,7 @@
     var logo = [];
     var screenShots = [];
     var usdl = {};
+    var caller;
 
     var handleImageFileSelection = function handleImageFileSelection(evnt, type) {
         var files = evnt.target.files;
@@ -213,7 +214,7 @@
                 success: function (response) {
                     $('#message').modal('hide');
                     MessageManager.showMessage('Created', 'The offering has been updated')
-                    refreshAndUpdateDetailsView();
+                    caller.refreshAndUpdateDetailsView();
                 },
                 error: function (xhr) {
                     var resp = xhr.responseText;
@@ -328,8 +329,9 @@
             }
         });
     };
-    editOfferingForm = function editOfferingForm(offeringElement) {
+    editOfferingForm = function editOfferingForm(offeringElement, callerObj) {
 
+        caller = callerObj;
         logo = [];
         screenShots = [];
         usdl = {};

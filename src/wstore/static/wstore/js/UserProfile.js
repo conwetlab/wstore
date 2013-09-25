@@ -1,6 +1,6 @@
 (function() {
 
-    UserProfile = function UserProfile(userInfo) {
+    UserProfile = function UserProfile() {
     };
 
     UserProfile.prototype.buildProfile = function buildProfile(userInfo) {

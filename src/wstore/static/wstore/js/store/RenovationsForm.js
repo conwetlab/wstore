@@ -19,6 +19,9 @@
  */
 
 (function(){
+
+    var caller;
+
     var makeRenovationRequest = function makeRenovationRequest(offElem) {
         var request, error = false;
         var msg;
@@ -72,7 +75,7 @@
                 success: function (response) {
                     $('#message').modal('hide');
                     MessageManager.showMessage('Renovated', 'Subscriptions has been renovated');
-                    refreshAndUpdateDetailsView();
+                    caller.refreshAndUpdateDetailsView();
                 },
                 error: function (xhr) {
                     var resp = xhr.responseText;
@@ -148,9 +151,12 @@
         })
     }
 
-    paintRenovationForm = function paintRenovationForm(outDated, offElem) {
+    paintRenovationForm = function paintRenovationForm(outDated, offElem, callerObj) {
         var btnYes, btnNo;
         var msg = 'Pending renovations';
+
+        caller = callerObj;
+        
         MessageManager.showMessage(msg, 'The following subscriptions are out of date: ');
         for (var i = 0; i < outDated.length; i++) {
             var p = $('<p></p>');

@@ -20,6 +20,8 @@
 
 (function(){
 
+    var caller;
+
     var makePublishRequest = function makePublishRequest(offeringElement, markets) {
         var request = {};
 
@@ -49,7 +51,7 @@
                 MessageManager.showMessage('Published', 'The offering has been published');
                 $('#catalogue-container').empty();
                 offeringElement.setState('published');
-                refreshDetailsView(offeringElement);
+                caller.update(offeringElement);
             },
             error: function (xhr) {
                 var resp = xhr.responseText;
@@ -84,8 +86,9 @@
         })
     };
 
-    publishOffering = function publishOffering(offeringElement) {
+    publishOffering = function publishOffering(offeringElement, callerObj) {
         // Get marketplaces
+        caller = callerObj;
 
         $.ajax({
             type: "GET",

@@ -26,13 +26,10 @@
      * @param vOnly Indicates if the window is in view only mode
      * @returns {BindResourcesForm}
      */
-    BindResourcesForm = function BindResourcesForm (offeringElement, vOnly) {
-        if (vOnly) {
-            this.viewOnly = true;
-        } else {
-            this.viewOnly = false;
-        }
+    BindResourcesForm = function BindResourcesForm (offeringElement, vOnly, callerObj) {
+        this.viewOnly = vOnly;
         this.offeringElem = offeringElement;
+        this.caller = callerObj;
         
     };
 
@@ -90,10 +87,10 @@
             dataType: 'json',
             contentType: 'application/json',
             data: JSON.stringify(resSelected),
-            success: function (response) {
+            success: (function (response) {
                 MessageManager.showMessage('Bound', 'The resources have been bound');
-                refreshAndUpdateDetailsView();
-            },
+                this.caller.refreshAndUpdateDetailsView();
+            }).bind(this),
             error: function (xhr) {
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;

@@ -20,43 +20,45 @@
 
 (function  () {
 
-    var offElem;
-    var backAct;
-    var detContainer;
-    var legalLoaded;
-    var pricingLoaded;
-    var slaLoaded;
-    var interLoaded;
-    var resLoaded;
-    var appLoaded
+    /**
+     * Constructor for the Offering details view
+     * @param offeringElement Offering to be displayed
+     * @param backAction Function that specifies the action to be performed when the back button is pressed
+     * @param container Container where the view is loaded
+     * @returns {CatalogueDetailsView}
+     */
+    CatalogueDetailsView = function CatalogueDetailsView(offeringElement, backAction, container) {
+        this.offeringElement = offeringElement;
+        this.backAction = backAction;
+        this.container = container;
+        this.legalLoaded = false;
+        this.pricingLoaded = false;
+        this.slaLoaded = false;
+        this.interLoaded = false;
+        this.resLoaded = false;
+        this.appLoaded = false;
+    }
 
-    paintOfferingDetails = function paintOfferingDetails (offeringElement, backAction, container) {
+    /**
+     * Displays the Catalogue Details view
+     */
+    CatalogueDetailsView.prototype.showView = function showView () {
         var screen, action;
 
-        offElem = offeringElement;
-        backAct = backAction;
-        detContainer = container;
-        legalLoaded = false;
-        pricingLoaded = false;
-        slaLoaded = false;
-        interLoaded = false;
-        resLoaded = false;
-        appLoaded = false
-        // Create the details view
-
         // Clean the container
-        $(container).empty();
+        $(this.container).empty();
 
         // Load the main template
-        if (offeringElement.getState() == 'uploaded') {
+        if (this.offeringElement.getState() == 'uploaded') {
             action = 'Publish';
-        } else if (offeringElement.getState() == 'published') {
-            if ((USERNAME == offeringElement.getProvider()) && (ORGANIZATION == offeringElement.getOrganization())) {
+        } else if (this.offeringElement.getState() == 'published') {
+            if ((USERPROFILE.getUsername() == this.offeringElement.getProvider()) 
+                    && (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization())) {
                 action = 'Delete';
             } else {
                 action = 'Purchase';
             }
-        } else if (offeringElement.getState() == 'purchased' || offeringElement.getState() == 'rated') {
+        } else if (this.offeringElement.getState() == 'purchased' || this.offeringElement.getState() == 'rated') {
             action = 'Download';
         } else {
             action = null;
@@ -64,27 +66,27 @@
 
         $.template('detailsTemplate', $('#details_offering_template'));
         $.tmpl('detailsTemplate', {
-            'name': offeringElement.getName(),
-            'logo': offeringElement.getLogo(),
-            'organization': offeringElement.getOrganization(),
-            'owner': offeringElement.getProvider(),
-            'version': offeringElement.getVersion(),
-            'updated': offeringElement.getPublication(),
+            'name': this.offeringElement.getName(),
+            'logo': this.offeringElement.getLogo(),
+            'organization': this.offeringElement.getOrganization(),
+            'owner': this.offeringElement.getProvider(),
+            'version': this.offeringElement.getVersion(),
+            'updated': this.offeringElement.getPublication(),
             'action': action
-        }).appendTo(container);
+        }).appendTo(this.container);
 
         if (action == null) {
             $('#main-action').remove();
         }
-        fillStarsRating(offeringElement.getRating(), $('#details-stars'));
+        fillStarsRating(this.offeringElement.getRating(), $('#details-stars'));
 
         // Load the main info template
         $.template('mainInfoTemplate', $('#main_info_offering_template'));
         $.tmpl('mainInfoTemplate', {
-            'description': offeringElement.getDescription()
+            'description': this.offeringElement.getDescription()
         }).appendTo('#main-tab');
 
-        screen = offeringElement.getScreenshots();
+        screen = this.offeringElement.getScreenshots();
         if (screen.length > 0) {
             for (var i = 0; i < screen.length; i++) {
                 var imageDiv = $('<div></div>').addClass('item');
@@ -100,66 +102,75 @@
             $('#screenshots-car').remove();
         }
 
-        if (offeringElement.getState() != 'uploaded') {
-            paintComments();
+        if (this.offeringElement.getState() != 'uploaded') {
+            this.paintComments();
         } else {
             $('h3:contains(Comments)').addClass('hide');
         }
 
-        buildTabs();
+        this.buildTabs();
 
-        $('#back').click(function (e) {
-            $(container).empty();
-            backAction();
-        });
+        $('#back').click((function (e) {
+            $(this.container).empty();
+            this.backAction();
+        }).bind(this));
 
         // Set advanced operations
-        if((USERNAME == offeringElement.getProvider()) && 
-          (ORGANIZATION == offeringElement.getOrganization()) &&
-          (offeringElement.getState() != 'deleted')) {
+        // Delete offering
+        if((USERPROFILE.getUsername() == this.offeringElement.getProvider()) && 
+          (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) &&
+          (this.offeringElement.getState() != 'deleted')) {
 
-            $('<input></input>').attr('type', 'button').attr('value', 'Delete offering').addClass('btn btn-danger btn-advanced').appendTo('#advanced-op').click(function() {
+            $('<input></input>').attr('type', 'button').attr('value', 'Delete offering').addClass('btn btn-danger btn-advanced').appendTo('#advanced-op').click((function() {
                 var msg = "Are you sure that you want to delete the offering";
-                MessageManager.showYesNoWindow(msg, function() {
-                    deleteOffering(offeringElement, backAction, container);
-                });
-            });
+                MessageManager.showYesNoWindow(msg, (function() {
+                    this.deleteOffering();
+                }).bind(this));
+            }).bind(this));
         }
 
-        $('<input></input>').attr('type', 'button').attr('value', 'Download service model').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
-            getServiceModel(offeringElement);
-        });
+        // Download service model
+        $('<input></input>').attr('type', 'button').attr('value', 'Download service model').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+            this.getServiceModel();
+        }).bind(this));
 
-        if((USERNAME == offeringElement.getProvider()) && 
-          (ORGANIZATION == offeringElement.getOrganization()) && 
-          (offeringElement.getState() == 'uploaded')) {
-            $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
-                var resForm = new BindResourcesForm(offeringElement);
+        // Bind resources and edit the offering
+        if((USERPROFILE.getUsername() == this.offeringElement.getProvider()) && 
+          (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) && 
+          (this.offeringElement.getState() == 'uploaded')) {
+            $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+                var resForm = new BindResourcesForm(this.offeringElement, false, this);
                 resForm.display();
-            });
-            $('<input></input>').attr('type', 'button').attr('value', 'Edit').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
-                editOfferingForm(offeringElement);
-            });
+            }).bind(this));
+            $('<input></input>').attr('type', 'button').attr('value', 'Edit').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+                editOfferingForm(this.offeringElement, this);
+            }).bind(this));
         }
 
         // Set the main operation
-        $('#main-action').click(mainAction.bind(this, action));
+        $('#main-action').click((function() {
+            this.mainAction(action);
+        }).bind(this));
 
         //Check renovations
         if (action == 'Download') {
-            checkRenovations(offeringElement.getPricing());
+            this.checkRenovations();
         }
 
-        if (offeringElement.getState() == 'purchased') {
-            $('#comment-btn').removeClass('hide').click(function() {
-                paintCommentForm(offeringElement);
-            });
+        // Form for comment and rate the offering
+        if (this.offeringElement.getState() == 'purchased') {
+            $('#comment-btn').removeClass('hide').click((function() {
+                paintCommentForm(this.offeringElement, this);
+            }).bind(this));
         }
         setFooter();
     };
 
-    var paintComments = function paintComments() {
-        var comments = offElem.getComments();
+    /**
+     * Paint the comments of the offering
+     */
+    CatalogueDetailsView.prototype.paintComments = function paintComments() {
+        var comments = this.offeringElement.getComments();
 
         for (var i = 0; i < comments.length; i++) {
             var templ;
@@ -176,8 +187,12 @@
             templ.appendTo('#comments');
         }
     }
-    var checkRenovations = function checkRenovations(pricing) {
-        var price_plans = pricing.price_plans;
+
+    /**
+     * Check if the user needs to renovate a subscription in this offering
+     */
+    CatalogueDetailsView.prototype.checkRenovations = function checkRenovations() {
+        var price_plans = this.offeringElement.getPricing().price_plans;
         if (price_plans.length > 0) {
             var outDated = [];
             var toRenovate = false;
@@ -206,27 +221,34 @@
             }
             // If out of date subscriptions show renovation window
             if (toRenovate) {
-                paintRenovationForm(outDated, offElem);
+                paintRenovationForm(outDated, offElem, this);
             }
         }
     };
 
-    var mainAction = function mainAction (action) {
+    /**
+     * Performs the main action of the details view
+     * @param action Action to be performed
+     */
+    CatalogueDetailsView.prototype.mainAction = function mainAction (action) {
         if (action == 'Publish') {
-            publishOffering(offElem);
+            publishOffering(this.offeringElement, this);
         } else if (action == 'Purchase'){
-            purchaseOffering(offElem);
+            purchaseOffering(this.offeringElement, this);
         } else if (action == 'Delete') {
             var msg = "Are you sure that you want to delete the offering";
-            MessageManager.showYesNoWindow(msg, function() {
-                deleteOffering(offElem, backAct, detContainer);
-            });
+            MessageManager.showYesNoWindow(msg, (function() {
+                this.deleteOffering();
+            }).bind(this));
         } else if (action == 'Download') {
-            downloadElements(offElem);
+            downloadElements(this.offeringElement);
         }
     };
 
-    var deleteOffering = function deleteOffering (offeringElement, backAction, container) {
+    /**
+     * Deletes the offering
+     */
+    CatalogueDetailsView.prototype.deleteOffering = function deleteOffering () {
         var csrfToken = $.cookie('csrftoken');
         $.ajax({
             headers: {
@@ -234,16 +256,16 @@
             },
             type: "DELETE",
             url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
-            'organization': offeringElement.getOrganization(),
-            'name': offeringElement.getName(),
-            'version': offeringElement.getVersion()
+            'organization': this.offeringElement.getOrganization(),
+            'name': this.offeringElement.getName(),
+            'version': this.offeringElement.getVersion()
             }),
             dataType: 'json',
-            success: function (response) {
+            success: (function (response) {
                 MessageManager.showMessage('Deleted', 'The offering has been deleted');
-                $(container).empty();
-                backAction();
-            },
+                $(this.container).empty();
+                this.backAction();
+            }).bind(this),
             error: function (xhr) {
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
@@ -252,14 +274,20 @@
         });
     };
 
-    var getServiceModel = function getServiceModel (offeringElement) {
-        window.open(offeringElement.getOfferingDescriptionURL());
+    /**
+     * Downloads the service model of the offering
+     */
+    CatalogueDetailsView.prototype.getServiceModel = function getServiceModel () {
+        window.open(this.offeringElement.getOfferingDescriptionURL());
     };
 
-    var buildTabs = function buildTabs() {
+    /**
+     * Builds the tabs whose in has been provided in the offering
+     */
+    CatalogueDetailsView.prototype.buildTabs = function buildTabs() {
         // Check which tabs to include
         // Interactions
-        if (offElem.getInteractions().length > 0) {
+        if (this.offeringElement.getInteractions().length > 0) {
             // Include the tab
             var li = $('<li></li>');
             $('<a></a>').text('Interactions').attr('href', '#int-tab').attr('data-toggle', 'tab').appendTo(li);
@@ -270,13 +298,13 @@
                 $('.nav-tabs').append(li);
             }
             // Set the listener
-            $('a[href="#int-tab"]').on('shown', function (e) {
-                paintInteractionProtocols(offElem.getInteractions());
-            });
+            $('a[href="#int-tab"]').on('shown', (function (e) {
+                this.paintInteractionProtocols();
+            }).bind(this));
         }
 
         // Legal conditions
-        if (offElem.getLegal().length > 0) {
+        if (this.offeringElement.getLegal().length > 0) {
             // Include the tab
             var li = $('<li></li>');
             $('<a></a>').text('Legal').attr('href', '#legal-tab').attr('data-toggle', 'tab').appendTo(li);
@@ -287,13 +315,13 @@
                 $('.nav-tabs').append(li);
             }
             // Set the listener
-            $('a[href="#legal-tab"]').on('shown', function (e) {
-                paintLegal(offElem.getLegal());
-            });
+            $('a[href="#legal-tab"]').on('shown', (function (e) {
+                this.paintLegal();
+            }).bind(this));
         }
 
         // Pricing
-        if (offElem.getPricing().price_plans.length > 0) {
+        if (this.offeringElement.getPricing().price_plans.length > 0) {
             // Include the tab
             var li = $('<li></li>');
             $('<a></a>').text('Pricing').attr('href', '#pricing-tab').attr('data-toggle', 'tab').appendTo(li);
@@ -304,13 +332,13 @@
                 $('.nav-tabs').append(li);
             }
             // Set the listener
-            $('a[href="#pricing-tab"]').on('shown', function (e) {
-                paintPricing(offElem.getPricing());
-            });
+            $('a[href="#pricing-tab"]').on('shown', (function (e) {
+                this.paintPricing();
+            }).bind(this));
         }
 
         // Service level agreement
-        if (offElem.getSla().length > 0) {
+        if (this.offeringElement.getSla().length > 0) {
             // Include the tab
             var li = $('<li></li>');
             $('<a></a>').text('Service Level Agreement').attr('href', '#sla-tab').attr('data-toggle', 'tab').appendTo(li);
@@ -321,13 +349,13 @@
                 $('.nav-tabs').append(li);
             }
             // Set the listener
-            $('a[href="#sla-tab"]').on('shown', function (e) {
-                paintSla(offElem.getSla());
-            });
+            $('a[href="#sla-tab"]').on('shown', (function (e) {
+                this.paintSla();
+            }).bind(this));
         }
 
         // Resources
-        if (offElem.getResources().length > 0) {
+        if (this.offeringElement.getResources().length > 0) {
             // Include the tab
             var li = $('<li></li>');
             $('<a></a>').text('Offering Resources').attr('href', '#res-tab').attr('data-toggle', 'tab').appendTo(li);
@@ -338,13 +366,13 @@
                 $('.nav-tabs').append(li);
             }
             // Set the listener
-            $('a[href="#res-tab"]').on('shown', function (e) {
-                paintResources(offElem.getResources());
-            });
+            $('a[href="#res-tab"]').on('shown', (function (e) {
+                this.paintResources();
+            }).bind(this));
         }
 
         // Applications
-        if (offElem.getApplications().length > 0) {
+        if (this.offeringElement.getApplications().length > 0) {
             // Include the tab
             var li = $('<li></li>');
             $('<a></a>').text('Applications').attr('href', '#app-tab').attr('data-toggle', 'tab').appendTo(li);
@@ -355,13 +383,13 @@
                 $('.nav-tabs').append(li);
             }
             // Set the listener
-            $('a[href="#app-tab"]').on('shown', function (e) {
-                paintApplications(offElem.getApplications());
-            });
+            $('a[href="#app-tab"]').on('shown', (function (e) {
+                this.paintApplications();
+            }).bind(this));
         }
     };
 
-    var paintLegalClauses = function paintLegalClauses (clauses, dom) {
+    CatalogueDetailsView.prototype.paintLegalClauses = function paintLegalClauses (clauses, dom) {
         if (clauses.length > 0) {
             $('<h3></h3>').text('Clauses').appendTo('.clauses');
             $.template('legalClausesTemplate', $('#legal_clauses_template'));
@@ -369,9 +397,11 @@
         }
     };
 
-    var paintLegal = function paintLegal (legal) {
-        if (!legalLoaded) {
-            legalLoaded = true;
+    CatalogueDetailsView.prototype.paintLegal = function paintLegal () {
+        if (!this.legalLoaded) {
+            var legal = this.offeringElement.getLegal();
+
+            this.legalLoaded = true;
             // Create the tab for legal conditions
             $('<h2></h2>').text('Legal conditions').appendTo('#legal-tab');
             $.template('legalTemplate', $('#legal_template'));
@@ -385,13 +415,13 @@
                 })
                 dom.appendTo('#legal-tab');
                 if('clauses' in legal[i]) {
-                    paintLegalClauses(legal[i].clauses, dom.find('.clauses'));
+                    this.paintLegalClauses(legal[i].clauses, dom.find('.clauses'));
                 }
             }
         }
     };
 
-    var paintPriceElement = function paintPriceElement (priceElem, dom, type) {
+    CatalogueDetailsView.prototype.paintPriceElement = function paintPriceElement (priceElem, dom, type) {
         if (priceElem.length > 0) {
             var priceTempl;
 
@@ -415,11 +445,11 @@
         }
     };
 
-    var paintPricing = function paintPricing (pricing) {
-        if (!pricingLoaded) {
-            var price_plans = pricing.price_plans;
+    CatalogueDetailsView.prototype.paintPricing = function paintPricing () {
+        if (!this.pricingLoaded) {
+            var price_plans = this.offeringElement.getPricing().price_plans;
 
-            pricingLoaded = true;
+            this.pricingLoaded = true;
 
             $('<h2></h2>').text('Pricing Information').appendTo('#pricing-tab');
 
@@ -433,17 +463,17 @@
                 });
                 dom.appendTo('#pricing-tab');
                 if ('price_components' in price_plans[i]) {
-                    paintPriceElement(price_plans[i].price_components, dom.find('.price-components'), 'components');
+                    this.paintPriceElement(price_plans[i].price_components, dom.find('.price-components'), 'components');
                 }
 
                 if ('taxes' in price_plans[i]) {
-                    paintPriceElement(price_plans[i].taxes, dom.find('.taxes'), 'taxes');
+                    this.paintPriceElement(price_plans[i].taxes, dom.find('.taxes'), 'taxes');
                 }
             }
         }
     };
 
-    var paintSlaVariables =  function paintSlaVariables (variables, dom) {
+    CatalogueDetailsView.prototype.paintSlaVariables =  function paintSlaVariables (variables, dom) {
         if(variables.length > 0) {
             $('<h5></h5>').text('Variables').appendTo(dom);
             $.template('slaVariableTemplate', $('#sla_variable_template'));
@@ -451,7 +481,7 @@
         }
     };
 
-    var paintSlaExpresions = function paintSlaExpresions (expresions, dom) {
+    CatalogueDetailsView.prototype.paintSlaExpresions = function paintSlaExpresions (expresions, dom) {
         if(expresions.length > 0) {
             $('<h3></h3>').text('Service level expresions').appendTo(dom);
             $.template('slaExpresionsTemplate', $('#sla_expresion_template'));
@@ -473,16 +503,18 @@
                 }
 
                 if('variables' in expresions[i]) {
-                    paintSlaVariables(expresions[i].variables, varDom.find('.variables'));
+                    this.paintSlaVariables(expresions[i].variables, varDom.find('.variables'));
                 }
                 varDom.appendTo(dom);
             };
         }
     };
 
-    var paintSla = function paintSla (sla) {
-        if(!slaLoaded) {
-            slaLoaded = true;
+    CatalogueDetailsView.prototype.paintSla = function paintSla () {
+        if(!this.slaLoaded) {
+            var sla = this.offeringElement.getSla();
+
+            this.slaLoaded = true;
             $('<h2></h2>').text('Service level agreement information').appendTo('#sla-tab');
 
             $.template('slaTemplate', $('#sla_template'));
@@ -496,13 +528,13 @@
                 });
                 dom.appendTo('#sla-tab');
                 if('slaExpresions' in sla[i]){
-                    paintSlaExpresions(sla[i].slaExpresions, dom.find('.expresions'));
+                    this.paintSlaExpresions(sla[i].slaExpresions, dom.find('.expresions'));
                 }
             };
         }
     };
 
-    var paintInteractionParams = function paintInteractionParams (params, domElem, title) {
+    CatalogueDetailsView.prototype.paintInteractionParams = function paintInteractionParams (params, domElem, title) {
         $('<h4></h4>').text(title).appendTo(domElem);
         $.template('intParamTemplate', $('#int_param_template'));
 
@@ -515,7 +547,7 @@
         }
     };
 
-    var paintInteractions = function paintInteractions (interactions, domElem) {
+    CatalogueDetailsView.prototype.paintInteractions = function paintInteractions (interactions, domElem) {
         $('<h3></h3>').text('Interactions').appendTo(domElem);
         $.template('interactTemplate', $('#int_template'));
 
@@ -527,18 +559,20 @@
             });
             inter.appendTo(domElem);
             if ('inputs' in interactions[i] && interactions[i].inputs.length > 0) {
-                paintInteractionParams(interactions[i].inputs, inter.find('.inputs'), 'Inputs');
+                this.paintInteractionParams(interactions[i].inputs, inter.find('.inputs'), 'Inputs');
             }
 
             if ('outputs' in interactions[i] && interactions[i].outputs.length > 0) {
-                paintInteractionParams(interactions[i].outputs, inter.find('.outputs'), 'Outputs');
+                this.paintInteractionParams(interactions[i].outputs, inter.find('.outputs'), 'Outputs');
             }
         }
     };
 
-    var paintInteractionProtocols = function paintInteractionProtocols (interactions) {
-        if(!interLoaded) {
-            interLoaded = true;
+    CatalogueDetailsView.prototype.paintInteractionProtocols = function paintInteractionProtocols () {
+        if(!this.interLoaded) {
+            var interactions = this.offeringElement.getInteractions();
+
+            this.interLoaded = true;
             $('<h2></h2>').text('Interaction protocols information').appendTo('#int-tab');
 
             $.template('intProtTemplate', $('#int_prot_template'));
@@ -552,15 +586,17 @@
                 prot.appendTo('#int-tab');
 
                 if ('interactions' in interactions[i] && interactions[i].interactions.length > 0) {
-                    paintInteractions(interactions[i].interactions, prot.find('.interactions'));
+                    this.paintInteractions(interactions[i].interactions, prot.find('.interactions'));
                 }
             }
         }
     };
 
-    var paintResources = function paintResources (resources) {
-        if(!resLoaded) {
-            resLoaded = true;
+    CatalogueDetailsView.prototype.paintResources = function paintResources () {
+        if(!this.resLoaded) {
+            var resources = this.offeringElement.getResources();
+
+            this.resLoaded = true;
             $('<h2></h2>').text('Offering resources').appendTo('#res-tab');
             for (var i = 0; i < resources.length; i++) {
                 var cont = $('<div></div>');
@@ -582,9 +618,11 @@
         }
     };
 
-    var paintApplications = function paintApplications (applications) {
-        if(!appLoaded) {
-            appLoaded = true;
+    CatalogueDetailsView.prototype.paintApplications = function paintApplications () {
+        if(!this.appLoaded) {
+            var applications = this.offeringElement.getApplications();
+
+            this.appLoaded = true;
             $('<h2></h2>').text('Applications').appendTo('#app-tab');
             for (var i = 0; i < applications.length; i++) {
                 var cont = $('<div></div>');
@@ -606,25 +644,32 @@
         }
     };
 
-    refreshAndUpdateDetailsView = function refreshAndUpdateDetailsView () {
+    CatalogueDetailsView.prototype.refreshAndUpdateDetailsView = function refreshAndUpdateDetailsView () {
         $.ajax({
             type: "GET",
             url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
-                'organization': offElem.getOrganization(),
-                'name': offElem.getName(),
-                'version': offElem.getVersion()
+                'organization': this.offeringElement.getOrganization(),
+                'name': this.offeringElement.getName(),
+                'version': this.offeringElement.getVersion()
             }),
             dataType: 'json',
-            success: function (response) {
+            success: (function (response) {
                 var newElem = new OfferingElement(response)
-                paintOfferingDetails(newElem, backAct, detContainer);
-            },
+                this.update(newElem);
+            }).bind(this),
             error: function (xhr) {
             }
         });
     };
 
-    refreshDetailsView = function refreshDetailsView (offeringElement) {
-        paintOfferingDetails(offeringElement, backAct, detContainer);
+    CatalogueDetailsView.prototype.update = function update (offElement) {
+        this.offeringElement = offElement;
+        this.legalLoaded = false;
+        this.pricingLoaded = false;
+        this.slaLoaded = false;
+        this.interLoaded = false;
+        this.resLoaded = false;
+        this.appLoaded = false;
+        this.showView();
     };
 })();

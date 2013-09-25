@@ -22,6 +22,7 @@
 
     var taxAddr;
     var free = true;
+    var caller;
 
     var makePurchaseRequest = function makePurchaseRequest(offeringElement) {
         var csrfToken = $.cookie('csrftoken');
@@ -120,7 +121,7 @@
                                 if (newWindow.closed) {
                                     clearInterval(timer);
                                     $('#message').modal('hide');
-                                    refreshAndUpdateDetailsView();
+                                    caller.refreshAndUpdateDetailsView();
                                 } else if (newWindow.location.host == window.location.host) {
                                     clearInterval(timer);
                                     $('#message').modal('hide');
@@ -128,7 +129,7 @@
 
                                     $('.modal-footer > .btn').click(function() {
                                         newWindow.close();
-                                        refreshAndUpdateDetailsView();
+                                        caller.refreshAndUpdateDetailsView();
                                     });
                                 }
                             }, 1000);
@@ -157,7 +158,7 @@
                         }
                         //Refresh offering details view
                         offeringElement.setState('purchased');
-                        refreshAndUpdateDetailsView();
+                        caller.update(offeringElement);
                         $('#message').modal('hide');
 
                         timer = setInterval(function() {
@@ -258,9 +259,11 @@
         })
     };
 
-    purchaseOffering = function purchaseOffering(offeringElement) {
+    purchaseOffering = function purchaseOffering(offeringElement, callerObj) {
         var nextButton, cancelButton, pricing, action;
         var checked = false;
+
+        caller = callerObj;
         free = true;
 
         // Create the modal
