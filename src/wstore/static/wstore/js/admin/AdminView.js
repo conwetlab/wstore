@@ -214,6 +214,30 @@
         paintElementTable();
     };
 
-    // Set initial listeners
-    //$(document).ready(); 
+    setFooter = function setFooter() {
+        // Append the terms and conditions bar
+        // Check if the bar is included
+        if ($('footer').length > 0) {
+            $('footer').remove();
+        }
+        // Create the new footer
+        $.template('footerTemplate', $('#footer_template'));
+        $.tmpl('footerTemplate').appendTo('body');
+        $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
+    }
+
+    calculatePositions = function calculatePositions() {
+        // Check window width
+        if ($(window).width() < 979) {
+            // Change headers position to avoid problems with bootstrap responsive
+            // FIX ME: This positions are valid if the FI-LAB bar is included
+            $('.title_wrapper').css('top', '-30px');
+            $('.navigation').css('top', '-109px');
+        } else {
+            $('.title_wrapper').css('top', '140px');
+            $('.navigation').css('top', '60px');
+        }
+        setFooter();
+    }
+    $(window).resize(calculatePositions);
 })()

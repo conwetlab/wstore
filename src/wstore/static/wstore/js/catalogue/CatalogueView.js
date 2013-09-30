@@ -292,6 +292,20 @@
         $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
     }
 
-    $(window).resize(setFooter);
-    //$(document).ready(paintCatalogue);
+    calculatePositions = function calculatePositions() {
+        // Check window width
+        if ($(window).width() < 979) {
+            // Change headers position to avoid problems with bootstrap responsive
+            // FIX ME: This positions are valid if the FI-LAB bar is included
+            $('.title_wrapper').css('top', '-30px');
+            $('.navigation').css('top', '-109px');
+        } else {
+            $('.title_wrapper').css('top', '140px');
+            $('.navigation').css('top', '60px');
+        }
+        setFooter();
+    }
+
+    $(window).resize(calculatePositions);
+
 })();
