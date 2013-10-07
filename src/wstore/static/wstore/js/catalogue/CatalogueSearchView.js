@@ -80,6 +80,38 @@
         })
     }
 
+    var getPriceStr = function getPriceStr(pricing) {
+        var pricePlans;
+        var priceStr = 'Free';
+
+        if (pricing.price_plans && pricing.price_plans.length > 0) {
+            var pricePlan = pricing.price_plans[0];
+            
+            if (pricePlan.price_components && pricePlan.price_components.length > 0) {
+             // Check if it is a single payment
+                if (pricePlan.price_components.length == 1) {
+                    var component = pricePlan.price_components[0];
+                    if (component.unit.toLowerCase() == 'single payment') {
+                        priceStr = component.value;
+                        if (component.currency == 'EUR') {
+                            priceStr = priceStr + ' €';
+                        } else {
+                            priceStr = priceStr + ' £';
+                        }
+                    } else {
+                        priceStr = 'View pricing';
+                    }
+                // Check if is a complex pricing
+                } else {
+                    priceStr = 'View pricing';
+                }
+            }
+            
+        }
+
+        return priceStr;
+    };
+
     paintProvidedOfferings = function paintProvidedOfferings (target, data) {
 
         $(target).empty();
@@ -87,37 +119,73 @@
             var offering_elem = new OfferingElement(data[i]);
             var offDetailsView = new CatalogueDetailsView(offering_elem, paintCatalogue, '#catalogue-container');
             var labelClass = "label";
-            var state = offering_elem.getState();
-            var stars, templ;
+            var labelValue = offering_elem.getState();
+            var stars, templ, priceStr;
 
-            if (state == 'rated') {
-                state = 'purchased';
-            }
-
-            if (state == 'purchased') {
-                labelClass += " label-success";
-            } else if (state == 'published') {
-                labelClass += " label-info";
-            } else if (state == 'deleted') {
-                labelClass += " label-important";
-            }
-
+            // Append Price and button if necessary
             $.template('miniOfferingTemplate', $('#mini_offering_template'));
             templ = $.tmpl('miniOfferingTemplate', {
                 'name': offering_elem.getName(),
                 'organization': offering_elem.getOrganization(),
                 'logo': offering_elem.getLogo(),
-                'state': state,
-                'rating': offering_elem.getRating(),
-                'description': offering_elem.getShortDescription(),
-                'label_class': labelClass
+                'description': offering_elem.getShortDescription()
             }).click((function(off) {
                 return function() {
                     off.showView();
                 }
             })(offDetailsView));
 
+            // Include the gradient if needed
+            if (offering_elem.getName().length > 18) {
+                var spanDeg; 
+                $('<span></span>').addClass('txt-gradient').appendTo(templ.find('h2'));
+            }
+
             fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
+
+            priceStr = getPriceStr(offering_elem.getPricing())
+            // Append button
+            if ((USERPROFILE.getCurrentOrganization() != offering_elem.getOrganization()) 
+                    && (labelValue == 'published')) {
+                var padding = '18px';
+                var text = priceStr;
+                var buttonClass = "btn btn-success";
+
+                if (priceStr != 'Free') {
+                    padding = '13px';
+                    buttonClass = "btn btn-blue";
+                }
+
+                if (priceStr == 'View pricing') {
+                    text = 'Purchase';
+                }
+                $('<button></button>').addClass(buttonClass + ' mini-off-btn').text(text).click((function(off) {
+                    return function() {
+                        off.showView();
+                        off.mainAction('Purchase');
+                    }
+                })(offDetailsView)).css('padding-left', padding).appendTo(templ.find('.offering-meta'));
+            } else {
+                var span = $('<span></span>').addClass('mini-off-price').text(priceStr);
+                if (priceStr == 'Free') {
+                    span.css('color', 'green');
+                }
+                span.appendTo(templ.find('.offering-meta'));
+            }
+                
+            if (labelValue != 'published') {
+                var label = $('<span></span>');
+                if (labelValue == 'purchased' || labelValue == 'rated') {
+                    labelClass += " label-success";
+                    labelValue = 'purchased';
+                } else if (labelValue == 'deleted') {
+                    labelClass += " label-important";
+                }
+                label.addClass(labelClass).text(labelValue);
+                templ.find('.off-org-name').before(label);
+                templ.find('.off-org-name').css('width', '126px')
+                templ.find('.off-org-name').css('left', '78px');
+            }
             templ.appendTo(target)
         }
         setFooter();
