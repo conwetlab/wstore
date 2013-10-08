@@ -52,9 +52,12 @@
         if (this.offeringElement.getState() == 'uploaded') {
             action = 'Publish';
         } else if (this.offeringElement.getState() == 'published') {
-            if ((USERPROFILE.getUsername() == this.offeringElement.getProvider()) 
-                    && (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization())) {
-                action = 'Delete';
+            if (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) {
+                if (USERPROFILE.getUsername() == this.offeringElement.getProvider()) {
+                    action = 'Delete';
+                } else {
+                    action = null;
+                }
             } else {
                 action = 'Purchase';
             }
@@ -162,6 +165,35 @@
             $('#comment-btn').removeClass('hide').click((function() {
                 paintCommentForm(this.offeringElement, this);
             }).bind(this));
+        }
+        // Calculate positions on resize
+        this.calculatePositions();
+        $(window).resize(this.calculatePositions.bind(this));
+    };
+
+    /**
+     * Set all displayed components in the correct place depending on the window
+     * size
+     */
+    CatalogueDetailsView.prototype.calculatePositions = function calculatePositions() {
+        var position = $('.tabbable').offset();
+
+        // Calculate tabs width
+        $('.detailed-info').css('width', ($(window).width() - position.left) + 'px');
+        // If there is a back button calculate its position
+        if($('#back').length > 0) {
+            $('#back').css('left', ($('.tabbable').width() - 92) + 'px');
+        }
+
+        if ($(window).width() < 981) {
+            $('.title_wrapper').css('top', '-30px');
+            $('.navigation').css('top', '-109px');
+            $('.detailed-info').css('top', '66px');
+            $('.detailed-info').css('left', '220px');
+        } else {
+            $('.title_wrapper').removeAttr('style');
+            $('.navigation').css('top', '60px');
+            $('.detailed-info').css('top', '246px');
         }
         setFooter();
     };

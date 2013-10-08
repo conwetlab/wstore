@@ -205,6 +205,9 @@
             initSearchView('OFFERING_COLLECTION');
         })
 
+        if (USERPROFILE.getUserRoles().indexOf('admin') == -1) {
+            $('.navigation').css('width', '188px')
+        }
         // Get initial offerings
         getOfferings(EndpointManager.getEndpoint('NEWEST_COLLECTION'), $('#newest-container'));
         getOfferings(EndpointManager.getEndpoint('TOPRATED_COLLECTION'), $('#top-rated-container'));
@@ -223,15 +226,50 @@
     }
 
     calculatePositions = function calculatePositions() {
+
+        
         // Check window width
-        if ($(window).width() < 979) {
+        if ($(window).width() < 981) {
             // Change headers position to avoid problems with bootstrap responsive
-            // FIX ME: This positions are valid if the FI-LAB bar is included
+            // FIX ME: This positions only are valid if the FI-LAB bar is included
             $('.title_wrapper').css('top', '-30px');
             $('.navigation').css('top', '-109px');
+
+            // Check if search view is active
+            if ($('.search-container').length > 0) {
+                $('.catalogue-form .form').removeAttr('style');
+                $('.catalogue-form').css('margin-left', '0');
+                if ($(window).width() < 769) { // Responsive activation width
+                    var sortMargin;
+
+                    $('.catalogue-form .form').css('width', '100%');
+                    $('.pagination').removeAttr('style');
+                    $('.search-container').removeAttr('style');
+                    $('.search-container').css('left', '20px');
+
+                    // Calculate sorting position
+                    sortMargin = Math.floor(($(window).width()/2) - $('#sorting').width() -12);
+                    $('#sorting').css('margin-left', sortMargin + 'px');
+                    $('h2:contains(Sort by)').css('margin-left', sortMargin + 'px');
+                } else {
+                    $('.catalogue-form').css('margin-left', '0');
+                    $('.search-container').removeAttr('style');
+                    $('.search-container').css('top', '130px');
+                    $('#sorting').removeAttr('style');
+                    $('h2:contains(Sort by)').removeAttr('style');
+                }
+            }
         } else {
-            $('.title_wrapper').css('top', '140px');
+            $('.title_wrapper').removeAttr('style');
             $('.navigation').css('top', '60px');
+
+            if ($('.search-container').length > 0) {
+                $('.catalogue-form .form').removeAttr('style');
+                $('.catalogue-form').css('margin-left', '0');
+                $('.search-container').removeAttr('style');
+                $('#sorting').removeAttr('style');
+                $('h2:contains(Sort by)').removeAttr('style');
+            }
         }
         setFooter();
     }

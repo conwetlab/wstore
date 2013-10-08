@@ -101,6 +101,12 @@
     cursor: pointer;
 }
 
+.offerings-container {
+    position: absolute;
+    top: 176px;
+    left:228px;
+}
+
 #notification-help {
     float: left;
     position: relative;
@@ -316,8 +322,8 @@
 
 .detailed-info {
     position: absolute;
-    top: 270px;
-    left: 260px;
+    top: 246px;
+    left: 210px;
 }
 
 #screenshots-car {
@@ -337,7 +343,6 @@
 
 .tab-button {
     position: absolute;
-    right: 20px;
     z-index: 3;
 }
 
@@ -439,3 +444,10 @@ h2 {
   background-color: rgb(0, 43, 103) !important;
 }
 
+#store-return {
+  position: absolute;
+}
+
+.catalogue-form .form {
+  width: 221px;
+}

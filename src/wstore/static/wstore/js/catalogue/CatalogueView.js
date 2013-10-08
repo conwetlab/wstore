@@ -268,6 +268,10 @@
             changeTab(currentTab, true);
         });
 
+        if (USERPROFILE.getUserRoles().indexOf('admin') == -1) {
+            $('.navigation').css('width', '188px')
+        }
+        calculatePositions();
         changeTab('#purchased-tab');
     };
 
@@ -293,16 +297,35 @@
     }
 
     calculatePositions = function calculatePositions() {
+        var position;
+
+        $('.catalogue-form .form').removeAttr('style');
+
         // Check window width
-        if ($(window).width() < 979) {
+        if ($(window).width() < 981) {
             // Change headers position to avoid problems with bootstrap responsive
             // FIX ME: This positions are valid if the FI-LAB bar is included
             $('.title_wrapper').css('top', '-30px');
             $('.navigation').css('top', '-109px');
+
+            //Up the catalogue tabs
+            if ($(window).width() < 769) { // Responsive activation
+                $('.offerings-container').css('top', '225px');
+                $('.offerings-container').css('left', '10px');
+                $('.catalogue-form .form').css('width', '100%');
+            } else {
+                $('.offerings-container').css('top', '0');
+                $('.offerings-container').css('left', '228px');
+            }
         } else {
             $('.title_wrapper').css('top', '140px');
             $('.navigation').css('top', '60px');
+            $('.offerings-container').css('top', '176px');
+            $('.offerings-container').css('left', '228px');
         }
+        // Calculate tabs width, at the end to avoid problems with position changes
+        position = $('.tabbable').offset();
+        $('.offerings-container').css('width', ($(window).width() - position.left) + 'px');
         setFooter();
     }
 

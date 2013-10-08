@@ -228,7 +228,7 @@
 
     calculatePositions = function calculatePositions() {
         // Check window width
-        if ($(window).width() < 979) {
+        if ($(window).width() < 981) {
             // Change headers position to avoid problems with bootstrap responsive
             // FIX ME: This positions are valid if the FI-LAB bar is included
             $('.title_wrapper').css('top', '-30px');
