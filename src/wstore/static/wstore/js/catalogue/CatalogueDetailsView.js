@@ -81,6 +81,17 @@
         if (action == null) {
             $('#main-action').remove();
         }
+        // Check price for action button
+        if (action == 'Purchase') {
+            var priceStr = getPriceStr(this.offeringElement.getPricing());
+            if (priceStr != 'View pricing'){
+                $('#main-action').val(priceStr);
+                if (priceStr == 'Free') {
+                    $('#main-action').removeClass('btn-blue');
+                    $('#main-action').addClass('btn-success');
+                }
+            }
+        }
         fillStarsRating(this.offeringElement.getRating(), $('#details-stars'));
 
         // Load the main info template

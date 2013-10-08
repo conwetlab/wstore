@@ -80,7 +80,7 @@
         })
     }
 
-    var getPriceStr = function getPriceStr(pricing) {
+    getPriceStr = function getPriceStr(pricing) {
         var pricePlans;
         var priceStr = 'Free';
 
