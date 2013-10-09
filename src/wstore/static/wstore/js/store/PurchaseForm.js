@@ -157,8 +157,7 @@
                             downloadResources(response);
                         }
                         //Refresh offering details view
-                        offeringElement.setState('purchased');
-                        caller.update(offeringElement);
+                        offeringElement.updateOfferingInfo(caller.update.bind(caller));
                         $('#message').modal('hide');
 
                         timer = setInterval(function() {
