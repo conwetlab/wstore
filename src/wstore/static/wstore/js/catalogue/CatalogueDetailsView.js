@@ -206,7 +206,7 @@
             $('.navigation').css('top', '60px');
             $('.detailed-info').css('top', '246px');
         }
-        setFooter();
+        setTimeout(setFooter, 600);
     };
 
     /**

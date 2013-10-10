@@ -293,7 +293,11 @@
         // Create the new footer
         $.template('footerTemplate', $('#footer_template'));
         $.tmpl('footerTemplate').appendTo('body');
-        $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
+        if ($(window).height() < $(document).height()) {
+            $('footer').css('position', 'absolute').css('top', ($(document).height()) + 'px');
+        } else {
+            $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
+        }
     }
 
     calculatePositions = function calculatePositions() {
