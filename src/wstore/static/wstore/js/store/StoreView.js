@@ -235,14 +235,16 @@
     }
 
     calculatePositions = function calculatePositions() {
+        var filabInt = $('#oil-nav').length > 0;
 
-        
         // Check window width
         if ($(window).width() < 981) {
             // Change headers position to avoid problems with bootstrap responsive
-            // FIX ME: This positions only are valid if the FI-LAB bar is included
-            $('.title_wrapper').css('top', '-30px');
-            $('.navigation').css('top', '-109px');
+
+            if (filabInt) {
+                $('.title_wrapper').css('top', '-30px');
+                $('.navigation').css('top', '-109px');
+            }
 
             // Check if search view is active
             if ($('.search-container').length > 0) {
@@ -256,6 +258,10 @@
                     $('.search-container').removeAttr('style');
                     $('.search-container').css('left', '20px');
 
+                    if (!filabInt) {
+                        $('.search-container').css('top', '427px');
+                    }
+
                     // Calculate sorting position
                     sortMargin = Math.floor(($(window).width()/2) - $('#sorting').width() -12);
                     $('#sorting').css('margin-left', sortMargin + 'px');
@@ -263,14 +269,22 @@
                 } else {
                     $('.catalogue-form').css('margin-left', '0');
                     $('.search-container').removeAttr('style');
-                    $('.search-container').css('top', '130px');
+
+                    if (filabInt) {
+                        $('.search-container').css('top', '130px');
+                    } else {
+                        $('.search-container').css('top', '280px');
+                    }
+
                     $('#sorting').removeAttr('style');
                     $('h2:contains(Sort by)').removeAttr('style');
                 }
             }
         } else {
-            $('.title_wrapper').removeAttr('style');
-            $('.navigation').css('top', '60px');
+            if (filabInt) {
+                $('.title_wrapper').css('top', '140px');
+                $('.navigation').css('top', '60px');
+            }
 
             if ($('.search-container').length > 0) {
                 $('.catalogue-form .form').removeAttr('style');
