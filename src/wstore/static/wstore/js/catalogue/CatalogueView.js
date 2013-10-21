@@ -269,7 +269,12 @@
         });
 
         if (USERPROFILE.getUserRoles().indexOf('admin') == -1) {
-            $('.navigation').css('width', '188px')
+            // The navigation menu width depends on the presence of the FI-LAB bar
+            if ($('#oil-nav').length > 0) {
+                $('.navigation').css('width', '188px');
+            } else {
+                $('.navigation').css('width', '278px');
+            }
         }
         calculatePositions();
         changeTab('#purchased-tab');
