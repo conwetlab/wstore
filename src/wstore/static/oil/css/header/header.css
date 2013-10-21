@@ -48,7 +48,7 @@ nav.navbar-inner .logo-header{
   padding: 0;
   width: auto;
   float: left;
-  margin: 15px 0 0 3px;
+  margin: 15px 5px 0 3px;
   font-size: 23px;
   color: rgb(96, 193, 207);
   font-family: NeoTech;
@@ -172,10 +172,10 @@ ul.pull-right {
 }
 
 #oil-usr {
-  color: rgb(119, 119, 119);
+  color: #555;
   height: 20px;
   line-height: 20px;
-  font-size: 16px;
+  font-size: 14px;
   text-shadow: rgb(255, 255, 255) 0px 1px 0px;
 }
 

@@ -346,6 +346,10 @@
     z-index: 3;
 }
 
+#user-edit {
+    right: 15px;
+}
+
 .btn-advanced {
     margin-right: 10px;
 }
