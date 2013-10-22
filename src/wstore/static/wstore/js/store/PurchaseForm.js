@@ -24,6 +24,100 @@
     var free = true;
     var caller;
 
+    /**
+     * Manages the success callback of the purchase in case a PayPal redirection is needed
+     * @param response, Server response
+     */
+    var onSuccessPayPal = function onSuccessPayPal(response) {
+        $('#message').modal('hide');
+        // Inform user that is going to be redirected, including the redirection handler
+        MessageManager.showYesNoWindow('The payment process will continue in a separate window', function() {
+            var newWindow = window.open(response.redirection_link);
+            var timer, timer1;
+
+            // Close yes no window
+            $('#message').modal('hide');
+
+            // Create a modal to lock the store during PayPal request
+            MessageManager.showMessage('Payment', 'The Paypal checkout is open in another window');
+
+            $('.modal-footer').empty()
+
+            // Include a cancel button
+            $('<input></input>').addClass('btn btn-danger').attr('type', 'button').attr('value', 'Cancel').click(function() {
+                $('#message').modal('hide');
+            }).appendTo('.modal-footer');
+
+            // Close PayPal window in case the payment is canceled
+            $('#message').on('hidden', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                newWindow.close();
+                $('#message-container').empty();
+            })
+
+            // Check if the PayPal window remains open
+            timer = setInterval(function() {
+                if (newWindow.closed) {
+                    clearInterval(timer);
+                    $('#message').modal('hide');
+                    caller.refreshAndUpdateDetailsView();
+                } else if (newWindow.location.host == window.location.host) {
+                    clearInterval(timer);
+                    $('#message').modal('hide');
+                    MessageManager.showMessage('Payment', 'The PayPal process has finished. The external window will be closed');
+
+                    $('.modal-footer > .btn').click(function() {
+                        newWindow.close();
+                        caller.refreshAndUpdateDetailsView();
+                    });
+                }
+            }, 1000);
+
+            timer1 = setInterval(function() {
+
+                if ($('#back').length > 0) {
+                    clearInterval(timer1);
+                    // If the function notifyPurchaseEnd is defined means that is a remote purchase
+                    if (notifyPurchaseEnd && typeof(notifyPurchaseEnd) == 'function') {
+                        notifyPurchaseEnd(response);
+                    }
+                }
+            }, 500);
+
+        }, 'Payment'); // End of yes-no window handler
+    };
+
+    /**
+     * Handler the success callback is case a purchase has finished
+     * @param response, Server response
+     */
+    var onSuccessFinish = function onSuccessFinish(offeringElement, response) {
+        var timer;
+        //Download resources
+        if ($(window.location).attr('href').indexOf('contracting') == -1) {
+            downloadResources(response);
+        }
+        //Refresh offering details view
+        offeringElement.updateOfferingInfo(caller.update.bind(caller));
+        $('#message').modal('hide');
+
+        timer = setInterval(function() {
+
+            if ($('#back').length > 0) {
+                clearInterval(timer);
+                // If the function notifyPurchaseEnd is defined means that is a remote purchase
+                if (notifyPurchaseEnd && typeof(notifyPurchaseEnd) == 'function') {
+                    notifyPurchaseEnd(response);
+                }
+            }
+        }, 500);
+    };
+
+    /**
+     * Makes the request for purchasing an offering
+     * @param offeringElement, Object with the offering to be purchased
+     */
     var makePurchaseRequest = function makePurchaseRequest(offeringElement) {
         var csrfToken = $.cookie('csrftoken');
         var error = false;
@@ -92,88 +186,9 @@
                 data: JSON.stringify(request),
                 success: function (response) {
                     if ('redirection_link' in response) {
-
-                        $('#message').modal('hide');
-                        MessageManager.showYesNoWindow('The payment process will continue in a separate window', function() {
-                            var newWindow = window.open(response.redirection_link);
-                            var timer, timer1;
-
-                            // Close yes no window
-                            $('#message').modal('hide');
-
-                            // Create a modal to lock the store during PayPal request
-                            MessageManager.showMessage('Payment', 'The Paypal checkout is open in another window');
-
-                            $('.modal-footer').empty()
-
-                            $('<input></input>').addClass('btn btn-danger').attr('type', 'button').attr('value', 'Cancel').click(function() {
-                                $('#message').modal('hide');
-                            }).appendTo('.modal-footer');
-
-                            $('#message').on('hidden', function(event) {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                newWindow.close();
-                                $('#message-container').empty();
-                            })
-
-                            timer = setInterval(function() {
-                                if (newWindow.closed) {
-                                    clearInterval(timer);
-                                    $('#message').modal('hide');
-                                    caller.refreshAndUpdateDetailsView();
-                                } else if (newWindow.location.host == window.location.host) {
-                                    clearInterval(timer);
-                                    $('#message').modal('hide');
-                                    MessageManager.showMessage('Payment', 'The PayPal process has finished. The external window will be closed');
-
-                                    $('.modal-footer > .btn').click(function() {
-                                        newWindow.close();
-                                        caller.refreshAndUpdateDetailsView();
-                                    });
-                                }
-                            }, 1000);
-
-                            timer1 = setInterval(function() {
-
-                                if ($('#back').length > 0) {
-                                    clearInterval(timer1);
-
-                                    if ('client_redirection_uri' in response) {
-                                        // The window has been opened from an external source
-                                        $('#back').remove();
-                                        $('<input></input>').attr('id', 'back').addClass('btn btn-basic').attr('type', 'button').attr('value', 'End purchase').click(function() {
-                                            window.location = response.client_redirection_uri;
-                                        }).appendTo('[class="nav nav-tabs"]');
-                                    }
-                                }
-                            }, 500);
-
-                        }, 'Payment');
+                        onSuccessPayPal(response);
                     } else {
-                        var timer;
-                        //Download resources
-                        if ($(window.location).attr('href').indexOf('contracting') == -1) {
-                            downloadResources(response);
-                        }
-                        //Refresh offering details view
-                        offeringElement.updateOfferingInfo(caller.update.bind(caller));
-                        $('#message').modal('hide');
-
-                        timer = setInterval(function() {
-
-                            if ($('#back').length > 0) {
-                                clearInterval(timer);
-
-                                if ('client_redirection_uri' in response) {
-                                    // The window has been opened from an external source
-                                    $('#back').remove();
-                                    $('<input></input>').attr('id', 'back').addClass('btn btn-blue').attr('type', 'button').attr('value', 'End purchase').click(function() {
-                                        window.location = response.client_redirection_uri;
-                                    }).appendTo('[class="nav nav-tabs"]');
-                                }
-                            }
-                        }, 500);
+                        onSuccessFinish(offeringElement, response);
                     }
                 },
                 error: function (xhr) {
@@ -188,6 +203,10 @@
         }
     };
 
+    /**
+     * Downloads offering resources
+     * @param data, Offering data
+     */
     var downloadResources = function downloadResources(data) {
         var resources = data.resources;
         for (var i = 0; i < resources.length; i++) {
@@ -196,6 +215,10 @@
         window.open(data.bill[0]);
     };
 
+    /**
+     * Displays the form for selecting the payment method
+     * @param offeringElement, Offering to be purchased
+     */
     var showPaymentInfoForm = function showPaymentInfoForm(offeringElement) {
         var select, acceptButton, cancelButton;
         // Crear modal body
@@ -258,6 +281,11 @@
         })
     };
 
+    /**
+     * Dsiplays the form for purchasing an offering
+     * @param offeringElement, offering to be purchased
+     * @param callerObj, Object that creates the form
+     */
     purchaseOffering = function purchaseOffering(offeringElement, callerObj) {
         var nextButton, cancelButton, pricing, action;
         var checked = false;

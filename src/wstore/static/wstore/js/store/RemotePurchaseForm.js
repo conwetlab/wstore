@@ -20,6 +20,14 @@
 
 (function() {
 
+    notifyPurchaseEnd = function notifyPurchaseEnd(response) {
+        // The window has been opened from an external source
+        $('#back').remove();
+        $('<input></input>').attr('id', 'back').addClass('btn btn-blue').attr('type', 'button').attr('value', 'End purchase').click(function() {
+            window.location = response.client_redirection_uri;
+        }).appendTo('[class="nav nav-tabs"]');
+    };
+
     getPriceStr = function getPriceStr(pricing) {
         var pricePlans;
         var priceStr = 'Free';
