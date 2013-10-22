@@ -845,26 +845,37 @@ def comment_offering(offering, comment, user):
 
     # If there is a place append the offering
     if len(top_rated) < 4:
-        top_rated.append(offering.pk)
+
+        # If the offering is not included append it
+        if not offering.pk in top_rated:
+            top_rated.append(offering.pk)
+
+        # Sort top rated offerings
         context.top_rated = sorted(top_rated, key=lambda off: Offering.objects.get(pk=off).rating, reverse=True)
         context.save()
     else:
 
-        pos = None
-        i = 0
-        found = False
-
-        # Check if the new rating is bigger than any top rated
-        while i < len(top_rated) and not found:
-            if Offering.objects.get(pk=top_rated[i]).rating < offering.rating:
-                pos = i
-                found = True
-            else:
-                i += 1
-
-        # If the new rating is a top rating append the offering
-        if pos != None:
-            top_rated.insert(pos, offering.pk)
-            top_rated.remove(top_rated[-1])
-            context.top_rated = top_rated
+        # If the offering is already a top rated offering just sort them
+        if offering.pk in top_rated:
+            context.top_rated = sorted(top_rated, key=lambda off: Offering.objects.get(pk=off).rating, reverse=True)
             context.save()
+
+        else:
+            pos = None
+            i = 0
+            found = False
+
+            # Check if the new rating is bigger than any top rated
+            while i < len(top_rated) and not found:
+                if Offering.objects.get(pk=top_rated[i]).rating < offering.rating:
+                    pos = i
+                    found = True
+                else:
+                    i += 1
+
+            # If the new rating is a top rating append the offering
+            if pos != None:
+                top_rated.insert(pos, offering.pk)
+                top_rated.remove(top_rated[-1])
+                context.top_rated = top_rated
+                context.save()
