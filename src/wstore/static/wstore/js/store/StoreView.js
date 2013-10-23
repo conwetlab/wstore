@@ -214,6 +214,7 @@
             }
         }
         // Get initial offerings
+        calculatePositions();
         getOfferings(EndpointManager.getEndpoint('NEWEST_COLLECTION'), $('#newest-container'));
         getOfferings(EndpointManager.getEndpoint('TOPRATED_COLLECTION'), $('#top-rated-container'));
     };

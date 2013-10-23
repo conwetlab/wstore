@@ -470,7 +470,6 @@ $(document).ready(function() {
         USERPROFILE.fillUserInfo();
     }
 
-    calculatePositions();
     userForm = new UserConfForm(USERPROFILE);
 
     $('#conf-link').click(function() {
