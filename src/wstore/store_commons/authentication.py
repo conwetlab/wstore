@@ -22,14 +22,39 @@ from django.contrib.auth import logout as django_logout
 from django.http import HttpResponseRedirect
 from django.conf import settings
 
+from wstore.store_commons.utils.http import build_response
+
+
 class Http403(Exception):
     pass
+
 
 def logout(request):
 
     django_logout(request)
+    response = None
+
     if settings.OILAUTH:
-        url = 'https://account.lab.fi-ware.eu/users/sign_out'
+        # Check if the logout request is originated in a different domain
+        if 'HTTP_ORIGIN' in request.META:
+            origin = request.META['HTTP_ORIGIN']
+            allowed_origins = [
+                'https://account.lab.fi-ware.eu',
+                'https://cloud.lab.fi-ware.eu',
+                'https://mashup.lab.fi-ware.eu']
+
+            if origin in allowed_origins:
+                headers = {'Access-Control-Allow-Origin': origin}
+                response = build_response(request, 200, 'OK', headers=headers)
+
+        else:
+            # If using the FI-LAB authentication and it is not a cross domain
+            # request redirect to the FI-LAB main page
+            response = build_response(request, 200, 'OK')
+
+    # If not using the FI-LAB authentication redirect to the login page
     else:
         url = '/login?next=/'
-    return HttpResponseRedirect(url)
+        response = HttpResponseRedirect(url)
+
+    return response
