@@ -212,6 +212,7 @@
 
     refreshView = function refreshView() {
         paintElementTable();
+        calculatePositions();
     };
 
     setFooter = function setFooter() {
@@ -227,15 +228,17 @@
     }
 
     calculatePositions = function calculatePositions() {
+        var filabInt = $('#oil-nav').length > 0;
         // Check window width
-        if ($(window).width() < 981) {
-            // Change headers position to avoid problems with bootstrap responsive
-            // FIX ME: This positions are valid if the FI-LAB bar is included
-            $('.title_wrapper').css('top', '-30px');
-            $('.navigation').css('top', '-109px');
-        } else {
-            $('.title_wrapper').css('top', '140px');
-            $('.navigation').css('top', '60px');
+        if (filabInt) {
+            if ($(window).width() < 981) {
+                // Change headers position to avoid problems with bootstrap responsive
+                $('.title_wrapper').css('top', '-30px');
+                $('.navigation').css('top', '-109px');
+            } else {
+                $('.title_wrapper').css('top', '140px');
+                $('.navigation').css('top', '60px');
+            }
         }
         setFooter();
     }
