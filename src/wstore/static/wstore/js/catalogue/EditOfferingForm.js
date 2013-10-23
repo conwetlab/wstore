@@ -177,7 +177,7 @@
             }
             provided = true
 
-        } else {
+        } else if($('#usdl-url').length > 0){
             var usdlLink = $.trim($('#usdl-url').val());
 
             if (usdlLink == '') {
@@ -213,7 +213,7 @@
                 data: JSON.stringify(request),
                 success: function (response) {
                     $('#message').modal('hide');
-                    MessageManager.showMessage('Created', 'The offering has been updated')
+                    MessageManager.showMessage('Updated', 'The offering has been updated')
                     caller.refreshAndUpdateDetailsView();
                 },
                 error: function (xhr) {
