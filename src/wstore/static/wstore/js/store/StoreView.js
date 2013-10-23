@@ -124,12 +124,6 @@
                 }
             })(offDetailsView));
 
-            // Include the gradient if needed
-            if (offering_elem.getName().length > 18) {
-                var spanDeg; 
-                $('<span></span>').addClass('txt-gradient').appendTo(templ.find('h2'));
-            }
-
             fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
 
             priceStr = getPriceStr(offering_elem.getPricing())
