@@ -27,7 +27,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 from wstore.offerings.resources_management import register_resource
-from wstore.models import Resource
+from wstore.models import Resource, Organization
 
 
 __test__ = False
@@ -120,6 +120,10 @@ class ResourceRegisteringTestCase(TestCase):
         }
 
         provider = User.objects.get(username='test_user')
+        org = Organization.objects.get(name=provider.username)
+        resource = Resource.objects.get(name='Existing')
+        resource.provider = org
+        resource.save()
 
         error = False
         msg = None

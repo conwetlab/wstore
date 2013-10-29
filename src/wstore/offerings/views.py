@@ -41,7 +41,7 @@ from wstore.store_commons.utils.method_request import MethodRequest
 
 class OfferingCollection(Resource):
 
-    # Creates a new offering asociated with the user
+    # Creates a new offering associated with the user
     # that is create a new application model
     @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))

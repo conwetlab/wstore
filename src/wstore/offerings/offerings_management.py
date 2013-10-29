@@ -764,7 +764,7 @@ def bind_resources(offering, data, provider):
         offering_resources.append(of_res)
 
     for res in data:
-        resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider)
+        resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider.userprofile.current_organization)
 
         if not ObjectId(resource.pk) in offering_resources:
             added_resources.append(resource.pk)

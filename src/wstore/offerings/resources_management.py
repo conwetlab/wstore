@@ -31,8 +31,9 @@ def register_resource(provider, data, file_=None):
 
     # Check if the resource already exists
     existing = True
+    current_organization = provider.userprofile.current_organization
     try:
-        Resource.objects.get(name=data['name'], provider=provider, version=data['version'])
+        Resource.objects.get(name=data['name'], provider=current_organization, version=data['version'])
     except:
         existing = False
 
@@ -54,7 +55,7 @@ def register_resource(provider, data, file_=None):
             resource = data['content']
 
             #decode the content and save the media file
-            file_name = provider.username + '__' + data['name'] + '__' + data['version'] + '__' + resource['name']
+            file_name = current_organization.name + '__' + data['name'] + '__' + data['version'] + '__' + resource['name']
             path = os.path.join(settings.MEDIA_ROOT, 'resources')
             file_path = os.path.join(path, file_name)
             f = open(file_path, "wb")
@@ -71,7 +72,7 @@ def register_resource(provider, data, file_=None):
 
     else:
         #decode the content and save the media file
-        file_name = provider.username + '__' + data['name'] + '__' + data['version'] + '__' + file_.name
+        file_name = current_organization.name + '__' + data['name'] + '__' + data['version'] + '__' + file_.name
         path = os.path.join(settings.MEDIA_ROOT, 'resources')
         file_path = os.path.join(path, file_name)
         f = open(file_path, "wb")
@@ -82,7 +83,7 @@ def register_resource(provider, data, file_=None):
 
     Resource.objects.create(
         name=resource_data['name'],
-        provider=provider,
+        provider=current_organization,
         version=resource_data['version'],
         description=resource_data['description'],
         download_link=resource_data['link'],
@@ -92,7 +93,7 @@ def register_resource(provider, data, file_=None):
 
 
 def get_provider_resources(provider):
-    resouces = Resource.objects.filter(provider=provider)
+    resouces = Resource.objects.filter(provider=provider.userprofile.current_organization)
     response = []
     for res in resouces:
         resource_info = {

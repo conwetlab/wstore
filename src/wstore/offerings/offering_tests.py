@@ -1007,25 +1007,13 @@ class OfferingPublicationTestCase(TestCase):
 
         self.assertTrue(error)
 
-    def test_publish_offering_no_resources(self):
-        data = {
-            'marketplaces': ['test_market']
-        }
-        offering = Offering.objects.get(name='test_offering2')
-        error = False
-        try:
-            offerings_management.publish_offering(offering, data)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, 'It is not possible to publish an offering without resources')
-
 
 class OfferingBindingTestCase(TestCase):
 
     fixtures = ['bind.json']
+    @classmethod
+    def setUpClass(cls):
+        settings.OILAUTH = False
 
     def test_basic_binding(self):
         data = [{
@@ -1034,6 +1022,11 @@ class OfferingBindingTestCase(TestCase):
         }]
         offering = Offering.objects.get(name='test_offering1')
         provider = User.objects.get(username='test_user')
+        org = Organization.objects.get(name=provider.username)
+        resource = Resource.objects.get(name='test_resource1')
+        resource.provider = org
+        resource.save()
+
         offerings_management.bind_resources(offering, data, provider)
         offering = Offering.objects.get(name='test_offering1')
 
@@ -1053,6 +1046,16 @@ class OfferingBindingTestCase(TestCase):
         }]
         offering = Offering.objects.get(name='test_offering2')
         provider = User.objects.get(username='test_user')
+
+        org = Organization.objects.get(name=provider.username)
+        resource = Resource.objects.get(name='test_resource1')
+        resource.provider = org
+        resource.save()
+
+        resource = Resource.objects.get(name='test_resource3')
+        resource.provider = org
+        resource.save()
+
         offerings_management.bind_resources(offering, data, provider)
         offering = Offering.objects.get(name='test_offering2')
 
