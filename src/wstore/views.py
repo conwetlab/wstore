@@ -134,7 +134,7 @@ class ServeMedia(API_Resource):
 
             # Check if the request user has access to the resource
             splited_name = name.split('__')
-            prov = User.objects.get(username=splited_name[0])
+            prov = Organization.objects.get(name=splited_name[0])
             resource = Resource.objects.get(provider=prov, name=splited_name[1], version=splited_name[2])
 
             # Check if the user has purchased an offering with the resource
