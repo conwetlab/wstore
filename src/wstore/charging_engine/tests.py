@@ -107,6 +107,14 @@ def fake_cdr_generation(parts, time):
     pass
 
 
+class FakeSubprocess():
+
+    def __init__(self):
+        pass
+
+    def call(self, prams):
+        pass
+
 class SinglePaymentChargingTestCase(TestCase):
 
     tags = ('fiware-ut-12',)
@@ -117,19 +125,9 @@ class SinglePaymentChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         super(SinglePaymentChargingTestCase, cls).setUpClass()
-
-    def setUp(self):
-        self._to_delete = []
-
-    def tearDown(self):
-
-        for f in self._to_delete:
-            fil = os.path.join(settings.BASEDIR, f[1:])
-            os.remove(fil)
-
-        self._to_delete = []
 
     def test_basic_charging_single_payment(self):
 
@@ -184,7 +182,6 @@ class SinglePaymentChargingTestCase(TestCase):
         bills = purchase.bill
 
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         contract = purchase.contract
         charges = contract.charges
@@ -256,7 +253,6 @@ class SinglePaymentChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
         bills = purchase.bill
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         contract = purchase.contract
         charges = contract.charges
@@ -299,21 +295,8 @@ class SubscriptionChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        charging_engine.subprocess = FakeSubprocess()
         super(SubscriptionChargingTestCase, cls).setUpClass()
-
-    def setUp(self):
-        self._to_delete = []
-
-    def tearDown(self):
-
-        for f in self._to_delete:
-            try:
-                fil = os.path.join(settings.BASEDIR, f[1:])
-                os.remove(fil)
-            except:
-                pass
-
-        self._to_delete = []
 
     def test_basic_subscription_charging(self):
 
@@ -365,7 +348,6 @@ class SubscriptionChargingTestCase(TestCase):
         charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging(new_purchase=True)
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        self._to_delete.extend(purchase.bill)
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 1)
@@ -435,7 +417,6 @@ class SubscriptionChargingTestCase(TestCase):
         charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
-        self._to_delete.extend(purchase.bill)
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 2)
@@ -508,7 +489,6 @@ class SubscriptionChargingTestCase(TestCase):
         charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
-        self._to_delete.extend(purchase.bill)
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 2)
@@ -575,22 +555,9 @@ class PayPerUseChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         super(PayPerUseChargingTestCase, cls).setUpClass()
-
-    def setUp(self):
-        self._to_delete = []
-
-    def tearDown(self):
-
-        for f in self._to_delete:
-            try:
-                fil = os.path.join(settings.BASEDIR, f[1:])
-                os.remove(fil)
-            except:
-                pass
-
-        self._to_delete = []
 
     def test_basic_sdr_feeding(self):
 
@@ -1006,7 +973,6 @@ class PayPerUseChargingTestCase(TestCase):
 
         bills = purchase.bill
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         self.assertEqual(purchase.state, 'paid')
         contract = purchase.contract
@@ -1061,7 +1027,6 @@ class PayPerUseChargingTestCase(TestCase):
 
         bills = purchase.bill
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         self.assertEqual(purchase.state, 'paid')
 
@@ -1105,6 +1070,7 @@ class AsynchronousPaymentTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        charging_engine.subprocess = FakeSubprocess()
         charging_engine.threading = FakeThreading()
         super(AsynchronousPaymentTestCase, cls).setUpClass()
 
@@ -1185,7 +1151,6 @@ class AsynchronousPaymentTestCase(TestCase):
         bills = purchase.bill
 
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         contract = purchase.contract
         self.assertEqual(len(contract.charges), 1)
