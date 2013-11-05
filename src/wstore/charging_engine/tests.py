@@ -159,7 +159,7 @@ class SinglePaymentChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -231,7 +231,7 @@ class SinglePaymentChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -328,7 +328,7 @@ class SubscriptionChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -959,7 +959,7 @@ class PayPerUseChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -1115,7 +1115,7 @@ class AsynchronousPaymentTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -1496,7 +1496,7 @@ class CDRGeranationTestCase(TestCase):
         f.close()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
         purchase.offering.save()
 
         charging = charging_engine.ChargingEngine(purchase)
@@ -1546,7 +1546,7 @@ class CDRGeranationTestCase(TestCase):
         f.close()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
         purchase.offering.save()
 
         charging = charging_engine.ChargingEngine(purchase)
@@ -1604,7 +1604,7 @@ class CDRGeranationTestCase(TestCase):
         f.close()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
         purchase.offering.save()
 
         purchase.organization_owned = True
@@ -1669,7 +1669,7 @@ class CDRGeranationTestCase(TestCase):
         f.close()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
         purchase.offering.save()
 
         charging = charging_engine.ChargingEngine(purchase)
