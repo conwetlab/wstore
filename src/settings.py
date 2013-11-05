@@ -200,7 +200,6 @@ INSTALLED_APPS = (
     'wstore',
     'wstore.defaulttheme',
     'wstore.charging_engine',
-    'wstore.oauth2provider',
     'wstore.store_commons',
     'django_crontab',
     'django_nose',
