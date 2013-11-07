@@ -44,7 +44,10 @@ def logout(request):
                 'https://mashup.lab.fi-ware.eu']
 
             if origin in allowed_origins:
-                headers = {'Access-Control-Allow-Origin': origin}
+                headers = {
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Credentials': 'true'
+                }
                 response = build_response(request, 200, 'OK', headers=headers)
 
         else:
