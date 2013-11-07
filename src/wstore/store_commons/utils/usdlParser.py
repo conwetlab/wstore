@@ -61,6 +61,8 @@ class USDLParser(object):
         elif mime_type == 'text/n3' or mime_type == 'text/turtle' or mime_type == 'text/plain':
             self._graph.parse(data=usdl_document, format='n3')
         elif mime_type == 'application/json':
+            # For json-ld a conjuntive graph is needed
+            self._graph = rdflib.ConjunctiveGraph()
             self._graph.parse(data=usdl_document, format='json-ld')
         else:
             msg = _('Error the document has not a valid rdf format')

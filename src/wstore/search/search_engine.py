@@ -38,7 +38,7 @@ class SearchEngine():
     def _aggregate_text(self, offering):
 
         usdl_document = offering.offering_description
-        graph = rdflib.Graph()
+        graph = rdflib.ConjunctiveGraph()
 
         graph.parse(data=json.dumps(usdl_document), format='json-ld')
 
