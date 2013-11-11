@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Define variables used in all scripts if not already set
 if [[ -z "$WORKSPACE" ]]
