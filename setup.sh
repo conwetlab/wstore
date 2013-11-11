@@ -1,36 +1,27 @@
 #!/bin/bash
 
-export WORKSPACE=`pwd`
+# Define variables used in all scripts if not already set
+if [[ -z "$WORKSPACE" ]]
+  then
+    export WORKSPACE=`pwd`
+fi
 
+if [[ -z "$PIP_DOWNLOAD_CACHE" ]]
+  then
+    export PIP_DOWNLOAD_CACHE=~/.pip_cache
+fi
+
+# Activate Virtualenv
+cd $WORKSPACE/src
 virtualenv-2.7 virtenv
 source virtenv/bin/activate
 
-# download Python dependencies
-export PIP_DOWNLOAD_CACHE=~/.pip_cache
-pip install lxml "rdflib>=3.2.0" pymongo
-pip install git+https://github.com/django-nonrel/django@nonrel-1.4
-pip install git+https://github.com/django-nonrel/djangotoolbox@toolbox-1.4
-pip install git+https://github.com/django-nonrel/mongodb-engine@mongodb-engine-1.4-beta
-pip install https://github.com/RDFLib/rdflib-jsonld/archive/master.zip
+$WORKSPACE/python-dep-install.sh
+$WORKSPACE/pylucene-install.sh
 
-pip install git+https://github.com/conwetlab/paypalpy.git
-pip install nose django-nose
-
-# CHECK THIS DEPENDENCIES TO BE IDM-independent
-pip install django-social-auth
-pip install django-crontab
-
-
-# download to $CACHE directory to avoid wasting bandwidth
-# then extract it to the correct directory
-CACHE=~/.cache
-wget -N --directory-prefix=$CACHE http://apache.rediris.es/lucene/pylucene/pylucene-3.6.2-1-src.tar.gz
-tar -xf $CACHE/pylucene-3.6.2-1-src.tar.gz
-
+# Create project directories
 cd $WORKSPACE/src
+mkdir -p media/{bills,resources}
+mkdir -p wstore/search/index
 
-mkdir media
-mkdir media/bills
-mkdir media/resources
-mkdir wstore/search/index
-
+$WORKSPACE/coverage.sh

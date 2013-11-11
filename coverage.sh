@@ -1,9 +1,4 @@
 #!/bin/bash
-
-export WORKSPACE=`pwd`
-
-source virtenv/bin/activate
-
 pip install coverage
 
 cd $WORKSPACE/src
