@@ -207,7 +207,7 @@ class OfferingCreationTestCase(TestCase):
         })
         profile.save()
 
-        offerings_management.create_offering(user, profile, data)
+        offerings_management.create_offering(user, data)
         content = self._db.wstore_offering.find_one({"name": "test_offering"})
 
         self.assertEqual(content['name'], 'test_offering')
@@ -260,7 +260,7 @@ class OfferingCreationTestCase(TestCase):
         })
         profile.save()
 
-        offerings_management.create_offering(user, profile, data)
+        offerings_management.create_offering(user, data)
         content = self._db.wstore_offering.find_one({"name": "test_offering"})
 
         self.assertEqual(content['name'], 'test_offering')
@@ -299,7 +299,7 @@ class OfferingCreationTestCase(TestCase):
         })
         profile.save()
 
-        offerings_management.create_offering(user, profile, data)
+        offerings_management.create_offering(user, data)
         content = self._db.wstore_offering.find_one({"name": "test_offering"})
 
         self.assertEqual(content['name'], 'test_offering')
@@ -337,7 +337,7 @@ class OfferingCreationTestCase(TestCase):
         profile.save()
         error = False
         try:
-            offerings_management.create_offering(user, profile, data)
+            offerings_management.create_offering(user, data)
         except Exception, e:
             error = True
             msg = e.message
@@ -374,7 +374,7 @@ class OfferingCreationTestCase(TestCase):
         profile.save()
         error = False
         try:
-            offerings_management.create_offering(user, profile, data)
+            offerings_management.create_offering(user, data)
         except Exception:
             error = True
 
@@ -409,7 +409,7 @@ class OfferingCreationTestCase(TestCase):
         profile.save()
         error = False
         try:
-            offerings_management.create_offering(user, profile, data)
+            offerings_management.create_offering(user, data)
         except:
             error = True
 
@@ -445,7 +445,7 @@ class OfferingCreationTestCase(TestCase):
         msg = None
 
         try:
-            offerings_management.create_offering(user, profile, data)
+            offerings_management.create_offering(user, data)
         except Exception, e:
             error = True
             msg = e.message

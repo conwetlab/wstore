@@ -91,13 +91,13 @@ class OfferingRollback():
     def __init__(self, func):
         self._func = func
 
-    def __call__(self, provider, profile, json_data):
+    def __call__(self, provider, json_data):
 
         try:
-            self._func(provider, profile, json_data)
+            self._func(provider, json_data)
         except HTTPError, e:
-            rollback(provider, profile, json_data, 'Http error')
+            rollback(provider, provider.userprofile, json_data, 'Http error')
             raise e
         except Exception, e:
-            rollback(provider, profile, json_data, e.message)
+            rollback(provider, provider.userprofile, json_data, e.message)
             raise e

@@ -323,8 +323,9 @@ def _create_basic_usdl(usdl_info):
 # Creates a new offering including the media files and
 # the repository uploads
 @OfferingRollback
-def create_offering(provider, profile, json_data):
+def create_offering(provider, json_data):
 
+    profile = provider.userprofile
     data = {}
     if not 'name' in json_data or not 'version' in json_data:
         raise Exception('Missing required fields')

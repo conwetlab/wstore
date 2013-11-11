@@ -49,11 +49,10 @@ class OfferingCollection(Resource):
 
         # Obtains the user profile of the user
         user = request.user
-        profile = UserProfile.objects.get(user=user)
         content_type = get_content_type(request)[0]
 
         # Get the provider roles in the current organization
-        roles = profile.get_current_roles()
+        roles = user.userprofile.get_current_roles()
 
         # Checks the provider role
         if 'provider' in roles:
@@ -61,7 +60,7 @@ class OfferingCollection(Resource):
             if content_type == 'application/json':
                 try:
                     json_data = json.loads(request.raw_post_data)
-                    create_offering(user, profile, json_data)
+                    create_offering(user, json_data)
                 except HTTPError:
                     return build_response(request, 502, 'Bad Gateway')
                 except Exception, e:
@@ -69,7 +68,7 @@ class OfferingCollection(Resource):
             else:
                 pass  # TODO xml parsed
         else:
-            pass
+            return build_response(request, 403, 'Forbidden')
 
         return build_response(request, 201, 'Created')
 
