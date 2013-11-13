@@ -1,5 +1,6 @@
 #!/bin/bash
 pip install coverage
+pip install mock
 
 cd $WORKSPACE/src
 

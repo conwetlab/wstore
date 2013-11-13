@@ -1,0 +1,678 @@
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+
+# This file is part of WStore.
+
+# WStore is free software: you can redistribute it and/or modify
+# it under the terms of the European Union Public Licence (EUPL)
+# as published by the European Commission, either version 1.1
+# of the License, or (at your option) any later version.
+
+# WStore is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# European Union Public Licence for more details.
+
+# You should have received a copy of the European Union Public Licence
+# along with WStore.
+# If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
+
+import json
+
+from mock import MagicMock
+from urllib2 import HTTPError
+
+from django.test import TestCase
+from django.test.client import RequestFactory
+from django.contrib.auth.models import User
+
+from wstore.offerings import views
+from wstore.models import Offering, Organization
+
+
+class FakeOfferingManagement():
+    pass
+
+
+class OfferingCollectionTestCase(TestCase):
+
+    tags = ('offering-api',)
+
+    @classmethod
+    def setUpClass(cls):
+        super(OfferingCollectionTestCase, cls).setUpClass()
+
+    def setUp(self):
+        # Create request factory
+        self.factory = RequestFactory()
+        # Create testing user
+        self.user = User.objects.create_user(
+            username='test_user',
+            email='',
+            password='passwd'
+        )
+
+    def test_get_offering_request(self):
+
+        return_value = [{
+            'name': 'test_offering1',
+            'owner_organization': 'test_organization1',
+            'owner_admin_user_id': 'test_user',
+            'version': '1.0',
+            'state': 'published',
+            'description_url': 'http://repository.com/collection/usdl',
+            'rating': 0,
+            'comments': [],
+            'tags': [],
+            'image_url': 'media/image.png',
+            'related_images': [],
+            'creation_date': '2013-05-01 10:00:00',
+            'publication_date': '2013-06-03 10:00:00',
+            'resources': []
+        }]
+
+        # Mock get offerings method
+        offering_collection = views.OfferingCollection()
+        views.get_offerings = MagicMock(name='get_offering')
+
+        # Not counting offerings
+        #------------------------------------
+        # Published
+        #------------------------------------
+        views.get_offerings.return_value = return_value
+        request = self.factory.get('/api/offering/offerings')
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.read(request)
+
+        # Check correct call
+        views.get_offerings.assert_called_once_with(self.user, sort=None)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), list)
+        self.assertEqual(len(body_response), 1)
+        value = body_response[0]
+        self.assertEqual(value['name'], 'test_offering1')
+        self.assertEqual(value['owner_organization'], 'test_organization1')
+        self.assertEqual(value['owner_admin_user_id'], 'test_user')
+
+        #------------------------------------
+        # Provided
+        #------------------------------------
+
+        views.get_offerings.reset_mock()
+        request = self.factory.get('/api/offering/offerings?filter=provided')
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.read(request)
+
+        # Check correct call
+        views.get_offerings.assert_called_once_with(self.user, None, sort=None, owned=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), list)
+        self.assertEqual(len(body_response), 1)
+        value = body_response[0]
+        self.assertEqual(value['name'], 'test_offering1')
+        self.assertEqual(value['owner_organization'], 'test_organization1')
+        self.assertEqual(value['owner_admin_user_id'], 'test_user')
+
+        #--------------------------------------
+        # Purchased
+        #--------------------------------------
+        views.get_offerings.reset_mock()
+        request = self.factory.get('/api/offering/offerings?filter=purchased')
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.read(request)
+
+        # Check correct call
+        views.get_offerings.assert_called_once_with(self.user, 'purchased', sort=None, owned=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), list)
+        self.assertEqual(len(body_response), 1)
+        value = body_response[0]
+        self.assertEqual(value['name'], 'test_offering1')
+        self.assertEqual(value['owner_organization'], 'test_organization1')
+        self.assertEqual(value['owner_admin_user_id'], 'test_user')
+
+        # Counting offerings
+        views.count_offerings = MagicMock(name='count_offerings')
+        views.count_offerings.return_value = {
+            'number': 3
+        }
+
+        #----------------------------------------
+        # Published
+        #----------------------------------------
+        request = self.factory.get('/api/offering/offerings?action=count')
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.read(request)
+
+        # Check correct call
+        views.count_offerings.assert_called_once_with(self.user)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['number'], 3)
+
+        #----------------------------------------
+        # Provided
+        #----------------------------------------
+        views.count_offerings.reset_mock()
+        request = self.factory.get('/api/offering/offerings?action=count&filter=provided')
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.read(request)
+
+        # Check correct call
+        views.count_offerings.assert_called_once_with(self.user, None, owned=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['number'], 3)
+        #----------------------------------------
+        # Purchased
+        #----------------------------------------
+        views.count_offerings.reset_mock()
+        request = self.factory.get('/api/offering/offerings?action=count&filter=purchased')
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.read(request)
+
+        # Check correct call
+        views.count_offerings.assert_called_once_with(self.user, 'purchased', owned=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['number'], 3)
+
+    def test_create_offering_correct_request(self):
+
+        data = {
+            'name': 'test_offering',
+            'version': 1.0,
+            'description': 'test offering'
+        }
+        views.create_offering = MagicMock(name='create_offering')
+        offering_collection = views.OfferingCollection()
+
+        request = self.factory.post(
+            '/api/offering/offerings',
+            json.dumps(data),
+            HTTP_ACCEPT='application/json; charset=utf-8',
+            content_type='application/json; charset=utf-8'
+        )
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['provider', 'customer']
+        self.user.userprofile.save()
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.create(request)
+
+        # Check correct call
+        views.create_offering.assert_called_once_with(self.user, data)
+
+        self.assertEqual(response.status_code, 201)
+        content = json.loads(response.content)
+        self.assertEqual(content['message'], 'Created')
+        self.assertEqual(content['result'], 'correct')
+
+    def test_create_offering_no_provider(self):
+        data = {
+            'name': 'test_offering',
+            'version': 1.0,
+            'description': 'test offering'
+        }
+        views.create_offering = MagicMock(name='create_offering')
+        offering_collection = views.OfferingCollection()
+
+        request = self.factory.post(
+            '/api/offering/offerings',
+            json.dumps(data),
+            HTTP_ACCEPT='application/json; charset=utf-8',
+            content_type='application/json; charset=utf-8'
+        )
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['customer']
+        self.user.userprofile.save()
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.create(request)
+
+        # Check correct call
+        self.assertFalse(views.create_offering.called)
+
+        self.assertEqual(response.status_code, 403)
+        content = json.loads(response.content)
+        self.assertEqual(content['message'], 'Forbidden')
+        self.assertEqual(content['result'], 'error')
+
+    def test_create_offering_bad_gateway(self):
+
+        data = {
+            'name': 'test_offering',
+            'version': 1.0,
+            'description': 'test offering'
+        }
+        views.create_offering = MagicMock(name='create_offering')
+        views.create_offering.side_effect = HTTPError('', 500, '', None, None)
+
+        offering_collection = views.OfferingCollection()
+
+        request = self.factory.post(
+            '/api/offering/offerings',
+            json.dumps(data),
+            HTTP_ACCEPT='application/json; charset=utf-8',
+            content_type='application/json; charset=utf-8'
+        )
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['provider', 'customer']
+        self.user.userprofile.save()
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.create(request)
+
+        # Check correct call
+        views.create_offering.assert_called_once_with(self.user, data)
+
+        self.assertEqual(response.status_code, 502)
+        content = json.loads(response.content)
+        self.assertEqual(content['message'], 'Bad Gateway')
+        self.assertEqual(content['result'], 'error')
+
+    def test_create_offering_Exception(self):
+
+        data = {
+            'name': 'test_offering',
+            'version': 1.0,
+            'description': 'test offering'
+        }
+        views.create_offering = MagicMock(name='create_offering')
+        views.create_offering.side_effect = Exception('Error in creation')
+
+        offering_collection = views.OfferingCollection()
+
+        request = self.factory.post(
+            '/api/offering/offerings',
+            json.dumps(data),
+            HTTP_ACCEPT='application/json; charset=utf-8',
+            content_type='application/json; charset=utf-8'
+        )
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['provider', 'customer']
+        self.user.userprofile.save()
+        request.user = self.user
+
+        # Call the view
+        response = offering_collection.create(request)
+
+        # Check correct call
+        views.create_offering.assert_called_once_with(self.user, data)
+
+        self.assertEqual(response.status_code, 400)
+        content = json.loads(response.content)
+        self.assertEqual(content['message'], 'Error in creation')
+        self.assertEqual(content['result'], 'error')
+
+
+class OfferingEntryTestCase(TestCase):
+
+    tags = ('offering-api',)
+
+    def setUp(self):
+        # Create request factory
+        self.factory = RequestFactory()
+        # Create testing user
+        self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+
+    def test_get_offering(self):
+
+        return_value = {
+            'name': 'test_offering',
+            'owner_organization': 'test_user',
+            'owner_admin_user_id': 'test_user',
+            'version': '1.0',
+            'state': 'published',
+            'description_url': 'http://repository.com/collection/usdl',
+            'rating': 0,
+            'comments': [],
+            'tags': [],
+            'image_url': 'media/image.png',
+            'related_images': [],
+            'creation_date': '2013-05-01 10:00:00',
+            'publication_date': '2013-06-03 10:00:00',
+            'resources': []
+        }
+
+        # Mock get offerings method
+        offering_entry = views.OfferingEntry()
+        views.get_offering_info = MagicMock(name='get_offering_info')
+        views.get_offering_info.return_value = return_value
+
+        request = self.factory.get('/api/offering/offerings/test_user/test_offering/1.0')
+        request.user = self.user
+
+        # Call the view
+        offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=Organization.objects.get(name='test_user'),
+            owner_admin_user=self.user,
+            version='1.0',
+            state='published',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+
+        response = offering_entry.read(request, 'test_user', 'test_offering', '1.0')
+
+        # Check correct call
+        views.get_offering_info.assert_called_once_with(offering, self.user)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=UTF-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['name'], 'test_offering')
+        self.assertEqual(body_response['owner_organization'], 'test_user')
+        self.assertEqual(body_response['owner_admin_user_id'], 'test_user')
+
+    def test_get_offering_not_found(self):
+
+        # Mock get offerings method
+        offering_entry = views.OfferingEntry()
+        views.get_offering_info = MagicMock(name='get_offering_info')
+
+        request = self.factory.get('/api/offering/offerings/test_user/test_offering/1.0', HTTP_ACCEPT='application/json')
+        request.user = self.user
+
+        response = offering_entry.read(request, 'test_user', 'test_offering', '1.0')
+
+        # Check correct call
+        self.assertFalse(views.get_offering_info.called)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Not found')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_get_offering_exception(self):
+
+        # Mock get offerings method
+        offering_entry = views.OfferingEntry()
+        views.get_offering_info = MagicMock(name='get_offering_info')
+        views.get_offering_info.side_effect = Exception('Error getting offering')
+
+        request = self.factory.get('/api/offering/offerings/test_user/test_offering/1.0', HTTP_ACCEPT='application/json')
+        request.user = self.user
+
+        offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=Organization.objects.get(name='test_user'),
+            owner_admin_user=self.user,
+            version='1.0',
+            state='published',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+
+        response = offering_entry.read(request, 'test_user', 'test_offering', '1.0')
+
+        # Check correct call
+        views.get_offering_info.assert_called_once_with(offering, self.user)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Error getting offering')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_offering_update(self):
+
+        data = {
+            'name': 'test_offering',
+            'version': '1.0',
+            'description': 'test offering'
+        }
+
+        # Mock get offerings method
+        offering_entry = views.OfferingEntry()
+        views.update_offering = MagicMock(name='update_offering')
+
+        request = self.factory.put(
+            '/api/offering/offerings/test_user/test_offering/1.0',
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+
+        request.user = self.user
+
+        # Call the view
+        offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=Organization.objects.get(name='test_user'),
+            owner_admin_user=self.user,
+            version='1.0',
+            state='published',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+        #views.Offering.is_owner = MagicMock(name='is_owner')
+        #views.Offering.is_owner.return_value = True
+
+        response = offering_entry.update(request, 'test_user', 'test_offering', '1.0')
+
+        # Check correct call
+        views.update_offering.assert_called_once_with(offering, data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'OK')
+        self.assertEqual(body_response['result'], 'correct')
+
+    def test_offering_update_not_found(self):
+
+        data = {
+            'name': 'test_offering',
+            'version': '1.0',
+            'description': 'test offering'
+        }
+
+        # Mock get offerings method
+        offering_entry = views.OfferingEntry()
+        views.update_offering = MagicMock(name='update_offering')
+
+        request = self.factory.put(
+            '/api/offering/offerings/test_user/test_offering/1.0',
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+
+        request.user = self.user
+
+        response = offering_entry.update(request, 'test_user', 'test_offering', '1.0')
+
+        # Check correct call
+        self.assertFalse(views.update_offering.called)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Not found')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_offering_update_not_provider(self):
+
+        data = {
+            'name': 'test_offering',
+            'version': '1.0',
+            'description': 'test offering'
+        }
+
+        # Mock get offerings method
+        offering_entry = views.OfferingEntry()
+        views.update_offering = MagicMock(name='update_offering')
+
+        request = self.factory.put(
+            '/api/offering/offerings/test_user/test_offering/1.0',
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+
+        request.user = self.user
+        org = Organization.objects.get(name='test_user')
+
+        # Call the view
+        Offering.objects.create(
+            name='test_offering',
+            owner_organization=org,
+            owner_admin_user=self.user,
+            version='1.0',
+            state='published',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+        # Mock offering functions to obtain that the user is not owner
+        views.Offering.is_owner = MagicMock(name='is_owner')
+        views.Offering.is_owner.return_value = False
+        org.managers = []
+        org.save()
+
+        response = offering_entry.update(request, 'test_user', 'test_offering', '1.0')
+
+        # Check correct call
+        self.assertFalse(views.update_offering.called)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Forbidden')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_offering_update_exception(self):
+
+        data = {
+            'name': 'test_offering',
+            'version': '1.0',
+            'description': 'test offering'
+        }
+
+        # Mock get offerings method
+        offering_entry = views.OfferingEntry()
+        views.update_offering = MagicMock(name='update_offering')
+        views.update_offering.side_effect = Exception('Update error')
+
+        request = self.factory.put(
+            '/api/offering/offerings/test_user/test_offering/1.0',
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+
+        request.user = self.user
+        org = Organization.objects.get(name='test_user')
+
+        # Call the view
+        offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=org,
+            owner_admin_user=self.user,
+            version='1.0',
+            state='published',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+
+        response = offering_entry.update(request, 'test_user', 'test_offering', '1.0')
+
+        # Check correct call
+        views.update_offering.assert_called_once_with(offering, data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Update error')
+        self.assertEqual(body_response['result'], 'error')
