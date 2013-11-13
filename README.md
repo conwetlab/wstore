@@ -29,22 +29,14 @@ package management tools provided by your operating system or using the availabl
 
 In order to install python and django dependences you can execute the script setup.sh.
 This script will create a virtual environment for the project with the corresponding
-packages. To use this script you need virtualenv2.7 and python 2.7.
+packages, resolve all needed python and django dependences, and execute a complete test in order to ensure that 
+WStore is correctly installed. To use this script you need virtualenv2.7 and python 2.7.
 
-The script setup.sh will also download and extract pylucene 3.6.2 package in the working directory; 
-however, it will not install the package, since it needs you to fill some environment 
-preferences.
-
-To install pylucene package have a look to pylucene documentation:
-
-* http://lucene.apache.org/pylucene/install.html
-
-**Note**: if you have used setup.sh script, you will need to activate the virtual environment before installing,
-otherwise pylucene package will not be visible by WStore. Moreover, when selecting the configuation in 
-the Makefile, you will need to setup the PREFIX\_PYTHON variable pointing to the virtual env, not pointing 
-to the system python installation. For example, assuming an Ubuntu 11.10 your configuartion should be similar
-to:
-
+The script setup.sh download, extract and install pylucene 3.6.2 package. To do 
+that setup.sh uses pylucene-install.sh and pylucene-patch-make-env.sh. This scripts install
+lucene for a Ubuntu 11.10 like configuration, this cofiguration is setup in the pylucene-patch-make-env.sh 
+script that modifies pylucene Makefile uncommenting and modifying the corresponding lines. 
+The default configuartion is:
 
     # Linux     (Ubuntu 11.10 64-bit, Python 2.7.2, OpenJDK 1.7, setuptools 0.6.16)
     # Be sure to also set JDK['linux2'] in jcc's setup.py to the JAVA_HOME value
@@ -55,11 +47,25 @@ to:
     JCC=$(PYTHON) -m jcc --shared
     NUM_FILES=4
 
-Finally, an script called test.sh has been provided, this script will install dependences
-for testing and execute WStore tests to check that it is correctly installed. Note, that 
-this step is optional as well as testing dependences.
+If you have a different enviroment you can modify pylucene-patch-make-env.sh to uncomment and 
+modify the lines that match with your environment. Note that the PREFIX\_PYTHON variable is 
+pointing to the python executable in your system by default; however, if you are using the 
+provided scripts or a virtualenv by your own, you have to modify this variable to point to 
+the python executable in your virtualenv, as can be seen in the example above.
 
-For instructions on how to install WStore manually have a look at:
+If you do not want to modify this script, you can manually execute the script python-dep-install.sh
+to resolve python dependences, manually install pylucene 3.6.2. and then, executng coverage.sh to 
+perform the test. Note that the virtualenv is created in the setup.sh script so if you want to use 
+a virtual environment you will need to install and activate it manually before installing any component;
+otherwise, you will need to provide superuser credentials and all dependences will be installed in 
+your system.
+
+To manually install pylucene package have a look to pylucene documentation:
+
+* http://lucene.apache.org/pylucene/install.html
+
+
+For instructions on how to install WStore manually, without using any script, have a look at:
 
 * http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/Store\_-\_W-Store\_-\_Installation\_and\_Administration\_Guide
 
