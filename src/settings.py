@@ -46,6 +46,7 @@ BASEDIR = path.dirname(path.abspath(__file__))
 STORE_NAME = 'WStore'
 AUTH_PROFILE_MODULE = 'wstore.models.UserProfile'
 OILAUTH = True
+PORTALINSTANCE = False
 
 THEME_ACTIVE = 'defaulttheme'
 # Local time zone for this installation.

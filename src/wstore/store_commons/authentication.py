@@ -34,7 +34,7 @@ def logout(request):
     django_logout(request)
     response = None
 
-    if settings.OILAUTH:
+    if settings.PORTALINSTANCE:
         # Check if the logout request is originated in a different domain
         if 'HTTP_ORIGIN' in request.META:
             origin = request.META['HTTP_ORIGIN']
@@ -56,6 +56,9 @@ def logout(request):
             response = build_response(request, 200, 'OK')
 
     # If not using the FI-LAB authentication redirect to the login page
+    elif settings.OILAUTH:
+        from wstore.social_auth_backend import FIWARE_LOGOUT_URL
+        response = HttpResponseRedirect(FIWARE_LOGOUT_URL)
     else:
         url = '/login?next=/'
         response = HttpResponseRedirect(url)

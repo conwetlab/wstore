@@ -47,6 +47,7 @@ FIWARE_ACCESS_TOKEN_URL = 'https://account.lab.fi-ware.eu/token'
 FIWARE_USER_DATA_URL = 'https://account.lab.fi-ware.eu/user'
 FIWARE_NOTIFICATION_URL = 'https://account.lab.fi-ware.eu/purchases'
 FIWARE_APPLICATIONS_URL = 'https://account.lab.fi-ware.eu/applications.json'
+FIWARE_LOGOUT_URL = 'https://account.lab.fi-ware.eu/users/sign_out'
 
 
 

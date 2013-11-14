@@ -43,7 +43,8 @@ from wstore.models import Offering
 def home(request):
     context = {
        'organization': request.user.userprofile.current_organization.name,
-       'oil': settings.OILAUTH
+       'oil': settings.OILAUTH,
+       'portal': settings.PORTALINSTANCE
     }
     return render(request, 'index.html', context)
 
@@ -52,7 +53,8 @@ def home(request):
 def admin(request):
     if request.user.is_staff:
         context = {
-            'oil': settings.OILAUTH
+            'oil': settings.OILAUTH,
+            'portal': settings.PORTALINSTANCE
         }
         return render(request, 'admin/admin.html', context)
     else:
@@ -67,7 +69,8 @@ def catalogue(request):
         'roles': profile.get_current_roles(),
         'usdl_editor': settings.USDL_EDITOR_URL,
 	    'organization': profile.current_organization.name,
-        'oil': settings.OILAUTH
+        'oil': settings.OILAUTH,
+        'portal': settings.PORTALINSTANCE
     }
     return render(request, 'catalogue/catalogue.html', context)
 

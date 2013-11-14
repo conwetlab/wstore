@@ -102,21 +102,22 @@
         <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_warning_template">{% include "alert_warning_template.html" %}</script>
 
-	    {% if oil %}
+        {% if portal %}
             <script src="https://account.lab.fi-ware.eu/assets/signOut.js" type="text/javascript"></script>
             <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
         {% endif %}
+        
     </head>
     <body>
         <div id="wrapper">
-    {% if oil %}
+    {% if portal %}
         <div id="oil-bar">
         {% include "oil/header.html" %}
         </div>
-        {% endif %}
+    {% endif %}
         <div class="container-fluid bread-container">
             <div class="row-fluid">
-            {% if not oil %}
+            {% if not portal %}
                 <div>
                     <img id="logo" src="{{ STATIC_URL }}assets/img/logo.png" />
                 </div>
@@ -136,7 +137,7 @@
                             <li><a href="/administration">Administration</a></li>
                         {% endif %}
                     </ul>
-                   {% if not oil %}
+                   {% if not portal %}
                    <div class="btn btn-success float-right dropdown">
                        <div href="#" class="dropdown-toggle" data-toggle="dropdown">
                            <i class="icon-user icon-white"></i>

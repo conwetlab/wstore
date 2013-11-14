@@ -196,14 +196,20 @@
             $('#back').css('left', ($('.tabbable').width() - 92) + 'px');
         }
 
-        if ($(window).width() < 981) {
-            $('.title_wrapper').css('top', '-30px');
-            $('.navigation').css('top', '-109px');
-            $('.detailed-info').css('top', '66px');
+        if ($(window).width() < 966) {
+            if ($('#oil-bar').length > 0) {
+                $('.title_wrapper').css('top', '-30px');
+                $('.navigation').css('top', '-109px');
+                $('.detailed-info').css('top', '66px');
+            } else {
+                $('.detailed-info').css('top', '215px');
+            }
             $('.detailed-info').css('left', '220px');
         } else {
-            $('.title_wrapper').removeAttr('style');
-            $('.navigation').css('top', '60px');
+            if ($('#oil-bar').length > 0) {
+                $('.title_wrapper').removeAttr('style');
+                $('.navigation').css('top', '60px');
+            }
             $('.detailed-info').css('top', '246px');
         }
         setTimeout(setFooter, 600);
