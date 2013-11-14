@@ -205,7 +205,7 @@ class ResourceCollection(Resource):
     def create(self, request):
 
         user = request.user
-        profile = UserProfile.objects.get(user=user)
+        profile = user.userprofile
         content_type = get_content_type(request)[0]
 
         if 'provider' in profile.get_current_roles():
@@ -214,27 +214,32 @@ class ResourceCollection(Resource):
                 try:
                     data = json.loads(request.raw_post_data)
                     register_resource(user, data)
-                except:
-                    return build_response(request, 400, 'Invalid JSON content')
+                except Exception, e:
+                    return build_response(request, 400, e.message)
             elif content_type == 'multipart/form-data':
                 try:
                     data = json.loads(request.POST['json'])
                     f = request.FILES['file']
                     register_resource(user, data, file_=f)
-                except:
-                    return build_response(request, 400, 'Invalid JSON content')
+                except Exception, e:
+                    return build_response(request, 400, e.message)
         else:
-            pass
+            return build_response(request, 403, 'Forbidden')
 
         return build_response(request, 201, 'Created')
 
     @authentication_required
     def read(self, request):
-        profile = UserProfile.objects.get(user=request.user)
+        profile = request.user.userprofile
         if 'provider' in profile.get_current_roles():
-            response = get_provider_resources(request.user)
+            try:
+                response = get_provider_resources(request.user)
+            except Exception, e:
+                return build_response(request, 400, e.message)
+        else:
+            return build_response(request, 403, 'Forbidden')
 
-        return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json; charset=utf-8')
 
 
 class ResourceEntry(Resource):
