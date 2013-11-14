@@ -22,17 +22,14 @@ import json
 
 from mock import MagicMock
 from urllib2 import HTTPError
+from StringIO import StringIO
 
 from django.test import TestCase
-from django.test.client import RequestFactory
+from django.test.client import RequestFactory, MULTIPART_CONTENT
 from django.contrib.auth.models import User
 
 from wstore.offerings import views
 from wstore.models import Offering, Organization
-
-
-class FakeOfferingManagement():
-    pass
 
 
 class OfferingCollectionTestCase(TestCase):
@@ -675,4 +672,274 @@ class OfferingEntryTestCase(TestCase):
 
         self.assertEqual(type(body_response), dict)
         self.assertEqual(body_response['message'], 'Update error')
+        self.assertEqual(body_response['result'], 'error')
+
+
+class ResourceColectionTestCase(TestCase):
+
+    tags = ('offering-api',)
+
+    def setUp(self):
+        # Create request factory
+        self.factory = RequestFactory()
+        # Create testing user
+        self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+
+    def test_get_resources(self):
+
+        return_value = [{
+            'name': 'test_resource',
+            'provider': 'test_user',
+            'version': '1.0'
+        }]
+
+        # Mock get offerings method
+        resource_collection = views.ResourceCollection()
+        views.get_provider_resources = MagicMock(name='get_provider_resources')
+
+        views.get_provider_resources.return_value = return_value
+        request = self.factory.get('/api/offering/resources', HTTP_ACCEPT='application/json')
+
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['provider', 'customer']
+        self.user.userprofile.save()
+
+        request.user = self.user
+
+        # Call the view
+        response = resource_collection.read(request)
+
+        # Check correct call
+        views.get_provider_resources.assert_called_once_with(self.user)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), list)
+        self.assertEqual(len(body_response), 1)
+        value = body_response[0]
+        self.assertEqual(value['name'], 'test_resource')
+        self.assertEqual(value['provider'], 'test_user')
+        self.assertEqual(value['version'], '1.0')
+
+    def test_get_resources_no_provider(self):
+
+        # Mock get offerings method
+        resource_collection = views.ResourceCollection()
+        views.get_provider_resources = MagicMock(name='get_provider_resources')
+
+        request = self.factory.get('/api/offering/resources', HTTP_ACCEPT='application/json')
+
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['customer']
+        self.user.userprofile.save()
+
+        request.user = self.user
+
+        # Call the view
+        response = resource_collection.read(request)
+
+        # Check correct call
+        self.assertFalse(views.get_provider_resources.called)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Forbidden')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_get_resources_exception(self):
+
+        # Mock get offerings method
+        resource_collection = views.ResourceCollection()
+        views.get_provider_resources = MagicMock(name='get_provider_resources')
+        views.get_provider_resources.side_effect = Exception('Getting resources error')
+
+        request = self.factory.get('/api/offering/resources', HTTP_ACCEPT='application/json')
+
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['provider', 'customer']
+        self.user.userprofile.save()
+
+        request.user = self.user
+
+        # Call the view
+        response = resource_collection.read(request)
+
+        # Check correct call
+        views.get_provider_resources.assert_called_once_with(self.user)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Getting resources error')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_create_resource(self):
+
+        data = {
+            'name': 'test_resource',
+            'version': '1.0',
+            'description': 'test resource'
+        }
+
+        # Mock get offerings method
+        resource_collection = views.ResourceCollection()
+        views.register_resource = MagicMock(name='get_provider_resources')
+
+        request = self.factory.post(
+            '/api/offering/resources',
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['provider', 'customer']
+        self.user.userprofile.save()
+
+        request.user = self.user
+
+        # Call the view
+        response = resource_collection.create(request)
+
+        # Check correct call
+        views.register_resource.assert_called_once_with(self.user, data)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Created')
+        self.assertEqual(body_response['result'], 'correct')
+
+    def test_create_resource_multipart(self):
+
+        data = {
+            'name': 'test_resource',
+            'version': '1.0',
+            'description': 'test resource'
+        }
+
+        # Mock get offerings method
+        resource_collection = views.ResourceCollection()
+        views.register_resource = MagicMock(name='get_provider_resources')
+
+        f = StringIO()
+        f.name = 'test_file.txt'
+        f.write('test file')
+
+        request = self.factory.post(
+            '/api/offering/resources',
+            {'json': json.dumps(data),
+             'file': f},
+            content_type=MULTIPART_CONTENT,
+            HTTP_ACCEPT='application/json',
+        )
+
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['provider', 'customer']
+        self.user.userprofile.save()
+
+        request.user = self.user
+
+        # Call the view
+        response = resource_collection.create(request)
+
+        # Check correct call
+        expected_file = request.FILES['file']  # The type change when loaded
+
+        views.register_resource.assert_called_once_with(self.user, data, file_=expected_file)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Created')
+        self.assertEqual(body_response['result'], 'correct')
+
+    def test_create_resource_no_provider(self):
+
+        data = {
+            'name': 'test_resource',
+            'version': '1.0',
+            'description': 'test resource'
+        }
+
+        # Mock get offerings method
+        resource_collection = views.ResourceCollection()
+        views.register_resource = MagicMock(name='get_provider_resources')
+
+        request = self.factory.post(
+            '/api/offering/resources',
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['customer']
+        self.user.userprofile.save()
+
+        request.user = self.user
+
+        # Call the view
+        response = resource_collection.create(request)
+
+        # Check correct call
+        self.assertFalse(views.register_resource.called)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Forbidden')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_create_resource_exception(self):
+
+        data = {
+            'name': 'test_resource',
+            'version': '1.0',
+            'description': 'test resource'
+        }
+
+        # Mock get offerings method
+        resource_collection = views.ResourceCollection()
+        views.register_resource = MagicMock(name='get_provider_resources')
+        views.register_resource.side_effect = Exception('Resource creation exeption')
+
+        request = self.factory.post(
+            '/api/offering/resources',
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['customer', 'provider']
+        self.user.userprofile.save()
+
+        request.user = self.user
+
+        # Call the view
+        response = resource_collection.create(request)
+
+        # Check correct call
+        views.register_resource.assert_called_once_with(self.user, data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Resource creation exeption')
         self.assertEqual(body_response['result'], 'error')
