@@ -29,7 +29,8 @@ from django.test.client import RequestFactory, MULTIPART_CONTENT
 from django.contrib.auth.models import User
 
 from wstore.offerings import views
-from wstore.models import Offering, Organization
+from wstore.models import Offering, Organization, Context
+from django.contrib.sites.models import Site
 
 
 class OfferingCollectionTestCase(TestCase):
@@ -942,4 +943,198 @@ class ResourceColectionTestCase(TestCase):
 
         self.assertEqual(type(body_response), dict)
         self.assertEqual(body_response['message'], 'Resource creation exeption')
+        self.assertEqual(body_response['result'], 'error')
+
+
+class PublishEntryTestCase(TestCase):
+
+    tags = ('offering-api',)
+
+    def setUp(self):
+        # Create request factory
+        self.factory = RequestFactory()
+        # Create testing user
+        self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+        self.data = {
+            'marketplaces': []
+        }
+        self.request = self.factory.post(
+            '/offering/offerings/test_user/test_offering/1.0',
+            json.dumps(self.data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+        self.request.user = self.user
+
+    def test_publish_offering(self):
+
+        # Mock publish offering method
+        views.publish_offering = MagicMock(name='publish_offering')
+        publish_entry = views.PublishEntry()
+
+        offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=Organization.objects.get(name=self.user.username),
+            owner_admin_user=self.user,
+            version='1.0',
+            state='uploaded',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+
+        # Call the view
+        site = Site.objects.create(name='Test_site', domain='http://testsite.com')
+        Context.objects.create(site=site)
+        views.get_current_site = MagicMock()
+        views.get_current_site.return_value = site
+
+        response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
+
+        views.publish_offering.assert_called_once_with(offering, self.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'OK')
+        self.assertEqual(body_response['result'], 'correct')
+
+    def test_publish_offering_not_found(self):
+
+        # Mock publish offering method
+        views.publish_offering = MagicMock(name='publish_offering')
+        publish_entry = views.PublishEntry()
+
+        # Call the view
+        response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
+
+        self.assertFalse(views.publish_offering.called)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Not found')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_publish_entry_not_owner(self):
+
+        # Mock publish offering method
+        views.publish_offering = MagicMock(name='publish_offering')
+        publish_entry = views.PublishEntry()
+        org = Organization.objects.get(name=self.user.username)
+        org.managers = []
+        org.save()
+
+        Offering.objects.create(
+            name='test_offering',
+            owner_organization=org,
+            owner_admin_user=self.user,
+            version='1.0',
+            state='uploaded',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+        Offering.is_owner = MagicMock()
+        Offering.is_owner.return_value = False
+
+        # Call the view
+        response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
+
+        self.assertFalse(views.publish_offering.called)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Forbidden')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_publish_entry_bad_gateway(self):
+
+        # Mock publish offering method
+        views.publish_offering = MagicMock(name='publish_offering')
+        views.publish_offering.side_effect = HTTPError('', 500, '', None, None)
+        publish_entry = views.PublishEntry()
+
+        offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=Organization.objects.get(name=self.user.username),
+            owner_admin_user=self.user,
+            version='1.0',
+            state='uploaded',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+        # Call the view
+        response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
+
+        views.publish_offering.assert_called_once_with(offering, self.data)
+
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Bad gateway')
+        self.assertEqual(body_response['result'], 'error')
+
+    def test_publish_entry_exception(self):
+
+        # Mock publish offering method
+        views.publish_offering = MagicMock(name='publish_offering')
+        views.publish_offering.side_effect = Exception('Publication error')
+        publish_entry = views.PublishEntry()
+
+        offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=Organization.objects.get(name=self.user.username),
+            owner_admin_user=self.user,
+            version='1.0',
+            state='uploaded',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+        # Call the view
+        response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
+
+        views.publish_offering.assert_called_once_with(offering, self.data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Publication error')
         self.assertEqual(body_response['result'], 'error')
