@@ -207,7 +207,15 @@ FIWARE_APPLICATIONS_URL = 'https://fiware_idm_url/applications.json'
 </pre>
 
 Next, register WStore as an application in the identity management portal and get
-OAuth2 credentials for your application.
+OAuth2 credentials for your application. You will need to create two roles in your 
+application, one for offering provider and other for offering customer. This roles 
+will be used in the organizations with access to your WStore instance in order to grant
+organization user the corresponding rights for purchasing and creating offerings for a 
+complete organizations. To include the name you have specified for that roles, you have 
+to fill the following settings in social\_auth\_backend.py:
+
+    FIWARE_PROVIDER_ROLE='Name of the role'
+    FIWARE_CUSTOMER_ROLE='Name of the role' 
 
 Finally, include OAuth2 credentials in your WStore instance by filling the settings:
 
