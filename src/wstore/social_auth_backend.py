@@ -49,6 +49,9 @@ FIWARE_NOTIFICATION_URL = 'https://account.lab.fi-ware.eu/purchases'
 FIWARE_APPLICATIONS_URL = 'https://account.lab.fi-ware.eu/applications.json'
 FIWARE_LOGOUT_URL = 'https://account.lab.fi-ware.eu/users/sign_out'
 
+FIWARE_PROVIDER_ROLE = 'Offering Provider'
+FIWARE_CUSTOMER_ROLE = 'Offering Customer'
+
 
 
 class FiwareBackend(OAuthBackend):
@@ -186,9 +189,9 @@ def fill_internal_user_info(*arg, **kwargs):
             if role['name'] == 'Owner':
                 if not kwargs['user'].pk in org_model.managers:
                     org_model.managers.append(kwargs['user'].pk)
-            elif role['name'] == 'Offering Provider':
+            elif role['name'] == FIWARE_PROVIDER_ROLE:
                 org_roles.append('provider')
-            elif role['name'] == 'Offering Customer':
+            elif role['name'] == FIWARE_CUSTOMER_ROLE:
                 org_roles.append('customer')
 
         organizations.append({
