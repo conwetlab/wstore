@@ -19,12 +19,12 @@ In order to have WStore up and running the following software is required
 * Pylucene 3.6.2
 * paypalpy 
 * django-crontab
-* wkpdf2html
+* wkhtml2pdf
 
 Installation
 ------------
 
-The Web Server, MongoDB, wkpdf2html, python and pip itself can be installed using the 
+The Web Server, MongoDB, wkhtml2pdf, python and pip itself can be installed using the 
 package management tools provided by your operating system or using the available installers.
 
 In order to install python and django dependences you can execute the script setup.sh.
