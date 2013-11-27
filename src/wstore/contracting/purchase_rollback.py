@@ -93,7 +93,8 @@ class PurchaseRollback():
         except Exception, e:
             if e.message != "This offering can't be purchased" and e.message != 'The offering has been already purchased'\
              and e.message != 'Invalid payment method' and e.message != 'Invalid credit card info'\
-             and e.message != 'The customer does not have a tax address' and e.message != 'The customer does not have payment info':
+             and e.message != 'The customer does not have a tax address' and e.message != 'The customer does not have payment info'\
+             and e.message != 'The tax address is not valid':
 
                 # Get the purchase
                 if org_owned:
