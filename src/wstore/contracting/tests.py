@@ -19,6 +19,7 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
+from mock import MagicMock
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -35,8 +36,8 @@ from wstore.charging_engine.models import Contract
 
 __test__ = False
 
-class FakeChargingEngine:
 
+class FakeChargingEngine:
     def __init__(self, purchase, payment_method=None, credit_card=None):
         pass
 
@@ -57,7 +58,12 @@ class PurchasesCreationTestCase(TestCase):
     def setUpClass(cls):
         purchases_management.generate_bill = fake_generate_bill
         purchases_management.ChargingEngine = FakeChargingEngine
+        purchases_management.ChargingEngine.resolve_charging = MagicMock(name='resolve_charging')
         super(PurchasesCreationTestCase, cls).setUpClass()
+
+    def setUp(self):
+        purchases_management.ChargingEngine.resolve_charging.reset_mock()
+        purchases_management.ChargingEngine.resolve_charging.return_value = None
 
     def test_basic_purchase_creation(self):
 
@@ -284,6 +290,167 @@ class PurchasesCreationTestCase(TestCase):
 
         self.assertTrue(error)
         self.assertEqual(msg, "The offering has been already purchased")
+
+    def test_purchase_exeptions(self):
+
+        # Load test info
+        user = User.objects.get(username='test_user')
+        offering = Offering.objects.get(name='test_offering')
+
+        error_messages = [
+            'The customer does not have a tax address',
+            'The tax address is not valid',
+            'Invalid credit card info',
+            'Invalid payment method',
+            'The customer does not have payment info'
+        ]
+        payment_info = [{
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
+            }
+        }, {
+           'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
+            },
+            'tax_address': {
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
+        }, {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
+            },
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
+        }, {
+            'payment_method': 'credit',
+            'credit_card': {
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
+            },
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
+        }, {
+            'payment_method': 'credit_card',
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
+        }
+        ]
+        # Test exceptions
+        for i in range(0, 3):
+            error = False
+            msg = None
+
+            try:
+                purchases_management.create_purchase(user, offering, payment_info=payment_info[i])
+            except Exception, e:
+                error = True
+                msg = e.message
+
+            self.assertTrue(error)
+            self.assertEqual(msg, error_messages[i])
+
+    def test_purchase_creation_paypal(self):
+        user = User.objects.get(username='test_user')
+        offering = Offering.objects.get(name='test_offering')
+        payment_info = {
+            'payment_method': 'paypal',
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
+        }
+        purchase = purchases_management.create_purchase(user, offering, payment_info=payment_info)
+
+        self.assertEqual(purchase.customer.username, 'test_user')
+        self.assertEqual(purchase.organization_owned, False)
+        self.assertEqual(purchase.offering_id, offering.pk)
+        self.assertEqual(purchase.tax_address['street'], 'test street')
+        self.assertEqual(purchase.tax_address['postal'], '28000')
+        self.assertEqual(purchase.tax_address['city'], 'test city')
+        self.assertEqual(purchase.tax_address['country'], 'test country')
+
+        purchase = Purchase.objects.get(customer=user, offering=offering)
+
+        self.assertEqual(purchase.customer.username, 'test_user')
+        self.assertEqual(purchase.organization_owned, False)
+        self.assertEqual(purchase.offering_id, offering.pk)
+        self.assertEqual(purchase.tax_address['street'], 'test street')
+        self.assertEqual(purchase.tax_address['postal'], '28000')
+        self.assertEqual(purchase.tax_address['city'], 'test city')
+        self.assertEqual(purchase.tax_address['country'], 'test country')
+
+        user_profile = UserProfile.objects.get(user=user)
+        self.assertEqual(len(user_profile.offerings_purchased), 1)
+        self.assertEqual(user_profile.offerings_purchased[0], offering.pk)
+
+    def test_purchase_creation_organization_payment(self):
+        user = User.objects.get(username='test_user')
+        offering = Offering.objects.get(name='test_offering')
+
+        user_profile = UserProfile.objects.get(user=user)
+        org = Organization.objects.get(name='test_organization')
+        org.payment_info = {
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
+        }
+        org.save()
+        user_profile.current_organization = org
+        user_profile.organizations = [{
+            'organization': org.pk,
+            'roles': ['customer']
+        }]
+        user_profile.save()
+        payment_info = {
+            'payment_method': 'credit_card',
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
+        }
+
+        purchases_management.ChargingEngine.resolve_charging.return_value = 'http://paypal.com/redirect'
+        redirect_url = purchases_management.create_purchase(user, offering, True, payment_info=payment_info)
+        purchases_management.ChargingEngine.resolve_charging.assert_called_once_with(new_purchase=True)
+
+        self.assertEquals(redirect_url, 'http://paypal.com/redirect')
 
 
 class PurchaseRollbackTestCase(TestCase):
