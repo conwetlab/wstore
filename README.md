@@ -64,6 +64,15 @@ To manually install pylucene package have a look to pylucene documentation:
 
 * http://lucene.apache.org/pylucene/install.html
 
+Note that you will need to resolve Pylucene dependences (Java, ANT) before installing WStore, as can
+be seen above, pyluene is configured to work with openjdk-7 as Java virtual machine. If you want
+to use a different vm you will need to configure it manually as stated before.
+
+WStore uses wkhtml2pdf for the creation of invoices, this software requires an X Server to work. If 
+you do not have one, we recomend using Xvfb in the display 98.
+
+    $ apt-get install Xvfb
+    $ Xvfb :98 &
 
 For instructions on how to install WStore manually, without using any script, have a look at:
 
@@ -206,8 +215,13 @@ FIWARE_NOTIFICATION_URL = 'https://fiware_idm_url/purchases'
 FIWARE_APPLICATIONS_URL = 'https://fiware_idm_url/applications.json'
 </pre>
 
-Next, register WStore as an application in the identity management portal and get
-OAuth2 credentials for your application. You will need to create two roles in your 
+Next, register WStore as an application in the identity management portal, to do that
+WStore uses the following URL as as callback URL for OAuth2 authentication:
+
+    <host_wstore>/complete/fiware 
+
+Once you have registered your WStore instance, get OAuth2 credentials needed for the 
+authenticacion of your application. You will need to create two roles in your 
 application, one for offering provider and other for offering customer. This roles 
 will be used in the organizations with access to your WStore instance in order to grant
 organization user the corresponding rights for purchasing and creating offerings for a 
