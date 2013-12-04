@@ -240,6 +240,16 @@
                 $('.navigation').css('top', '60px');
             }
         }
+        // Check username length to avoid display problems
+        if ($.trim($('div.btn.btn-success > div.dropdown-toggle').text()).length > 12) {
+            var shortName = ' '+ USERNAME.substring(0, 9) + '...';
+            // Replace user button contents
+            var userBtn = $('div.btn.btn-success > div.dropdown-toggle');
+            userBtn.empty();
+            userBtn.text(shortName);
+            userBtn.prepend($('<i></i>').addClass('icon-user icon-white'));
+            userBtn.append($('<b></b>').addClass('caret'));
+        }
         setFooter();
     }
     $(window).resize(calculatePositions);

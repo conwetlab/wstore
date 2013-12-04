@@ -349,6 +349,17 @@
         // Calculate tabs width, at the end to avoid problems with position changes
         position = $('.tabbable').offset();
         $('.offerings-container').css('width', ($(window).width() - position.left) + 'px');
+
+        // Check username length to avoid display problems
+        if ($.trim($('div.btn.btn-success > div.dropdown-toggle').text()).length > 12) {
+            var shortName = ' '+ USERNAME.substring(0, 9) + '...';
+            // Replace user button contents
+            var userBtn = $('div.btn.btn-success > div.dropdown-toggle');
+            userBtn.empty();
+            userBtn.text(shortName);
+            userBtn.prepend($('<i></i>').addClass('icon-user icon-white'));
+            userBtn.append($('<b></b>').addClass('caret'));
+        }
         setFooter();
     }
 
