@@ -69,10 +69,10 @@ be seen above, pyluene is configured to work with openjdk-7 as Java virtual mach
 to use a different vm you will need to configure it manually as stated before.
 
 WStore uses wkhtml2pdf for the creation of invoices, this software requires an X Server to work. If 
-you do not have one, we recomend using Xvfb in the display 98.
+you do not have one, WStore will try to run Xvfb on the display :98. To install Xvfb use the following
+command.
 
-    $ apt-get install Xvfb
-    $ Xvfb :98 &
+    $ apt-get install xvfb
 
 For instructions on how to install WStore manually, without using any script, have a look at:
 

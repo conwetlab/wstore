@@ -461,7 +461,10 @@ class ChargingEngine:
             invoice_name += '_1'
 
         # Compile the bill file
-        subprocess.call([settings.BASEDIR + '/create_invoice.sh', bill_path, in_name])
+        try:
+            subprocess.call([settings.BASEDIR + '/create_invoice.sh', bill_path, in_name])
+        except:
+            raise Exception('Invoice generation problem')
 
         # Remove temporal files
         for file_ in os.listdir(settings.BILL_ROOT):
