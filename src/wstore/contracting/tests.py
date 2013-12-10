@@ -20,6 +20,7 @@
 
 import json
 from mock import MagicMock
+from urllib2 import HTTPError
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -32,6 +33,7 @@ from wstore.models import Organization
 from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.charging_engine.models import Contract
+from social_auth.db.django_models import UserSocialAuth
 
 
 __test__ = False
@@ -575,6 +577,9 @@ class FakeUrlib2Notify():
             self._response = response
 
         def open(self, request):
+            if  request.get_header('Authorization') == 'Bearer bca':
+                raise HTTPError('', 401, '', None, None)
+
             self._method = request.get_method()
             self._header = request.get_header('Content-type')
             self._body = request.data
@@ -599,6 +604,9 @@ class ProviderNotificationTestCase(TestCase):
         notify_provider.urllib2 = cls._urllib
         super(ProviderNotificationTestCase, cls).setUpClass()
 
+    def setUp(self):
+        self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+
     def test_provider_notification(self):
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
@@ -614,3 +622,126 @@ class ProviderNotificationTestCase(TestCase):
 
         self.assertEqual(content['customer'], 'test_organization1')
         self.assertEqual(content['reference'], '61005aba8e05ac2115f022f0')
+
+    def test_identity_manager_notification(self):
+
+        from django.conf import settings
+        settings.OILAUTH = True
+        
+        # Mock purchase info
+        purchase = MagicMock()
+        purchase.offering.notification_url = ''
+        purchase.offering.applications = [{
+            'id': 1,
+            'name': 'test_app1'
+        }]
+        purchase.organization_owned = False
+        purchase.offering.owner_organization.name = 'test_user'
+        purchase.offering.version = '1.0'
+        purchase.offering.name = 'test_offering'
+        purchase.ref = '11111'
+
+        self.user.userprofile.actor_id = 1
+        self.user.userprofile.access_token = 'aaa'
+        self.user.userprofile.save()
+        purchase.customer = self.user
+
+        notify_provider.notify_provider(purchase)
+        opener = self._urllib._opener
+
+        content = json.loads(opener._body)
+
+        self.assertEquals(len(content['applications']), 1)
+        self.assertEquals(content['applications'][0]['id'], 1)
+        self.assertEquals(content['applications'][0]['name'], 'test_app1')
+        self.assertEquals(content['customer'], 1)
+        
+
+    test_identity_manager_notification.tags = ('fiware-ut-23',)
+
+    def test_identity_manager_notification_org(self):
+
+        from django.conf import settings
+        settings.OILAUTH = True
+        
+        # Mock purchase info
+        purchase = MagicMock()
+        purchase.offering.notification_url = ''
+        purchase.offering.applications = [{
+            'id': 1,
+            'name': 'test_app1'
+        }]
+        purchase.organization_owned = True
+        purchase.offering.owner_organization.name = 'test_user'
+        purchase.owner_organization.actor_id = 2
+        purchase.offering.version = '1.0'
+        purchase.offering.name = 'test_offering'
+        purchase.ref = '11111'
+
+        self.user.userprofile.access_token = 'aaa'
+        self.user.userprofile.save()
+        purchase.customer = self.user
+
+        notify_provider.notify_provider(purchase)
+        opener = self._urllib._opener
+
+        content = json.loads(opener._body)
+
+        self.assertEquals(len(content['applications']), 1)
+        self.assertEquals(content['applications'][0]['id'], 1)
+        self.assertEquals(content['applications'][0]['name'], 'test_app1')
+        self.assertEquals(content['customer'], 2)
+
+    test_identity_manager_notification_org.tags = ('fiware-ut-23',)
+
+    def test_identity_manager_notification_token_refresh(self):
+
+        from django.conf import settings
+        settings.OILAUTH = True
+        
+        # Mock purchase info
+        purchase = MagicMock()
+        purchase.offering.notification_url = ''
+        purchase.offering.applications = [{
+            'id': 1,
+            'name': 'test_app1'
+        }]
+        purchase.organization_owned = True
+        purchase.offering.owner_organization.name = 'test_user'
+        purchase.owner_organization.actor_id = 2
+        purchase.offering.version = '1.0'
+        purchase.offering.name = 'test_offering'
+        purchase.ref = '11111'
+
+        self.user.userprofile.access_token = 'bca'
+        self.user.userprofile.save()
+
+        # Mock social auth methods
+        UserSocialAuth.refresh_token = MagicMock()
+        user_social_auth = UserSocialAuth.objects.create(user=self.user, provider='fiware')
+
+        user_social_auth.extra_data = {
+            'access_token': 'bbb',
+            'refresh_token': 'ccc'
+        }
+
+        user_social_auth.save()
+        self.user.social_auth = [user_social_auth]
+
+        purchase.customer = self.user
+
+        # Call the tested method
+        notify_provider.notify_provider(purchase)
+        opener = self._urllib._opener
+
+        content = json.loads(opener._body)
+
+        UserSocialAuth.refresh_token.assert_any_call()
+        self.assertEquals(len(content['applications']), 1)
+        self.assertEquals(content['applications'][0]['id'], 1)
+        self.assertEquals(content['applications'][0]['name'], 'test_app1')
+        self.assertEquals(content['customer'], 2)
+
+    test_identity_manager_notification_org.tags = ('fiware-ut-23',)
+
+    test_identity_manager_notification_token_refresh.tags = ('fiware-ut-23',)
