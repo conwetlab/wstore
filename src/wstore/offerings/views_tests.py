@@ -1248,8 +1248,6 @@ class ApplicationCollectionTestCase(TestCase):
         self.request.user.userprofile.save()
         self._test_call()
 
-    test_get_application_organization.tags = ('fiware-ut-23', 'fiware-ut-26')
-
     def test_get_applications_refresh_token(self):
 
         # Load specific user info

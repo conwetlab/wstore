@@ -169,6 +169,8 @@ class PurchasesCreationTestCase(TestCase):
         self.assertEqual(len(organization.offerings_purchased), 1)
         self.assertEqual(organization.offerings_purchased[0], offering.pk)
 
+    test_purchase_creation_org_owned.tags = ('fiware-ut-26', )
+
     def test_purchase_creation_tax_address(self):
 
         user = User.objects.get(username='test_user')
@@ -418,6 +420,8 @@ class PurchasesCreationTestCase(TestCase):
         self.assertEqual(len(user_profile.offerings_purchased), 1)
         self.assertEqual(user_profile.offerings_purchased[0], offering.pk)
 
+    test_purchase_creation_paypal.tags = ('fiware-ut-17',)
+
     def test_purchase_creation_organization_payment(self):
         user = User.objects.get(username='test_user')
         offering = Offering.objects.get(name='test_offering')
@@ -453,6 +457,8 @@ class PurchasesCreationTestCase(TestCase):
         purchases_management.ChargingEngine.resolve_charging.assert_called_once_with(new_purchase=True)
 
         self.assertEquals(redirect_url, 'http://paypal.com/redirect')
+
+    test_purchase_creation_organization_payment.tags = ('fiware-ut-26',)
 
 
 class PurchaseRollbackTestCase(TestCase):
