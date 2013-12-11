@@ -1166,7 +1166,7 @@ class ApplicationCollectionTestCase(TestCase):
             'id': 1,
             'name': 'test_app1',
             'roles': []
-        },{
+        }, {
             'id': 2,
             'name': 'test_app2',
             'roles': []
@@ -1281,4 +1281,102 @@ class ApplicationCollectionTestCase(TestCase):
         self.assertEqual(type(body_response), dict)
         self.assertEqual(body_response['message'], 'Forbidden')
         self.assertEqual(body_response['result'], 'error')
-        
+
+
+class CommentEntryTestCase(TestCase):
+
+    tags = ('fiware-ut-24',)
+
+    def setUp(self):
+        # Create request factory
+        self.factory = RequestFactory()
+        # Create testing user
+        self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+        self.data = {
+            'title': 'a comment',
+            'rating': 5,
+            'comment': 'a comment'
+        }
+        self.request = self.factory.post(
+            '/offering/offerings/test_user/test_offering/1.0/comment',
+            json.dumps(self.data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+        self.request.user = self.user
+
+    def test_comment_and_rate_api(self):
+
+        # Create the offering to be rated
+        offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=Organization.objects.get(name=self.user.username),
+            owner_admin_user=self.user,
+            version='1.0',
+            state='published',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+        comment_entry = views.CommentEntry()
+        views.comment_offering = MagicMock(name='comment_offering')
+        response = comment_entry.create(self.request, 'test_user', 'test_offering', '1.0')
+
+        views.comment_offering.assert_called_once_with(offering, self.data, self.user)
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], 'Created')
+        self.assertEqual(body_response['result'], 'correct')
+
+    def test_comment_and_rate__api_errors(self):
+
+        errors = [
+            'Not found',
+            'Forbidden',
+            'Invalid content'
+        ]
+        # Mock comment method
+        comment_entry = views.CommentEntry()
+        views.comment_offering = MagicMock(name='comment_offering')
+        views.comment_offering.side_effect = Exception('Creation error')
+
+        for error in errors:
+            # Load offering info
+            off_name = 'test_offering'
+
+            if error != 'Not found':
+                if error == 'Forbidden':
+                    off_state = 'uploaded'
+                else:
+                    off_name = 'test_offering1'
+                    off_state = 'published'
+
+                Offering.objects.create(
+                    name=off_name,
+                    owner_organization=Organization.objects.get(name=self.user.username),
+                    owner_admin_user=self.user,
+                    version='1.0',
+                    state=off_state,
+                    description_url='',
+                    resources=[],
+                    comments=[],
+                    tags=[],
+                    image_url='',
+                    related_images=[],
+                    offering_description={},
+                    notification_url='',
+                    creation_date='2013-06-03 10:00:00'
+                )
+            response = comment_entry.create(self.request, 'test_user', off_name, '1.0')
+            body_response = json.loads(response.content)
+
+            self.assertEqual(type(body_response), dict)
+            self.assertEqual(body_response['message'], error)
+            self.assertEqual(body_response['result'], 'error')

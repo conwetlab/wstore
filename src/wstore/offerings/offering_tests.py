@@ -22,6 +22,7 @@ import pymongo
 import os
 import base64
 import json
+from mock import MagicMock
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -37,6 +38,7 @@ from wstore.models import Organization
 
 
 __test__ = False
+
 
 class FakeRepositoryAdaptor():
 
@@ -602,7 +604,6 @@ class OfferingRetrievingTestCase(TestCase):
                 self.assertEqual(resource['name'], 'test_resource')
                 self.assertEqual(resource['description'], 'Example resource')
 
-        
     def test_get_all_provider_offerings_org(self):
         user = User.objects.get(username='test_user')
         user_org = Organization.objects.get(name=user.username)
@@ -1011,6 +1012,7 @@ class OfferingPublicationTestCase(TestCase):
 class OfferingBindingTestCase(TestCase):
 
     fixtures = ['bind.json']
+
     @classmethod
     def setUpClass(cls):
         settings.OILAUTH = False
@@ -1129,3 +1131,229 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.delete_offering(offering)
         offering = Offering.objects.get(name='test_offering3')
         self.assertEqual(offering.state, 'deleted')
+
+
+class OfferingRatingTestCase(TestCase):
+
+    tags = ('fiware-ut-24',)
+
+    def setUp(self):
+        # Create testing user
+        self.user = User.objects.create_user(
+            username='test_user',
+            email='',
+            password='passwd'
+        )
+        self.offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=Organization.objects.get(name=self.user.username),
+            owner_admin_user=self.user,
+            version='1.0',
+            state='published',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+
+    def test_comment_offering(self):
+
+        # Set user info
+        self.user.userprofile.offerings_purchased.append(self.offering.pk)
+        self.user.userprofile.save()
+
+        # Set comment info
+        comment = {
+            'title': 'comment',
+            'rating': 5,
+            'comment': 'a comment'
+        }
+        offerings_management.Context = MagicMock()
+        context = MagicMock()
+        context.top_rated = []
+        offerings_management.Context.objects.all.return_value = [context]
+
+        offerings_management.comment_offering(self.offering, comment, self.user)
+        self.offering = Offering.objects.get(pk=self.offering.pk)
+        self.assertEquals(self.offering.rating, 5)
+        self.assertEquals(len(self.offering.comments), 1)
+        self.assertEquals(self.offering.comments[0]['title'], 'comment')
+
+        self.assertEquals(len(context.top_rated), 1)
+        self.assertEquals(context.top_rated[0], self.offering.pk)
+
+    def test_comment_offering_top_rated(self):
+
+        # Set user info
+        org = Organization.objects.get(name=self.user.username)
+        self.user.userprofile.organizations = [{
+            'organization': org.pk
+        }]
+        org.offerings_purchased.append(self.offering.pk)
+        org.save()
+        self.user.userprofile.save()
+
+        self.offering.rating = 3.0
+        self.offering.comments = [{
+            'title': 'initial comment',
+            'rating': 3,
+            'comment': 'initial comment'
+        }]
+        self.offering.save()
+
+        # Set comment info
+        comment = {
+            'title': 'comment',
+            'rating': 5,
+            'comment': 'a comment'
+        }
+
+        offerings_management.Context = MagicMock()
+        context = MagicMock()
+        context.top_rated = []
+
+        # Load top rated offerings
+        for i in range(1, 5):
+            top_off = Offering.objects.create(
+                name='test_offering' + str(i),
+                owner_organization=Organization.objects.get(name=self.user.username),
+                owner_admin_user=self.user,
+                version='1.0',
+                state='published',
+                description_url='',
+                resources=[],
+                comments=[],
+                tags=[],
+                image_url='',
+                related_images=[],
+                offering_description={},
+                notification_url='',
+                creation_date='2013-06-03 10:00:00',
+                rating=i
+            )
+            context.top_rated.append(top_off.pk)
+
+        offerings_management.Context.objects.all.return_value = [context]
+
+        offerings_management.comment_offering(self.offering, comment, self.user)
+        self.offering = Offering.objects.get(pk=self.offering.pk)
+        self.assertEquals(self.offering.rating, 4.0)
+        self.assertEquals(len(self.offering.comments), 2)
+        self.assertEquals(self.offering.comments[0]['title'], 'comment')
+
+        self.assertEquals(len(context.top_rated), 4)
+        self.assertEquals(context.top_rated[0], self.offering.pk)
+
+    def test_comment_offering_top_rated_sorting(self):
+
+        # Set user info
+        org = Organization.objects.get(name=self.user.username)
+        self.user.userprofile.organizations = [{
+            'organization': org.pk
+        }]
+        org.offerings_purchased.append(self.offering.pk)
+        org.save()
+        self.user.userprofile.save()
+
+        self.offering.rating = 3.0
+        self.offering.comments = [{
+            'title': 'initial comment',
+            'rating': 3,
+            'comment': 'initial comment'
+        }]
+        self.offering.save()
+
+        # Set comment info
+        comment = {
+            'title': 'comment',
+            'rating': 5,
+            'comment': 'a comment'
+        }
+
+        offerings_management.Context = MagicMock()
+        context = MagicMock()
+        context.top_rated = []
+
+        # Load top rated offerings
+        for i in range(1, 4):
+            top_off = Offering.objects.create(
+                name='test_offering' + str(i),
+                owner_organization=Organization.objects.get(name=self.user.username),
+                owner_admin_user=self.user,
+                version='1.0',
+                state='published',
+                description_url='',
+                resources=[],
+                comments=[],
+                tags=[],
+                image_url='',
+                related_images=[],
+                offering_description={},
+                notification_url='',
+                creation_date='2013-06-03 10:00:00',
+                rating=i
+            )
+            context.top_rated.append(top_off.pk)
+
+        # Insert the offering into the top rated offerings
+        context.top_rated.append(self.offering.pk)
+        offerings_management.Context.objects.all.return_value = [context]
+
+        offerings_management.comment_offering(self.offering, comment, self.user)
+        self.offering = Offering.objects.get(pk=self.offering.pk)
+        self.assertEquals(self.offering.rating, 4.0)
+        self.assertEquals(len(self.offering.comments), 2)
+        self.assertEquals(self.offering.comments[0]['title'], 'comment')
+
+        self.assertEquals(len(context.top_rated), 4)
+        self.assertEquals(context.top_rated[0], self.offering.pk)
+
+    def test_comment_offering_errors(self):
+
+        errors = [
+            'The user cannot comment this offering',
+            'The user cannot comment this offering',
+            'Invalid comment',
+            'Invalid rating'
+        ]
+
+        # Check the different exceptions that can occur
+        comment = {
+            'title': 'comment',
+            'rating': 5,
+            'comment': 'a comment'
+        }
+        for i in range(0, 4):
+            # Load specific info for every error
+            if i == 0:
+                # Include the offering as rated
+                self.user.userprofile.rated_offerings.append(self.offering.pk)
+            elif i == 1:
+                self.user.userprofile.rated_offerings = []
+            elif i == 2:
+                self.user.userprofile.offerings_purchased.append(self.offering.pk)
+                comment = {
+                }
+            else:
+                comment = {
+                    'title': 'comment',
+                    'rating': 10,
+                    'comment': 'a comment'
+                }
+
+            self.user.userprofile.save()
+            msg = None
+            error = False
+            try:
+                offerings_management.comment_offering(self.offering, comment, self.user)
+            except Exception, e:
+                msg = e.message
+                error = True
+
+            self.assertTrue(error)
+            self.assertEquals(msg, errors[i])
