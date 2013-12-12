@@ -5,6 +5,10 @@
     margin-left: -165px;
 }
 
+#become-prov {
+    margin-left: 20px;
+}
+
 #login-form {
     border: solid 1px rgb(190, 190, 190);
     padding: 20px;
@@ -22,7 +26,7 @@
 }
 
 #logo {
-    width: 100px;
+    width: 80px;
 }
 
 .title_wrapper {
@@ -40,14 +44,34 @@
     color: rgb(102, 102, 102);
     padding: 23px;
     margin-top: -36px;
+    position: absolute;
+    top: 140px;
+    right: 0;
+}
+
+.title_wrapper span {
     position: relative;
-    top: 10px;
+    top: -6px;
 }
 
 .store_title {
     position: relative;
-    left: 110px;
-    top: -80px;
+    left: 89px;
+    top: -50px;
+    color: rgb(96, 193, 207);
+    font-family: NeoTech;
+    font-size: 30px;
+    font-weight: 200;
+    width: 117px;
+}
+
+.store_title span {
+    color: rgb(0, 45, 103);
+}
+
+.store_title h2 {
+    float: right;
+    font-family: NeoTech;
 }
 
 .navigation {
@@ -73,6 +97,51 @@
     float: left;
 }
 
+.icon-question-sign:hover {
+    cursor: pointer;
+}
+
+.offerings-container {
+    position: absolute;
+    top: 176px;
+    left:228px;
+}
+
+#notification-help {
+    float: left;
+    position: relative;
+    top: -23px;
+    left: 100px;
+}
+
+#resources-help {
+    float: left;
+    position: relative;
+    top: -23px;
+    left: 112px;
+}
+
+.question-sing-sel {
+    color: rgb(96, 193, 207);
+}
+
+.notify-controls {
+    float: left;
+    margin-left: -17px;
+}
+
+#sel-resources {
+    float: left;
+    width: 100%;
+    max-height: 345px;
+    overflow-y: auto;
+}
+
+#usdl-container {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
 .catalogue-elem {
     margin-top: 50px;
 }
@@ -85,12 +154,6 @@
     width: 200px;
 }
 
-.offerings-container {
-    position: absolute;
-    top: 200px;
-    left: 250px;
-}
-
 .search-container {
     position: absolute;
     top: 300px;
@@ -101,23 +164,26 @@
     text-align: left;
     border: 1px solid rgb(205, 206, 209);
     border-radius: 6px;
-    width: 360px;
-    height: 320px;
-    padding-bottom: 17px;
-    padding-left: 17px;
-    padding-right: 17px;
+    width: 275px;
+    height: 130px;
+    padding: 10px;
     position: relative;
     display: inline-block;
     margin-right: 20px;
     margin-bottom: 15px;
-    transition: border linear 0.2s, box-shadow linear 0.2s, background linear 0.2s;
-    -moz-transition: border linear 0.2s, box-shadow linear 0.2s, background linear 0.2s; /* Firefox 4 */
-    -webkit-transition: border linear 0.2s, box-shadow linear 0.2s, background linear 0.2s; /* Safari and Chrome */
+    transition: border linear 0.2s, box-shadow linear 0.2s, /*background linear 0.2s*/;
+    -moz-transition: border linear 0.2s, box-shadow linear 0.2s, /*background linear 0.2s*/; /* Firefox 4 */
+    -webkit-transition: border linear 0.2s, box-shadow linear 0.2s, /*background linear 0.2s*/; /* Safari and Chrome */
     overflow: hidden;
+    -webkit-box-shadow: 0 0 8px rgba(50, 50, 50, 0.1);
+    -moz-box-shadow: 0 0 8px rgba(50, 50, 50, 0.1);
+    box-shadow: 0 0 8px rgba(50, 50, 50, 0.1);
+    background: white;
+    cursor: pointer;
 }
 
 .menu-offering:hover {
-    background-color: rgb(237, 237, 237);
+    /*background-color: rgb(237, 237, 237);*/
     border-color: rgba(82, 168, 236, 0.8);
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
     -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
@@ -130,24 +196,95 @@
     background: white;
     border-radius: 4px;
     display: inline;
+    position: absolute;
+    bottom: 0;
+    left: 0;
 }
 
-.menu-offering-row {
-    position: relative;
-    float:left;
-    margin-top: 10px;
-    margin-left: 10px;
+.menu-offering-row h2{
+    width: 191px;
+    height: 20px;
+    white-space: nowrap;
+    padding-top:2px;
+    overflow: hidden;
+    position: absolute;
+    top: -8px;
+    left: 10px;
+}
+
+.menu-offering-row .label {
+    position: absolute;
+    top: 31px;
+}
+
+#off-desc {
+    position: absolute;
+    bottom: 0;
+    right: 10px;
+    width: 104px;
+    height: 71px;
+    overflow: hidden;
+}
+
+.off-org-name {
+    position: absolute;
+    top: 30px;
+    width: 192px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.mini-off-price {
+    position: absolute;
+    top: 20px;
+    left: 0px;
+    font-size: 15px;
+    width: 100%;
+}
+
+.mini-off-btn {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 80px;
+}
+
+.txt-gradient {
+  background: -webkit-linear-gradient(left, rgba(255, 255, 255, 0), rgb(255, 255, 255));
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), rgb(255, 255, 255));
+  position: absolute;
+  top: 0px;
+  width: 38px;
+  height: 100%;
+  left: 156px;
+  transition: background linear 0.2s;
+  -moz-transition: background linear 0.2s; /* Firefox 4 */
+  -webkit-transition: background linear 0.2s;
+}
+
+.menu-offering-row >.txt-gradient {
+  top: 126px;
+  width: 43px;
+  height: 17px;
+  left: 240px;
+}
+
+.org-info .txt-gradient {
+  top: 31px;
+  width: 43px;
+  height: 17px;
+  left: 161px;
 }
 
 .offering-meta {
     position: absolute;
-    top: 15px;
-    left: 250px;
-    width: 95px;
+    top: 10px;
+    left: 205px;
+    width: 87px;
 }
 
 .offering-meta i{
-    font-size: 20px;
+    font-size: 17px;
 }
 
 .details-title {
@@ -174,8 +311,7 @@
 }
 
 .main-info i {
-    font-size: 20px;
-    margin: -4px;
+    font-size: 17px;
 }
 
 .main-info input {
@@ -187,8 +323,8 @@
 
 .detailed-info {
     position: absolute;
-    top: 270px;
-    left: 260px;
+    top: 246px;
+    left: 210px;
 }
 
 #screenshots-car {
@@ -208,8 +344,11 @@
 
 .tab-button {
     position: absolute;
-    right: 20px;
     z-index: 3;
+}
+
+#user-edit {
+    right: 15px;
 }
 
 .btn-advanced {
@@ -256,7 +395,64 @@
     margin-left: 25px;
 }
 
-#user-submit {
+.admin-submit {
     margin-top: 10px;
     margin-left: 30px;
+}
+
+.blue-star {
+    color: rgb(96, 193, 207);
+}
+
+#comment-text {
+    width: 97%;
+    height: 100px;
+}
+
+.comment-rating {
+    display: inline;
+    margin-left: 10px;
+}
+
+.table i:hover {
+  cursor: pointer;
+}
+
+a {
+  color: rgb(0, 43, 103);
+}
+
+a:hover {
+  color: rgb(96, 193, 207);
+  cursor: pointer;
+}
+
+h2 {
+  color: rgb(0, 43, 103);
+}
+
+.btn-blue {
+  background-color: rgb(0, 43, 103);
+  border-color: rgb(0, 43, 103);
+}
+
+.btn-blue:hover {
+  background-color: rgb(0, 43, 103);
+}
+
+.nav-pills > .active > a, .nav-pills > .active > a:hover {
+  color: rgb(255, 255, 255);
+  background-color: rgb(0, 43, 103);
+}
+
+.add-on {
+  background-color: rgb(0, 43, 103) !important;
+}
+
+#store-return {
+  position: absolute;
+}
+
+.catalogue-form .form {
+  width: 221px;
 }

@@ -23,7 +23,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from django.shortcuts import render
 
 from wstore.oauth2provider.provider import WstoreAuthorizationProvider
-from wstore.store_commons.utils.http import build_error_response
+from wstore.store_commons.utils.http import build_response
 
 
 
@@ -37,13 +37,13 @@ def provide_authorization_code(request):
     params = dict(request.GET)
     
     if 'response_type' not in params:
-        return build_error_response(request, 400, 'Missing parameter response_type in URL query')
+        return build_response(request, 400, 'Missing parameter response_type in URL query')
 
     if 'client_id' not in params:
-        return build_error_response(request, 400, 'Missing parameter client_id in URL query')
+        return build_response(request, 400, 'Missing parameter client_id in URL query')
 
     if 'redirect_uri' not in params:
-        return build_error_response(request, 400, 'Missing parameter redirect_uri in URL query')
+        return build_response(request, 400, 'Missing parameter redirect_uri in URL query')
 
     params = {
         'response_type': params['response_type'][0],

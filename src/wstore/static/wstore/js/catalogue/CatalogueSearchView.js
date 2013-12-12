@@ -22,7 +22,26 @@
 
     var nextPage;
 
-    getUserOfferings = function getUserOfferings (target, callback, count) {
+    fillStarsRating = function fillStarsRating(rating, container) {
+        // Fill rating stars
+
+        for (var k = 0; k < 5; k ++) {
+            var icon = $('<i></i>');
+
+            if (rating == 0) {
+                icon.addClass('icon-star-empty');
+            } else if (rating > 0 && rating < 1) {
+                icon.addClass('icon-star-half-empty blue-star');
+                rating = 0;
+            } else if (rating >= 1) {
+                icon.addClass('icon-star blue-star');
+                rating = rating - 1;
+            }
+            icon.appendTo(container);
+        }
+    };
+
+    getUserOfferings = function getUserOfferings (target, callback, endpoint, count) {
 
         var filter, offeringsPage;
 
@@ -40,10 +59,14 @@
             filter += '&limit=' + offeringsPage;
             // Set the first element
             filter += '&start=' + ((offeringsPage * (nextPage - 1)) + 1);
+
+            if ($('#sorting').val() != '') {
+                filter += '&sort=' + $('#sorting').val();
+            }
         }
         $.ajax({
             type: "GET",
-            url: EndpointManager.getEndpoint('OFFERING_COLLECTION') + filter,
+            url: endpoint + filter,
             dataType: 'json',
             success: function(response) {
                 callback(target, response);
@@ -57,33 +80,109 @@
         })
     }
 
+    getPriceStr = function getPriceStr(pricing) {
+        var pricePlans;
+        var priceStr = 'Free';
+
+        if (pricing.price_plans && pricing.price_plans.length > 0) {
+            var pricePlan = pricing.price_plans[0];
+            
+            if (pricePlan.price_components && pricePlan.price_components.length > 0) {
+             // Check if it is a single payment
+                if (pricePlan.price_components.length == 1) {
+                    var component = pricePlan.price_components[0];
+                    if (component.unit.toLowerCase() == 'single payment') {
+                        priceStr = component.value;
+                        if (component.currency == 'EUR') {
+                            priceStr = priceStr + ' €';
+                        } else {
+                            priceStr = priceStr + ' £';
+                        }
+                    } else {
+                        priceStr = 'View pricing';
+                    }
+                // Check if is a complex pricing
+                } else {
+                    priceStr = 'View pricing';
+                }
+            }
+            
+        }
+
+        return priceStr;
+    };
+
     paintProvidedOfferings = function paintProvidedOfferings (target, data) {
 
         $(target).empty();
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
+            var offDetailsView = new CatalogueDetailsView(offering_elem, paintCatalogue, '#catalogue-container');
             var labelClass = "label";
+            var labelValue = offering_elem.getState();
+            var stars, templ, priceStr;
 
-            if (offering_elem.getState() == 'purchased') {
-                labelClass += " label-success";
-            } else if (offering_elem.getState() == 'published') {
-                labelClass += " label-info";
-            } else if (offering_elem.getState() == 'deleted') {
-                labelClass += " label-important";
-            }
-
+            // Append Price and button if necessary
             $.template('miniOfferingTemplate', $('#mini_offering_template'));
-            $.tmpl('miniOfferingTemplate', {
+            templ = $.tmpl('miniOfferingTemplate', {
                 'name': offering_elem.getName(),
                 'organization': offering_elem.getOrganization(),
                 'logo': offering_elem.getLogo(),
-                'state': offering_elem.getState(),
-                'rating': offering_elem.getRating(),
-                'description': offering_elem.getShortDescription(),
-                'label_class': labelClass
-            }).appendTo(target).click(paintOfferingDetails.bind(this, offering_elem, paintCatalogue, '#catalogue-container'));
+                'description': offering_elem.getShortDescription()
+            }).click((function(off) {
+                return function() {
+                    off.showView();
+                }
+            })(offDetailsView));
 
+            fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
+
+            priceStr = getPriceStr(offering_elem.getPricing())
+            // Append button
+            if ((USERPROFILE.getCurrentOrganization() != offering_elem.getOrganization()) 
+                    && (labelValue == 'published')) {
+                var padding = '18px';
+                var text = priceStr;
+                var buttonClass = "btn btn-success";
+
+                if (priceStr != 'Free') {
+                    padding = '13px';
+                    buttonClass = "btn btn-blue";
+                }
+
+                if (priceStr == 'View pricing') {
+                    text = 'Purchase';
+                }
+                $('<button></button>').addClass(buttonClass + ' mini-off-btn').text(text).click((function(off) {
+                    return function() {
+                        off.showView();
+                        off.mainAction('Purchase');
+                    }
+                })(offDetailsView)).css('padding-left', padding).appendTo(templ.find('.offering-meta'));
+            } else {
+                var span = $('<span></span>').addClass('mini-off-price').text(priceStr);
+                if (priceStr == 'Free') {
+                    span.css('color', 'green');
+                }
+                span.appendTo(templ.find('.offering-meta'));
+            }
+                
+            if (labelValue != 'published') {
+                var label = $('<span></span>');
+                if (labelValue == 'purchased' || labelValue == 'rated') {
+                    labelClass += " label-success";
+                    labelValue = 'purchased';
+                } else if (labelValue == 'deleted') {
+                    labelClass += " label-important";
+                }
+                label.addClass(labelClass).text(labelValue);
+                templ.find('.off-org-name').before(label);
+                templ.find('.off-org-name').css('width', '126px')
+                templ.find('.off-org-name').css('left', '78px');
+            }
+            templ.appendTo(target)
         }
+        setFooter();
     };
 
     setNextPage = function setNextPage (nextPag) {

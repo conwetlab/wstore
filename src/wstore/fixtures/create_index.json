@@ -39,7 +39,9 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": [],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46",
             "offering_description" : {
 		"@context" : {
 			"blueprint" : "http://bizweb.sap.com/TR/blueprint#",
@@ -300,6 +302,16 @@
 			}
 		]
             }
+        }
+    },
+    {
+        "pk": "91000aba8e06ac2115f022f0",
+        "model": "wstore.Organization",
+        "fields": {
+            "name": "test_organization",
+            "offerings_purchased": [],
+            "payment_info": {},
+            "managers": []
         }
     }
 ]

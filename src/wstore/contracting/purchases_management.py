@@ -20,10 +20,8 @@
 
 from datetime import datetime
 
-from django.contrib.sites.models import get_current_site
-
 from wstore.charging_engine.charging_engine import ChargingEngine
-from wstore.models import Purchase, Context
+from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore import charging_engine
 from wstore.contracting.purchase_rollback import PurchaseRollback
@@ -38,13 +36,13 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
 
     profile = UserProfile.objects.get(user=user)
 
-    if offering.pk in profile.offerings_purchased or offering.pk in profile.organization.offerings_purchased:
-        raise Exception('The offering has been already purchased')
+    # Check if the offering is already purchased
+    if (org_owned and offering.pk in profile.current_organization.offerings_purchased) \
+    or offering.pk in profile.offerings_purchased:
+            raise Exception('The offering has been already purchased')
 
-    org = ''
     if org_owned:
-        organization = profile.organization
-        org = organization.name
+        organization = profile.current_organization
 
     # Get the effective tax address
     if not 'tax_address' in payment_info:
@@ -93,11 +91,15 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
         customer=user,
         date=datetime.now(),
         offering=offering,
-        owner_organization=org,
         organization_owned=org_owned,
         state='pending',
         tax_address=tax
     )
+
+    # Include the owner organization if needed
+    if org_owned:
+        purchase.owner_organization = organization
+
     # Load ref
     purchase.ref = purchase.pk
     purchase.save()
@@ -114,12 +116,12 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
 
         # If no redirect URL is provided the purchase has ended so the user profile
         # info is updated
-        profile.offerings_purchased.append(offering.pk)
-        profile.save()
-
         if org_owned:
             organization.offerings_purchased.append(offering.pk)
             organization.save()
+        else:
+            profile.offerings_purchased.append(offering.pk)
+            profile.save()
 
         notify_provider(purchase)
 

@@ -10,13 +10,37 @@
     <input type="file" name="files" id="img-logo"></input>
     <label>Screen shots</label>
     <input type="file" name="files" id="screen-shots" multiple></input>
-    <label>USDL Info</label>
+    <div class="clear space"></div>
+
+    <div class="control-group">
+        <label class="control-label">Notification URL</label>
+        <div class="controls">
+            <label class="radio">
+                <input type="radio" name="notify-select" id="not-opt-1" value="default"> Use default notification URL.
+            </label>
+            <label class="radio">
+                <input type="radio" name="notify-select" id="not-opt-2" value="new"> Provide a notification URL.
+            </label>
+            <label class="radio">
+                <input type="radio" name="notify-select" id="not-opt-3" value="none"> Not use a notification URL.
+            </label>
+        </div>
+    </div>
+
+    <div class="clear space"></div>
+    <input class="hide" type="text" id="notify" placeholder="Notification URL" />
+    <div class="clear space"></div>
+
+    <label>Select how to provide offering info</label>
     <select id="usdl-sel">
         <option value="0">-----</option>
-        <option value="1">Upload USDL</option>
-        <option value="2">Provide USDL URL</option>
+        <option value="1">Update USDL info manually</option>
+        <option value="2">Upload USDL</option>
+        <option value="3">Provide USDL URL</option>
     </select>
-    <i class="icon-question-sign" id="upload-help" rel="popover" data-content="Select if you want to provide an USDL document or a link to the repository if you have already uploaded it" data-original-title="Help"></i>
+    <i class="icon-question-sign" id="upload-help" rel="popover" data-content="Select the method to provide the USDL with the new info. You can provide an USDL or provide an URL pointing to an USDL. You can also manually update the info, if you created a basic USDL when you created the offering." data-original-title="Help"></i>
+    <div id="warning-container" />
+	 <div class="space clear" />
 	<div id="usdl-container">
 	</div>
 </form>

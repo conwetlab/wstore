@@ -1,0 +1,36 @@
+.app-icon {
+  height: 40px;
+  float: left;
+}
+
+.app-info {
+  margin-left: 10px;
+  float: left;
+}
+
+.app-info p {
+  margin-bottom: 3px;
+}
+
+#app-help {
+  float: left;
+  position: relative;
+  top: -23px;
+  left: 115px;
+}
+
+#applications {
+  list-style: none;
+  display: inline;
+  float: left;
+  margin-left: -18px;
+  width: 100%;
+  margin-top: 20px;
+  max-height: 345px;
+  overflow-y: auto;
+}
+
+#applications input[type="checkbox"] {
+  float: right;
+  margin: 15px 15px 0px 0px;
+}

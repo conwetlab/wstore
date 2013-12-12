@@ -36,16 +36,8 @@
         "model": "wstore.Organization",
         "fields": {
             "name": "test_organization",
-            "offerings_purchased": []
-        }
-    },
-    {
-        "pk": "51000aba8e05ac2115f122ff",
-        "model": "wstore.UserProfile",
-        "fields": {
-            "user": "51000aba8e05ac2115f022f9",
-            "organization": "51000aba8e05ac2135f122ff",
-            "roles": ["customer", "provider"]
+            "offerings_purchased": [],
+            "managers": []
         }
     },
     {
@@ -64,8 +56,9 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": [],
-            "owner_organization": "test_organization",
-            "offering_description": {}
+            "owner_organization": "51000aba8e05ac2135f122ff",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46"
         }
     }
 ]

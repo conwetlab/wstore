@@ -61,6 +61,8 @@ class USDLParser(object):
         elif mime_type == 'text/n3' or mime_type == 'text/turtle' or mime_type == 'text/plain':
             self._graph.parse(data=usdl_document, format='n3')
         elif mime_type == 'application/json':
+            # For json-ld a conjuntive graph is needed
+            self._graph = rdflib.ConjunctiveGraph()
             self._graph.parse(data=usdl_document, format='json-ld')
         else:
             msg = _('Error the document has not a valid rdf format')
@@ -403,3 +405,67 @@ class USDLParser(object):
             raise Exception('No services included')
 
         return result
+
+
+def validate_usdl(usdl, mimetype):
+
+    valid = True
+    reason = ''
+    # Parse the USDL document
+    try:
+        parser = USDLParser(usdl, mimetype)
+        parsed_document = parser.parse()
+    except:
+        valid = False
+        reason = 'Malformed USDL'
+
+    # Check that it contains only a service
+    if valid:
+        if len(parsed_document['services_included']) != 1:
+            valid = False
+            reason = 'Only a Service included in the offering is supported'
+
+    # Check that there are not more than one price plan
+    if valid:
+        if len(parsed_document['pricing']['price_plans']) != 1:
+            valid = False
+            reason = 'Only a price plan is supported'
+
+    # Validate price components
+    if valid and 'price_components' in parsed_document['pricing']['price_plans'][0]:
+        price_components = parsed_document['pricing']['price_plans'][0]['price_components']
+
+        from wstore.charging_engine.models import Unit
+
+        currencies = []
+        for component in price_components:
+
+            # Validate currency
+            if component['currency'] != 'EUR' and component['currency'] != 'GBP':
+                valid = False
+                reason = 'A price component contains and invalid or unsupported currency'
+                break
+            else:
+                # Check that all price components has the same currency
+                if len(currencies) != 0 and (not component['currency'] in currencies):
+                    valid = False
+                    reason = 'All price components must use the same currency'
+                else:
+                    currencies.append(component['currency'])
+
+            # Validate unit
+            units = Unit.objects.filter(name=component['unit'].lower())
+            if len(units) == 0:
+                valid = False
+                reason = 'A price component contains an unsupported unit'
+                break
+
+            # Validate value
+            try:
+                float(component['value'])
+            except:
+                valid = False
+                reason = 'A price component contains an invalid value'
+                break
+
+    return (valid, reason)

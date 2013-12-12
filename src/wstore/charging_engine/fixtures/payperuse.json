@@ -55,8 +55,10 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
-            "offering_description": {}
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
         }
     },
     {
@@ -75,8 +77,10 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
-            "offering_description": {}
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
         }
     },
     {
@@ -95,8 +99,10 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
-            "offering_description": {}
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
         }
     },
     {
@@ -106,7 +112,6 @@
             "name": "test_resource",
             "version": "1.0",
             "provider": "51000aba8e05ac2115f022f9",
-            "resource_type": "download",
             "description": "Example resource",
             "state": "uploaded",
             "download_link": "",
@@ -144,7 +149,8 @@
                     "value": "1",
                     "unit": "invocation",
                     "currency": "EUR"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [],
             "pending_sdrs": [],
@@ -182,7 +188,8 @@
                     "value": "1",
                     "unit": "invocation",
                     "currency": "EUR"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [{
                 "offering": {
@@ -251,7 +258,8 @@
                     "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [],
             "pending_sdrs": [],
@@ -289,7 +297,8 @@
                     "value": "1",
                     "unit": "invocation",
                     "currency": "EUR"
-                }]
+                }],
+                "general_currency": "EUR"
             },
             "applied_sdrs": [],
             "pending_sdrs": [{
@@ -323,7 +332,7 @@
             "ref": "61004aba5e05acc115f022f0",
             "customer": "51070aba8e05cc2115f022f9",
             "organization_owned": true,
-            "owner_organization": "test_organization1",
+            "owner_organization": "90000ab08e06a02115602200",
             "date": "2013-02-05 17:06:46",
             "offering": "61000aba8e05ac2115f022f9",
             "state": "paid",
@@ -379,7 +388,9 @@
         "model": "wstore.Organization",
         "fields": {
             "name": "test_organization",
-            "offerings_purchased": []
+            "offerings_purchased": [],
+            "managers": [],
+            "private": false
         }
     },
     {
@@ -387,7 +398,9 @@
         "model": "wstore.Organization",
         "fields": {
             "name": "test_organization1",
-            "offerings_purchased": []
+            "offerings_purchased": [],
+            "managers": [],
+            "private": false
         }
     }
 ]

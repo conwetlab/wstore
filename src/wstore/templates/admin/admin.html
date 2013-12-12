@@ -2,31 +2,37 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <title>W-Store</title>
+        <title>FI-WARE Store</title>
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/aplication.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap-responsive.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/docs.css" />
-        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/font-awesome.css" />
+        <link href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/js/google-code-prettify/prettify.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/fonts/fonts.css" />
 
 	    <script type="text/javascript">
             USERNAME = "{{ user.username }}";
             // USERROLES = {{ roles }};
         </script>
-        <link href="http://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.8.2.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MessageManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserProfile.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/OrganizationUsersForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/OrganizationForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/AdminView.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/UserForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/UnitsForm.js"></script>
        
+        <script type="text/x-jquery-tmpl" id="footer_template">{% include "footer_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_conf_template">{% include "user_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="address_conf_template">{% include "address_conf_template.html" %}</script>
@@ -40,21 +46,35 @@
         <script type="text/x-jquery-tmpl" id="element_template">{% include "admin/element_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="form_template">{% include "admin/form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_form_template">{% include "admin/user_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="organization_form_template">{% include "admin/organization_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="unit_form_template">{% include "admin/unit_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="modal_template">{% include "modal_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_info_template">{% include "alert_info_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="orgs_users_template">{% include "admin/orgs_users_template.html" %}</script>
+        {% if portal %}
+            <script src="https://account.lab.fi-ware.eu/assets/signOut.js" type="text/javascript"></script>
+            <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
+        {% endif %}
 
     </head>
     <body>
-        <div class="container-fluid">
+    {% if portal %}
+        <div id="oil-bar">
+        {% include "oil/header.html" %}
+        </div>
+    {% endif %}
+        <div class="container-fluid bread-container">
             <div class="row-fluid">
+            {% if not portal %}
                 <div>
                     <img id="logo" src="{{ STATIC_URL }}assets/img/logo.png" />
                 </div>
                 <div class="store_title">
-                    <h1>Fi-ware</h1>
-                    <h2>W-Store</h2>
+                    <span>FI-</span>WARE
+                    <h2>WStore</h2>
                 </div>
+             {% endif %}
                 <div class="navigation">
                     <ul class="nav nav-pills main-menu">
                         <li ><a href="/">Store</a>
@@ -65,6 +85,7 @@
                             <a href="#">Administration</a>
                         </li>
                     </ul>
+                    {% if not portal %}
                     <div class="btn btn-success float-right dropdown">
                         <div href="#" class="dropdown-toggle" data-toggle="dropdown">
                             <i class="icon-user icon-white"></i>
@@ -76,14 +97,15 @@
                             <li><a href="/logout">Logout</a></li>
                         </ul>
                     </div>
+                    {% endif %}
                 </div>
             </div>
             <div class="row-fluid title_wrapper">
-                Administration
+                <span>Administration</span>
             </div>
         </div>
         <div class="container-fluid" >
-            <div class="row">
+            <div class="row-fluid">
                 <div id="message-container"></div>
             </div>
             <div class="row">
@@ -92,5 +114,17 @@
             </div>
             </div>
         </div>
+        {% if oil %}
+        <footer>
+            <div>
+                2013 &#169;
+            <a href="http://fi-ware.eu/">FI-WARE</a>
+            Usage of FI-LAB services subject to acceptance of
+            <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Terms_and_Conditions">Terms and conditions</a>
+            and
+            <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Personal_Data_Protection_Policy">Personal Data Protection Policy</a>
+            </div>
+        </footer>
+        {% endif %}
     </body>
 </html>

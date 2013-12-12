@@ -19,12 +19,14 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 from django.db import models
+from djangotoolbox.fields import ListField
 
 
 class RSS(models.Model):
     name = models.CharField(max_length=50)
     host = models.CharField(max_length=100)
     correlation_number = models.IntegerField(default=0)
+    pending_cdrs = ListField()
 
     class Meta:
         app_label = 'wstore'

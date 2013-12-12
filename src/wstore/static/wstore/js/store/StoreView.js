@@ -20,30 +20,34 @@
 
 (function () {
 
-    searchOfferings = function searchOfferings () {
-        var text = $('#text-search').val();
+    refreshView = function refreshView() {
+        $('home-container').empty();
+        paintHomePage();
+    };
 
-        if (text != '') {
-            $.ajax({
-                type: "GET",
-                url: EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': text}),
-                dataType: 'json',
-                success: function(response) {
-                    paintSearchView(response);
-                },
-                error: function(xhr) {
-                    var resp = xhr.responseText;
-                    var msg = JSON.parse(resp).message;
-                    MessageManager.showMessage('Error', msg);
-                }
-            });
+    fillStarsRating = function fillStarsRating(rating, container) {
+        // Fill rating stars
+
+        for (var k = 0; k < 5; k ++) {
+            var icon = $('<i></i>');
+
+            if (rating == 0) {
+                icon.addClass('icon-star-empty');
+            } else if (rating > 0 && rating < 1) {
+                icon.addClass('icon-star-half-empty blue-star');
+                rating = 0;
+            } else if (rating >= 1) {
+                icon.addClass('icon-star blue-star');
+                rating = rating - 1;
+            }
+            icon.appendTo(container);
         }
     };
 
     getOfferings = function getOfferings(endpoint, container, callback) {
          $.ajax({
             type: "GET",
-            url: EndpointManager.getEndpoint(endpoint),
+            url: endpoint,
             dataType: 'json',
             success: function(response) {
                 if (callback) {
@@ -61,6 +65,37 @@
         });
     };
 
+    getPriceStr = function getPriceStr(pricing) {
+        var pricePlans;
+        var priceStr = 'Free';
+
+        if (pricing.price_plans && pricing.price_plans.length > 0) {
+            var pricePlan = pricing.price_plans[0];
+
+            if (pricePlan.price_components && pricePlan.price_components.length > 0) {
+             // Check if it is a single payment
+                if (pricePlan.price_components.length == 1) {
+                    var component = pricePlan.price_components[0];
+                    if (component.unit.toLowerCase() == 'single payment') {
+                        priceStr = component.value;
+                        if (component.currency == 'EUR') {
+                            priceStr = priceStr + ' €';
+                        } else {
+                            priceStr = priceStr + ' £';
+                        }
+                    } else {
+                        priceStr = 'View pricing';
+                    }
+                // Check if is a complex pricing
+                } else {
+                    priceStr = 'View pricing';
+                }
+            }
+        }
+
+        return priceStr;
+    };
+
     paintOfferings = function paintOfferings(data, container, backAct) {
         var action = paintHomePage;
         container.empty();
@@ -71,27 +106,73 @@
 
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
+            var offDetailsView = new CatalogueDetailsView(offering_elem, action, '#home-container');
             var labelClass = "label";
+            var labelValue = offering_elem.getState();
+            var stars, templ, priceStr;
 
-            if (offering_elem.getState() == 'purchased') {
-                labelClass += " label-success";
-            } else if (offering_elem.getState() == 'published') {
-                labelClass += " label-info";
-            } else if (offering_elem.getState() == 'deleted') {
-                labelClass += " label-important";
-            }
-
+            // Append Price and button if necessary
             $.template('miniOfferingTemplate', $('#mini_offering_template'));
-            $.tmpl('miniOfferingTemplate', {
+            templ = $.tmpl('miniOfferingTemplate', {
                 'name': offering_elem.getName(),
                 'organization': offering_elem.getOrganization(),
                 'logo': offering_elem.getLogo(),
-                'state': offering_elem.getState(),
-                'rating': offering_elem.getRating(),
-                'description': offering_elem.getShortDescription(),
-                'label_class': labelClass
-            }).appendTo(container).click(paintOfferingDetails.bind(this, offering_elem, action, '#home-container'));
+                'description': offering_elem.getShortDescription()
+            }).click((function(off) {
+                return function() {
+                    off.showView();
+                }
+            })(offDetailsView));
+
+            fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
+
+            priceStr = getPriceStr(offering_elem.getPricing())
+            // Append button
+            if ((USERPROFILE.getCurrentOrganization() != offering_elem.getOrganization()) 
+                    && (labelValue == 'published')) {
+                var padding = '18px';
+                var text = priceStr;
+                var buttonClass = "btn btn-success";
+
+                if (priceStr != 'Free') {
+                    padding = '13px';
+                    buttonClass = "btn btn-blue";
+                }
+
+                if (priceStr == 'View pricing') {
+                    text = 'Purchase';
+                }
+                $('<button></button>').addClass(buttonClass + ' mini-off-btn').text(text).click((function(off) {
+                    return function() {
+                        off.showView();
+                        off.mainAction('Purchase');
+                    }
+                })(offDetailsView)).css('padding-left', padding).appendTo(templ.find('.offering-meta'));
+            } else {
+                var span = $('<span></span>').addClass('mini-off-price').text(priceStr);
+                if (priceStr == 'Free') {
+                    span.css('color', 'green');
+                }
+                span.appendTo(templ.find('.offering-meta'));
+            }
+                
+            if (labelValue != 'published') {
+                var label = $('<span></span>');
+                if (labelValue == 'purchased' || labelValue == 'rated') {
+                    labelClass += " label-success";
+                    labelValue = 'purchased';
+                } else if (labelValue == 'deleted') {
+                    labelClass += " label-important";
+                }
+                label.addClass(labelClass).text(labelValue);
+                templ.find('.off-org-name').before(label);
+                templ.find('.off-org-name').css('width', '126px')
+                templ.find('.off-org-name').css('left', '78px');
+            }
+
+            templ.appendTo(container)
         }
+        setFooter();
     }
 
     paintHomePage = function paintHomePage () {
@@ -99,15 +180,126 @@
         $.template('homePageTemplate', $('#home_page_template'));
         $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
 
-        // Set search listeners
-        $('#search').click(searchOfferings);
+        $('#search').click(function() {
+            if ($.trim($('#text-search').val()) != '') {
+                initSearchView('SEARCH_ENTRY');
+            }
+        });
+
+        // Set listener for enter key
+        $('#text-search').keypress(function(e) {
+            if (e.which == 13 && $.trim($(this).val()) != '') {
+                e.preventDefault();
+                e.stopPropagation();
+                initSearchView('SEARCH_ENTRY');
+            }
+        });
+
         $('#all').click(function() {
-            getOfferings('OFFERING_COLLECTION', '', paintSearchView);
+            initSearchView('OFFERING_COLLECTION');
         })
+
+        if (USERPROFILE.getUserRoles().indexOf('admin') == -1) {
+            // The navigation menu width depends on the presence of the FI-LAB bar
+            if ($('#oil-nav').length > 0) {
+                $('.navigation').css('width', '188px');
+            } else {
+                $('.navigation').css('width', '278px');
+            }
+        }
         // Get initial offerings
-        getOfferings('NEWEST_COLLECTION', $('#newest-container'));
-        getOfferings('TOPRATED_COLLECTION', $('#top-rated-container'));
+        calculatePositions();
+        getOfferings(EndpointManager.getEndpoint('NEWEST_COLLECTION'), $('#newest-container'));
+        getOfferings(EndpointManager.getEndpoint('TOPRATED_COLLECTION'), $('#top-rated-container'));
     };
 
-    $(document).ready(paintHomePage);
+    setFooter = function setFooter() {
+        // Append the terms and conditions bar
+        // Check if the bar is included
+        if ($('footer').length > 0) {
+            $('footer').remove();
+        }
+        // Create the new footer
+        $.template('footerTemplate', $('#footer_template'));
+        $.tmpl('footerTemplate').appendTo('body');
+        if ($(window).height() < $(document).height()) {
+            $('footer').css('position', 'absolute').css('top', ($(document).height()) + 'px');
+        } else {
+            $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
+        }
+    }
+
+    calculatePositions = function calculatePositions() {
+        var filabInt = $('#oil-nav').length > 0;
+
+        // Check window width
+        if ($(window).width() < 981) {
+            // Change headers position to avoid problems with bootstrap responsive
+
+            if (filabInt) {
+                $('.title_wrapper').css('top', '-30px');
+                $('.navigation').css('top', '-109px');
+            }
+
+            // Check if search view is active
+            if ($('.search-container').length > 0) {
+                $('.catalogue-form .form').removeAttr('style');
+                $('.catalogue-form').css('margin-left', '0');
+                if ($(window).width() < 769) { // Responsive activation width
+                    var sortMargin;
+
+                    $('.catalogue-form .form').css('width', '100%');
+                    $('.pagination').removeAttr('style');
+                    $('.search-container').removeAttr('style');
+                    $('.search-container').css('left', '20px');
+
+                    if (!filabInt) {
+                        $('.search-container').css('top', '427px');
+                    }
+
+                    // Calculate sorting position
+                    sortMargin = Math.floor(($(window).width()/2) - $('#sorting').width() -12);
+                    $('#sorting').css('margin-left', sortMargin + 'px');
+                    $('h2:contains(Sort by)').css('margin-left', sortMargin + 'px');
+                } else {
+                    $('.catalogue-form').css('margin-left', '0');
+                    $('.search-container').removeAttr('style');
+
+                    if (filabInt) {
+                        $('.search-container').css('top', '130px');
+                    } else {
+                        $('.search-container').css('top', '280px');
+                    }
+
+                    $('#sorting').removeAttr('style');
+                    $('h2:contains(Sort by)').removeAttr('style');
+                }
+            }
+        } else {
+            if (filabInt) {
+                $('.title_wrapper').css('top', '140px');
+                $('.navigation').css('top', '60px');
+            }
+
+            if ($('.search-container').length > 0) {
+                $('.catalogue-form .form').removeAttr('style');
+                $('.catalogue-form').css('margin-left', '0');
+                $('.search-container').removeAttr('style');
+                $('#sorting').removeAttr('style');
+                $('h2:contains(Sort by)').removeAttr('style');
+            }
+        }
+        // Check username length to avoid display problems
+        if ($.trim($('div.btn.btn-success > div.dropdown-toggle').text()).length > 12) {
+            var shortName = ' '+ USERNAME.substring(0, 9) + '...';
+            // Replace user button contents
+            var userBtn = $('div.btn.btn-success > div.dropdown-toggle');
+            userBtn.empty();
+            userBtn.text(shortName);
+            userBtn.prepend($('<i></i>').addClass('icon-user icon-white'));
+            userBtn.append($('<b></b>').addClass('caret'));
+        }
+        setFooter();
+    }
+    $(window).resize(calculatePositions);
 })();

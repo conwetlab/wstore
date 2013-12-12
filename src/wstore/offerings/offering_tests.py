@@ -22,6 +22,7 @@ import pymongo
 import os
 import base64
 import json
+from mock import MagicMock
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -37,6 +38,7 @@ from wstore.models import Organization
 
 
 __test__ = False
+
 
 class FakeRepositoryAdaptor():
 
@@ -63,7 +65,10 @@ class FakeRepositoryAdaptor():
         path = os.path.join(settings.BASEDIR, 'wstore/test/')
         f = open(os.path.join(path, 'test_usdl.rdf'), 'rb')
         # Return the content
-        return f.read()
+        return {
+            'content_type': 'application/rdf+xml',
+            'data': f.read()
+        }
 
 
 class FakeMarketAdaptor():
@@ -127,6 +132,7 @@ class OfferingCreationTestCase(TestCase):
         connection = pymongo.MongoClient()
         cls._db = connection.test_database
 
+        settings.OILAUTH = False
         # Capture repository calls
         offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
         offerings_management.SearchEngine = FakeSearchEngine
@@ -196,10 +202,14 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
-        offerings_management.create_offering(user, profile, data)
+        offerings_management.create_offering(user, data)
         content = self._db.wstore_offering.find_one({"name": "test_offering"})
 
         self.assertEqual(content['name'], 'test_offering')
@@ -245,10 +255,14 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
-        offerings_management.create_offering(user, profile, data)
+        offerings_management.create_offering(user, data)
         content = self._db.wstore_offering.find_one({"name": "test_offering"})
 
         self.assertEqual(content['name'], 'test_offering')
@@ -274,19 +288,20 @@ class OfferingCreationTestCase(TestCase):
                 'data': self._image,
             },
             'related_images': [],
-            'description_url': {
-                'content_type': 'application/rdf+xml',
-                'link': 'http://examplerep/v1/test_usdl'
-            }
+            'description_url': 'http://examplerep/v1/test_usdl'
         }
 
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
-        offerings_management.create_offering(user, profile, data)
+        offerings_management.create_offering(user, data)
         content = self._db.wstore_offering.find_one({"name": "test_offering"})
 
         self.assertEqual(content['name'], 'test_offering')
@@ -316,11 +331,15 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
         error = False
         try:
-            offerings_management.create_offering(user, profile, data)
+            offerings_management.create_offering(user, data)
         except Exception, e:
             error = True
             msg = e.message
@@ -349,11 +368,15 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
         error = False
         try:
-            offerings_management.create_offering(user, profile, data)
+            offerings_management.create_offering(user, data)
         except Exception:
             error = True
 
@@ -380,11 +403,15 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
         error = False
         try:
-            offerings_management.create_offering(user, profile, data)
+            offerings_management.create_offering(user, data)
         except:
             error = True
 
@@ -409,14 +436,18 @@ class OfferingCreationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
         error = False
         msg = None
 
         try:
-            offerings_management.create_offering(user, profile, data)
+            offerings_management.create_offering(user, data)
         except Exception, e:
             error = True
             msg = e.message
@@ -473,10 +504,7 @@ class OfferingUpdateTestCase(TestCase):
     def test_offering_update_from_url(self):
 
         data = {
-            'description_url': {
-                'content_type': 'application/rdf+xml',
-                'link': "http://examplerep/v1/test_usdl"
-            }
+            'description_url':  "http://examplerep/v1/test_usdl"
         }
         offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
 
@@ -551,41 +579,97 @@ class OfferingRetrievingTestCase(TestCase):
 
     def test_get_all_provider_offerings(self):
         user = User.objects.get(username='test_user')
+        user_org = Organization.objects.get(name=user.username)
+
+        for off in Offering.objects.all():
+            off.owner_organization = user_org
+            off.save()
+
         offerings = offerings_management.get_offerings(user, 'all', owned=True)
         self.assertEqual(len(offerings), 3)
 
         # Check published offering
-        self.assertEqual(offerings[2]['name'], 'test_offering3')
-        self.assertEqual(offerings[2]['version'], '1.0')
-        self.assertEqual(offerings[2]['state'], 'published')
-        self.assertEqual(offerings[2]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[2]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[2]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
+        for off in offerings:
+            if off['name'] == 'test_offering3':
+                self.assertEqual(off['name'], 'test_offering3')
+                self.assertEqual(off['version'], '1.0')
+                self.assertEqual(off['state'], 'published')
+                self.assertEqual(off['owner_organization'], 'test_user')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
 
-        self.assertEqual(len(offerings[2]['resources']), 1)
-        resource = offerings[2]['resources'][0]
+                self.assertEqual(len(off['resources']), 1)
+                resource = off['resources'][0]
+
+                self.assertEqual(resource['name'], 'test_resource')
+                self.assertEqual(resource['description'], 'Example resource')
+
+    def test_get_all_provider_offerings_org(self):
+        user = User.objects.get(username='test_user')
+        user_org = Organization.objects.get(name=user.username)
+
+        org = Organization.objects.get(name='test_organization')
+        user.userprofile.current_organization = org
+        user.userprofile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
+        user.userprofile.save()
+
+        off1 = Offering.objects.get(name='test_offering1')
+        off1.owner_organization = user_org
+        off1.save()
+
+        off2 = Offering.objects.get(name='test_offering2')
+        off2.owner_organization = user_org
+        off2.save()
+
+        offerings = offerings_management.get_offerings(user, 'all', owned=True)
+        self.assertEqual(len(offerings), 1)
+
+        # Check published offering
+        self.assertEqual(offerings[0]['name'], 'test_offering3')
+        self.assertEqual(offerings[0]['version'], '1.0')
+        self.assertEqual(offerings[0]['state'], 'published')
+        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
+        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
+        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
+
+        self.assertEqual(len(offerings[0]['resources']), 1)
+        resource = offerings[0]['resources'][0]
 
         self.assertEqual(resource['name'], 'test_resource')
         self.assertEqual(resource['description'], 'Example resource')
 
     def test_get_provider_uploaded_offerings(self):
+
         user = User.objects.get(username='test_user')
+        org = Organization.objects.get(name='test_organization')
+        user.userprofile.current_organization = org
+        user.userprofile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
+        user.userprofile.save()
+
         offerings = offerings_management.get_offerings(user, 'uploaded', owned=True)
         self.assertEqual(len(offerings), 2)
 
-        self.assertEqual(offerings[0]['name'], 'test_offering1')
-        self.assertEqual(offerings[0]['version'], '1.0')
-        self.assertEqual(offerings[0]['state'], 'uploaded')
-        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
-
-        self.assertEqual(offerings[1]['name'], 'test_offering2')
-        self.assertEqual(offerings[1]['version'], '1.1')
-        self.assertEqual(offerings[1]['state'], 'uploaded')
-        self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+        for off in offerings:
+            if off['name'] == 'test_offering1':
+                self.assertEqual(off['name'], 'test_offering1')
+                self.assertEqual(off['version'], '1.0')
+                self.assertEqual(off['state'], 'uploaded')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
+            else:
+                self.assertEqual(off['name'], 'test_offering2')
+                self.assertEqual(off['version'], '1.1')
+                self.assertEqual(off['state'], 'uploaded')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
 
 
 class PurchasedOfferingRetrievingTestCase(TestCase):
@@ -604,51 +688,62 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         user = User.objects.get(username='test_user2')
         profile = UserProfile.objects.get(user=user)
         profile.offerings_purchased = ['11000aba8e05ac2115f022f9']
-        org = Organization.objects.create(name='test_organization1')
+        org = Organization.objects.get(name='test_organization1')
         org.offerings_purchased = ['21000aba8e05ac2115f022ff', '11000aba8e05ac2115f022f9']
         org.save()
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
         offerings = offerings_management.get_offerings(user, 'purchased', owned=True)
 
         self.assertEqual(len(offerings), 2)
-        self.assertEqual(offerings[0]['name'], 'test_offering1')
-        self.assertEqual(offerings[0]['version'], '1.0')
-        self.assertEqual(offerings[0]['state'], 'purchased')
-        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
-        self.assertEqual(len(offerings[0]['bill']), 1)
-        self.assertEqual(offerings[0]['bill'][0], '/media/bills/61005aba8e05ac2115f022f0.pdf')
-        components = offerings[0]['offering_description']['pricing']['price_plans'][0]['price_components']
-        self.assertEqual(components[0]['title'], 'price component 1')
-        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
-        self.assertEqual(components[1]['title'], 'price component 2')
-        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
+        for off in offerings:
+            if off['name'] == 'test_offering1':
+                self.assertEqual(off['name'], 'test_offering1')
+                self.assertEqual(off['version'], '1.0')
+                self.assertEqual(off['state'], 'purchased')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
+                self.assertEqual(len(off['bill']), 1)
+                self.assertEqual(off['bill'][0], '/media/bills/61005aba8e05ac2115f022f0.pdf')
+                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
+                self.assertEqual(components[0]['title'], 'price component 1')
+                self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
+                self.assertEqual(components[1]['title'], 'price component 2')
+                self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
+            else:
 
-        self.assertEqual(offerings[1]['name'], 'test_offering2')
-        self.assertEqual(offerings[1]['version'], '1.1')
-        self.assertEqual(offerings[1]['state'], 'purchased')
-        self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
-        self.assertEqual(len(offerings[1]['bill']), 1)
-        self.assertEqual(offerings[1]['bill'][0], '/media/bills/61006aba8e05ac2115f022f0.pdf')
-        components = offerings[1]['offering_description']['pricing']['price_plans'][0]['price_components']
-        self.assertEqual(components[0]['title'], 'price component 1')
-        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
-        self.assertEqual(components[1]['title'], 'price component 2')
-        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
+                self.assertEqual(off['name'], 'test_offering2')
+                self.assertEqual(off['version'], '1.1')
+                self.assertEqual(off['state'], 'purchased')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+                self.assertEqual(len(off['bill']), 1)
+                self.assertEqual(off['bill'][0], '/media/bills/61006aba8e05ac2115f022f0.pdf')
+                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
+                self.assertEqual(components[0]['title'], 'price component 1')
+                self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
+                self.assertEqual(components[1]['title'], 'price component 2')
+                self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
 
     def test_get_published_offerings(self):
         user = User.objects.get(username='test_user2')
         profile = UserProfile.objects.get(user=user)
         profile.offerings_purchased = ['11000aba8e05ac2115f022f9']
-        org = Organization.objects.create(name='test_organization1')
+        org = Organization.objects.get(name='test_organization1')
         org.offerings_purchased = ['21000aba8e05ac2115f022ff', '11000aba8e05ac2115f022f9']
         org.save()
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
         offerings = offerings_management.get_offerings(user)
@@ -704,6 +799,13 @@ class OfferingPaginationTestCase(TestCase):
         }
 
         user = User.objects.get(username='test_user')
+        org = Organization.objects.get(name='test_organization')
+        user.userprofile.current_organization = org
+        user.userprofile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
+        user.userprofile.save()
         offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
 
         self.assertEqual(len(offerings), 3)
@@ -728,19 +830,27 @@ class OfferingPaginationTestCase(TestCase):
         self.assertEqual(offerings[4]['name'], 'test_offering8')
 
     def test_retrieving_pagination_half_page(self):
+
         pagination = {
             'skip': '8',
             'limit': '10'
         }
 
         user = User.objects.get(username='test_user')
-        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
+        org = Organization.objects.get(name='test_organization')
+        user.userprofile.current_organization = org
+        user.userprofile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
+        user.userprofile.save()
+        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination, sort='name')
 
         self.assertEqual(len(offerings), 3)
 
-        self.assertEqual(offerings[0]['name'], 'test_offering8')
-        self.assertEqual(offerings[1]['name'], 'test_offering9')
-        self.assertEqual(offerings[2]['name'], 'test_offering10')
+        self.assertEqual(offerings[0]['name'], 'test_offering7')
+        self.assertEqual(offerings[1]['name'], 'test_offering8')
+        self.assertEqual(offerings[2]['name'], 'test_offering9')
 
     def test_retrieving_pagination_invalid_limit(self):
         pagination = {
@@ -803,31 +913,22 @@ class PurchasedOfferingPaginationTestCase(TestCase):
         user = User.objects.get(username='test_user')
         profile = UserProfile.objects.get(user=user)
         profile.offerings_purchased = ['11000aba8e05ac2115f022f9', '21000aba8e05ac2115f022ff', '31000aba8e05ac2115f022f0']
-        org = Organization.objects.create(name='test_organization1')
+        org = Organization.objects.get(name='test_organization1')
         org.offerings_purchased = ['41000aba8e05ac2115f022f0', '51100aba8e05ac2115f022f0']
         org.save()
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations.append({
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        })
         profile.save()
 
-        offerings = offerings_management.get_offerings(user, filter_='purchased', owned=True, pagination=pagination)
+        offerings = offerings_management.get_offerings(user, filter_='purchased', owned=True, pagination=pagination, sort='name')
 
         self.assertEqual(len(offerings), 2)
 
-        self.assertEqual(offerings[0]['name'], 'test_offering1')
-        self.assertEqual(offerings[1]['name'], 'test_offering2')
-
-        pagination = {
-            'skip': '3',
-            'limit': '5'
-        }
-
-        offerings = offerings_management.get_offerings(user, filter_='purchased', owned=True, pagination=pagination)
-
-        self.assertEqual(len(offerings), 3)
-
-        self.assertEqual(offerings[0]['name'], 'test_offering3')
-        self.assertEqual(offerings[1]['name'], 'test_offering4')
-        self.assertEqual(offerings[2]['name'], 'test_offering5')
+        self.assertEqual(offerings[0]['name'], 'test_offering4')
+        self.assertEqual(offerings[1]['name'], 'test_offering5')
 
 
 class OfferingPublicationTestCase(TestCase):
@@ -907,25 +1008,14 @@ class OfferingPublicationTestCase(TestCase):
 
         self.assertTrue(error)
 
-    def test_publish_offering_no_resources(self):
-        data = {
-            'marketplaces': ['test_market']
-        }
-        offering = Offering.objects.get(name='test_offering2')
-        error = False
-        try:
-            offerings_management.publish_offering(offering, data)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, 'It is not possible to publish an offering without resources')
-
 
 class OfferingBindingTestCase(TestCase):
 
     fixtures = ['bind.json']
+
+    @classmethod
+    def setUpClass(cls):
+        settings.OILAUTH = False
 
     def test_basic_binding(self):
         data = [{
@@ -934,6 +1024,11 @@ class OfferingBindingTestCase(TestCase):
         }]
         offering = Offering.objects.get(name='test_offering1')
         provider = User.objects.get(username='test_user')
+        org = Organization.objects.get(name=provider.username)
+        resource = Resource.objects.get(name='test_resource1')
+        resource.provider = org
+        resource.save()
+
         offerings_management.bind_resources(offering, data, provider)
         offering = Offering.objects.get(name='test_offering1')
 
@@ -953,6 +1048,16 @@ class OfferingBindingTestCase(TestCase):
         }]
         offering = Offering.objects.get(name='test_offering2')
         provider = User.objects.get(username='test_user')
+
+        org = Organization.objects.get(name=provider.username)
+        resource = Resource.objects.get(name='test_resource1')
+        resource.provider = org
+        resource.save()
+
+        resource = Resource.objects.get(name='test_resource3')
+        resource.provider = org
+        resource.save()
+
         offerings_management.bind_resources(offering, data, provider)
         offering = Offering.objects.get(name='test_offering2')
 
@@ -1026,3 +1131,229 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.delete_offering(offering)
         offering = Offering.objects.get(name='test_offering3')
         self.assertEqual(offering.state, 'deleted')
+
+
+class OfferingRatingTestCase(TestCase):
+
+    tags = ('fiware-ut-24',)
+
+    def setUp(self):
+        # Create testing user
+        self.user = User.objects.create_user(
+            username='test_user',
+            email='',
+            password='passwd'
+        )
+        self.offering = Offering.objects.create(
+            name='test_offering',
+            owner_organization=Organization.objects.get(name=self.user.username),
+            owner_admin_user=self.user,
+            version='1.0',
+            state='published',
+            description_url='',
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date='2013-06-03 10:00:00'
+        )
+
+    def test_comment_offering(self):
+
+        # Set user info
+        self.user.userprofile.offerings_purchased.append(self.offering.pk)
+        self.user.userprofile.save()
+
+        # Set comment info
+        comment = {
+            'title': 'comment',
+            'rating': 5,
+            'comment': 'a comment'
+        }
+        offerings_management.Context = MagicMock()
+        context = MagicMock()
+        context.top_rated = []
+        offerings_management.Context.objects.all.return_value = [context]
+
+        offerings_management.comment_offering(self.offering, comment, self.user)
+        self.offering = Offering.objects.get(pk=self.offering.pk)
+        self.assertEquals(self.offering.rating, 5)
+        self.assertEquals(len(self.offering.comments), 1)
+        self.assertEquals(self.offering.comments[0]['title'], 'comment')
+
+        self.assertEquals(len(context.top_rated), 1)
+        self.assertEquals(context.top_rated[0], self.offering.pk)
+
+    def test_comment_offering_top_rated(self):
+
+        # Set user info
+        org = Organization.objects.get(name=self.user.username)
+        self.user.userprofile.organizations = [{
+            'organization': org.pk
+        }]
+        org.offerings_purchased.append(self.offering.pk)
+        org.save()
+        self.user.userprofile.save()
+
+        self.offering.rating = 3.0
+        self.offering.comments = [{
+            'title': 'initial comment',
+            'rating': 3,
+            'comment': 'initial comment'
+        }]
+        self.offering.save()
+
+        # Set comment info
+        comment = {
+            'title': 'comment',
+            'rating': 5,
+            'comment': 'a comment'
+        }
+
+        offerings_management.Context = MagicMock()
+        context = MagicMock()
+        context.top_rated = []
+
+        # Load top rated offerings
+        for i in range(1, 5):
+            top_off = Offering.objects.create(
+                name='test_offering' + str(i),
+                owner_organization=Organization.objects.get(name=self.user.username),
+                owner_admin_user=self.user,
+                version='1.0',
+                state='published',
+                description_url='',
+                resources=[],
+                comments=[],
+                tags=[],
+                image_url='',
+                related_images=[],
+                offering_description={},
+                notification_url='',
+                creation_date='2013-06-03 10:00:00',
+                rating=i
+            )
+            context.top_rated.append(top_off.pk)
+
+        offerings_management.Context.objects.all.return_value = [context]
+
+        offerings_management.comment_offering(self.offering, comment, self.user)
+        self.offering = Offering.objects.get(pk=self.offering.pk)
+        self.assertEquals(self.offering.rating, 4.0)
+        self.assertEquals(len(self.offering.comments), 2)
+        self.assertEquals(self.offering.comments[0]['title'], 'comment')
+
+        self.assertEquals(len(context.top_rated), 4)
+        self.assertEquals(context.top_rated[0], self.offering.pk)
+
+    def test_comment_offering_top_rated_sorting(self):
+
+        # Set user info
+        org = Organization.objects.get(name=self.user.username)
+        self.user.userprofile.organizations = [{
+            'organization': org.pk
+        }]
+        org.offerings_purchased.append(self.offering.pk)
+        org.save()
+        self.user.userprofile.save()
+
+        self.offering.rating = 3.0
+        self.offering.comments = [{
+            'title': 'initial comment',
+            'rating': 3,
+            'comment': 'initial comment'
+        }]
+        self.offering.save()
+
+        # Set comment info
+        comment = {
+            'title': 'comment',
+            'rating': 5,
+            'comment': 'a comment'
+        }
+
+        offerings_management.Context = MagicMock()
+        context = MagicMock()
+        context.top_rated = []
+
+        # Load top rated offerings
+        for i in range(1, 4):
+            top_off = Offering.objects.create(
+                name='test_offering' + str(i),
+                owner_organization=Organization.objects.get(name=self.user.username),
+                owner_admin_user=self.user,
+                version='1.0',
+                state='published',
+                description_url='',
+                resources=[],
+                comments=[],
+                tags=[],
+                image_url='',
+                related_images=[],
+                offering_description={},
+                notification_url='',
+                creation_date='2013-06-03 10:00:00',
+                rating=i
+            )
+            context.top_rated.append(top_off.pk)
+
+        # Insert the offering into the top rated offerings
+        context.top_rated.append(self.offering.pk)
+        offerings_management.Context.objects.all.return_value = [context]
+
+        offerings_management.comment_offering(self.offering, comment, self.user)
+        self.offering = Offering.objects.get(pk=self.offering.pk)
+        self.assertEquals(self.offering.rating, 4.0)
+        self.assertEquals(len(self.offering.comments), 2)
+        self.assertEquals(self.offering.comments[0]['title'], 'comment')
+
+        self.assertEquals(len(context.top_rated), 4)
+        self.assertEquals(context.top_rated[0], self.offering.pk)
+
+    def test_comment_offering_errors(self):
+
+        errors = [
+            'The user cannot comment this offering',
+            'The user cannot comment this offering',
+            'Invalid comment',
+            'Invalid rating'
+        ]
+
+        # Check the different exceptions that can occur
+        comment = {
+            'title': 'comment',
+            'rating': 5,
+            'comment': 'a comment'
+        }
+        for i in range(0, 4):
+            # Load specific info for every error
+            if i == 0:
+                # Include the offering as rated
+                self.user.userprofile.rated_offerings.append(self.offering.pk)
+            elif i == 1:
+                self.user.userprofile.rated_offerings = []
+            elif i == 2:
+                self.user.userprofile.offerings_purchased.append(self.offering.pk)
+                comment = {
+                }
+            else:
+                comment = {
+                    'title': 'comment',
+                    'rating': 10,
+                    'comment': 'a comment'
+                }
+
+            self.user.userprofile.save()
+            msg = None
+            error = False
+            try:
+                offerings_management.comment_offering(self.offering, comment, self.user)
+            except Exception, e:
+                msg = e.message
+                error = True
+
+            self.assertTrue(error)
+            self.assertEquals(msg, errors[i])

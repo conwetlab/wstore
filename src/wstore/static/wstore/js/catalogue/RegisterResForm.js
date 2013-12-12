@@ -38,6 +38,23 @@
         reader.readAsBinaryString(f);
     };
 
+    var helpHandler = function helpHandler(evnt) {
+        var helpId = evnt.target;
+        if (!$(helpId).prop('displayed')) {
+            $(helpId).popover('show');
+            $(helpId).prop('displayed', true);
+            $(helpId).addClass('question-sing-sel');
+            // Add document even
+            event.stopPropagation();
+            $(document).click(function() {
+                $(helpId).popover('hide');
+                $(helpId).prop('displayed', false);
+                $(helpId).removeClass('question-sing-sel');
+                $(document).unbind('click');
+            });
+        }
+    };
+
     var makeRegisterResRequest = function makeRegisterResRequest (evnt) {
          var name, version, link, contentType, request = {};
 
@@ -49,14 +66,12 @@
          description = $.trim($('[name="res-description"]').val());
 
          if (name && version) {
-             if ($('[name="res-type"]').val() == 'download') {
-                 request.content_type = contentType
-             }
+
+             request.content_type = contentType
              csrfToken = $.cookie('csrftoken');
              request.name = name;
              request.version = version;
              request.description = description;
-             request.type = $('[name="res-type"]').val();
 
              if (resource) {
                  request.content = resource;
@@ -100,27 +115,31 @@
         $.template('registerResTemplate', $('#register_res_form_template'));
         $.tmpl('registerResTemplate', {}).appendTo('.modal-body');
 
-        //Set listeners
-        $('#upload-help').on('hover', function () {
-            $('#upload-help').popover('show');
-        })
-        $('#link-help').on('hover', function () {
-            $('#link-help').popover('show');
-        })
 
-        $('[name="res-type"]').on('change', function() {
-            if ($(this).val() == 'api') {
-                $('[name="res-content-type"]').addClass('hide');
-                $('#upload').addClass('hide');
-                $('label:contains(Content type)').addClass('hide');
-                $('label:contains(Upload resource)').addClass('hide');
-                $('#upload-help').addClass('hide');
-            } else {
-                $('[name="res-content-type"]').removeClass('hide');
+        // Configure help messages
+        $('#upload-help').popover({'trigger': 'manual'});
+        $('#link-help').popover({'trigger': 'manual'});
+
+        //Set listeners
+        $('#upload-help').click(helpHandler);
+        $('#link-help').click(helpHandler);
+
+        $('#message').on('hide', function() {
+            $(document).unbind('click');
+            $('.popover').remove();
+        });
+
+        $('#res-type').on('change', function() {
+            if ($(this).val() == 'upload') {
                 $('#upload').removeClass('hide');
-                $('label:contains(Content type)').removeClass('hide');
-                $('label:contains(Upload resource)').removeClass('hide');
                 $('#upload-help').removeClass('hide');
+                $('[name="res-link"]').addClass('hide');
+                $('#link-help').addClass('hide');
+            } else {
+                $('#upload').addClass('hide');
+                $('#upload-help').addClass('hide');
+                $('[name="res-link"]').removeClass('hide');
+                $('#link-help').removeClass('hide');
             }
         });
 

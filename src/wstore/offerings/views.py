@@ -19,26 +19,29 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
+import urllib2
 from urllib2 import HTTPError
 
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.contrib.sites.models import get_current_site
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types, \
+from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
 authentication_required
-from wstore.models import Offering
+from wstore.models import Offering, Organization
 from wstore.models import UserProfile
 from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
-publish_offering, bind_resources, count_offerings, update_offering
+publish_offering, bind_resources, count_offerings, update_offering, comment_offering
 from wstore.offerings.resources_management import register_resource, get_provider_resources
-from django.contrib.sites.models import get_current_site
+from wstore.store_commons.utils.method_request import MethodRequest
+
 
 
 class OfferingCollection(Resource):
 
-    # Creates a new offering asociated with the user
+    # Creates a new offering associated with the user
     # that is create a new application model
     @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
@@ -46,26 +49,28 @@ class OfferingCollection(Resource):
 
         # Obtains the user profile of the user
         user = request.user
-        profile = UserProfile.objects.get(user=user)
         content_type = get_content_type(request)[0]
 
+        # Get the provider roles in the current organization
+        roles = user.userprofile.get_current_roles()
+
         # Checks the provider role
-        if 'provider' in profile.roles:
+        if 'provider' in roles:
 
             if content_type == 'application/json':
                 try:
                     json_data = json.loads(request.raw_post_data)
-                    create_offering(user, profile, json_data)
+                    create_offering(user, json_data)
                 except HTTPError:
-                    return build_error_response(request, 502, 'Bad Gateway')
-                except:
-                    return build_error_response(request, 400, 'Invalid content')
+                    return build_response(request, 502, 'Bad Gateway')
+                except Exception, e:
+                    return build_response(request, 400, e.message)
             else:
                 pass  # TODO xml parsed
         else:
-            pass
+            return build_response(request, 403, 'Forbidden')
 
-        return build_error_response(request, 201, 'Created')
+        return build_response(request, 201, 'Created')
 
     @authentication_required
     def read(self, request):
@@ -74,7 +79,13 @@ class OfferingCollection(Resource):
         # Read the query string in order to know the filter and the page
         filter_ = request.GET.get('filter', 'published')
         user = User.objects.get(username=request.user)
-        action = request.GET.get('action', 'none')
+        action = request.GET.get('action', None)
+        sort = request.GET.get('sort', None)
+
+        # Check sorting values
+        if sort != None:
+            if sort != 'date' and sort != 'rating' and sort != 'name':
+                return build_response(request, 400, 'Invalid sorting')
 
         pagination = {
             'skip': request.GET.get('start', None),
@@ -84,22 +95,22 @@ class OfferingCollection(Resource):
         if action != 'count':
             if pagination['skip'] and pagination['limit']:
                 if filter_ == 'provided':
-                    result = get_offerings(user, request.GET.get('state'), owned=True, pagination=pagination)
+                    result = get_offerings(user, request.GET.get('state'), owned=True, pagination=pagination, sort=sort)
 
                 elif filter_ == 'published':
-                    result = get_offerings(user, pagination=pagination)
+                    result = get_offerings(user, pagination=pagination, sort=sort)
 
                 elif filter_ == 'purchased':
-                    result = get_offerings(user, 'purchased', owned=True, pagination=pagination)
+                    result = get_offerings(user, 'purchased', owned=True, pagination=pagination, sort=sort)
             else:
                 if filter_ == 'provided':
-                    result = get_offerings(user, request.GET.get('state'), owned=True)
+                    result = get_offerings(user, request.GET.get('state'), owned=True, sort=sort)
 
                 elif filter_ == 'published':
-                    result = get_offerings(user)
+                    result = get_offerings(user, sort=sort)
 
                 elif filter_ == 'purchased':
-                    result = get_offerings(user, 'purchased', owned=True)
+                    result = get_offerings(user, 'purchased', owned=True, sort=sort)
 
         else:
             if filter_ == 'provided':
@@ -120,8 +131,16 @@ class OfferingEntry(Resource):
     @authentication_required
     def read(self, request, organization, name, version):
         user = request.user
-        offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
-        result = get_offering_info(offering, user)
+        try:
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
+        except:
+            return build_response(request, 404, 'Not found')
+
+        try:
+            result = get_offering_info(offering, user)
+        except Exception, e:
+            return build_response(request, 400, e.message)
 
         return HttpResponse(json.dumps(result), status=200, mimetype='application/json; charset=UTF-8')
 
@@ -130,72 +149,97 @@ class OfferingEntry(Resource):
     def update(self, request, organization, name, version):
 
         user = request.user
+        # Get the offering
         try:
-            offering = Offering.objects.get(owner_organization=organization, name=name, version=version)
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(owner_organization=org, name=name, version=version)
+        except:
+            return build_response(request, 404, 'Not found')
 
-            if offering.owner_admin_user != user:
-                return build_error_response(request, 403, 'Forbidden')
+        # Update the offering
+        try:
+            # Check if the user is the owner of the offering or if is a manager of the
+            # owner organization
+            if not offering.is_owner(user) and user.pk not in org.managers:
+                return build_response(request, 403, 'Forbidden')
 
             data = json.loads(request.raw_post_data)
 
             update_offering(offering, data)
         except Exception, e:
-            return build_error_response(request, 400, e.message)
+            return build_response(request, 400, e.message)
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')
 
     @authentication_required
     def delete(self, request, organization, name, version):
         # If the offering has been purchased it is not deleted
         # it is marked as deleted in order to allow customers that
         # have purchased the offering to install it if needed
-        offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
-        if not offering.is_owner(request.user):
-            return build_error_response(request, 401, 'Unauthorized')
 
-        delete_offering(offering)
+        # Get the offering
+        try:
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
+        except:
+            return build_response(request, 404, 'Not found')
 
-        return build_error_response(request, 204, 'No content')
+        # Check if the user can delete the offering
+        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
+            return build_response(request, 403, 'Forbidden')
+
+        # Delete the offering
+        try:
+            delete_offering(offering)
+        except Exception, e:
+            return build_response(request, 400, e.message)
+
+        return build_response(request, 204, 'No content')
 
 
 class ResourceCollection(Resource):
 
-    # Creates a new resource asociated with an user
+    # Creates a new resource associated with an user
     @supported_request_mime_types(('application/json', 'multipart/form-data'))
     @authentication_required
     def create(self, request):
 
         user = request.user
-        profile = UserProfile.objects.get(user=user)
+        profile = user.userprofile
         content_type = get_content_type(request)[0]
 
-        if 'provider' in profile.roles:
+        if 'provider' in profile.get_current_roles():
 
             if content_type == 'application/json':
                 try:
                     data = json.loads(request.raw_post_data)
                     register_resource(user, data)
-                except:
-                    return build_error_response(request, 400, 'Invalid JSON content')
+                except Exception, e:
+                    return build_response(request, 400, e.message)
             elif content_type == 'multipart/form-data':
                 try:
                     data = json.loads(request.POST['json'])
                     f = request.FILES['file']
                     register_resource(user, data, file_=f)
-                except:
-                    return build_error_response(request, 400, 'Invalid JSON content')
+                except Exception, e:
+                    return build_response(request, 400, e.message)
         else:
-            pass
+            return build_response(request, 403, 'Forbidden')
 
-        return build_error_response(request, 201, 'Created')
+        return build_response(request, 201, 'Created')
 
     @authentication_required
     def read(self, request):
-        profile = UserProfile.objects.get(user=request.user)
-        if 'provider' in profile.roles:
-            response = get_provider_resources(request.user)
+        profile = request.user.userprofile
+        if 'provider' in profile.get_current_roles():
+            try:
+                response = get_provider_resources(request.user)
+            except Exception, e:
+                return build_response(request, 400, e.message)
+        else:
+            return build_response(request, 403, 'Forbidden')
 
-        return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json; charset=utf-8')
 
 
 class ResourceEntry(Resource):
@@ -212,21 +256,23 @@ class PublishEntry(Resource):
         offering = None
         content_type = get_content_type(request)[0]
         try:
-            offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
         except:
-            return build_error_response(request, 404, 'Not found')
+            return build_response(request, 404, 'Not found')
 
-        if not offering.is_owner(request.user):
-            return build_error_response(request, 401, 'Unauthorized')
+        # Check that the user can publish the offering
+        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
+            return build_response(request, 403, 'Forbidden')
 
         if content_type == 'application/json':
             try:
                 data = json.loads(request.raw_post_data)
                 publish_offering(offering, data)
             except HTTPError:
-                return build_error_response(request, 502, 'Bad gateway')
+                return build_response(request, 502, 'Bad gateway')
             except Exception, e:
-                return build_error_response(request, 400, e.message)
+                return build_response(request, 400, e.message)
 
         # Append the new offering to the newest list
         site = get_current_site(request)
@@ -240,7 +286,7 @@ class PublishEntry(Resource):
 
         context.save()
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')
 
 
 class BindEntry(Resource):
@@ -253,21 +299,50 @@ class BindEntry(Resource):
         offering = None
         content_type = get_content_type(request)[0]
         try:
-            offering = Offering.objects.get(name=name, owner_organization=organization, version=version)
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
         except:
-            return build_error_response(request, 404, 'Not found')
+            return build_response(request, 404, 'Not found')
 
-        if not offering.is_owner(request.user):
-            return build_error_response(request, 401, 'Unauthorized')
+        # Check that the user can bind resources to the offering
+        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
+            return build_response(request, 403, 'Forbidden')
 
         if content_type == 'application/json':
             try:
                 data = json.loads(request.raw_post_data)
                 bind_resources(offering, data, request.user)
             except:
-                build_error_response(request, 400, 'Invalid JSON content')
+                build_response(request, 400, 'Invalid JSON content')
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')
+
+
+class CommentEntry(Resource):
+
+    @authentication_required
+    @supported_request_mime_types(('application/json', ))
+    def create(self, request, organization, name, version):
+
+        # Get the offering
+        try:
+            org = Organization.objects.get(name=organization)
+            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
+        except:
+            return build_response(request, 404, 'Not found')
+
+        # Check offering state
+        if offering.state != 'published':
+            return build_response(request, 403, 'Forbidden')
+
+        # Comment the offering
+        try:
+            data = json.loads(request.raw_post_data)
+            comment_offering(offering, data, request.user)
+        except:
+            return build_response(request, 400, 'Invalid content')
+
+        return build_response(request, 201, 'Created')
 
 
 class NewestCollection(Resource):
@@ -284,3 +359,88 @@ class NewestCollection(Resource):
             response.append(get_offering_info(offering, request.user))
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
+
+
+class TopRatedCollection(Resource):
+
+    @authentication_required
+    def read(self, request):
+
+        site = get_current_site(request)
+        context = Context.objects.get(site=site)
+
+        response = []
+        for off in context.top_rated:
+            offering = Offering.objects.get(pk=off)
+            response.append(get_offering_info(offering, request.user))
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json;charset=UTF-8')
+
+
+class ApplicationCollection(Resource):
+
+    # Get idm applications
+    @authentication_required
+    def read(self, request):
+
+        # Check user roles
+        if not 'provider' in request.user.userprofile.get_current_roles():
+            return build_response(request, 403, 'Forbidden')
+
+        # Make idm request
+        from wstore.social_auth_backend import FIWARE_APPLICATIONS_URL
+        url = FIWARE_APPLICATIONS_URL
+
+        if request.user.userprofile.is_user_org():
+            actor_id = request.user.userprofile.actor_id
+        else:
+            actor_id = request.user.userprofile.current_organization.actor_id
+
+        token = request.user.userprofile.access_token
+
+        url += '?actor_id=' + str(actor_id)
+        url += '&access_token=' + token
+
+        req = MethodRequest('GET', url)
+
+        # Call idm
+        opener = urllib2.build_opener()
+
+        resp = []
+        try:
+            response = opener.open(req)
+            # Make the response
+            resp = response.read()
+        except Exception, e:
+
+            if e.code == 401:
+                try:
+                    # Try to refresh the access token
+                    social = request.user.social_auth.filter(provider='fiware')[0]
+                    social.refresh_token()
+
+                    # Update credentials
+                    social = request.user.social_auth.filter(provider='fiware')[0]
+                    credentials = social.extra_data
+
+                    request.user.userprofile.access_token = credentials['access_token']
+                    request.user.userprofile.refresh_token = credentials['refresh_token']
+                    request.user.userprofile.save()
+
+                    # Try to connect again
+                    token = request.user.userprofile.access_token
+                    url += '?actor_id=' + str(actor_id)
+                    url += '&access_token=' + token
+
+                    req = MethodRequest('GET', url)
+                
+                    response = opener.open(req)
+                    # Make the response
+                    resp = response.read()
+                except:
+                    resp = json.dumps([])
+            else:
+                resp = json.dumps([])
+
+        return HttpResponse(resp, status=200, mimetype='application/json;charset=UTF-8')
+

@@ -31,8 +31,9 @@ def register_resource(provider, data, file_=None):
 
     # Check if the resource already exists
     existing = True
+    current_organization = provider.userprofile.current_organization
     try:
-        Resource.objects.get(name=data['name'], provider=provider, version=data['version'])
+        Resource.objects.get(name=data['name'], provider=current_organization, version=data['version'])
     except:
         existing = False
 
@@ -42,31 +43,19 @@ def register_resource(provider, data, file_=None):
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise Exception('Invalid version format')
 
-    if 'type' in data:
-        if data['type'] == 'download' or data['type'] == 'backend':
-            resource_type = data['type']
-        else:
-            raise Exception('Invalid resource type')
-    else:
-        resource_type = 'download'
-
     resource_data = {
         'name': data['name'],
         'version': data['version'],
-        'type': resource_type,
         'description': data['description'],
-        'content_type': ''
+        'content_type': data['content_type']
     }
-
-    if resource_type == 'download':
-        resource_data['content_type'] = data['content_type']
 
     if file_ is None:
         if 'content' in data:
             resource = data['content']
 
             #decode the content and save the media file
-            file_name = provider.username + '__' + data['name'] + '__' + data['version'] + '__' + resource['name']
+            file_name = current_organization.name + '__' + data['name'] + '__' + data['version'] + '__' + resource['name']
             path = os.path.join(settings.MEDIA_ROOT, 'resources')
             file_path = os.path.join(path, file_name)
             f = open(file_path, "wb")
@@ -83,7 +72,7 @@ def register_resource(provider, data, file_=None):
 
     else:
         #decode the content and save the media file
-        file_name = provider.username + '__' + data['name'] + '__' + data['version'] + '__' + file_.name
+        file_name = current_organization.name + '__' + data['name'] + '__' + data['version'] + '__' + file_.name
         path = os.path.join(settings.MEDIA_ROOT, 'resources')
         file_path = os.path.join(path, file_name)
         f = open(file_path, "wb")
@@ -94,9 +83,8 @@ def register_resource(provider, data, file_=None):
 
     Resource.objects.create(
         name=resource_data['name'],
-        provider=provider,
+        provider=current_organization,
         version=resource_data['version'],
-        resource_type=resource_data['type'],
         description=resource_data['description'],
         download_link=resource_data['link'],
         resource_path=resource_data['content_path'],
@@ -105,7 +93,7 @@ def register_resource(provider, data, file_=None):
 
 
 def get_provider_resources(provider):
-    resouces = Resource.objects.filter(provider=provider)
+    resouces = Resource.objects.filter(provider=provider.userprofile.current_organization)
     response = []
     for res in resouces:
         resource_info = {
@@ -114,10 +102,6 @@ def get_provider_resources(provider):
             'description': res.description,
             'content_type': res.content_type
         }
-        if res.resource_type == 'download':
-            resource_info['type'] = 'Downloadable resource'
-        else:
-            resource_info['type'] = 'Backend resource'
 
         response.append(resource_info)
 

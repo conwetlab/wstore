@@ -31,12 +31,14 @@
 
         if (userInfo.roles.indexOf('provider') != -1) {
             $('#provider').prop('checked', true);
+            $('h3:contains(Notification URL)').removeClass('hide');
+            $('#notification').removeClass('hide');
+            $('#notification').val(userInfo.notification_url);
         }
 
         if (userInfo.roles.indexOf('admin') != -1) {
             $('#admin').prop('checked', true);
         }
-        $('#organization').val(userInfo.organization).prop('disabled', true);
 
         if (userInfo.payment_info) {
             credit_card = userInfo.payment_info
@@ -97,7 +99,7 @@
     };
 
     var makeProfileRequest = function makeProfileRequest(endpoint, method) {
-        var username, firstName, lastName, organization;
+        var username, firstName, lastName, notification;
         var roles = [];
         var request = {};
         var filled = 0, inputs = 0, error = false;
@@ -106,6 +108,7 @@
         username = $.trim($('#user-name').val());
         firstName = $.trim($('#first-name').val());
         lastName = $.trim($('#last-name').val());
+        notification = $.trim($('#notification').val());
 
         if (method == 'POST' || ($('#passwd-input').length > 0)) {
             var passwd, passConf;
@@ -132,17 +135,18 @@
             roles.push('admin');
         }
 
-        organization = $('#organization').val();
-
-        if (!username || !firstName || !lastName || !organization) {
+        if (!username || !firstName || !lastName) {
             error = true
             msg = 'Missing a required field';
         }
         request.username = username;
         request.first_name = firstName;
         request.last_name = lastName;
-        request.organization = organization;
         request.roles = roles;
+
+        if (notification != '') {
+            request.notification_url = notification;
+        }
 
         // Get the tax address
         $('.addr-input').each(function() {
@@ -224,10 +228,6 @@
         $.template('userTemplate', $('#user_form_template')); // Create the template
         $.tmpl('userTemplate').appendTo("#admin-container"); // Render and append the template
 
-        for (var i = 0; i < orgs.length; i++) {
-            $('<option></option>').val(orgs[i]).text(orgs[i]).appendTo('#organization');
-        }
-
         if (user) {
             var checkPass;
 
@@ -280,6 +280,16 @@
                 makeProfileRequest(endpoint, 'POST');
             });
         }
+        $('#provider').change(function() {
+            if($(this).prop('checked')) {
+                $('h3:contains(Notification URL)').removeClass('hide');
+                $('#notification').removeClass('hide');
+            } else {
+                $('h3:contains(Notification URL)').addClass('hide');
+                $('#notification').addClass('hide');
+                $('#notification').val('');
+            }
+        });
     }
 
     userInfoRequest = function userInfoRequest() {

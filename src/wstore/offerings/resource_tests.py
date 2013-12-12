@@ -27,7 +27,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 from wstore.offerings.resources_management import register_resource
-from wstore.models import Resource
+from wstore.models import Resource, Organization
 
 
 __test__ = False
@@ -36,25 +36,6 @@ class ResourceRegisteringTestCase(TestCase):
 
     tags = ('fiware-ut-3',)
     fixtures = ['reg_res.json']
-
-    def test_resource_registering_backend(self):
-
-        data = {
-            'name': 'History Mod',
-            'version': '1.0',
-            'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'backend',
-            'link': 'https://historymod.com'
-        }
-
-        provider = User.objects.get(username='test_user')
-        register_resource(provider, data)
-
-        res = Resource.objects.get(name='History Mod')
-
-        self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_type, 'backend')
-        self.assertEqual(res.download_link, 'https://historymod.com')
 
     def test_resource_registering_download_encoded(self):
 
@@ -65,7 +46,6 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'Download',
             'version': '1.0',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
             'content': {
                 'name': 'test_usdl.rdf',
                 'data': encoded 
@@ -78,7 +58,6 @@ class ResourceRegisteringTestCase(TestCase):
 
         res = Resource.objects.get(name='Download')
         self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_type, 'download')
         self.assertEqual(res.resource_path, '/media/resources/test_user__Download__1.0__test_usdl.rdf')
 
         res_path = settings.BASEDIR + res.resource_path
@@ -105,7 +84,6 @@ class ResourceRegisteringTestCase(TestCase):
 
         res = Resource.objects.get(name='Download')
         self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_type, 'download')
         self.assertEqual(res.resource_path, '/media/resources/test_user__Download__1.0__test_usdl.rdf')
 
         res_path = settings.BASEDIR + res.resource_path
@@ -128,7 +106,6 @@ class ResourceRegisteringTestCase(TestCase):
         res = Resource.objects.get(name='History Mod')
 
         self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_type, 'download')
         self.assertEqual(res.download_link, 'https://historymod.com/download')
         self.assertEqual(res.content_type, 'text/plain')
 
@@ -143,6 +120,10 @@ class ResourceRegisteringTestCase(TestCase):
         }
 
         provider = User.objects.get(username='test_user')
+        org = Organization.objects.get(name=provider.username)
+        resource = Resource.objects.get(name='Existing')
+        resource.provider = org
+        resource.save()
 
         error = False
         msg = None

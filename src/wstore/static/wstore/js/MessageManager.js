@@ -67,6 +67,24 @@
         });
     };
 
+    MessageManager.showAlertWarnig = function showAlertWarnig(title, msg, messageCont) {
+        var container = $('#message-container');
+        var template;
+
+        if (messageCont) {
+            container = messageCont;
+        }
+
+        container.empty();
+        $.template('alertWarning', $('#alert_warning_template'));
+        template = $.tmpl('alertWarning', {'title': title, 'message': msg})
+        container.append(template);
+
+        $('#message').bind('closed', function() {
+            $(container).empty();
+        });
+    };
+
     MessageManager.showYesNoWindow = function showYesNoWindow (msg, handler, tit) {
         var title = '';
 
@@ -81,7 +99,11 @@
             'msg': msg
         }).appendTo('#message-container');
 
-        $('#btn-yes').click(handler);
+        $('#btn-yes').click(function() {
+            $('#message').modal('hide');
+            handler();
+        });
+
         $('#btn-no').click(function  () {
             $('#message').modal('hide');
         });

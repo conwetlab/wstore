@@ -19,7 +19,6 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 from django.contrib.auth import get_user
-from django.core.exceptions import MiddlewareNotUsed
 from django.utils.importlib import import_module
 from django.utils.functional import SimpleLazyObject
 from django.utils.http import http_date, parse_http_date_safe
@@ -126,10 +125,75 @@ class URLMiddleware(object):
 
 def get_api_user(request):
 
+    import json
+    import urllib2
     from wstore.oauth2provider.models import Token
+    from django.contrib.auth.models import User, AnonymousUser
+    from django.conf import settings
+    from wstore.social_auth_backend import FIWARE_USER_DATA_URL, fill_internal_user_info
+    from wstore.store_commons.utils.method_request import MethodRequest
 
+    # Get access_token from the request
     token = request.META['HTTP_AUTHORIZATION'].split(' ', 1)[1]
-    return Token.objects.get(token=token).user
+
+    if settings.OILAUTH:
+        # If using the idM to authenticate users, validate the token
+
+        opener = urllib2.build_opener()
+        url = FIWARE_USER_DATA_URL + '?access_token=' + token
+        request = MethodRequest('GET', url)
+        try:
+            response = opener.open(request)
+            user_info = json.loads(response.read())
+            # Try to get an internal user
+            user = User.objects.get(username=user_info['nickName'])
+
+            # The user has been validated but the user info is not valid since the
+            # used token belongs to an external application
+
+            # Get WStore token for the user
+            token = user.userprofile.access_token
+
+            # Get valid user info for WStore
+            url = FIWARE_USER_DATA_URL + '?access_token=' + token
+            request = MethodRequest('GET', url)
+
+            try:
+                response = opener.open(request)
+                user_info = json.loads(response.read())
+            except Exception, e:
+
+                if e.code == 401:
+                    # The access token may expired, try to refresh it
+                    social = user.social_auth.filter(provider='fiware')[0]
+                    social.refresh_token()
+
+                    # Try to get user info with the new access token
+                    social = user.social_auth.filter(provider='fiware')[0]
+                    new_credentials = social.extra_data
+
+                    user.userprofile.access_token = new_credentials['access_token']
+                    user.userprofile.refresh_token = new_credentials['refresh_token']
+                    user.userprofile.save()
+
+                    token = user.userprofile.access_token
+                    url = FIWARE_USER_DATA_URL + '?access_token=' + token
+                    request = MethodRequest('GET', url)
+                    response = opener.open(request)
+                    user_info = json.loads(response.read())
+                else:
+                    raise(e)
+
+            user_info['access_token'] = token
+            user_info['refresh_token'] = user.userprofile.refresh_token
+            fill_internal_user_info((), response=user_info, user=user)
+
+        except Exception, e:
+            user = AnonymousUser()
+
+        return user
+    else:
+        return Token.objects.get(token=token).user
 
 
 class AuthenticationMiddleware(object):

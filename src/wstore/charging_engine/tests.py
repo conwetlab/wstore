@@ -107,6 +107,14 @@ def fake_cdr_generation(parts, time):
     pass
 
 
+class FakeSubprocess():
+
+    def __init__(self):
+        pass
+
+    def call(self, prams):
+        pass
+
 class SinglePaymentChargingTestCase(TestCase):
 
     tags = ('fiware-ut-12',)
@@ -117,18 +125,9 @@ class SinglePaymentChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        charging_engine.subprocess = FakeSubprocess()
+        settings.OILAUTH = False
         super(SinglePaymentChargingTestCase, cls).setUpClass()
-
-    def setUp(self):
-        self._to_delete = []
-
-    def tearDown(self):
-
-        for f in self._to_delete:
-            fil = os.path.join(settings.BASEDIR, f[1:])
-            os.remove(fil)
-
-        self._to_delete = []
 
     def test_basic_charging_single_payment(self):
 
@@ -160,7 +159,7 @@ class SinglePaymentChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -183,7 +182,6 @@ class SinglePaymentChargingTestCase(TestCase):
         bills = purchase.bill
 
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         contract = purchase.contract
         charges = contract.charges
@@ -233,7 +231,7 @@ class SinglePaymentChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -255,7 +253,6 @@ class SinglePaymentChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
         bills = purchase.bill
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         contract = purchase.contract
         charges = contract.charges
@@ -298,21 +295,8 @@ class SubscriptionChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        charging_engine.subprocess = FakeSubprocess()
         super(SubscriptionChargingTestCase, cls).setUpClass()
-
-    def setUp(self):
-        self._to_delete = []
-
-    def tearDown(self):
-
-        for f in self._to_delete:
-            try:
-                fil = os.path.join(settings.BASEDIR, f[1:])
-                os.remove(fil)
-            except:
-                pass
-
-        self._to_delete = []
 
     def test_basic_subscription_charging(self):
 
@@ -344,7 +328,7 @@ class SubscriptionChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -364,7 +348,6 @@ class SubscriptionChargingTestCase(TestCase):
         charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging(new_purchase=True)
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        self._to_delete.extend(purchase.bill)
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 1)
@@ -434,7 +417,6 @@ class SubscriptionChargingTestCase(TestCase):
         charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
-        self._to_delete.extend(purchase.bill)
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 2)
@@ -507,7 +489,6 @@ class SubscriptionChargingTestCase(TestCase):
         charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
-        self._to_delete.extend(purchase.bill)
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 2)
@@ -574,21 +555,9 @@ class PayPerUseChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        charging_engine.subprocess = FakeSubprocess()
+        settings.OILAUTH = False
         super(PayPerUseChargingTestCase, cls).setUpClass()
-
-    def setUp(self):
-        self._to_delete = []
-
-    def tearDown(self):
-
-        for f in self._to_delete:
-            try:
-                fil = os.path.join(settings.BASEDIR, f[1:])
-                os.remove(fil)
-            except:
-                pass
-
-        self._to_delete = []
 
     def test_basic_sdr_feeding(self):
 
@@ -636,6 +605,8 @@ class PayPerUseChargingTestCase(TestCase):
     test_basic_sdr_feeding.tags = ('fiware-ut-14',)
 
     def test_sdr_feeding_some_applied(self):
+
+        settings.OILAUTH = False
 
         sdr = {
             'offering': {
@@ -756,7 +727,11 @@ class PayPerUseChargingTestCase(TestCase):
         user = User.objects.get(username='test_user2')
         profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization1')
-        profile.organization = org
+        profile.current_organization = org
+        profile.organizations = [{
+            'organization': org.pk,
+            'roles': ['customer', 'provider']
+        }]
         profile.save()
 
         purchase = Purchase.objects.get(pk='61004a9a5e95ac9115902290')
@@ -854,6 +829,7 @@ class PayPerUseChargingTestCase(TestCase):
 
     def test_sdr_feeding_invalid_timestamp(self):
 
+        settings.OILAUTH = False
         sdr = {
             'offering': {
                 'name': 'test_offering',
@@ -983,7 +959,7 @@ class PayPerUseChargingTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -997,7 +973,6 @@ class PayPerUseChargingTestCase(TestCase):
 
         bills = purchase.bill
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         self.assertEqual(purchase.state, 'paid')
         contract = purchase.contract
@@ -1052,7 +1027,6 @@ class PayPerUseChargingTestCase(TestCase):
 
         bills = purchase.bill
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         self.assertEqual(purchase.state, 'paid')
 
@@ -1096,6 +1070,7 @@ class AsynchronousPaymentTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         charging_engine.paypal = FakePal()
+        charging_engine.subprocess = FakeSubprocess()
         charging_engine.threading = FakeThreading()
         super(AsynchronousPaymentTestCase, cls).setUpClass()
 
@@ -1140,7 +1115,7 @@ class AsynchronousPaymentTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
 
         offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', compact=True)
+        json_model = graph.serialize(format='json-ld', auto_compact=True)
 
         offering.offering_description = json.loads(json_model)
         offering.save()
@@ -1176,7 +1151,6 @@ class AsynchronousPaymentTestCase(TestCase):
         bills = purchase.bill
 
         self.assertEqual(len(bills), 1)
-        self._to_delete.append(bills[0])
 
         contract = purchase.contract
         self.assertEqual(len(contract.charges), 1)
@@ -1465,18 +1439,22 @@ class ChargingDaemonTestCase(TestCase):
         self.assertEqual(len(contract.applied_sdrs), 0)
 
 
-class AdaptorWrapper():
+class AdaptorWrapperThread():
 
     _context = None
+    _url = None
+    _cdr = None
 
     def __init__(self, context):
         self._context = context
 
-    def __call__(self, url):
+    def __call__(self, url, cdr):
+        self._url = url
+        self._cdr = cdr
         return self
 
-    def send_cdr(self, cdr):
-        self._context._cdrs = cdr
+    def start(self):
+        self._context._cdrs = self._cdr
 
 
 class CDRGeranationTestCase(TestCase):
@@ -1487,7 +1465,7 @@ class CDRGeranationTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.RSSAdaptor = AdaptorWrapper(cls)
+        charging_engine.RSSAdaptorThread = AdaptorWrapperThread(cls)
         charging_engine.get_country_code = lambda x: '1'
         charging_engine.get_curency_code = lambda x: '1'
         super(CDRGeranationTestCase, cls).setUpClass()
@@ -1518,7 +1496,7 @@ class CDRGeranationTestCase(TestCase):
         f.close()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
         purchase.offering.save()
 
         charging = charging_engine.ChargingEngine(purchase)
@@ -1568,7 +1546,7 @@ class CDRGeranationTestCase(TestCase):
         f.close()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
         purchase.offering.save()
 
         charging = charging_engine.ChargingEngine(purchase)
@@ -1626,11 +1604,11 @@ class CDRGeranationTestCase(TestCase):
         f.close()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
         purchase.offering.save()
 
         purchase.organization_owned = True
-        purchase.owner_organization = 'test_organization'
+        purchase.owner_organization = Organization.objects.get(name='test_organization')
         purchase.save()
 
         charging = charging_engine.ChargingEngine(purchase)
@@ -1691,7 +1669,7 @@ class CDRGeranationTestCase(TestCase):
         f.close()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
+        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
         purchase.offering.save()
 
         charging = charging_engine.ChargingEngine(purchase)

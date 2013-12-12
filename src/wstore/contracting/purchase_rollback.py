@@ -20,7 +20,6 @@
 
 from wstore.models import Purchase
 from wstore.models import UserProfile
-from wstore.models import Organization
 
 
 def rollback(purchase):
@@ -28,7 +27,7 @@ def rollback(purchase):
     # so the models must not be deleted
     if purchase.state != 'paid':
 
-        # Check the payment has been made
+        # Check that the payment has been made
         contract = True
         try:
             contr = purchase.contract
@@ -47,7 +46,7 @@ def rollback(purchase):
         if to_del:
             # Check organization owned
             if purchase.organization_owned:
-                org = Organization.objects.get(name=purchase.owner_organization)
+                org = purchase.owner_organization
                 if purchase.offering.pk in org.offerings_purchased:
                     org.offerings_purchased.remove(purchase.offering.pk)
                     org.save()
@@ -68,7 +67,7 @@ def rollback(purchase):
     # offerings purchased list
     else:
         if purchase.organization_owned:
-            org = Organization.objects.get(name=purchase.owner_organization)
+            org = purchase.owner_organization
             if not purchase.offering.pk in org.offerings_purchased:
                 org.offerings_purchased.append(purchase.offering.pk)
                 org.save()
@@ -93,14 +92,16 @@ class PurchaseRollback():
             result = self._funct(user, offering, org_owned, payment_info)
         except Exception, e:
             if e.message != "This offering can't be purchased" and e.message != 'The offering has been already purchased'\
-             and e.message != 'Invalid payment method' and e.message != 'Invalid credit card info':
+             and e.message != 'Invalid payment method' and e.message != 'Invalid credit card info'\
+             and e.message != 'The customer does not have a tax address' and e.message != 'The customer does not have payment info'\
+             and e.message != 'The tax address is not valid':
 
                 # Get the purchase
                 if org_owned:
                     user_profile = UserProfile.objects.get(user=user)
-                    purchase = Purchase.objects.get(owner_organization=user_profile.organization.name, offering=offering)
+                    purchase = Purchase.objects.get(owner_organization=user_profile.current_organization, offering=offering)
                 else:
-                    purchase = Purchase.objects.get(customer=user, offering=offering)
+                    purchase = Purchase.objects.get(customer=user, offering=offering, organization_owned=False)
                 rollback(purchase)
 
             raise e

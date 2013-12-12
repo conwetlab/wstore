@@ -19,11 +19,24 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import urllib2
+import threading
 from lxml import etree
 from urllib2 import HTTPError
 from urlparse import urljoin
 
 from wstore.store_commons.utils.method_request import MethodRequest
+
+
+class RSSAdaptorThread(threading.Thread):
+
+    def __init__(self, rss_url, cdr_info):
+        threading.Thread.__init__(self)
+        self.url = rss_url
+        self.cdr = cdr_info
+
+    def run(self):
+        r = RSSAdaptor(self.url)
+        r.send_cdr(self.cdr)
 
 
 class RSSAdaptor():

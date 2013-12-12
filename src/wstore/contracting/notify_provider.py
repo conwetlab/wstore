@@ -19,31 +19,37 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-
 import urllib2
+
+from django.conf import settings
 
 from wstore.store_commons.utils.method_request import MethodRequest
 
 
 def notify_provider(purchase):
     """
-        This method is use to notify the service provider
+        This method is used to notify the service provider
         that his offering has been purchased
     """
     notification_url = purchase.offering.notification_url
 
-    # FIXME Make the notification URL a mandatory field
+    data = {
+        'offering': {
+            'organization': purchase.offering.owner_organization.name,
+            'name': purchase.offering.name,
+            'version': purchase.offering.version
+        },
+        'reference': purchase.ref,
+    }
+
+    # Notify the service provider
     if notification_url != '':
 
-        data = {
-            'offering': {
-                'organization': purchase.offering.owner_organization,
-                'name': purchase.offering.name,
-                'version': purchase.offering.version
-            },
-            'reference': purchase.ref,
-            'customer': purchase.customer.username
-        }
+        # Check the customer
+        if purchase.organization_owned:
+            data['customer'] = purchase.owner_organization.name
+        else:
+            data['customer'] = purchase.customer.username
 
         body = json.dumps(data)
         headers = {'Content-type': 'application/json'}
@@ -56,3 +62,51 @@ def notify_provider(purchase):
             response = opener.open(request)
         except:
             pass
+
+    # if the oil authentication is enabled, notify the idM the new purchase
+    if settings.OILAUTH and len(purchase.offering.applications) > 0:
+        data['applications'] = purchase.offering.applications
+
+        # Get the customer id for the idm
+        if purchase.organization_owned:
+            data['customer'] = purchase.owner_organization.actor_id
+        else:
+            data['customer'] = purchase.customer.userprofile.actor_id
+
+        token = purchase.customer.userprofile.access_token
+        body = json.dumps(data)
+        headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
+
+        from wstore.social_auth_backend import FIWARE_NOTIFICATION_URL
+
+        request = MethodRequest('POST', FIWARE_NOTIFICATION_URL, body, headers)
+
+        opener = urllib2.build_opener()
+
+        try:
+            response = opener.open(request)
+        except Exception , e:
+            if e.code == 401:
+                try:
+                    # Try to refresh the access_token
+                    social = purchase.customer.social_auth.filter(provider='fiware')[0]
+                    social.refresh_token()
+
+                    # update user information
+                    social = purchase.customer.social_auth.filter(provider='fiware')[0]
+                    new_credentials = social.extra_data
+
+                    purchase.customer.userprofile.access_token = new_credentials['access_token']
+                    purchase.customer.userprofile.refresh_token = new_credentials['refresh_token']
+                    purchase.customer.userprofile.save()
+                    token = purchase.customer.userprofile.access_token
+
+                    # Make the request
+                    headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
+                    request = MethodRequest('POST', FIWARE_NOTIFICATION_URL, body, headers)
+
+                    opener.open(request)
+                except:
+                    pass
+            else:
+                pass

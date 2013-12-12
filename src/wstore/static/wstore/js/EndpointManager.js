@@ -31,9 +31,13 @@
         'ORGANIZATION_COLLECTION': '/api/administration/organizations',
         'RESOURCE_COLLECTION': '/api/offering/resources',
         'OFFERING_COLLECTION': '/api/offering/offerings',
+        'APPLICATION_COLLECTION': '/api/offering/applications',
         'PURCHASE_COLLECTION': '/api/contracting',
         'NEWEST_COLLECTION': '/api/offering/offerings/newest',
-        'TOPRATED_COLLECTION': '/api/offering/offerings/newest' // It points to the newest list since rating is not implemented
+        'TOPRATED_COLLECTION': '/api/offering/offerings/toprated',
+        'UNIT_COLLECTION': '/api/administration/units',
+        'CHANGE_ORGANIZATION': '/api/administration/organizations/change',
+        'REQUEST_PROVIDER': '/api/provider'
     };
 
     // Contains endpoints that depend on variables
@@ -43,9 +47,11 @@
         'RSS_ENTRY': '/api/administration/rss/${name}',
         'USERPROFILE_ENTRY': '/api/administration/profiles/${username}',
         'ORGANIZATION_ENTRY': '/api/administration/organizations/${org}',
+        'ORGANIZATION_USER_ENTRY': '/api/administration/organizations/${org}/user',
         'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}',
         'PUBLISH_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/publish',
         'BIND_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/bind',
+        'RATING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/rating',
         'SEARCH_ENTRY': '/api/search/${text}',
         'PURCHASE_ENTRY':   '/api/contracting/${ref}'
     }

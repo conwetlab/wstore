@@ -8,12 +8,7 @@
             <ul class="thumbnails">
                 <li class="thumbnail main-info">
                     <img src="${logo}" />
-                    <div class="details-icons">
-                        <i class="icon-star-empty"></i>
-                        <i class="icon-star-empty"></i>
-                        <i class="icon-star-empty"></i>
-                        <i class="icon-star-empty"></i>
-                        <i class="icon-star-empty"></i>
+                    <div class="details-icons" id="details-stars">
                     </div>
                     <input id="main-action" type="button" class="btn btn-blue details-button" value="${action}" />
                     <div class="details-icons">
@@ -23,33 +18,18 @@
                     <p><b>Organization: </b>${organization}</p>
                     <p><b>Owner: </b>${owner}</p>
                     <p><b>Version: </b>${version}</p>
-                    <p><b>Last Update: </b>${updated}</p>
+                    <p><b>Publication date: </b>${updated}</p>
                 </li>
             </ul>
         </div>
-        <div class="span10 detailed-info">
+        <div class="span9 detailed-info">
           <div class="tabbable">
              <ul class="nav nav-tabs">
                <li class="active"><a href="#main-tab" data-toggle="tab">Main Info</a></li>
-               <li><a href="#int-tab" data-toggle="tab">Interactions</a></li>
-               <li><a href="#legal-tab" data-toggle="tab">Legal</a></li>
-               <li><a href="#pricing-tab" data-toggle="tab">Pricing</a></li>
-               <li><a href="#sla-tab" data-toggle="tab">Service level agreement</a></li>
-               <li><a href="#res-tab" data-toggle="tab">Offering resources</a></li>
                <input type="button" class="btn tab-button" id="back" value="Back"/>
              </ul>
             <div class="tab-content">
             <div class="tab-pane active" id="main-tab">
-            </div>
-            <div class="tab-pane" id="int-tab">
-            </div>
-            <div class="tab-pane" id="legal-tab">
-            </div>
-            <div class="tab-pane" id="pricing-tab">
-            </div>
-            <div class="tab-pane" id="sla-tab">
-            </div>
-            <div class="tab-pane" id="res-tab">
             </div>
             </div>
           </div>

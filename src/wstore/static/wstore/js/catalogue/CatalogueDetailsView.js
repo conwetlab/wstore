@@ -20,131 +20,228 @@
 
 (function  () {
 
-    var offElem;
-    var backAct;
-    var detContainer;
-    var legalLoaded;
-    var pricingLoaded;
-    var slaLoaded;
-    var interLoaded;
-    var resLoaded;
+    /**
+     * Constructor for the Offering details view
+     * @param offeringElement Offering to be displayed
+     * @param backAction Function that specifies the action to be performed when the back button is pressed
+     * @param container Container where the view is loaded
+     * @returns {CatalogueDetailsView}
+     */
+    CatalogueDetailsView = function CatalogueDetailsView(offeringElement, backAction, container) {
+        this.offeringElement = offeringElement;
+        this.backAction = backAction;
+        this.container = container;
+        this.legalLoaded = false;
+        this.pricingLoaded = false;
+        this.slaLoaded = false;
+        this.interLoaded = false;
+        this.resLoaded = false;
+        this.appLoaded = false;
+    }
 
-    paintOfferingDetails = function paintOfferingDetails (offeringElement, backAction, container) {
+    /**
+     * Displays the Catalogue Details view
+     */
+    CatalogueDetailsView.prototype.showView = function showView () {
         var screen, action;
 
-        offElem = offeringElement;
-        backAct = backAction;
-        detContainer = container;
-        legalLoaded = false;
-        pricingLoaded = false;
-        slaLoaded = false;
-        interLoaded = false;
-        resLoaded = false;
-        // Create the details view
-
         // Clean the container
-        $(container).empty();
+        $(this.container).empty();
 
         // Load the main template
-        if (offeringElement.getState() == 'uploaded') {
+        if (this.offeringElement.getState() == 'uploaded') {
             action = 'Publish';
-        } else if (offeringElement.getState() == 'published') {
-            if (USERNAME == offeringElement.getProvider()) {
-                action = 'Delete';
+        } else if (this.offeringElement.getState() == 'published') {
+            if (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) {
+                if (USERPROFILE.getUsername() == this.offeringElement.getProvider()) {
+                    action = 'Delete';
+                } else {
+                    action = null;
+                }
             } else {
                 action = 'Purchase';
             }
-        } else if (offeringElement.getState() == 'purchased') {
+        } else if (this.offeringElement.getState() == 'purchased' || this.offeringElement.getState() == 'rated') {
             action = 'Download';
+        } else {
+            action = null;
         }
 
         $.template('detailsTemplate', $('#details_offering_template'));
         $.tmpl('detailsTemplate', {
-            'name': offeringElement.getName(),
-            'logo': offeringElement.getLogo(),
-            'organization': offeringElement.getOrganization(),
-            'owner': offeringElement.getProvider(),
-            'version': offeringElement.getVersion(),
-            'updated': offeringElement.getUpdated(),
+            'name': this.offeringElement.getName(),
+            'logo': this.offeringElement.getLogo(),
+            'organization': this.offeringElement.getOrganization(),
+            'owner': this.offeringElement.getProvider(),
+            'version': this.offeringElement.getVersion(),
+            'updated': this.offeringElement.getPublication(),
             'action': action
-        }).appendTo(container);
+        }).appendTo(this.container);
+
+        if (action == null) {
+            $('#main-action').remove();
+        }
+        // Check price for action button
+        if (action == 'Purchase') {
+            var priceStr = getPriceStr(this.offeringElement.getPricing());
+            if (priceStr != 'View pricing'){
+                $('#main-action').val(priceStr);
+                if (priceStr == 'Free') {
+                    $('#main-action').removeClass('btn-blue');
+                    $('#main-action').addClass('btn-success');
+                }
+            }
+        }
+        fillStarsRating(this.offeringElement.getRating(), $('#details-stars'));
 
         // Load the main info template
         $.template('mainInfoTemplate', $('#main_info_offering_template'));
         $.tmpl('mainInfoTemplate', {
-            'description': offeringElement.getDescription()
+            'description': this.offeringElement.getDescription()
         }).appendTo('#main-tab');
 
-        screen = offeringElement.getScreenshots();
-        for (var i = 0; i < screen.length; i++) {
-            var imageDiv = $('<div></div>').addClass('item');
-            imageDiv.append($('<img src="' + screen[i] +'" alt />'));
+        screen = this.offeringElement.getScreenshots();
+        if (screen.length > 0) {
+            for (var i = 0; i < screen.length; i++) {
+                var imageDiv = $('<div></div>').addClass('item');
+                imageDiv.append($('<img src="' + screen[i] +'" alt />'));
 
-            if (i == 0) {
-                imageDiv.addClass('active');
-            }
-            imageDiv.appendTo('.carousel-inner');
-        };
+                if (i == 0) {
+                    imageDiv.addClass('active');
+                }
+                imageDiv.appendTo('.carousel-inner');
+            };
+        } else {
+            $('h2:contains(Screenshots)').remove();
+            $('#screenshots-car').remove();
+        }
 
-        // Set listeners
-        $('a[href="#int-tab"]').on('shown', function (e) {
-            paintInteractionProtocols(offeringElement.getInteractions());
-        });
+        if (this.offeringElement.getState() != 'uploaded') {
+            this.paintComments();
+        } else {
+            $('h3:contains(Comments)').addClass('hide');
+        }
 
-        $('a[href="#legal-tab"]').on('shown', function (e) {
-            paintLegal(offeringElement.getLegal());
-        });
+        this.buildTabs();
 
-        $('a[href="#pricing-tab"]').on('shown', function (e) {
-            paintPricing(offeringElement.getPricing());
-        });
-
-        $('a[href="#sla-tab"]').on('shown', function (e) {
-            paintSla(offeringElement.getSla());
-        });
-
-        $('a[href="#res-tab"]').on('shown', function (e) {
-            paintResources(offeringElement.getResources());
-        });
-
-        $('#back').click(function (e) {
-            $(container).empty();
-            backAction();
-        });
+        $('#back').click((function (e) {
+            $(this.container).empty();
+            this.backAction();
+        }).bind(this));
 
         // Set advanced operations
-        if(USERNAME == offeringElement.getProvider()) {
-            $('<input></input>').attr('type', 'button').attr('value', 'Delete offering').addClass('btn btn-danger btn-advanced').appendTo('#advanced-op').click(function() {
-                var msg = "Are you sure that you want to delete the offering";
-                MessageManager.showYesNoWindow(msg, function() {
-                    deleteOffering(offeringElement, backAction, container);
-                });
-            });
-        }
-        $('<input></input>').attr('type', 'button').attr('value', 'Download service model').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
-            getServiceModel(offeringElement);
-        });
+        // Delete offering
+        if((USERPROFILE.getUsername() == this.offeringElement.getProvider()) && 
+          (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) &&
+          (this.offeringElement.getState() != 'deleted')) {
 
-        if(USERNAME == offeringElement.getProvider() && offeringElement.getState() == 'uploaded') {
-            $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
-                bindResourcesForm(offeringElement);
-            });
-            $('<input></input>').attr('type', 'button').attr('value', 'Edit').addClass('btn btn-advanced').appendTo('#advanced-op').click(function() {
-                editOfferingForm(offeringElement);
-            });
+            $('<input></input>').attr('type', 'button').attr('value', 'Delete offering').addClass('btn btn-danger btn-advanced').appendTo('#advanced-op').click((function() {
+                var msg = "Are you sure that you want to delete the offering";
+                MessageManager.showYesNoWindow(msg, (function() {
+                    this.deleteOffering();
+                }).bind(this));
+            }).bind(this));
+        }
+
+        // Download service model
+        $('<input></input>').attr('type', 'button').attr('value', 'Download service model').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+            this.getServiceModel();
+        }).bind(this));
+
+        // Bind resources and edit the offering
+        if((USERPROFILE.getUsername() == this.offeringElement.getProvider()) && 
+          (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) && 
+          (this.offeringElement.getState() == 'uploaded')) {
+            $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+                var resForm = new BindResourcesForm(this.offeringElement, false, this);
+                resForm.display();
+            }).bind(this));
+            $('<input></input>').attr('type', 'button').attr('value', 'Edit').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+                editOfferingForm(this.offeringElement, this);
+            }).bind(this));
         }
 
         // Set the main operation
-        $('#main-action').click(mainAction.bind(this, action));
+        $('#main-action').click((function() {
+            this.mainAction(action);
+        }).bind(this));
 
         //Check renovations
         if (action == 'Download') {
-            checkRenovations(offeringElement.getPricing());
+            this.checkRenovations();
         }
+
+        // Form for comment and rate the offering
+        if (this.offeringElement.getState() == 'purchased') {
+            $('#comment-btn').removeClass('hide').click((function() {
+                paintCommentForm(this.offeringElement, this);
+            }).bind(this));
+        }
+        // Calculate positions on resize
+        this.calculatePositions();
+        $(window).resize(this.calculatePositions.bind(this));
     };
 
-    var checkRenovations = function checkRenovations(pricing) {
-        var price_plans = pricing.price_plans;
+    /**
+     * Set all displayed components in the correct place depending on the window
+     * size
+     */
+    CatalogueDetailsView.prototype.calculatePositions = function calculatePositions() {
+        var position = $('.tabbable').offset();
+
+        // Calculate tabs width
+        $('.detailed-info').css('width', ($(window).width() - position.left) + 'px');
+        // If there is a back button calculate its position
+        if($('#back').length > 0) {
+            $('#back').css('left', ($('.tabbable').width() - 92) + 'px');
+        }
+
+        if ($(window).width() < 966) {
+            if ($('#oil-bar').length > 0) {
+                $('.title_wrapper').css('top', '-30px');
+                $('.navigation').css('top', '-109px');
+                $('.detailed-info').css('top', '66px');
+            } else {
+                $('.detailed-info').css('top', '215px');
+            }
+            $('.detailed-info').css('left', '220px');
+        } else {
+            if ($('#oil-bar').length > 0) {
+                $('.title_wrapper').removeAttr('style');
+                $('.navigation').css('top', '60px');
+            }
+            $('.detailed-info').css('top', '246px');
+        }
+        setTimeout(setFooter, 600);
+    };
+
+    /**
+     * Paint the comments of the offering
+     */
+    CatalogueDetailsView.prototype.paintComments = function paintComments() {
+        var comments = this.offeringElement.getComments();
+
+        for (var i = 0; i < comments.length; i++) {
+            var templ;
+
+            $.template('commentTemplate', $('#comment_template'));
+            templ = $.tmpl('commentTemplate', {
+                'user': comments[i].user,
+                'timestamp': comments[i].timestamp.split(' ')[0],
+                'title': comments[i].title,
+                'comment': comments[i].comment
+            });
+
+            fillStarsRating(comments[i].rating, templ.find('.comment-rating'));
+            templ.appendTo('#comments');
+        }
+    }
+
+    /**
+     * Check if the user needs to renovate a subscription in this offering
+     */
+    CatalogueDetailsView.prototype.checkRenovations = function checkRenovations() {
+        var price_plans = this.offeringElement.getPricing().price_plans;
         if (price_plans.length > 0) {
             var outDated = [];
             var toRenovate = false;
@@ -173,27 +270,34 @@
             }
             // If out of date subscriptions show renovation window
             if (toRenovate) {
-                paintRenovationForm(outDated, offElem);
+                paintRenovationForm(outDated, offElem, this);
             }
         }
     };
 
-    var mainAction = function mainAction (action) {
+    /**
+     * Performs the main action of the details view
+     * @param action Action to be performed
+     */
+    CatalogueDetailsView.prototype.mainAction = function mainAction (action) {
         if (action == 'Publish') {
-            publishOffering(offElem);
+            publishOffering(this.offeringElement, this);
         } else if (action == 'Purchase'){
-            purchaseOffering(offElem);
+            purchaseOffering(this.offeringElement, this);
         } else if (action == 'Delete') {
             var msg = "Are you sure that you want to delete the offering";
-            MessageManager.showYesNoWindow(msg, function() {
-                deleteOffering(offElem, backAct, detContainer);
-            });
+            MessageManager.showYesNoWindow(msg, (function() {
+                this.deleteOffering();
+            }).bind(this));
         } else if (action == 'Download') {
-            downloadElements(offElem);
+            downloadElements(this.offeringElement);
         }
     };
 
-    var deleteOffering = function deleteOffering (offeringElement, backAction, container) {
+    /**
+     * Deletes the offering
+     */
+    CatalogueDetailsView.prototype.deleteOffering = function deleteOffering () {
         var csrfToken = $.cookie('csrftoken');
         $.ajax({
             headers: {
@@ -201,16 +305,16 @@
             },
             type: "DELETE",
             url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
-            'organization': offeringElement.getOrganization(),
-            'name': offeringElement.getName(),
-            'version': offeringElement.getVersion()
+            'organization': this.offeringElement.getOrganization(),
+            'name': this.offeringElement.getName(),
+            'version': this.offeringElement.getVersion()
             }),
             dataType: 'json',
-            success: function (response) {
+            success: (function (response) {
                 MessageManager.showMessage('Deleted', 'The offering has been deleted');
-                $(container).empty();
-                backAction();
-            },
+                $(this.container).empty();
+                this.backAction();
+            }).bind(this),
             error: function (xhr) {
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
@@ -219,11 +323,122 @@
         });
     };
 
-    var getServiceModel = function getServiceModel (offeringElement) {
-        window.open(offeringElement.getOfferingDescriptionURL());
+    /**
+     * Downloads the service model of the offering
+     */
+    CatalogueDetailsView.prototype.getServiceModel = function getServiceModel () {
+        window.open(this.offeringElement.getOfferingDescriptionURL());
     };
 
-    var paintLegalClauses = function paintLegalClauses (clauses, dom) {
+    /**
+     * Builds the tabs whose in has been provided in the offering
+     */
+    CatalogueDetailsView.prototype.buildTabs = function buildTabs() {
+        // Check which tabs to include
+        // Interactions
+        if (this.offeringElement.getInteractions().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Interactions').attr('href', '#int-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'int-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#int-tab"]').on('shown', (function (e) {
+                this.paintInteractionProtocols();
+            }).bind(this));
+        }
+
+        // Legal conditions
+        if (this.offeringElement.getLegal().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Legal').attr('href', '#legal-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'legal-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#legal-tab"]').on('shown', (function (e) {
+                this.paintLegal();
+            }).bind(this));
+        }
+
+        // Pricing
+        if (this.offeringElement.getPricing().price_plans.length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Pricing').attr('href', '#pricing-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'pricing-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#pricing-tab"]').on('shown', (function (e) {
+                this.paintPricing();
+            }).bind(this));
+        }
+
+        // Service level agreement
+        if (this.offeringElement.getSla().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Service Level Agreement').attr('href', '#sla-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'sla-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#sla-tab"]').on('shown', (function (e) {
+                this.paintSla();
+            }).bind(this));
+        }
+
+        // Resources
+        if (this.offeringElement.getResources().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Offering Resources').attr('href', '#res-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'res-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#res-tab"]').on('shown', (function (e) {
+                this.paintResources();
+            }).bind(this));
+        }
+
+        // Applications
+        if (this.offeringElement.getApplications().length > 0) {
+            // Include the tab
+            var li = $('<li></li>');
+            $('<a></a>').text('Applications').attr('href', '#app-tab').attr('data-toggle', 'tab').appendTo(li);
+            $('<div></div>').addClass('tab-pane').attr('id', 'app-tab').appendTo('.tab-content');
+            if ($('#back').length > 0) {
+                $('#back').before(li);
+            } else {
+                $('.nav-tabs').append(li);
+            }
+            // Set the listener
+            $('a[href="#app-tab"]').on('shown', (function (e) {
+                this.paintApplications();
+            }).bind(this));
+        }
+    };
+
+    CatalogueDetailsView.prototype.paintLegalClauses = function paintLegalClauses (clauses, dom) {
         if (clauses.length > 0) {
             $('<h3></h3>').text('Clauses').appendTo('.clauses');
             $.template('legalClausesTemplate', $('#legal_clauses_template'));
@@ -231,34 +446,31 @@
         }
     };
 
-    var paintLegal = function paintLegal (legal) {
-        if (!legalLoaded) {
-            legalLoaded = true;
+    CatalogueDetailsView.prototype.paintLegal = function paintLegal () {
+        if (!this.legalLoaded) {
+            var legal = this.offeringElement.getLegal();
 
+            this.legalLoaded = true;
+            // Create the tab for legal conditions
             $('<h2></h2>').text('Legal conditions').appendTo('#legal-tab');
+            $.template('legalTemplate', $('#legal_template'));
 
-            if (legal.length > 0) {
-                $.template('legalTemplate', $('#legal_template'));
+            for (var i = 0; i < legal.length; i++) {
+                var dom;
 
-                for (var i = 0; i < legal.length; i++) {
-                    var dom;
-
-                    dom = $.tmpl('legalTemplate', {
-                        'name': legal[i].name,
-                        'description': legal[i].description
-                    })
-                    dom.appendTo('#legal-tab');
-                    if('clauses' in legal[i]) {
-                        paintLegalClauses(legal[i].clauses, dom.find('.clauses'));
-                    }
+                dom = $.tmpl('legalTemplate', {
+                    'name': legal[i].name,
+                    'description': legal[i].description
+                })
+                dom.appendTo('#legal-tab');
+                if('clauses' in legal[i]) {
+                    this.paintLegalClauses(legal[i].clauses, dom.find('.clauses'));
                 }
-            } else {
-                $('<p></p>').text('No legal conditions have been defined').appendTo('#legal-tab');
             }
         }
     };
 
-    var paintPriceElement = function paintPriceElement (priceElem, dom, type) {
+    CatalogueDetailsView.prototype.paintPriceElement = function paintPriceElement (priceElem, dom, type) {
         if (priceElem.length > 0) {
             var priceTempl;
 
@@ -282,39 +494,35 @@
         }
     };
 
-    var paintPricing = function paintPricing (pricing) {
-        if (!pricingLoaded) {
-            var price_plans = pricing.price_plans;
+    CatalogueDetailsView.prototype.paintPricing = function paintPricing () {
+        if (!this.pricingLoaded) {
+            var price_plans = this.offeringElement.getPricing().price_plans;
 
-            pricingLoaded = true;
+            this.pricingLoaded = true;
 
-            $('<h2></h2>').text('Pricing Infomation').appendTo('#pricing-tab');
+            $('<h2></h2>').text('Pricing Information').appendTo('#pricing-tab');
 
-            if (price_plans.length > 0){
-                $.template('pricingTemplate', $('#pricing_template'));
+            $.template('pricingTemplate', $('#pricing_template'));
 
-                for (var i = 0; i < price_plans.length; i++) {
-                    var dom;
-                    dom = $.tmpl('pricingTemplate', {
-                        'title': price_plans[i].title,
-                        'description': price_plans[i].description
-                    });
-                    dom.appendTo('#pricing-tab');
-                    if ('price_components' in price_plans[i]) {
-                        paintPriceElement(price_plans[i].price_components, dom.find('.price-components'), 'components');
-                    }
-
-                    if ('taxes' in price_plans[i]) {
-                        paintPriceElement(price_plans[i].taxes, dom.find('.taxes'), 'taxes');
-                    }
+            for (var i = 0; i < price_plans.length; i++) {
+                var dom;
+                dom = $.tmpl('pricingTemplate', {
+                    'title': price_plans[i].title,
+                    'description': price_plans[i].description
+                });
+                dom.appendTo('#pricing-tab');
+                if ('price_components' in price_plans[i]) {
+                    this.paintPriceElement(price_plans[i].price_components, dom.find('.price-components'), 'components');
                 }
-            } else {
-                $('<p></p>').text('No pricing information has been defined. This offering is free').appendTo('#pricing-tab');
+
+                if ('taxes' in price_plans[i]) {
+                    this.paintPriceElement(price_plans[i].taxes, dom.find('.taxes'), 'taxes');
+                }
             }
         }
     };
 
-    var paintSlaVariables =  function paintSlaVariables (variables, dom) {
+    CatalogueDetailsView.prototype.paintSlaVariables =  function paintSlaVariables (variables, dom) {
         if(variables.length > 0) {
             $('<h5></h5>').text('Variables').appendTo(dom);
             $.template('slaVariableTemplate', $('#sla_variable_template'));
@@ -322,7 +530,7 @@
         }
     };
 
-    var paintSlaExpresions = function paintSlaExpresions (expresions, dom) {
+    CatalogueDetailsView.prototype.paintSlaExpresions = function paintSlaExpresions (expresions, dom) {
         if(expresions.length > 0) {
             $('<h3></h3>').text('Service level expresions').appendTo(dom);
             $.template('slaExpresionsTemplate', $('#sla_expresion_template'));
@@ -344,40 +552,38 @@
                 }
 
                 if('variables' in expresions[i]) {
-                    paintSlaVariables(expresions[i].variables, varDom.find('.variables'));
+                    this.paintSlaVariables(expresions[i].variables, varDom.find('.variables'));
                 }
                 varDom.appendTo(dom);
             };
         }
     };
 
-    var paintSla = function paintSla (sla) {
-        if(!slaLoaded) {
-            slaLoaded = true;
+    CatalogueDetailsView.prototype.paintSla = function paintSla () {
+        if(!this.slaLoaded) {
+            var sla = this.offeringElement.getSla();
+
+            this.slaLoaded = true;
             $('<h2></h2>').text('Service level agreement information').appendTo('#sla-tab');
 
-            if (sla.length > 0) {
-                $.template('slaTemplate', $('#sla_template'));
+            $.template('slaTemplate', $('#sla_template'));
 
-                for (var i = 0; i < sla.length; i++) {
-                    var dom;
-                    dom = $.tmpl('slaTemplate', {
-                        'title': sla[i].title,
-                        'description': sla[i].description,
-                        'obligated': sla[i].obligatedParty.substring(sla[i].obligatedParty.indexOf('#') + 1)
-                    });
-                    dom.appendTo('#sla-tab');
-                    if('slaExpresions' in sla[i]){
-                        paintSlaExpresions(sla[i].slaExpresions, dom.find('.expresions'));
-                    }
-                };
-            } else {
-                $('<p></p>').text('No service level agreement has been defined').appendTo('#sla-tab');
-            }
+            for (var i = 0; i < sla.length; i++) {
+                var dom;
+                dom = $.tmpl('slaTemplate', {
+                    'title': sla[i].title,
+                    'description': sla[i].description,
+                    'obligated': sla[i].obligatedParty.substring(sla[i].obligatedParty.indexOf('#') + 1)
+                });
+                dom.appendTo('#sla-tab');
+                if('slaExpresions' in sla[i]){
+                    this.paintSlaExpresions(sla[i].slaExpresions, dom.find('.expresions'));
+                }
+            };
         }
     };
 
-    var paintInteractionParams = function paintInteractionParams (params, domElem, title) {
+    CatalogueDetailsView.prototype.paintInteractionParams = function paintInteractionParams (params, domElem, title) {
         $('<h4></h4>').text(title).appendTo(domElem);
         $.template('intParamTemplate', $('#int_param_template'));
 
@@ -390,7 +596,7 @@
         }
     };
 
-    var paintInteractions = function paintInteractions (interactions, domElem) {
+    CatalogueDetailsView.prototype.paintInteractions = function paintInteractions (interactions, domElem) {
         $('<h3></h3>').text('Interactions').appendTo(domElem);
         $.template('interactTemplate', $('#int_template'));
 
@@ -402,89 +608,117 @@
             });
             inter.appendTo(domElem);
             if ('inputs' in interactions[i] && interactions[i].inputs.length > 0) {
-                paintInteractionParams(interactions[i].inputs, inter.find('.inputs'), 'Inputs');
+                this.paintInteractionParams(interactions[i].inputs, inter.find('.inputs'), 'Inputs');
             }
 
             if ('outputs' in interactions[i] && interactions[i].outputs.length > 0) {
-                paintInteractionParams(interactions[i].outputs, inter.find('.outputs'), 'Outputs');
+                this.paintInteractionParams(interactions[i].outputs, inter.find('.outputs'), 'Outputs');
             }
         }
     };
 
-    var paintInteractionProtocols = function paintInteractionProtocols (interactions) {
-        if(!interLoaded) {
-            interLoaded = true;
+    CatalogueDetailsView.prototype.paintInteractionProtocols = function paintInteractionProtocols () {
+        if(!this.interLoaded) {
+            var interactions = this.offeringElement.getInteractions();
+
+            this.interLoaded = true;
             $('<h2></h2>').text('Interaction protocols information').appendTo('#int-tab');
 
-            if(interactions.length > 0) {
-                $.template('intProtTemplate', $('#int_prot_template'));
+            $.template('intProtTemplate', $('#int_prot_template'));
 
-                for (var i = 0; i < interactions.length; i++) {
-                    var prot = $.tmpl('intProtTemplate', {
-                        'title': interactions[i].title,
-                        'description': interactions[i].description,
-                        'technical_interface': interactions[i].technical_interface
-                    });
-                    prot.appendTo('#int-tab');
+            for (var i = 0; i < interactions.length; i++) {
+                var prot = $.tmpl('intProtTemplate', {
+                    'title': interactions[i].title,
+                    'description': interactions[i].description,
+                    'technical_interface': interactions[i].technical_interface
+                });
+                prot.appendTo('#int-tab');
 
-                    if ('interactions' in interactions[i] && interactions[i].interactions.length > 0) {
-                        paintInteractions(interactions[i].interactions, prot.find('.interactions'));
-                    }
+                if ('interactions' in interactions[i] && interactions[i].interactions.length > 0) {
+                    this.paintInteractions(interactions[i].interactions, prot.find('.interactions'));
                 }
-            } else {
-                $('<p></p>').text('No interaction protocols have been defined').appendTo('#int-tab');
             }
         }
     };
 
-    var paintResources = function paintResources (resources) {
-        if(!resLoaded) {
-            resLoaded = true;
+    CatalogueDetailsView.prototype.paintResources = function paintResources () {
+        if(!this.resLoaded) {
+            var resources = this.offeringElement.getResources();
+
+            this.resLoaded = true;
             $('<h2></h2>').text('Offering resources').appendTo('#res-tab');
-            if (resources.length > 0) {
-                for (var i = 0; i < resources.length; i++) {
-                    var cont = $('<div></div>');
-                    var p;
-                    p = $('<p></p>').appendTo(cont);
-                    p.append('<b>Name: </b>');
-                    p.append(resources[i].name);
+            for (var i = 0; i < resources.length; i++) {
+                var cont = $('<div></div>');
+                var p;
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Name: </b>');
+                p.append(resources[i].name);
 
-                    p = $('<p></p>').appendTo(cont);
-                    p.append('<b>Version: </b>');
-                    p.append(resources[i].version);
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Version: </b>');
+                p.append(resources[i].version);
 
-                    p = $('<p></p>').appendTo(cont);
-                    p.append('<b>Description: </b>');
-                    p.append(resources[i].description);
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Description: </b>');
+                p.append(resources[i].description);
 
-                    cont.appendTo('#res-tab');
-                }
-            } else {
-                $('<p></p>').text('The offering has no resources').appendTo('#res-tab');
+                cont.appendTo('#res-tab');
             }
         }
     };
 
+    CatalogueDetailsView.prototype.paintApplications = function paintApplications () {
+        if(!this.appLoaded) {
+            var applications = this.offeringElement.getApplications();
 
-    refreshAndUpdateDetailsView = function refreshAndUpdateDetailsView () {
+            this.appLoaded = true;
+            $('<h2></h2>').text('Applications').appendTo('#app-tab');
+            for (var i = 0; i < applications.length; i++) {
+                var cont = $('<div></div>');
+                var p;
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Name: </b>');
+                p.append(applications[i].name);
+
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>URL: </b>');
+                p.append(applications[i].url);
+
+                p = $('<p></p>').appendTo(cont);
+                p.append('<b>Description: </b>');
+                p.append(applications[i].description);
+
+                cont.appendTo('#app-tab');
+            }
+        }
+    };
+
+    CatalogueDetailsView.prototype.refreshAndUpdateDetailsView = function refreshAndUpdateDetailsView () {
         $.ajax({
             type: "GET",
             url: EndpointManager.getEndpoint('OFFERING_ENTRY', {
-                'organization': offElem.getOrganization(),
-                'name': offElem.getName(),
-                'version': offElem.getVersion()
+                'organization': this.offeringElement.getOrganization(),
+                'name': this.offeringElement.getName(),
+                'version': this.offeringElement.getVersion()
             }),
             dataType: 'json',
-            success: function (response) {
+            success: (function (response) {
                 var newElem = new OfferingElement(response)
-                paintOfferingDetails(newElem, backAct, detContainer);
-            },
+                this.update(newElem);
+            }).bind(this),
             error: function (xhr) {
             }
         });
     };
 
-    refreshDetailsView = function refreshDetailsView (offeringElement) {
-        paintOfferingDetails(offeringElement, backAct, detContainer);
+    CatalogueDetailsView.prototype.update = function update (offElement) {
+        this.offeringElement = offElement;
+        this.legalLoaded = false;
+        this.pricingLoaded = false;
+        this.slaLoaded = false;
+        this.interLoaded = false;
+        this.resLoaded = false;
+        this.appLoaded = false;
+        this.showView();
     };
 })();

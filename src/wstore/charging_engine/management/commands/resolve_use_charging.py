@@ -55,7 +55,7 @@ class Command(BaseCommand):
                         purchase = contract.purchase
 
                         if purchase.organization_owned:
-                            org = Organization.objects.get(name=purchase.owner_organization)
+                            org = purchase.owner_organization
                             payment_info = org.payment_info
                         else:
                             payment_info = purchase.customer.userprofile.payment_info
@@ -78,7 +78,7 @@ class Command(BaseCommand):
 
                 # Get payment info
                 if purchase.organization_owned:
-                    org = Organization.objects.get(name=purchase.owner_organization)
+                    org = purchase.owner_organization
                     payment_info = org.payment_info
                 else:
                     payment_info = purchase.customer.userprofile.payment_info

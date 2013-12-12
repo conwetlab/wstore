@@ -45,18 +45,16 @@ BASEDIR = path.dirname(path.abspath(__file__))
 
 STORE_NAME = 'WStore'
 AUTH_PROFILE_MODULE = 'wstore.models.UserProfile'
-#THEME_ACTIVE = 'defaulttheme'
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'Europe/Madrid'
+OILAUTH = True
+PORTALINSTANCE = False
 
-# Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
+THEME_ACTIVE = 'defaulttheme'
+# Local time zone for this installation.
+
+# Language code for this installation.
 LANGUAGE_CODE = 'en'
 
-SITE_ID = u'50a0ecfa8e05ac48d2ecb345'
+SITE_ID = u'51f64f368e05ac639c9039b2'
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -105,7 +103,13 @@ STATICFILES_FINDERS = (
 #    'wstore.themes.ActiveThemeFinder',
 )
 
-LOGIN_URL = "/login"
+if OILAUTH:
+    LOGIN_URL = "/login/fiware/"
+    LOGIN_REDIRECT_URL = '/'
+    LOGIN_ERROR_URL = '/login-error'
+    SOCIAL_AUTH_DISCONNECT_REDIRECT_URL = "/login/fiware/"
+else:
+    LOGIN_URL = '/login/'
 
 USDL_EDITOR_URL = "http://wstore.lab.fi-ware.eu/usdl-editor"
 
@@ -119,6 +123,18 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.media',
     'django.core.context_processors.request',
     'django.core.context_processors.static',
+    'social_auth.context_processors.social_auth_by_type_backends',
+)
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_auth.backends.pipeline.social.social_auth_user',
+    #'social_auth.backends.pipeline.associate.associate_by_email',
+    'social_auth.backends.pipeline.user.get_username',
+    'social_auth.backends.pipeline.user.create_user',
+    'social_auth.backends.pipeline.social.associate_user',
+    'social_auth.backends.pipeline.social.load_extra_data',
+    'social_auth.backends.pipeline.user.update_user_details',
+    'wstore.social_auth_backend.fill_internal_user_info'
 )
 
 # List of callables that know how to import templates from various sources.
@@ -132,6 +148,12 @@ TEMPLATE_LOADERS = (
 MIDDLEWARE_CLASSES = (
     'wstore.store_commons.middleware.URLMiddleware',
 )
+
+WSTOREMAILUSER = '<mail_user'
+WSTOREMAIL = '<email>'
+WSTOREMAILPASS = '<email_passwd>'
+
+WSTOREPROVIDERREQUEST = '<provider_requests_email>'
 
 URL_MIDDLEWARE_CLASSES = {
     'default': (
@@ -179,11 +201,24 @@ INSTALLED_APPS = (
     'wstore',
     'wstore.defaulttheme',
     'wstore.charging_engine',
-    'wstore.oauth2provider',
     'wstore.store_commons',
     'django_crontab',
     'django_nose',
+    'social_auth',
 )
+
+AUTHENTICATION_BACKENDS = (
+    'wstore.social_auth_backend.FiwareBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+#SOCIAL_AUTH_SANITIZE_REDIRECTS = False
+
+FIWARE_APP_ID = '<fiware_app_id>'
+FIWARE_API_SECRET = '<fiware_secret>'
+
+SOCIAL_AUTH_ENABLED_BACKENDS = ('fiware',)
+
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 # Paypal creadetials
@@ -205,3 +240,7 @@ from django.contrib.sites.management import create_default_site
 from django.contrib.sites import models as site_app
 
 signals.post_syncdb.disconnect(create_default_site, site_app)
+
+import lucene
+
+lucene.initVM(lucene.CLASSPATH)

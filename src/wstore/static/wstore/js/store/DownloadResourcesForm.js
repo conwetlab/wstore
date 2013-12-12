@@ -51,7 +51,6 @@
                     window.open(res.link);
                 };
             })(resources[i])).appendTo(p);
-
             p.appendTo('.modal-body');
 
         }

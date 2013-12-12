@@ -1,24 +1,18 @@
 
 
 <div class="menu-offering">
-    <div class="row menu-offering-row">
-      <h2>${name}</h2>
-      <img src="${logo}" alt="">
-      <div class="offering-meta">
-          <i class="icon-star-empty" ></i>
-          <i class="icon-star-empty" ></i>
-          <i class="icon-star-empty" ></i>
-          <i class="icon-star-empty" ></i>
-          <i class="icon-star-empty" ></i>
-          <p>${rating}</p>
-          <span class="${label_class}">${state}</span>
+    <div class="fluid-row menu-offering-row">
+      <h2>${name}<span class="txt-gradient" /></h2>
+      <div class="org-info">
+        <p class="off-org-name">${organization}</p>
+        <span class="txt-gradient" />
       </div>
-    </div>
-    <div class="row menu-offering-row">
-      <h2>Owner organization</h2>
-      <p>${organization}</p>
-      <h2>Description</h2>
-      <p>${description}</p>
+      <img src="${logo}" alt="" />
+      <div class="offering-meta">
+          <div class="stars-container" />
+      </div>
+      <p id="off-desc">${description}</p>
+      <span class="txt-gradient" />
     </div>
 </div>
 

@@ -29,6 +29,7 @@
                </div>
            </td>
        </tr>
+       {% if not oil %}
         <tr>
            <td class="show-org"> Organizations </td>
            <td>
@@ -42,6 +43,15 @@
            <td>
                <div class="add-prof">
                    <i class="icon-plus add-prof"></i>
+               </div>
+           </td>
+       </tr>
+       {% endif %}
+       <tr>
+           <td class="show-units"> Pricing model units </td>
+           <td>
+               <div class="add-unit">
+                   <i class="icon-plus add-unit"></i>
                </div>
            </td>
        </tr>

@@ -22,6 +22,7 @@
     var logo = [];
     var screenShots = [];
     var usdl = {};
+    var caller;
 
     var handleImageFileSelection = function handleImageFileSelection(evnt, type) {
         var files = evnt.target.files;
@@ -94,6 +95,23 @@
         reader.readAsText(f);
     };
 
+    var helpHandler = function helpHandler(evnt) {
+        var helpId = evnt.target;
+        if (!$(helpId).prop('displayed')) {
+            $(helpId).popover('show');
+            $(helpId).prop('displayed', true);
+            $(helpId).addClass('question-sing-sel');
+            // Add document even
+            event.stopPropagation();
+            $(document).click(function() {
+                $(helpId).popover('hide');
+                $(helpId).prop('displayed', false);
+                $(helpId).removeClass('question-sing-sel');
+                $(document).unbind('click');
+            });
+        }
+    };
+
     var makeEditRequest = function makeEditRequest(offeringElement) {
         var csrfToken = $.cookie('csrftoken');
         var msg, request = {};
@@ -117,23 +135,57 @@
                 request.offering_description = usdl;
                 provided = true;
             }
-        } else {
-            var usdlLink = $.trim($('#usdl-url').val());
-            var contentType = $.trim($('#content-type').val());
+        } else if($('#price-input').length > 0) {
 
-            if (usdlLink != '' && contentType == '') {
+            var description;
+            var pricing = {};
+            var legal = {};
+            var rep = $('#repositories').val();
+            // Check provided info
+            description = $.trim($('#description').val());
+
+            if (description == '') {
                 error = true;
-                msg = 'Missing content type';
-                
-            } else if (usdlLink == '' && contentType != '') {
+                msg = 'The description is required';
+            }
+            pricing.price_model = $('#pricing-select').val();
+
+            // If a payment model is selected the price is required
+            if (pricing.price_model == 'single_payment') {
+                var price = $.trim($('#price-input').val());
+                if (price == '') {
+                    error = true;
+                    msg = 'The price is required for a single payment model';
+                } else if (!$.isNumeric(price)){
+                    error = true;
+                    msg = 'The price must be a number';
+                } else {
+                    pricing.price = price;
+                }
+            }
+            legal.title = $.trim($('#legal-title').val());
+            legal.text = $.trim($('#legal-text').val());
+
+            // Include the info
+            request.offering_info = {
+                'description': description,
+                'pricing': pricing
+            }
+            // Include the legal info if completed
+            if (legal.title && legal.text) {
+                request.offering_info.legal = legal
+            }
+            provided = true
+
+        } else if($('#usdl-url').length > 0){
+            var usdlLink = $.trim($('#usdl-url').val());
+
+            if (usdlLink == '') {
                 error = true;
                 msg = 'Missing USDL Link';
 
-            } else if (usdlLink != '' && contentType != '') {
-                request.description_url = {
-                    'link': usdlLink,
-                    'content_type': contentType
-                }
+            } else {
+                request.description_url = usdlLink;
                 provided = true;
             }
         }
@@ -161,8 +213,8 @@
                 data: JSON.stringify(request),
                 success: function (response) {
                     $('#message').modal('hide');
-                    MessageManager.showMessage('Created', 'The offering has been updated')
-                    refreshAndUpdateDetailsView();
+                    MessageManager.showMessage('Updated', 'The offering has been updated')
+                    caller.refreshAndUpdateDetailsView();
                 },
                 error: function (xhr) {
                     var resp = xhr.responseText;
@@ -178,6 +230,10 @@
 
     var displayUploadUSDLForm = function displayUploadUSDLForm() {
         var i;
+        var helpMsg = "Upload an USDL document containing the offering info";
+        $('#warning-container').empty();
+
+        $('#upload-help').attr('data-content', helpMsg);
 
         $('#usdl-container').empty();
         $.template('usdlFormTemplate', $('#upload_usdl_form_template'));
@@ -196,15 +252,86 @@
     };
 
     var displayUSDLLinkForm = function displayUSDLLinkForm() {
-        $('#usdl-container').empty();
+        var helpMsg = "Provide an URL of an USDL document uploaded in a Repository";
+        $('#warning-container').empty();
 
-        $('<input></input>').attr('type', 'text').attr('id', 'content-type').attr('placeholder', 'Content type').appendTo('#usdl-container');
-        $('<div></div>').addClass('clear space').appendTo('#usdl-container');
+        $('#upload-help').attr('data-content', helpMsg);
+        $('#usdl-container').empty();
         $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo('#usdl-container');
     };
 
-    editOfferingForm = function editOfferingForm(offeringElement) {
+    var checkBasicUSDL = function checkBasicUSDL(offeringElement) {
+        var basic = true;
+        var pricing = offeringElement.getPricing();
+        var legal = offeringElement.getLegal();
 
+        if (legal.length > 0) {
+            legal = legal[0];
+        }
+
+        $('#description').val(offeringElement.getDescription());
+        // Check Pricing model
+        if (pricing.price_plans && pricing.price_plans.length > 0) {
+            var plan = pricing.price_plans[0];
+            if (plan.price_components && plan.price_components.length > 1) {
+                basic = false;
+            } else if (plan.price_components && plan.price_component.length == 1) {
+                var comp = plan.price_components[0];
+                if (comp.unit.toLowerCase() == 'single payment') {
+                    // Fill the form info
+                    $('#pricing-select').val('single_payment');
+                    $('#price-input').val(comp.value);
+                    $('#price-input').attr('disabled', false);
+                } else {
+                    basic = false;
+                }
+            }
+        }
+        
+        // Check Legal conditions
+        if (legal.clauses && legal.clauses.length > 0) {
+            if (legal.clauses.length == 1) {
+                var clause = legal.clauses[0];
+                // Fill form info
+                $('#legal-title').val(clause.name);
+                $('#legal-text').val(clause.text);
+            } else {
+                basic = false;
+            }
+        }
+        return basic;
+    };
+
+    var displayUpdateUSDLInfo = function displayUpdateUSDLInfo(offeringElement) {
+        var helpMsg = "Update manually your basic USDL info. This method only supports free or single payment as price models";
+        $('#warning-container').empty();
+
+        $('#upload-help').attr('data-content', helpMsg);
+        $('#usdl-container').empty();
+        $.template('usdlFormTemplate', $('#create_usdl_form_template'));
+        $.tmpl('usdlFormTemplate', {}).appendTo('#usdl-container');
+
+        // Remove unecesary inputs
+        $('label:contains(Select the repository)').remove();
+        $('#repositories').remove();
+
+        if (!checkBasicUSDL(offeringElement)) {
+            var msg = 'This offering contains a complex USDL. If you use this method the USDL will be overridden and you may lose some info';
+            MessageManager.showAlertWarnig('Warning', msg, $('#warning-container'));
+        }
+
+        // Set listeners
+        $('#pricing-select').change(function() {
+            if ($(this).val() == 'free') {
+                $('#price-input').prop('disabled', true);
+            } else {
+                $('#price-input').prop('disabled', false);
+            }
+        });
+    };
+    editOfferingForm = function editOfferingForm(offeringElement, callerObj) {
+
+        caller = callerObj;
         logo = [];
         screenShots = [];
         usdl = {};
@@ -235,17 +362,32 @@
 
         $('#usdl-sel').change(function() {
             if($(this).val() == "1") {
+                displayUpdateUSDLInfo(offeringElement);
+            } else if($(this).val() == "2") {
                 displayUploadUSDLForm();
-            } else if ($(this).val() == "2") {
+            } else if ($(this).val() == "3") {
                 displayUSDLLinkForm();
             } else {
+                var helpMsg = "Select the method to provide the USDL with the new info. You can provide an USDL or provide an URL pointing to an USDL. You can also manually update the info, if you created a basic USDL when you created the offering.";
+                $('#upload-help').attr('data-content', helpMsg);
+                $('#warning-container').empty();
                 $('#usdl-container').empty()
+            }
+            // Quit the help menu if needed
+            if ($('#upload-help').prop('displayed')) {
+                $('#upload-help').popover('hide');
+                $('#upload-help').prop('displayed', false);
+                $('#upload-help').removeClass('question-sing-sel');
             }
         });
 
-        $('#upload-help').on('hover', function () {
-            $('#upload-help').popover('show');
+        $('#upload-help').popover({'trigger': 'manual'});
+        $('#upload-help').click(helpHandler);
+        $('#message').on('hide', function() {
+            $(document).unbind('click');
+            $('.popover').remove();
         });
+
         $('.modal-footer > .btn').click(function(evnt) {
             evnt.preventDefault();
             evnt.stopPropagation();

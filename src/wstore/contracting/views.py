@@ -25,11 +25,12 @@ from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.models import User
-from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_error_response, get_content_type, supported_request_mime_types, \
+from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
 authentication_required
 from wstore.offerings.offerings_management import get_offering_info
 from wstore.contracting.purchases_management import create_purchase
@@ -38,8 +39,7 @@ from wstore.models import Offering, Organization, Context
 from wstore.models import Purchase
 from wstore.models import Resource as store_resource
 from wstore.contracting.purchase_rollback import rollback
-from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
+
 
 
 class PurchaseFormCollection(Resource):
@@ -50,25 +50,22 @@ class PurchaseFormCollection(Resource):
 
         data = json.loads(request.raw_post_data)
 
-        user_profile = request.user.userprofile
-
         # Get the offering
-        if isinstance(data['offering'], dict):
-            id_ = data['offering']
-            offering = Offering.objects.get(owner_organization=id_['organization'], name=id_['name'], version=id_['version'])
-        else:
-            offering = Offering.objects.get(description_url=data['offering'])
+        try:
+            if isinstance(data['offering'], dict):
+                id_ = data['offering']
+                org = Organization.objects.get(name=id_['organization'])
+                offering = Offering.objects.get(owner_organization=org, name=id_['name'], version=id_['version'])
+            else:
+                offering = Offering.objects.get(description_url=data['offering'])
+        except:
+            return build_response(request, 404, 'Not found')
 
         redirect_uri = data['redirect_uri']
 
-        # Check that the user has not already purchased the offering
-        if offering.pk in user_profile.offerings_purchased \
-        or offering.pk in user_profile.organization.offerings_purchased:
-            return build_error_response(request, 400, 'You have already purchased the offering')
-
         # Check that the offering can be purchased
         if offering.state != 'published':
-            return build_error_response(request, 400, 'The offering cannot be purchased')
+            return build_response(request, 400, 'The offering cannot be purchased')
 
         token = offering.pk + request.user.pk
         site = get_current_site(request)
@@ -110,36 +107,25 @@ class PurchaseFormCollection(Resource):
 
         id_ = info['offering']
 
-        # Remove the context entry
-        # del(context.user_refs[token])
         context.save()
-
-        user_profile = user.userprofile
 
         # Load the offering info
         try:
             offering = Offering.objects.get(pk=id_)
         except:
-            return build_error_response(request, 404, 'The offering not exists')
+            return build_response(request, 404, 'Not found')
         offering_info = get_offering_info(offering, user)
-
-        # Check that the user is not the owner of the offering
-
-        if offering.owner_admin_user == user:
-            return build_error_response(request, 400, 'You are the owner of the offering')
-
-        # Check that the user has not already purchased the offering
-        if offering.pk in user_profile.offerings_purchased \
-        or offering.pk in user_profile.organization.offerings_purchased:
-            return build_error_response(request, 400, 'You have already purchased the offering')
 
         # Check that the offering can be purchased
         if offering.state != 'published':
-            return build_error_response(request, 400, 'The offering cannot be purchased')
+            return build_response(request, 400, 'The offering cannot be purchased')
+
+        from django.conf import settings
 
         # Create the context
         context = {
-            'offering_info': mark_safe(json.dumps(offering_info))
+            'offering_info': mark_safe(json.dumps(offering_info)),
+            'oil': settings.OILAUTH
         }
 
         # Return the form to purchase the offering
@@ -152,6 +138,7 @@ class PurchaseCollection(Resource):
     @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request):
+
         user = request.user
         content_type = get_content_type(request)[0]
 
@@ -163,7 +150,8 @@ class PurchaseCollection(Resource):
 
                 if isinstance(data['offering'], dict):
                     id_ = data['offering']
-                    offering = Offering.objects.get(owner_organization=id_['organization'], name=id_['name'], version=id_['version'])
+                    org = Organization.objects.get(name=id_['organization'])
+                    offering = Offering.objects.get(owner_organization=org, name=id_['name'], version=id_['version'])
                 else:
                     offering = Offering.objects.get(description_url=data['offering'])
 
@@ -175,22 +163,35 @@ class PurchaseCollection(Resource):
                 if 'credit_card' in data['payment']:
                     payment_info['credit_card'] = data['payment']['credit_card']
 
-                response_info = create_purchase(user, offering, data['organization_owned'], payment_info)
-            except:
+                # Check if the user is purchasing for an organization
+
+                org_owned = True
+                if user.userprofile.is_user_org():
+                    org_owned = False
+
+                # Check if the user has the customer role for the organization
+                if org_owned:
+                    roles = user.userprofile.get_current_roles()
+
+                    if not 'customer' in roles:
+                        return build_response(request, 403, 'Forbidden')
+
+                response_info = create_purchase(user, offering, org_owned=org_owned, payment_info=payment_info)
+            except Exception, e:
                 # Check if the offering has been paid before the exception has been raised
                 paid = False
 
-                if data['organization_owned']:
-                    if offering.pk in request.user.userprofile.organization.offerings_purchased:
+                if org_owned:
+                    if offering.pk in request.user.userprofile.current_organization.offerings_purchased:
                         paid = True
-                        response_info = Purchase.objects.get(owner_organization=request.user.userprofile.organization.name, offering=offering)
+                        response_info = Purchase.objects.get(owner_organization=request.user.userprofile.current_organization, offering=offering)
                 else:
                     if offering.pk in request.user.userprofile.offerings_purchased:
                         paid = True
-                        response_info = Purchase.objects.get(customer=request.user, offering=offering)
+                        response_info = Purchase.objects.get(customer=request.user, offering=offering, organization_owned=False)
 
                 if not paid:
-                    return build_error_response(request, 400, 'Invalid json content')
+                    return build_response(request, 400, e.message)
 
         response = {}
         # If the value returned by the create_purchase method is a string means that
@@ -207,13 +208,12 @@ class PurchaseCollection(Resource):
             for res in offering.resources:
                 r = store_resource.objects.get(pk=res)
 
-                if r.resource_type == 'download':
-                    # Check if the resource has been uploaded to the store or is
-                    # in an external applications server
-                    if r.resource_path != '':
-                        response['resources'].append(r.resource_path)
-                    elif r.download_link != '':
-                        response['resources'].append(r.download_link)
+                # Check if the resource has been uploaded to the store or if is
+                # in an external applications server
+                if r.resource_path != '':
+                    response['resources'].append(r.resource_path)
+                elif r.download_link != '':
+                    response['resources'].append(r.download_link)
 
             # Load bill URL
             response['bill'] = response_info.bill
@@ -228,6 +228,7 @@ class PurchaseCollection(Resource):
         if token in context.user_refs:
             redirect_uri = context.user_refs[token]['redirect_uri']
             del(context.user_refs[token])
+            context.save()
             response['client_redirection_uri'] = redirect_uri
 
         return HttpResponse(json.dumps(response), status=status, mimetype=content_type)
@@ -257,8 +258,7 @@ class PurchaseEntry(Resource):
                     credit_card = data['credit_card']
                 else:
                     if purchase.organization_owned:
-                        org = Organization.objects.get(name=purchase.owner_organization)
-                        credit_card = org.payment_info
+                        credit_card = purchase.owner_organization.payment_info
                     else:
                         credit_card = purchase.customer.userprofile.payment_info
                 charging_engine = ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
@@ -268,6 +268,6 @@ class PurchaseEntry(Resource):
             # Refresh the purchase info
             purchase = Purchase.objects.get(ref=reference)
             rollback(purchase)
-            return build_error_response(request, 400, 'Invalid JSON content')
+            return build_response(request, 400, 'Invalid JSON content')
 
-        return build_error_response(request, 200, 'OK')
+        return build_response(request, 200, 'OK')

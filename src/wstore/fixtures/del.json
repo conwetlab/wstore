@@ -55,8 +55,9 @@
             "related_images": [],
             "description_url": "http://testrepository.com/v1/rep/storeOfferingsCollection/test_organization__test_offering__1.0",
             "resources": [],
-            "owner_organization": "test_organization",
-            "offering_description": {}
+            "owner_organization": "51000aba8e05ac2115f123ff",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46"
         }
     },
     {
@@ -75,8 +76,10 @@
             "related_images": [],
             "description_url": "http://testrepository.com/v1/rep/storeOfferingsCollection/test_organization__test_offering2__1.0",
             "resources": [],
-            "owner_organization": "test_organization",
-            "offering_description": {}
+            "owner_organization": "51000aba8e05ac2115f123ff",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
         }
     },
     {
@@ -95,17 +98,10 @@
             "related_images": [],
             "description_url": "http://testrepository.com/v1/rep/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": [],
-            "owner_organization": "test_organization",
-            "offering_description": {}
-        }
-    },
-    {
-        "pk": "51000aba8e05ac2115f122ff",
-        "model": "wstore.UserProfile",
-        "fields": { 
-            "user": "51000aba8e05ac2115f022f9",
-            "organization": "51000aba8e05ac2115f123ff",
-            "roles": ["customer", "provider"]
+            "owner_organization": "51000aba8e05ac2115f123ff",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
         }
     },
     {
@@ -113,7 +109,8 @@
         "model": "wstore.Organization",
         "fields": { 
             "name": "test_organization",
-            "offerings_purchased": []
+            "offerings_purchased": [],
+            "managers": []
         }
     }
 ]

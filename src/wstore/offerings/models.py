@@ -23,13 +23,14 @@ from django.db import models
 from djangotoolbox.fields import ListField, DictField
 
 from wstore.models import Marketplace
+from wstore.models import Organization
 
 
 # An application is an offering composed by some
 # backend comopents and some resources
 class Offering(models.Model):
     name = models.CharField(max_length=50)
-    owner_organization = models.CharField(max_length=50)
+    owner_organization = models.ForeignKey(Organization)
     owner_admin_user = models.ForeignKey(User)
     # support_organization
     # support_admin_user
@@ -45,6 +46,9 @@ class Offering(models.Model):
     related_images = ListField()
     offering_description = DictField()
     notification_url = models.CharField(max_length=100)
+    creation_date = models.DateTimeField()
+    publication_date = models.DateTimeField(null=True, blank=True)
+    applications = ListField()
 
     def is_owner(self, user):
         return self.owner_admin_user == user
@@ -60,8 +64,7 @@ class Offering(models.Model):
 class Resource(models.Model):
     name = models.CharField(max_length=50)
     version = models.CharField(max_length=20)
-    provider = models.ForeignKey(User)
-    resource_type = models.CharField(max_length=50)
+    provider = models.ForeignKey(Organization)
     content_type = models.CharField(max_length=50)
     # Organization
     description = models.TextField()

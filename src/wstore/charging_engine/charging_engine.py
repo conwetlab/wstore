@@ -23,6 +23,7 @@ from __future__ import absolute_import
 import os
 import json
 import time
+import codecs
 import subprocess
 import threading
 from pymongo import MongoClient
@@ -36,7 +37,7 @@ from django.template import loader, Context
 from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
 
-from wstore.models import Resource
+from wstore.models import Resource, Organization
 from wstore.models import UserProfile
 from wstore.models import Purchase
 from wstore.models import Offering
@@ -46,7 +47,7 @@ from wstore.charging_engine.models import Unit
 from wstore.charging_engine.price_resolver import resolve_price
 from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.contracting.purchase_rollback import rollback
-from wstore.rss_adaptor.rssAdaptor import RSSAdaptor
+from wstore.rss_adaptor.rssAdaptor import RSSAdaptorThread
 from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
 
 
@@ -123,7 +124,7 @@ class ChargingEngine:
 
         return country_code
 
-    def _charge_client(self, price, concept):
+    def _charge_client(self, price, concept, currency):
 
         # Call payment gateway (paypal)
         # Configure paypal credentials
@@ -154,7 +155,7 @@ class ChargingEngine:
                     countrycode=country_code,
                     zip=self._purchase.tax_address['postal'],
                     amt=price,
-                    currencycode='EUR'
+                    currencycode=currency
                 )
             except Exception, e:
                 raise Exception('Error while creating payment: ' + e.value[0])
@@ -170,7 +171,7 @@ class ChargingEngine:
                 resp = pp.SetExpressCheckout(
                     paymentrequest_0_paymentaction='Sale',
                     paymentrequest_0_amt=price,
-                    paymentrequest_0_currencycode='EUR',
+                    paymentrequest_0_currencycode=currency,
                     returnurl=url + 'api/contracting/' + self._purchase.ref + '/accept',
                     cancelurl=url + 'api/contracting/' + self._purchase.ref + '/cancel',
                 )
@@ -191,165 +192,165 @@ class ChargingEngine:
         cdrs = []
 
         # Take the first RSS registered
-        rss = RSS.objects.all()[0]
+        rss_collection = RSS.objects.all()
 
-        # Create connection for raw database access
-        connection = MongoClient()
-        db = connection[settings.DATABASES['default']['NAME']]
+        if len(rss_collection) > 0:
+            rss = RSS.objects.all()[0]
 
-        # Get the service name using direct access to the stored
-        # JSON USDL description
+            # Create connection for raw database access
+            connection = MongoClient()
+            db = connection[settings.DATABASES['default']['NAME']]
 
-        offering_description = self._purchase.offering.offering_description
+            # Get the service name using direct access to the stored
+            # JSON USDL description
 
-        # Get the used tag for RDF properties
-        service_tag = ''
-        dc_tag = ''
-        for k, v in offering_description['@context'].iteritems():
-            if v == 'http://www.linked-usdl.org/ns/usdl-core#':
-                service_tag = k
-            if v == 'http://purl.org/dc/terms/':
-                dc_tag = k
+            offering_description = self._purchase.offering.offering_description
 
-        # Get the service name
-        service_name = ''
-        for node in offering_description['@graph']:
-            if node['@type'] == service_tag + ':Service':
-                service_name = node[dc_tag + ':title']['@value']
+            # Get the used tag for RDF properties
+            service_tag = ''
+            dc_tag = ''
+            for k, v in offering_description['@context'].iteritems():
+                if v == 'http://www.linked-usdl.org/ns/usdl-core#':
+                    service_tag = k
+                if v == 'http://purl.org/dc/terms/':
+                    dc_tag = k
 
-        # Get the provider (Organization)
-        provider = self._purchase.offering.owner_organization
+            # Get the service name
+            service_name = ''
+            for node in offering_description['@graph']:
+                if node['@type'] == service_tag + ':Service':
+                    service_name = node[dc_tag + ':title']['@value']
 
-        # Set offering ID
-        offering = self._purchase.offering.name + ' ' + self._purchase.offering.version
+            # Get the provider (Organization)
+            provider = self._purchase.offering.owner_organization.name
 
-        # Get the customer
-        if self._purchase.organization_owned:
-            customer = self._purchase.owner_organization
-        else:
-            customer = self._purchase.customer.username
+            # Set offering ID
+            offering = self._purchase.offering.name + ' ' + self._purchase.offering.version
 
-        # Get the country code
-        country_code = self._get_country_code(self._purchase.tax_address['country'])
-        country_code = get_country_code(country_code)
+            # Get the customer
+            if self._purchase.organization_owned:
+                customer = self._purchase.owner_organization.name
+            else:
+                customer = self._purchase.customer.username
 
-        # Check the type of the applied parts
-        if 'single_payment' in applied_parts:
+            # Get the country code
+            country_code = self._get_country_code(self._purchase.tax_address['country'])
+            country_code = get_country_code(country_code)
 
-            # A cdr is generated for every price part
-            for part in applied_parts['single_payment']:
+            # Check the type of the applied parts
+            if 'single_payment' in applied_parts:
 
-                # Take and increment the correlation number using
-                # the mongoDB atomic access in order to avoid race
-                # problems
-                corr_number = db.wstore_rss.find_and_modify(
-                    query={'_id': ObjectId(rss.pk)},
-                    update={'$inc': {'correlation_number': 1}}
-                )['correlation_number']
+                # A cdr is generated for every price part
+                for part in applied_parts['single_payment']:
 
-                # Set the description
-                description = 'Single payment: ' + part['value'] + ' ' + part['currency']
-                currency = get_curency_code(part['currency'])
+                    # Take and increment the correlation number using
+                    # the mongoDB atomic access in order to avoid race
+                    # problems
+                    corr_number = db.wstore_rss.find_and_modify(
+                        query={'_id': ObjectId(rss.pk)},
+                        update={'$inc': {'correlation_number': 1}}
+                    )['correlation_number']
 
-                cdrs.append({
-                    'provider': provider,
-                    'service': service_name,
-                    'defined_model': 'Single payment event',
-                    'correlation': str(corr_number),
-                    'purchase': self._purchase.pk,
-                    'offering': offering,
-                    'product_class': 'SaaS',
-                    'description': description,
-                    'cost_currency': currency,
-                    'cost_value': part['value'],
-                    'tax_currency': '1',
-                    'tax_value': '0.0',
-                    'source': '1',
-                    'operator': '1',
-                    'country': country_code,
-                    'time_stamp': time_stamp,
-                    'customer': customer,
-                })
+                    # Set the description
+                    description = 'Single payment: ' + part['value'] + ' ' + part['currency']
+                    currency = get_curency_code(part['currency'])
 
-        if 'subscription' in applied_parts:
+                    cdrs.append({
+                        'provider': provider,
+                        'service': service_name,
+                        'defined_model': 'Single payment event',
+                        'correlation': str(corr_number),
+                        'purchase': self._purchase.pk,
+                        'offering': offering,
+                        'product_class': 'SaaS',
+                        'description': description,
+                        'cost_currency': currency,
+                        'cost_value': part['value'],
+                        'tax_currency': '1',
+                        'tax_value': '0.0',
+                        'source': '1',
+                        'operator': '1',
+                        'country': country_code,
+                        'time_stamp': time_stamp,
+                        'customer': customer,
+                    })
 
-            # A cdr is generated by price part
-            for part in applied_parts['subscription']:
+            if 'subscription' in applied_parts:
 
-                corr_number = db.wstore_rss.find_and_modify(
-                    query={'_id': ObjectId(rss.pk)},
-                    update={'$inc': {'correlation_number': 1}}
-                )['correlation_number']
+                # A cdr is generated by price part
+                for part in applied_parts['subscription']:
 
-                # Set the description
-                description = 'Subscription: ' + part['value'] + ' ' + part['currency'] + ' ' + part['unit']
-                currency = get_curency_code(part['currency'])
+                    corr_number = db.wstore_rss.find_and_modify(
+                        query={'_id': ObjectId(rss.pk)},
+                        update={'$inc': {'correlation_number': 1}}
+                    )['correlation_number']
 
-                cdrs.append({
-                    'provider': provider,
-                    'service': service_name,
-                    'defined_model': 'Subscription event',
-                    'correlation': str(corr_number),
-                    'purchase': self._purchase.pk,
-                    'offering': offering,
-                    'product_class': 'SaaS',
-                    'description': description,
-                    'cost_currency': currency,
-                    'cost_value': part['value'],
-                    'tax_currency': '1',
-                    'tax_value': '0.0',
-                    'source': '1',
-                    'operator': '1',
-                    'country': country_code,
-                    'time_stamp': time_stamp,
-                    'customer': customer,
-                })
+                    # Set the description
+                    description = 'Subscription: ' + part['value'] + ' ' + part['currency'] + ' ' + part['unit']
+                    currency = get_curency_code(part['currency'])
 
-        if 'pay_per_use' in applied_parts:
+                    cdrs.append({
+                        'provider': provider,
+                        'service': service_name,
+                        'defined_model': 'Subscription event',
+                        'correlation': str(corr_number),
+                        'purchase': self._purchase.pk,
+                        'offering': offering,
+                        'product_class': 'SaaS',
+                        'description': description,
+                        'cost_currency': currency,
+                        'cost_value': part['value'],
+                        'tax_currency': '1',
+                        'tax_value': '0.0',
+                        'source': '1',
+                        'operator': '1',
+                        'country': country_code,
+                        'time_stamp': time_stamp,
+                        'customer': customer,
+                    })
 
-            # A cdr is generated by price part
-            for part in applied_parts['pay_per_use']:
+            if 'pay_per_use' in applied_parts:
 
-                corr_number = db.wstore_rss.find_and_modify(
-                    query={'_id': ObjectId(rss.pk)},
-                    update={'$inc': {'correlation_number': 1}}
-                )['correlation_number']
+                # A cdr is generated by price part
+                for part in applied_parts['pay_per_use']:
 
-                # Set the description
-                description = 'Fee per ' + part['unit'] + ', Consumption: ' + str(part['value'])
-                currency = get_curency_code(part['applied_part']['currency'])
+                    corr_number = db.wstore_rss.find_and_modify(
+                        query={'_id': ObjectId(rss.pk)},
+                        update={'$inc': {'correlation_number': 1}}
+                    )['correlation_number']
 
-                cdrs.append({
-                    'provider': provider,
-                    'service': service_name,
-                    'defined_model': 'Pay per use event',
-                    'correlation': str(corr_number),
-                    'purchase': self._purchase.pk,
-                    'offering': offering,
-                    'product_class': 'SaaS',
-                    'description': description,
-                    'cost_currency': currency,
-                    'cost_value': str(part['price']),
-                    'tax_currency': '1',
-                    'tax_value': '0.0',
-                    'source': '1',
-                    'operator': '1',
-                    'country': country_code,
-                    'time_stamp': time_stamp,
-                    'customer': customer,
-                })
+                    # Set the description
+                    description = 'Fee per ' + part['unit'] + ', Consumption: ' + str(part['value'])
+                    currency = get_curency_code(part['applied_part']['currency'])
 
-        # Send the created CDRs to the Revenue Sharing System
-        try:
-            rss_adaptor = RSSAdaptor(rss.host)
-            rss_adaptor.send_cdr(cdrs)
-        except:
-            pass
+                    cdrs.append({
+                        'provider': provider,
+                        'service': service_name,
+                        'defined_model': 'Pay per use event',
+                        'correlation': str(corr_number),
+                        'purchase': self._purchase.pk,
+                        'offering': offering,
+                        'product_class': 'SaaS',
+                        'description': description,
+                        'cost_currency': currency,
+                        'cost_value': str(part['price']),
+                        'tax_currency': '1',
+                        'tax_value': '0.0',
+                        'source': '1',
+                        'operator': '1',
+                        'country': country_code,
+                        'time_stamp': time_stamp,
+                        'customer': customer,
+                    })
+
+            # Send the created CDRs to the Revenue Sharing System
+            r = RSSAdaptorThread(rss.host, cdrs)
+            r.start()
 
     def _generate_invoice(self, price, applied_parts, type_):
 
         parts = []
-
+        currency = self._purchase.contract.pricing_model['general_currency']
         if type_ == 'initial':
             # If initial can only contain single payments and subscriptions
             parts = {
@@ -368,7 +369,7 @@ class ChargingEngine:
             bill_template = loader.get_template('contracting/bill_template_initial.html')
 
         elif type_ == 'renovation':
-            # If renovation can only contain subscription
+            # If renovation, can only contain subscriptions
             for part in applied_parts['subscription']:
                 parts.append((part['title'], part['value'], part['currency'], part['unit'], str(part['renovation_date'])))
 
@@ -376,7 +377,7 @@ class ChargingEngine:
             bill_template = loader.get_template('contracting/bill_template_renovation.html')
 
         elif type_ == 'use':
-            # If use can only contain pay per use parts
+            # If use, can only contain pay per use parts
             for part in applied_parts['pay_per_use']:
                 parts.append((part['applied_part']['title'], part['applied_part']['value'],
                               part['applied_part']['currency'], part['applied_part']['unit'],
@@ -411,11 +412,11 @@ class ChargingEngine:
         context = {
             'BASEDIR': settings.BASEDIR,
             'offering_name': offering.name,
-            'off_organization': offering.owner_organization,
+            'off_organization': offering.owner_organization.name,
             'off_version': offering.version,
             'ref': self._purchase.ref,
             'date': date,
-            'organization': customer_profile.organization.name,
+            'organization': customer_profile.current_organization.name,
             'customer': customer_profile.complete_name,
             'address': tax.get('street'),
             'postal': tax.get('postal'),
@@ -426,7 +427,7 @@ class ChargingEngine:
             'tax': '0',
             'total': price,
             'resources': resources,
-            'cur': 'euros'  # General currency of the invoice
+            'cur': currency  # General currency of the invoice
         }
 
         # Include the corresponding parts
@@ -449,7 +450,7 @@ class ChargingEngine:
         # Create the bill code file
         invoice_name = self._purchase.ref + '_' + date
         bill_path = os.path.join(settings.BILL_ROOT, invoice_name + '.html')
-        f = open(bill_path, 'wb')
+        f = codecs.open(bill_path, 'wb', 'utf-8')
         f.write(bill_code)
         f.close()
 
@@ -460,7 +461,10 @@ class ChargingEngine:
             invoice_name += '_1'
 
         # Compile the bill file
-        subprocess.call(['/usr/bin/wkhtmltopdf', bill_path, in_name])
+        try:
+            subprocess.call([settings.BASEDIR + '/create_invoice.sh', bill_path, in_name])
+        except:
+            raise Exception('Invoice generation problem')
 
         # Remove temporal files
         for file_ in os.listdir(settings.BILL_ROOT):
@@ -487,30 +491,43 @@ class ChargingEngine:
         price_model = {}
 
         if 'price_components' in usdl_pricing:
+
+            currency_loaded = False
             for comp in usdl_pricing['price_components']:
 
+                # Check price component unit
                 try:
                     unit = Unit.objects.get(name=comp['unit'])
                 except:
                     raise(Exception, 'Unsupported unit in price plan model')
 
+                # The price component defines a single payment
                 if unit.defined_model == 'single payment':
                     if not 'single_payment' in price_model:
                         price_model['single_payment'] = []
 
                     price_model['single_payment'].append(comp)
 
+                # The price component defines a subscription
                 elif unit.defined_model == 'subscription':
                     if not 'subscription' in price_model:
                         price_model['subscription'] = []
 
                     price_model['subscription'].append(comp)
 
+                # The price component defines a pay per user
                 elif unit.defined_model == 'pay per use':
                     if not 'pay_per_use' in price_model:
                         price_model['pay_per_use'] = []
 
                     price_model['pay_per_use'].append(comp)
+
+                # Save the general currency of the offering
+                if not currency_loaded:
+                    price_model['general_currency'] = comp['currency']
+                    currency_loaded = True
+        else:
+            price_model['general_currency'] = 'EUR'
 
         # Create the contract entry
         Contract.objects.create(
@@ -523,20 +540,13 @@ class ChargingEngine:
 
     def _calculate_renovation_date(self, unit):
 
-        renovation_date = None
+        unit_model = Unit.objects.get(name=unit)
 
         now = datetime.now()
         # Transform now date into seconds
         now = time.mktime(now.timetuple())
 
-        if unit.lower() == 'per week':
-            renovation_date = now + 604800  # 7 days
-        elif unit.lower() == 'per month':
-            renovation_date = now + 2592000  # 30 days
-        elif unit.lower() == 'per year':
-            renovation_date = now + 31536000  # 365 days
-        else:
-            raise Exception('Invalid unit')
+        renovation_date = now + (unit_model.renovation_period * 86400)  # Seconds in a day
 
         renovation_date = datetime.fromtimestamp(renovation_date)
         return renovation_date
@@ -544,7 +554,8 @@ class ChargingEngine:
     def include_sdr(self, sdr):
         # Check the offering and customer
         off_data = sdr['offering']
-        offering = Offering.objects.get(name=off_data['name'], owner_organization=off_data['organization'], version=off_data['version'])
+        org = Organization.objects.get(name=off_data['organization'])
+        offering = Offering.objects.get(name=off_data['name'], owner_organization=org, version=off_data['version'])
 
         if offering != self._purchase.offering:
             raise Exception('The offering defined in the SDR is not the purchase offering')
@@ -554,7 +565,14 @@ class ChargingEngine:
         if self._purchase.organization_owned:
             # Check if the user belongs to the organization
             profile = UserProfile.objects.get(user=customer)
-            if profile.organization.name != self._purchase.owner_organization:
+            belongs = False
+
+            for org in profile.organizations:
+                if org['organization'] == self._purchase.owner_organization.pk:
+                    belongs = True
+                    break
+
+            if not belongs:
                 raise Exception('The user not belongs to the owner organization')
         else:
             # Check if the user has purchased the offering
@@ -627,7 +645,7 @@ class ChargingEngine:
             contract.charges.append({
                 'date': time_stamp,
                 'cost': price,
-                'currency': 'EUR',  # FIXME allow any currency
+                'currency': contract.pricing_model['general_currency'],
                 'concept': concept
             })
 
@@ -710,7 +728,7 @@ class ChargingEngine:
                 # Call the price resolver
                 price = resolve_price(related_model)
                 # Make the charge
-                redirect_url = self._charge_client(price, 'initial charge')
+                redirect_url = self._charge_client(price, 'initial charge', self._price_model['general_currency'])
             else:
                 # If it is not necessary to charge the customer the state is set to paid
                 self._purchase.state = 'paid'
@@ -754,7 +772,7 @@ class ChargingEngine:
                         unmodified.append(s)
 
                 price = resolve_price(related_model)
-                redirect_url = self._charge_client(price, 'Renovation')
+                redirect_url = self._charge_client(price, 'Renovation', self._price_model['general_currency'])
 
                 if len(unmodified) > 0:
                     related_model['unmodified'] = unmodified
@@ -791,7 +809,7 @@ class ChargingEngine:
                     related_model['pay_per_use'].append(pend_sdr)
 
                 # Charge the client
-                redirect_url = self._charge_client(price, 'Pay per use')
+                redirect_url = self._charge_client(price, 'Pay per use', self._price_model['general_currency'])
 
                 if self._purchase.state == 'paid':
                     self.end_charging(price, 'pay per use', related_model)

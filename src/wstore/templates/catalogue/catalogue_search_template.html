@@ -1,4 +1,4 @@
-<div class="catalogue-form">
+<div class="span2 catalogue-form">
     <form class="form form-vertical catalogue-elem">
         <div class="pagination pagination-centered">
         </div>
@@ -6,10 +6,10 @@
             Sort by
         </h2>
         <select id="sorting">
-            <option>Popularity</option>
-            <option>Organization</option>
-            <option>Creation date</option>
-            <option>Owner</option>
+            <option value="">-----</option>
+            <option value="rating">Popularity</option>
+            <option value="name">Name</option>
+            <option value="date">Date</option>
         </select>
         <select id="number-offerings">
             <option>10</option>
@@ -19,38 +19,23 @@
         <h2>
             Filter by
         </h2>
-        <input type="text" />
-        <input type="button" value="View all"></input>
+        <input type="text" id="cat-search-input"/>
+        <input type="button" value="Search" id="cat-search"></input>
+        <input type="button" value="View all" id="cat-all"></input>
     </form>
 </div>
-<div class="span10 offerings-container">
+<div class="span9 offerings-container">
     <div class="tabbable catalogue-elem"> 
         <ul class="nav nav-tabs">
             <li class="active"><a href="#purchased-tab" data-toggle="tab">Purchased</a></li>
-            {% if 'provider' in roles %}
-            <li><a href="#provided-tab" data-toggle="tab">Provided</a></li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Options<b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                    <li><a id="create-app">Create offering</a></li>
-                    <li><a id="register-res">Register resource</a></li>
-                    <li><a id="view-res">View resources</a></li>
-                </ul>
-            </li>
-            {% endif %}
        </ul>
        <div class="tab-content">
            <div class="tab-pane active" id="purchased-tab">
               <div id="purchased-content">
               </div>
            </div>
-           {% if 'provider' in roles %}
-           <div class="tab-pane" id="provided-tab">
-              <div id="provided-content">
-              </div>
-           </div>
-           {% endif %}
        </div>
-    </div>
+   </div>
 </div>
-
+<div class="clear space" />
+<div style="clear:both" />

@@ -1,0 +1,116 @@
+#oil-nav .dropdown-submenu a:hover{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu a:focus{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu a:active{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu .active a{
+  background-color: #049cdb;
+}
+
+#oil-nav .dropdown-submenu .active a:focus{
+  background-color: #049cdb;
+}
+
+#oil-nav .dropdown-submenu li a:hover{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu li a:focus{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav .dropdown-submenu li a:active{
+  color: #fff;
+  background-color: #049cdb;
+  background-image: none;
+}
+
+#oil-nav ul.nav li a img{
+  width: 20px;
+}
+
+#oil-nav ul.nav li a span{
+  box-shadow: none
+}
+
+#oil-nav ul.nav li.dropdown.open>.dropdown-toggle, #oil-nav .navbar .nav li.dropdown.active>.dropdown-toggle, #oil-nav .navbar .nav li.dropdown.open.active>.dropdown-toggle {
+  background-color: transparent !important;
+}
+
+#oil-nav .dropdown-menu>li>a:hover, #oil-nav .dropdown-menu>li>a:focus, #oil-nav .dropdown-submenu:hover>a, #oil-nav .dropdown-submenu:focus>a {
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  background-color: rgb(0, 45, 103);
+  background-image: none !important;
+}
+
+#oil-nav ul.dropdown-menu a{
+  padding: 10px 20px;
+}
+
+#oil-nav .dropdown-menu .divider {
+  height: 1px;
+  margin: 4px;
+}
+#oil-nav .dropdown-menu{
+  margin-top: -7px;
+  -webkit-border: 1px solid rgba(0,0,0,0.1);
+  -moz-border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.1);
+  -webkit-box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+  -moz-box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+  box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+}
+
+#oil-nav ul.nav span.name{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline;
+  width: 70px;
+}
+
+.navbar .nav.pull-right {
+  margin-right: -10px;
+  margin-left: 0px;
+  line-height: 21px;
+  height: 40px;
+}
+
+.navbar .icon-caret-right {
+    position: absolute;
+    top: 15px;
+    left: 145px;
+}
+
+.navbar .pull-left {
+    width: 100%;
+}
+
+.navbar .dropdown [data-placement="left"]{
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+.navbar .dropdown [data-placement="left"] img{
+    padding-right: 4px;
+}

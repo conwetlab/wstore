@@ -20,6 +20,8 @@
 
 (function(){
 
+    var caller;
+
     var makePublishRequest = function makePublishRequest(offeringElement, markets) {
         var request = {};
 
@@ -49,7 +51,7 @@
                 MessageManager.showMessage('Published', 'The offering has been published');
                 $('#catalogue-container').empty();
                 offeringElement.setState('published');
-                refreshDetailsView(offeringElement);
+                caller.update(offeringElement);
             },
             error: function (xhr) {
                 var resp = xhr.responseText;
@@ -74,17 +76,19 @@
             };
 
             formContent.appendTo('.modal-body');
-            // Set listeners
-            $('.modal-footer > .btn').click(function() {
-                makePublishRequest(offeringElement, markets);
-            })
         } else {
-            $('<p></p>').text('No marketplaces where publish the offering have been registered');
+            var msg = "There aren't Marketplaces registered. Press accept if you want to publish your offering only in WStore";
+            MessageManager.showAlertInfo('No Marketplaces', msg, $('.modal-body'));
         }
+        // Set listeners
+        $('.modal-footer > .btn').click(function() {
+            makePublishRequest(offeringElement, markets);
+        })
     };
 
-    publishOffering = function publishOffering(offeringElement) {
+    publishOffering = function publishOffering(offeringElement, callerObj) {
         // Get marketplaces
+        caller = callerObj;
 
         $.ajax({
             type: "GET",

@@ -23,6 +23,7 @@ from urllib2 import HTTPError
 from urlparse import urljoin
 
 from wstore.store_commons.utils.method_request import MethodRequest
+from wstore.store_commons.utils import mimeparser
 
 
 class RepositoryAdaptor():
@@ -80,7 +81,13 @@ class RepositoryAdaptor():
         if not (response.code > 199 and response.code < 300):
             raise HTTPError(response.url, response.code, response.msg, None, None)
 
-        return response.read()
+        allowed_formats = ['text/plain', 'application/rdf+xml', 'text/turtle', 'text/n3']
+        resp_content_type = mimeparser.best_match(allowed_formats, response.headers.get('content-type'))
+
+        return {
+            'content_type': resp_content_type,
+            'data': response.read()
+        }
 
     def delete(self, name=None):
 

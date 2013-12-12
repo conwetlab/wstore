@@ -18,7 +18,7 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls.defaults import patterns, url, include
 
 import wstore.oauth2provider.urls
 from wstore import views
@@ -44,16 +44,24 @@ urlpatterns = patterns('',
     url(r'^api/administration/rss/?$', rss_views.RSSCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/profiles/?$', admin_views.UserProfileCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/organizations/?$', admin_views.OrganizationCollection(permitted_methods=('GET', 'POST'))),
+    url(r'^api/administration/units/?$', admin_views.UnitCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/marketplaces/(?P<market>[\w -]+)/?$', market_views.MarketplaceEntry(permitted_methods=('GET', 'PUT', 'DELETE'))),
     url(r'^api/administration/repositories/(?P<repository>[\w -]+)/?$', rep_views.RepositoryEntry(permitted_methods=('GET', 'PUT', 'DELETE'))),
     url(r'^api/administration/rss/(?P<rss>[\w -]+)/?$', rss_views.RSSEntry(permitted_methods=('GET', 'DELETE'))),
     url(r'^api/administration/profiles/(?P<username>[\w -]+)?$', admin_views.UserProfileEntry(permitted_methods=('GET', 'PUT'))),
+    url(r'^api/administration/profiles/(?P<username>[\w -]+)/reset?$', 'wstore.admin.views.reset_user', name='reset_user'),
+    url(r'^api/administration/organizations/change', 'wstore.admin.views.change_current_organization', name='change_current_organization'),
+    url(r'^api/administration/organizations/(?P<org>[\w -]+)?$', admin_views.OrganizationEntry(permitted_methods=('PUT',))),
+    url(r'^api/administration/organizations/(?P<org>[\w -]+)/users?$', admin_views.OrganizationUserCollection(permitted_methods=('POST',))),
     url(r'^api/offering/offerings/?$', offering_views.OfferingCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/offering/offerings/newest?$', offering_views.NewestCollection(permitted_methods=('GET',))),
+    url(r'^api/offering/offerings/toprated?$', offering_views.TopRatedCollection(permitted_methods=('GET',))),
     url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/?$', offering_views.OfferingEntry(permitted_methods=('GET', 'PUT', 'DELETE'))),
     url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/publish?$', offering_views.PublishEntry(permitted_methods=('POST',))),
     url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/bind?$', offering_views.BindEntry(permitted_methods=('POST',))),
+    url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/rating?$', offering_views.CommentEntry(permitted_methods=('POST',))),
     url(r'^api/offering/resources/?$', offering_views.ResourceCollection(permitted_methods=('GET', 'POST'))),
+    url(r'^api/offering/applications?$', offering_views.ApplicationCollection(permitted_methods=('GET',))),
     url(r'^api/contracting/?$', contracting_views.PurchaseCollection(permitted_methods=('POST',))),
     url(r'^api/contracting/form/?$', contracting_views.PurchaseFormCollection(permitted_methods=('GET', 'POST',))),
     url(r'^api/contracting/(?P<reference>[\w]+)/?$', contracting_views.PurchaseEntry(permitted_methods=('GET', 'PUT'))),
@@ -61,6 +69,8 @@ urlpatterns = patterns('',
     url(r'^api/contracting/(?P<reference>[\w]+)/cancel?$', charging_views.PayPalCancelation(permitted_methods=('GET',))),
     url(r'^api/contracting/(?P<reference>[\w]+)/accounting?$', charging_views.ServiceRecordCollection(permitted_methods=('POST',))),
     url(r'^api/search/(?P<text>[\w -]+)/?$', search_views.SearchEntry(permitted_methods=('GET',))),
+    url(r'^api/provider/?$', views.ProviderRequest(permitted_methods=('POST',))),
+    url(r'', include('social_auth.urls')),
 )
 
 urlpatterns += wstore.oauth2provider.urls.urlpatterns

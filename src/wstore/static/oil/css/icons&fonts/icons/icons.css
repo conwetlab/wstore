@@ -1,0 +1,15 @@
+/**************MENU TOOLBAR 20PX*************/
+
+[class="arrow-down-"],   [class*="arrow-down-"] {
+  width: 25px;
+  height: 25px;
+  background-image: url("img/arrow-down.png");
+  display: inline-block;
+  vertical-align: text-top;
+  background-repeat: no-repeat;
+  *margin-right: .3em;
+}
+
+.arrow-down-settings { background-position: -1px -35px; }
+
+.arrow-down-settings:hover { background-position: -1px -5px; }

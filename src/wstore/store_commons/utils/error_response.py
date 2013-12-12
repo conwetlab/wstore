@@ -21,10 +21,14 @@
 from xml.dom.minidom import getDOMImplementation
 from django.utils import simplejson
 
-def get_xml_error(request, mimetype, status_code, value):
+def get_xml_response(request, mimetype, status_code, value):
     dom = getDOMImplementation()
 
-    doc = dom.createDocument(None, "error", None)
+    if status_code >= 400:
+        doc = dom.createDocument(None, "error", None)
+    else:
+        doc = dom.createDocument(None, "message", None)
+
     rootelement = doc.documentElement
     text = doc.createTextNode(value)
     rootelement.appendChild(text)
@@ -34,9 +38,13 @@ def get_xml_error(request, mimetype, status_code, value):
     return errormsg
 
 
-
-def get_json_error_response(request, mimetype, status_code, message):
-    return simplejson.dumps({
-        'result': 'error',
+def get_json_response(request, mimetype, status_code, message):
+    response = {
         'message': message
-    })
+    }
+    if status_code >= 400:
+        response['result'] = 'error'
+    else:
+        response['result'] = 'correct'
+
+    return simplejson.dumps(response)

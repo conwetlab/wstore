@@ -36,7 +36,7 @@ def rollback(provider, profile, json_data, msg):
         return
 
     # Check files
-    dir_name = profile.organization.name + '__' + json_data['name'] + '__' + json_data['version']
+    dir_name = profile.current_organization.name + '__' + json_data['name'] + '__' + json_data['version']
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
 
     if os.path.exists(path):
@@ -48,14 +48,14 @@ def rollback(provider, profile, json_data, msg):
         os.rmdir(path)
 
     # Check if the offering has been created
-    offering = Offering.objects.filter(owner_organization=profile.organization.name, name=json_data['name'], version=json_data['version'])
+    offering = Offering.objects.filter(owner_organization=profile.current_organization, name=json_data['name'], version=json_data['version'])
 
     remove = False
     if len(offering) > 0:
         offering = offering[0]
 
         # If the offerings has been created means that the USDL is
-        # uploded in the repository
+        # uploaded in the repository
         if 'offering_description' in json_data:
             remove = True
             url = offering.description_url
@@ -66,7 +66,7 @@ def rollback(provider, profile, json_data, msg):
         if 'offerings_description' in json_data:
             repository = Repository.objects.get(name=json_data['repository'])
             repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
-            offering_id = profile.organization.name + '__' + json_data['name'] + '__' + json_data['version']
+            offering_id = profile.current_organization.name + '__' + json_data['name'] + '__' + json_data['version']
 
             uploaded = True
             try:
@@ -91,13 +91,13 @@ class OfferingRollback():
     def __init__(self, func):
         self._func = func
 
-    def __call__(self, provider, profile, json_data):
+    def __call__(self, provider, json_data):
 
         try:
-            self._func(provider, profile, json_data)
+            self._func(provider, json_data)
         except HTTPError, e:
-            rollback(provider, profile, json_data, 'Http error')
+            rollback(provider, provider.userprofile, json_data, 'Http error')
             raise e
         except Exception, e:
-            rollback(provider, profile, json_data, e.message)
+            rollback(provider, provider.userprofile, json_data, e.message)
             raise e

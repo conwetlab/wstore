@@ -23,199 +23,26 @@ import rdflib
 import re
 import base64
 import os
+from datetime import datetime
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from urlparse import urlparse
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.template import loader
+from django.template import Context as TmplContext
 
 from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.market_adaptor.marketadaptor import MarketAdaptor
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
-from wstore.models import Resource
+from wstore.models import Resource, Organization
 from wstore.models import Repository
 from wstore.models import Offering
 from wstore.models import Marketplace
 from wstore.models import Purchase
-from wstore.models import UserProfile
-from wstore.store_commons.utils.usdlParser import USDLParser
-
-
-def _get_purchased_offerings(user, db, pagination=None):
-
-    # Get the user profile purchased offerings
-    user_profile = db.wstore_userprofile.find_one({'user_id': ObjectId(user.pk)})
-    # Get the user organization purchased offerings
-    organization = db.wstore_organization.find_one({'_id': user_profile['organization_id']})
-    result = []
-
-    # Load user and organization purchased offerings
-    user_purchased = user_profile['offerings_purchased']
-
-    # Remove user offerings from organization offerings
-    for offer in organization['offerings_purchased']:
-        if not offer in user_purchased:
-            user_purchased.append(offer)
-
-    # If pagination has been defined take the offerings corresponding to the page
-    if pagination:
-        skip = int(pagination['skip']) - 1
-        limit = int(pagination['limit'])
-
-        if skip < len(user_purchased):
-            user_purchased = user_purchased[skip:(skip + limit)]
-
-    # Load user offerings  to the result
-    for offer in user_purchased:
-        offer_info = db.wstore_offering.find_one({'_id': ObjectId(offer)})
-        offer_info['state'] = 'purchased'
-        offering = Offering.objects.get(pk=offer)
-        try:
-            purchase = Purchase.objects.get(offering=offering, customer=user)
-        except:
-            purchase = Purchase.objects.get(offering=offering, owner_organization=organization['name'])
-        offer_info['bill'] = purchase.bill
-        result.append(offer_info)
-
-    return result
-
-
-# Gets a set of offerings depending on filter value
-def get_offerings(user, filter_='published', owned=False, pagination=None):
-
-    if pagination and (not int(pagination['skip']) > 0 or not int(pagination['limit']) > 0):
-        raise Exception('Invalid pagination limits')
-
-    # Get all the offerings owned by the provider using raw mongodb access
-    connection = MongoClient()
-    db = connection[settings.DATABASES['default']['NAME']]
-    offerings = db.wstore_offering
-    # Pagination: define the first element and the number of elements
-    if owned:
-        if  filter_ == 'uploaded':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'uploaded'}).sort('_id', 1)
-        elif filter_ == 'all':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id)}).sort('_id', 1)
-        elif  filter_ == 'published':
-            prov_offerings = offerings.find({'owner_admin_user_id': ObjectId(user.id), 'state': 'published'}).sort('_id', 1)
-        elif filter_ == 'purchased':
-            if pagination:
-                prov_offerings = _get_purchased_offerings(user, db, pagination)
-                pagination = None
-            else:
-                prov_offerings = _get_purchased_offerings(user, db)
-
-    else:
-        if  filter_ == 'published':
-            prov_offerings = offerings.find({'state': 'published'}).sort('_id', 1)
-
-    result = []
-
-    if pagination:
-        prov_offerings = prov_offerings.skip(int(pagination['skip']) - 1).limit(int(pagination['limit']))
-
-    profile = UserProfile.objects.get(user=user)
-    org = profile.organization
-
-    for offer in prov_offerings:
-        offer['owner_admin_user_id'] = User.objects.get(pk=offer['owner_admin_user_id']).username
-        offer['_id'] = str(offer['_id'])
-        parser = USDLParser(json.dumps(offer['offering_description']), 'application/json')
-        offer['offering_description'] = parser.parse()
-        resource_content = []
-
-        purchase = None
-        # If filter is published change state and add bill to the purchased offerings
-        if (not owned and filter_ == 'published') or filter_ == 'purchased':
-            found = False
-
-            if str(offer['_id']) in profile.offerings_purchased:
-                offering = Offering.objects.get(pk=str(offer['_id']))
-                purchase = Purchase.objects.get(offering=offering, customer=user)
-                found = True
-
-            elif str(offer['_id']) in org.offerings_purchased:
-                offering = Offering.objects.get(pk=str(offer['_id']))
-                purchase = Purchase.objects.get(offering=offering, owner_organization=org.name)
-                found = True
-
-            if found and filter_ == 'published':
-                offer['bill'] = purchase.bill
-                offer['state'] = 'purchased'
-
-        # If the offering has been purchased and contains pricing components based on
-        # subscriptions the parsed pricing model is replace with the pricing model of the
-        # contract
-        if purchase != None and ('subscription' in purchase.contract.pricing_model):
-            pricing_model = purchase.contract.pricing_model
-            offer['offering_description']['pricing']['price_plans'][0]['price_components'] = []
-
-            # Cast renovation date to string in order to avoid serialization problems
-
-            for subs in pricing_model['subscription']:
-                subs['renovation_date'] = str(subs['renovation_date'])
-                offer['offering_description']['pricing']['price_plans'][0]['price_components'].append(subs)
-
-            if 'single_payment' in pricing_model:
-                offer['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['single_payment'])
-
-            if 'pay_per_use' in pricing_model:
-                offer['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['pay_per_use'])
-
-        for resource in offer['resources']:
-            res = Resource.objects.get(id=resource)
-            res_info = {
-                'name': res.name,
-                'version': res.version,
-                'description': res.description,
-                'content_type': res.content_type
-            }
-
-            if res.resource_type == 'download':
-                res_info['type'] = 'Downloadable resource'
-            else:
-                res_info['type'] = 'Backend resource'
-
-            if offer['state'] == 'purchased':
-                if res.resource_type == 'download':
-                    if res.resource_path != '':
-                        res_info['link'] = res.resource_path
-                    elif res.download_link != '':
-                        res_info['link'] = res.download_link
-
-            resource_content.append(res_info)
-        offer['resources'] = resource_content
-
-        # Use to avoid the serialization error with marketplaces id
-        if 'marketplaces' in offer:
-            del(offer['marketplaces'])
-
-        result.append(offer)
-
-    return result
-
-
-def count_offerings(user, filter_='published', owned=False):
-
-    if owned:
-        if  filter_ == 'uploaded':
-            count = Offering.objects.filter(owner_admin_user=user, state='uploaded').count()
-        elif filter_ == 'all':
-            count = Offering.objects.filter(owner_admin_user=user).count()
-        elif  filter_ == 'published':
-            count = Offering.objects.filter(owner_admin_user=user, state='published').count()
-        elif filter_ == 'purchased':
-            user_profile = UserProfile.objects.get(user=user)
-            count = len(user_profile.offerings_purchased)
-            count += len(user_profile.organization.offerings_purchased)
-
-    else:
-        if  filter_ == 'published':
-            count = Offering.objects.filter(state='published').count()
-
-    return {'number': count}
+from wstore.models import UserProfile, Context
+from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 
 
 def get_offering_info(offering, user):
@@ -225,17 +52,26 @@ def get_offering_info(offering, user):
     # Check if the user has purchased the offering
     state = offering.state
 
-    if offering.pk in user_profile.offerings_purchased:
-        state = 'purchased'
-        purchase = Purchase.objects.get(offering=offering, customer=user)
-    elif offering.pk in user_profile.organization.offerings_purchased:
-        state = 'purchased'
-        purchase = Purchase.objects.get(offering=offering, owner_organization=user_profile.organization.name)
+    # Check if the current organization is the user organization
+    if user_profile.is_user_org():
+
+        if offering.pk in user_profile.offerings_purchased:
+            state = 'purchased'
+            purchase = Purchase.objects.get(offering=offering, customer=user, organization_owned=False)
+
+    else:
+        if offering.pk in user_profile.current_organization.offerings_purchased:
+            state = 'purchased'
+            purchase = Purchase.objects.get(offering=offering, owner_organization=user_profile.current_organization)
+
+    if state == 'purchased':
+        if offering.pk in user_profile.rated_offerings:
+            state = 'rated'
 
     # Load offering data
     result = {
         'name': offering.name,
-        'owner_organization': offering.owner_organization,
+        'owner_organization': offering.owner_organization.name,
         'owner_admin_user_id': offering.owner_admin_user.username,
         'version': offering.version,
         'state': state,
@@ -245,6 +81,8 @@ def get_offering_info(offering, user):
         'tags': offering.tags,
         'image_url': offering.image_url,
         'related_images': offering.related_images,
+        'creation_date': str(offering.creation_date),
+        'publication_date': str(offering.publication_date),
         'resources': []
     }
 
@@ -258,12 +96,7 @@ def get_offering_info(offering, user):
             'content_type': resource.content_type
         }
 
-        if resource.resource_type == 'download':
-            res_info['type'] = 'Downloadable resource'
-        else:
-            res_info['type'] = 'Backend resource'
-
-        if state == 'purchased' and resource.resource_type == 'download':
+        if (state == 'purchased' or state == 'rated'):
             if resource.resource_path != '':
                 res_info['link'] = resource.resource_path
             elif resource.download_link != '':
@@ -271,11 +104,15 @@ def get_offering_info(offering, user):
 
         result['resources'].append(res_info)
 
+    if settings.OILAUTH:
+        result['applications'] = offering.applications
+
+    # Load applications
     # Load offering description
     parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
     result['offering_description'] = parser.parse()
 
-    if state == 'purchased':
+    if state == 'purchased' or state == 'rated':
         result['bill'] = purchase.bill
 
         # If the offering has been purchased the parsed pricing model is replaced
@@ -301,11 +138,194 @@ def get_offering_info(offering, user):
     return result
 
 
+def _get_purchased_offerings(user, db, pagination=None, sort=None):
+
+    # Get the user profile purchased offerings
+    user_profile = db.wstore_userprofile.find_one({'user_id': ObjectId(user.pk)})
+    # Get the user organization purchased offerings
+    organization = db.wstore_organization.find_one({'_id': user_profile['current_organization_id']})
+
+    if not user.userprofile.is_user_org():
+        user_purchased = organization['offerings_purchased']
+
+    else:
+        # If the current organization is the user organization, load
+        # all user offerings
+
+        user_purchased = user_profile['offerings_purchased']
+
+        # Append user offerings from organization offerings
+        for offer in organization['offerings_purchased']:
+            if not offer in user_purchased:
+                user_purchased.append(offer)
+
+    # Check sorting
+
+    if sort == 'creation_date':
+        user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).creation_date, reverse=True)
+    elif sort == 'publication_date':
+        user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).publication_date, reverse=True)
+    elif sort == 'name':
+        user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).name)
+    elif sort == 'rating':
+        user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).rating, reverse=True)
+
+    # If pagination has been defined take the offerings corresponding to the page
+    if pagination:
+        skip = int(pagination['skip']) - 1
+        limit = int(pagination['limit'])
+
+        if skip < len(user_purchased):
+            user_purchased = user_purchased[skip:(skip + limit)]
+
+    return user_purchased
+
+
+# Gets a set of offerings depending on filter value
+def get_offerings(user, filter_='published', owned=False, pagination=None, sort=None):
+
+    if pagination and (not int(pagination['skip']) > 0 or not int(pagination['limit']) > 0):
+        raise Exception('Invalid pagination limits')
+
+    # Set sorting values
+    order = -1
+    if sort == None or sort == 'date':
+        if not owned and  filter_ == 'published':
+            sorting = 'publication_date'
+        else:
+            sorting = 'creation_date'
+    else:
+        sorting = sort
+        if sorting == 'name':
+            order = 1
+
+    # Get all the offerings owned by the provider using raw mongodb access
+    connection = MongoClient()
+    db = connection[settings.DATABASES['default']['NAME']]
+    offerings = db.wstore_offering
+
+    # Pagination: define the first element and the number of elements
+    if owned and filter_ != 'purchased':
+        current_organization = user.userprofile.current_organization
+        query = {
+            'owner_admin_user_id': ObjectId(user.id),
+            'owner_organization_id': ObjectId(current_organization.id)
+        }   
+
+        if  filter_ == 'uploaded':
+            query['state'] = 'uploaded'
+
+        elif  filter_ == 'published':
+            query['state'] = 'published'
+
+        prov_offerings = offerings.find(query).sort(sorting, order)
+
+    elif owned and filter_ == 'purchased':
+        if pagination:
+            prov_offerings = _get_purchased_offerings(user, db, pagination, sort=sorting)
+            pagination = None
+        else:
+            prov_offerings = _get_purchased_offerings(user, db, sort=sorting)
+
+    else:
+        if  filter_ == 'published':
+            prov_offerings = offerings.find({'state': 'published'}).sort(sorting, order)
+
+    if pagination:
+        prov_offerings = prov_offerings.skip(int(pagination['skip']) - 1).limit(int(pagination['limit']))
+
+    result = []
+
+    for offer in prov_offerings:
+        if '_id' in offer:
+            pk = str(offer['_id'])
+        else:
+            pk = offer
+
+        offering = Offering.objects.get(pk=pk)
+        # Use get_offering_info to create the JSON with the offering info
+        result.append(get_offering_info(offering, user))
+
+    return result
+
+
+def count_offerings(user, filter_='published', owned=False):
+
+    if owned:
+        current_org = user.userprofile.current_organization
+
+        # If the current organization is not the user organization
+        # get only the offerings owned by that organization
+        if  filter_ == 'uploaded':
+            count = Offering.objects.filter(owner_admin_user=user, state='uploaded', owner_organization=current_org).count()
+        elif filter_ == 'all':
+            count = Offering.objects.filter(owner_admin_user=user, owner_organization=current_org).count()
+        elif  filter_ == 'published':
+            count = Offering.objects.filter(owner_admin_user=user, state='published', owner_organization=current_org).count()
+        elif filter_ == 'purchased':
+            count = len(current_org.offerings_purchased)
+            if user.userprofile.is_user_org():
+                count += len(user.userprofile.offerings_purchased)
+
+    else:
+        if  filter_ == 'published':
+            count = Offering.objects.filter(state='published').count()
+
+    return {'number': count}
+
+
+def _create_basic_usdl(usdl_info):
+
+    # Get the template
+    usdl_template = loader.get_template('usdl/usdl_template.rdf')
+    # Create the context
+
+    if usdl_info['base_uri'].endswith('/'):
+        usdl_info['base_uri'] = usdl_info['base_uri'] + 'storeOfferingCollection/'
+    else:
+        usdl_info['base_uri'] = usdl_info['base_uri'] + '/storeOfferingCollection/'
+
+    site = Context.objects.all()[0].site.domain
+
+    if site.endswith('/'):
+        site = site[:-1]
+
+    image_url = site + usdl_info['image_url']
+
+    free = False
+    if usdl_info['pricing']['price_model'] == 'free':
+        free = True
+
+    context = {
+        'base_uri': usdl_info['base_uri'],
+        'name': usdl_info['name'],
+        'fixed_name': usdl_info['name'].replace(' ', ''),
+        'image_url': image_url,
+        'description': usdl_info['description'],
+        'created': str(datetime.now()),
+        'free': free
+    }
+
+    if not free:
+        context['price'] = usdl_info['pricing']['price']
+
+    if 'legal' in usdl_info:
+        context['legal'] = True
+        context['legal_title'] = usdl_info['legal']['title']
+        context['legal_text'] = usdl_info['legal']['text']
+
+    # Render the template
+    usdl = usdl_template.render(TmplContext(context))
+    # Return the USDL document
+    return usdl
+
+
 # Creates a new offering including the media files and
 # the repository uploads
 @OfferingRollback
-def create_offering(provider, profile, json_data):
+def create_offering(provider, json_data):
 
+    profile = provider.userprofile
     data = {}
     if not 'name' in json_data or not 'version' in json_data:
         raise Exception('Missing required fields')
@@ -316,21 +336,46 @@ def create_offering(provider, profile, json_data):
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise Exception('Invalid version format')
 
+    # If using the idm, get the applications from the request
+    if settings.OILAUTH:
+
+        # Validate application structure
+        data['applications'] = []
+
+        for app in json_data['applications']:
+            data['applications'].append({
+                'name': app['name'],
+                'url': app['url'],
+                'id': app['id'],
+                'description': app['description']
+            })
+
     data['related_images'] = []
 
     # Get organization
-    organization = profile.organization
+    organization = profile.current_organization
 
     # Check if the offering already exists
     existing = True
 
     try:
-        Offering.objects.get(name=data['name'], owner_organization=organization.name, version=data['version'])
+        Offering.objects.get(name=data['name'], owner_organization=organization, version=data['version'])
     except:
         existing = False
 
     if existing:
         raise Exception('The offering already exists')
+
+    # Check the URL to notify the provider
+    notification_url = ''
+
+    if 'notification_url' in json_data:
+        if json_data['notification_url'] == 'default':
+            notification_url = organization.notification_url
+            if notification_url == '':
+                raise Exception('No default URL defined for the organization')
+        else:
+            notification_url = json_data['notification_url']
 
     # Create the directory for app media
     dir_name = organization.name + '__' + data['name'] + '__' + data['version']
@@ -375,19 +420,54 @@ def create_offering(provider, profile, json_data):
 
         # Check that the link to USDL is unique since could be used to
         # purchase offerings from Marketplace
-        usdl_info = json_data['description_url']
-        off = Offering.objects.filter(description_url=usdl_info['link'])
+        usdl_info = {}
+        usdl_url = json_data['description_url']
+        off = Offering.objects.filter(description_url=usdl_url)
 
         if len(off) != 0:
             raise Exception('The provided USDL description is already registered')
 
         # Download the USDL from the repository
-        repository_adaptor = RepositoryAdaptor(usdl_info['link'])
-        usdl = repository_adaptor.download(content_type=usdl_info['content_type'])
-        data['description_url'] = usdl_info['link']
+        repository_adaptor = RepositoryAdaptor(usdl_url)
+        accept = "text/plain; application/rdf+xml; text/turtle; text/n3"
 
+        usdl = repository_adaptor.download(content_type=accept)
+        usdl_info['content_type'] = usdl['content_type']
+
+        usdl = usdl['data']
+        data['description_url'] = usdl_url
+
+    # If the USDL is going to be created
+    elif 'offering_info' in json_data:
+
+        # Validate USDL info
+        if not 'description' in json_data['offering_info'] or not 'pricing' in json_data['offering_info']:
+            raise Exception('Invalid USDL info')
+
+        offering_info = json_data['offering_info']
+        offering_info['image_url'] = data['image_url']
+        offering_info['name'] = data['name']
+
+        repository = Repository.objects.get(name=json_data['repository'])
+
+        offering_info['base_uri'] = repository.host
+
+        usdl = _create_basic_usdl(offering_info)
+        usdl_info = {
+            'content_type': 'application/rdf+xml'
+        }
+
+        repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
+        offering_id = organization.name + '__' + data['name'] + '__' + data['version']
+        data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl, name=offering_id)
     else:
         raise Exception('No USDL description provided')
+
+    # Validate the USDL
+    valid = validate_usdl(usdl, usdl_info['content_type'])
+
+    if not valid[0]:
+        raise Exception(valid[1])
 
     # Serialize and store USDL info in json-ld format
     graph = rdflib.Graph()
@@ -399,12 +479,12 @@ def create_offering(provider, profile, json_data):
             rdf_format = 'json-ld'
 
     graph.parse(data=usdl, format=rdf_format)
-    data['offering_description'] = graph.serialize(format='json-ld', compact=True)
+    data['offering_description'] = graph.serialize(format='json-ld', auto_compact=True)
 
     # Create the offering
     offering = Offering.objects.create(
         name=data['name'],
-        owner_organization=organization.name,
+        owner_organization=organization,
         owner_admin_user=provider,
         version=data['version'],
         state='uploaded',
@@ -415,8 +495,16 @@ def create_offering(provider, profile, json_data):
         image_url=data['image_url'],
         related_images=data['related_images'],
         offering_description=json.loads(data['offering_description']),
-        notification_url='http://130.206.82.141:5000/get_accounting'  # FIXME hardcoded
+        notification_url=notification_url,
+        creation_date=datetime.now()
     )
+
+    if settings.OILAUTH:
+        offering.applications = data['applications']
+        offering.save()
+
+    if 'resources' in json_data and len(json_data['resources']) > 0:
+        bind_resources(offering, json_data['resources'], profile.user)
 
     # Load offering document to the search index
     index_path = os.path.join(settings.BASEDIR, 'wstore')
@@ -434,7 +522,7 @@ def update_offering(offering, data):
     if offering.state != 'uploaded':
         raise Exception('The offering cannot be edited')
 
-    dir_name = offering.owner_organization + '__' + offering.name + '__' + offering.version
+    dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
 
     # Update the logo
@@ -483,20 +571,66 @@ def update_offering(offering, data):
 
     # The USDL document has changed in the repository
     elif 'description_url' in data:
-        usdl_info = data['description_url']
+        usdl_info = {}
+        usdl_url = data['description_url']
 
         # Check the link
-        if usdl_info['link'] != offering.description_url:
+        if usdl_url != offering.description_url:
             raise Exception('The provided USDL URL is not valid')
 
         # Download new content
-        repository_adaptor = RepositoryAdaptor(usdl_info['link'])
-        usdl = repository_adaptor.download(content_type=usdl_info['content_type'])
+        repository_adaptor = RepositoryAdaptor(usdl_url)
+        accept = "text/plain; application/rdf+xml; text/turtle; text/n3"
+        usdl = repository_adaptor.download(content_type=accept)
+
+        usdl_info['content_type'] = usdl['content_type']
+        usdl = usdl['data']
+
+        new_usdl = True
+    elif 'offering_info' in data:
+        usdl_info = {
+            'content_type': 'application/rdf+xml'
+        }
+        # Validate USDL info
+        if not 'description' in data['offering_info'] or not 'pricing' in data['offering_info']:
+            raise Exception('Invalid USDL info')
+
+        offering_info = data['offering_info']
+        offering_info['image_url'] = offering.image_url
+
+        offering_info['name'] = offering.name
+
+        splited_desc_url = offering.description_url.split('/')
+
+        base_uri = splited_desc_url[0] + '//'
+        splited_desc_url.remove(splited_desc_url[0])
+        splited_desc_url.remove(splited_desc_url[0])
+        splited_desc_url.remove(splited_desc_url[-1])
+        splited_desc_url.remove(splited_desc_url[-1])
+
+        for p in splited_desc_url:
+            base_uri += (p + '/')
+
+        offering_info['base_uri'] = base_uri
+
+        usdl = _create_basic_usdl(offering_info)
+        usdl_info = {
+            'content_type': 'application/rdf+xml'
+        }
+
+        repository_adaptor = RepositoryAdaptor(offering.description_url)
+        repository_adaptor.upload(usdl_info['content_type'], usdl)
         new_usdl = True
 
     # If the USDL has changed store the new description
     # in the offering model
     if new_usdl:
+        # Validate the USDL
+        valid = validate_usdl(usdl, usdl_info['content_type'])
+
+        if not valid[0]:
+            raise Exception(valid[1])
+
         # Serialize and store USDL info in json-ld format
         graph = rdflib.Graph()
 
@@ -508,7 +642,7 @@ def update_offering(offering, data):
             rdf_format = 'json-ld'
 
         graph.parse(data=usdl, format=rdf_format)
-        offering.offering_description = json.loads(graph.serialize(format='json-ld', compact=True))
+        offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
 
     offering.save()
 
@@ -516,9 +650,6 @@ def update_offering(offering, data):
 def publish_offering(offering, data):
 
     for market in data['marketplaces']:
-
-        if not len(offering.resources) > 0:
-            raise Exception('It is not possible to publish an offering without resources')
 
         m = Marketplace.objects.get(name=market)
         market_adaptor = MarketAdaptor(m.host)
@@ -530,15 +661,19 @@ def publish_offering(offering, data):
         offering.marketplaces.append(m.pk)
 
     offering.state = 'published'
+    offering.publication_date = datetime.now()
     offering.save()
 
 
 def delete_offering(offering):
     # If the offering has been purchased it is not deleted
     # it is marked as deleted in order to allow customers that
-    # have purchased the offering to intall it if needed
+    # have purchased the offering to install it if needed
 
     #delete the usdl description from the repository
+    if offering.state == 'deleted':
+        raise Exception('The offering is already deleted')
+
     parsed_url = urlparse(offering.description_url)
     path = parsed_url.path
     host = parsed_url.scheme + '://' + parsed_url.netloc
@@ -553,7 +688,7 @@ def delete_offering(offering):
 
         if offering.related_images or offering.resources:
             # If the offering has media files delete them
-            dir_name = offering.owner_organization + '__' + offering.name + '__' + offering.version
+            dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
             path = os.path.join(settings.MEDIA_ROOT, dir_name)
             files = os.listdir(path)
 
@@ -575,8 +710,54 @@ def delete_offering(offering):
         offering.state = 'deleted'
         offering.save()
 
+        context = Context.objects.all()[0]
+        # Check if the offering is in the newest list
+        if offering.pk in context.newest:
+            # Remove the offering from the newest list
+            newest = context.newest
+
+            if len(newest) < 4:
+                newest.remove(offering.pk)
+            else:
+                # Get the 4 newest offerings using the publication date for sorting
+                connection = MongoClient()
+                db = connection[settings.DATABASES['default']['NAME']]
+                offerings = db.wstore_offering
+                newest_off = offerings.find({'state': 'published'}).sort('publication_date', -1).limit(4)
+
+                newest = []
+                for n in newest_off:
+                    newest.append(str(n['_id']))
+
+            context.newest = newest
+            context.save()
+
+        # Check if the offering is in the top rated list
+        if offering.pk in context.top_rated:
+            # Remove the offering from the top rated list
+            top_rated = context.top_rated
+            if len(top_rated) < 4:
+                top_rated.remove(offering.pk)
+            else:
+                # Get the 4 top rated offerings
+                connection = MongoClient()
+                db = connection[settings.DATABASES['default']['NAME']]
+                offerings = db.wstore_offering
+                top_off = offerings.find({'state': 'published', 'rating': {'$gt': 0}}).sort('rating', -1).limit(4)
+
+                top_rated = []
+                for t in top_off:
+                    top_rated.append(str(t['_id']))
+
+            context.top_rated = top_rated
+            context.save()
+
 
 def bind_resources(offering, data, provider):
+
+    # Check that the offering supports binding
+    if offering.state != 'uploaded':
+        raise Exception('This offering cannot be modified')
 
     added_resources = []
     offering_resources = []
@@ -584,7 +765,7 @@ def bind_resources(offering, data, provider):
         offering_resources.append(of_res)
 
     for res in data:
-        resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider)
+        resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider.userprofile.current_organization)
 
         if not ObjectId(resource.pk) in offering_resources:
             added_resources.append(resource.pk)
@@ -592,7 +773,7 @@ def bind_resources(offering, data, provider):
             offering_resources.remove(ObjectId(resource.pk))
 
     # added_resources contains the resources to be added to the offering
-    # and offering_resources the resurces to be deleted from the offering
+    # and offering_resources the resources to be deleted from the offering
 
     for add_res in added_resources:
         resource = Resource.objects.get(pk=add_res)
@@ -607,3 +788,95 @@ def bind_resources(offering, data, provider):
         offering.resources.remove(del_res)
 
     offering.save()
+
+
+def comment_offering(offering, comment, user):
+
+    # Check if the user can comment the offering.
+    if offering.pk in user.userprofile.rated_offerings:
+        raise Exception('The user cannot comment this offering')
+
+    elif (not offering.pk in user.userprofile.offerings_purchased):
+
+        # Check if the offering is purchased by an organization
+        org_purchased = False
+        for org in user.userprofile.organizations:
+            o = Organization.objects.get(pk=org['organization'])
+            if offering.pk in o.offerings_purchased:
+                org_purchased = True
+                break
+
+        if not org_purchased:
+            raise Exception('The user cannot comment this offering')
+
+    # Check comment structure
+    if not 'title' in comment or not 'rating' in comment or not 'comment' in comment:
+        raise Exception('Invalid comment')
+
+    # Check rating
+    if comment['rating'] < 0 or comment['rating'] > 5:
+        raise Exception('Invalid rating')
+
+    # Add the comment
+    offering.comments.insert(0, {
+        'user': user.username,
+        'timestamp': str(datetime.now()),
+        'title': comment['title'],
+        'comment': comment['comment'],
+        'rating': comment['rating']
+    })
+
+    # Calculate new offering rate
+    old_rate = offering.rating
+
+    if old_rate == 0:
+        offering.rating = comment['rating']
+    else:
+        offering.rating = ((old_rate * (len(offering.comments) - 1)) + comment['rating']) / len(offering.comments)
+
+    offering.save()
+
+    user.userprofile.rated_offerings.append(offering.pk)
+    user.userprofile.save()
+
+    # Check the top rated structure
+    context = Context.objects.all()[0]
+
+    top_rated = context.top_rated
+
+    # If there is a place append the offering
+    if len(top_rated) < 4:
+
+        # If the offering is not included append it
+        if not offering.pk in top_rated:
+            top_rated.append(offering.pk)
+
+        # Sort top rated offerings
+        context.top_rated = sorted(top_rated, key=lambda off: Offering.objects.get(pk=off).rating, reverse=True)
+        context.save()
+    else:
+
+        # If the offering is already a top rated offering just sort them
+        if offering.pk in top_rated:
+            context.top_rated = sorted(top_rated, key=lambda off: Offering.objects.get(pk=off).rating, reverse=True)
+            context.save()
+
+        else:
+            pos = None
+            i = 0
+            found = False
+
+            # Check if the new rating is bigger than any top rated
+            while i < len(top_rated) and not found:
+                if Offering.objects.get(pk=top_rated[i]).rating < offering.rating:
+                    pos = i
+                    found = True
+                else:
+                    i += 1
+
+            # If the new rating is a top rating append the offering
+            if pos != None:
+                top_rated.insert(pos, offering.pk)
+                top_rated.remove(top_rated[-1])
+                context.top_rated = top_rated
+                context.save()

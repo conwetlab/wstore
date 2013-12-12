@@ -84,7 +84,7 @@ _:b28a
 <http://localhost:8000/usdleditor#B4dyA6JWJpj3dNw3n> 
   a price:PriceComponent ; 
   dcterms:title "Price component 1"@en ; 
-  gr:hasCurrency "euros" ; 
+  gr:hasCurrency "EUR" ; 
   gr:hasCurrencyValue "5"^^xsd:float ; 
   gr:hasUnitOfMeasurement "single payment" ; 
   dcterms:description "price component 1 description"@en . 

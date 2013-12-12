@@ -55,9 +55,11 @@
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "test_organization",
+            "owner_organization": "91000aba8e06ac2115f022f0",
             "notification_url": "http://notificationurl.com",
-            "offering_description": {}
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
         }
     },
     {
@@ -67,7 +69,6 @@
             "name": "test_resource",
             "version": "1.0",
             "provider": "51000aba8e05ac2115f022f9",
-            "resource_type": "download",
             "description": "Example resource",
             "state": "uploaded",
             "download_link": "",
@@ -82,7 +83,7 @@
             "ref": "61005aba8e05ac2115f022f0",
             "customer": "51070aba8e05cc2115f022f9",
             "organization_owned": true,
-            "owner_organization": "test_organization1",
+            "owner_organization": "91000aba8e06666615f022f0",
             "date": "2013-02-05 17:06:46",
             "offering": "61000aba8e05ac2115f022f9",
             "state": "paid",
@@ -93,6 +94,26 @@
                 "city": "test city",
                 "country": "test country"
             }
+        }
+    },
+    {
+        "pk": "91000aba8e06ac2115f022f0",
+        "model": "wstore.Organization",
+        "fields": {
+            "name": "test_organization",
+            "offerings_purchased": [],
+            "payment_info": {},
+            "managers": []
+        }
+    },
+    {
+        "pk": "91000aba8e06666615f022f0",
+        "model": "wstore.Organization",
+        "fields": {
+            "name": "test_organization1",
+            "offerings_purchased": [],
+            "payment_info": {},
+            "managers": []
         }
     }
 ]

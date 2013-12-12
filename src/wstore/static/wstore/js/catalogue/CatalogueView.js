@@ -24,14 +24,29 @@
     var currentPage = 1;
     var numberOfPages = 1;
 
+    var searchParams = {
+        'keyword': '',
+        'searching': false
+    };
+
     var getNextUserOfferings = function getNextUserOfferings (nextPage) {
+        var endpoint;
+
         // Set the pagination values in catalogue search view
         setNextPage(nextPage);
         // refresh pagination element
         refreshPagination(nextPage);
         currentPage = nextPage;
+
         // make get offerings request
-        getUserOfferings(currentTab, paintProvidedOfferings);
+        // Calculate the endpoint of the request
+        if (searchParams.searching) {
+            endpoint = EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': searchParams.keyword});
+        } else {
+            endpoint = EndpointManager.getEndpoint('OFFERING_COLLECTION')
+        }
+
+        getUserOfferings(currentTab, paintProvidedOfferings, endpoint);
     };
 
     var refreshPagination = function refreshPagination (nextPage) {
@@ -150,9 +165,22 @@
         getNextUserOfferings(1);
     };
 
-    var changeTab = function changeTab (tab) {
+    var changeTab = function changeTab (tab, changeMode) {
+        var endpoint;
+
         currentTab = tab;
-        getUserOfferings(tab, setPaginationParams, true);
+
+        if (changeMode) {
+            searchParams.keyword = '';
+            searchParams.searching = false;
+        }
+
+        if (searchParams.searching) {
+            endpoint = EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': searchParams.keyword})
+        } else {
+            endpoint = EndpointManager.getEndpoint('OFFERING_COLLECTION')
+        }
+        getUserOfferings(tab, setPaginationParams, endpoint, true);
     };
 
     paintCatalogue = function paintCatalogue() {
@@ -160,36 +188,181 @@
         $.template('catalogueTemplate', $('#catalogue_search_template'));
         $.tmpl('catalogueTemplate', {}).appendTo('#catalogue-container');
 
+        // If the user is a provider, append provider buttons
+        if (USERPROFILE.getCurrentRoles().indexOf('provider') != -1) {
+            var div;
+            $.template('providerTabsTemplate', $('#provider_tabs_template'));
+            $.tmpl('providerTabsTemplate', {}).appendTo('.nav-tabs');
+
+            div = $('<div></div>').addClass('tab-pane').attr('id', 'provided-tab');
+            $('<div></div>').attr('id', 'provided-content').appendTo(div);
+            div.appendTo('.tab-content');
+        } else {
+            // Include the 'become a provider' button if needed
+            if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
+                var provBtn = $('<input></input>').addClass('btn btn-blue').attr('type', 'button').attr('id', 'become-prov');
+                if (!USERPROFILE.providerRequested()) {
+                    var requestForm = new ProviderRequestForm(USERPROFILE);
+
+                    provBtn.val('Become a provider');
+                    provBtn.click(function() {
+                        requestForm.display();
+                    })
+                } else {
+                    provBtn.val('Request pending');
+                }
+                provBtn.appendTo('.nav-tabs');
+            }
+        }
+
         if ($('#create-app').length > 0) {
             $('#create-app').click(function () {
                 getRepositories(showCreateAppForm);
             });
             $('#register-res').click(showRegisterResourceForm);
             $('#view-res').click(function() {
-                var offElem = {}
+                var resForm, offElem = {}
                 offElem.getResources = function() {
                     return [];
                 }
-                bindResourcesForm(offElem, true);
+                resForm = new BindResourcesForm(offElem, true);
+                resForm.display();
             });
         }
 
         // Load data into the tabs on show
         $('a[data-toggle="tab"]').on('shown', function (e) {
-            changeTab(e.target.hash);
+            changeTab(e.target.hash, true);
         });
 
         $('#number-offerings').change(function() {
             changeTab(currentTab);
         });
 
-        changeTab('#purchased-tab');
+        $('#sorting').change(function() {
+            changeTab(currentTab);
+        });
 
+        $('#cat-search').click(function() {
+            var keyword = $.trim($('#cat-search-input').val());
+            if (keyword != ''){
+                searchParams.keyword = keyword;
+                searchParams.searching = true;
+                changeTab(currentTab);
+            }
+        });
+
+        // Set listener for enter key
+        $('#cat-search-input').keypress(function(e) {
+            var keyword = $.trim($('#cat-search-input').val());
+
+            if (e.which == 13 && keyword != '') {
+                e.preventDefault();
+                e.stopPropagation();
+                searchParams.keyword = keyword;
+                searchParams.searching = true;
+                changeTab(currentTab);
+            }
+        });
+        $('#cat-all').click(function() {
+            changeTab(currentTab, true);
+        });
+
+        if (USERPROFILE.getUserRoles().indexOf('admin') == -1) {
+            // The navigation menu width depends on the presence of the FI-LAB bar
+            if ($('#oil-nav').length > 0) {
+                $('.navigation').css('width', '188px');
+            } else {
+                $('.navigation').css('width', '278px');
+            }
+        }
+        calculatePositions();
+        changeTab('#purchased-tab');
     };
 
     getCurrentTab = function getCurrentTab () {
         return currentTab;
     };
 
-    $(document).ready(paintCatalogue);
+    refreshView = function refreshView() {
+        $('#catalogue-container').empty();
+        paintCatalogue();
+    };
+
+    setFooter = function setFooter() {
+        // Append the terms and conditions bar
+        // Check if the bar is included
+        if ($('footer').length > 0) {
+            $('footer').remove();
+        }
+        // Create the new footer
+        $.template('footerTemplate', $('#footer_template'));
+        $.tmpl('footerTemplate').appendTo('body');
+        if ($(window).height() < $(document).height()) {
+            $('footer').css('position', 'absolute').css('top', ($(document).height()) + 'px');
+        } else {
+            $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
+        }
+    }
+
+    calculatePositions = function calculatePositions() {
+        var position;
+        var filabInt = $('#oil-nav').length > 0;
+
+        $('.catalogue-form .form').removeAttr('style');
+
+        // Check window width
+        if ($(window).width() < 981) {
+            // Change headers position to avoid problems with bootstrap responsive
+            if (filabInt) {
+                $('.title_wrapper').css('top', '-30px');
+                $('.navigation').css('top', '-109px');
+            }
+
+            //Up the catalogue tabs
+            if ($(window).width() < 769) { // Responsive activation
+                if (filabInt) {
+                    $('.offerings-container').css('top', '225px');
+                } else {
+                    $('.offerings-container').css('top', '365px');
+                }
+
+                $('.offerings-container').css('left', '10px');
+                $('.catalogue-form .form').css('width', '100%');
+            } else {
+                if (filabInt) {
+                    $('.offerings-container').css('top', '0');
+                } else {
+                    $('.offerings-container').css('top', '148px');
+                }
+
+                $('.offerings-container').css('left', '228px');
+            }
+        } else {
+            if (filabInt) {
+                $('.title_wrapper').css('top', '140px');
+                $('.navigation').css('top', '60px');
+            }
+            $('.offerings-container').css('top', '176px');
+            $('.offerings-container').css('left', '228px');
+        }
+        // Calculate tabs width, at the end to avoid problems with position changes
+        position = $('.tabbable').offset();
+        $('.offerings-container').css('width', ($(window).width() - position.left) + 'px');
+
+        // Check username length to avoid display problems
+        if ($.trim($('div.btn.btn-success > div.dropdown-toggle').text()).length > 12) {
+            var shortName = ' '+ USERNAME.substring(0, 9) + '...';
+            // Replace user button contents
+            var userBtn = $('div.btn.btn-success > div.dropdown-toggle');
+            userBtn.empty();
+            userBtn.text(shortName);
+            userBtn.prepend($('<i></i>').addClass('icon-user icon-white'));
+            userBtn.append($('<b></b>').addClass('caret'));
+        }
+        setFooter();
+    }
+
+    $(window).resize(calculatePositions);
+
 })();

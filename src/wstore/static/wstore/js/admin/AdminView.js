@@ -178,6 +178,10 @@
             userInfoRequest();
         });
 
+        $('.show-units').click(function() {
+           unitsInfoRequest();
+        });
+
         $('.add-market').click(function() {
             main = true;
             paintForm('MARKET_COLLECTION', 'Marketplace');
@@ -194,14 +198,59 @@
         });
 
         $('.add-org').click(function() {
-            painOrganizationForm();
+            paintOrganizationForm();
         });
 
         $('.add-prof').click(function() {
             paintUserForm();
         });
+
+        $('.add-unit').click(function() {
+            paintUnitForm();
+        });
     };
 
-    // Set initial listeners
-    $(document).ready(paintElementTable); 
+    refreshView = function refreshView() {
+        paintElementTable();
+        calculatePositions();
+    };
+
+    setFooter = function setFooter() {
+        // Append the terms and conditions bar
+        // Check if the bar is included
+        if ($('footer').length > 0) {
+            $('footer').remove();
+        }
+        // Create the new footer
+        $.template('footerTemplate', $('#footer_template'));
+        $.tmpl('footerTemplate').appendTo('body');
+        $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
+    }
+
+    calculatePositions = function calculatePositions() {
+        var filabInt = $('#oil-nav').length > 0;
+        // Check window width
+        if (filabInt) {
+            if ($(window).width() < 981) {
+                // Change headers position to avoid problems with bootstrap responsive
+                $('.title_wrapper').css('top', '-30px');
+                $('.navigation').css('top', '-109px');
+            } else {
+                $('.title_wrapper').css('top', '140px');
+                $('.navigation').css('top', '60px');
+            }
+        }
+        // Check username length to avoid display problems
+        if ($.trim($('div.btn.btn-success > div.dropdown-toggle').text()).length > 12) {
+            var shortName = ' '+ USERNAME.substring(0, 9) + '...';
+            // Replace user button contents
+            var userBtn = $('div.btn.btn-success > div.dropdown-toggle');
+            userBtn.empty();
+            userBtn.text(shortName);
+            userBtn.prepend($('<i></i>').addClass('icon-user icon-white'));
+            userBtn.append($('<b></b>').addClass('caret'));
+        }
+        setFooter();
+    }
+    $(window).resize(calculatePositions);
 })()

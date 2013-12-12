@@ -1,0 +1,218 @@
+body{
+  background-color: #fcfcfc;
+  font-family: OpenSans, Arial, sans-serif;
+}
+
+a:hover{
+  color: rgb(96, 193, 207);
+  text-decoration: none;
+}
+
+header{
+  display: block;
+  background-color: #f4f4f4;
+  padding: 1px 10px 1px;
+  border-bottom: 1px solid #F2F2F2;
+  -moz-box-shadow: 0px 1px 8px rgba(50, 51, 51, 0.15);
+  -webkit-box-shadow: 0px 1px 8px rgba(50, 51, 51, 0.15);
+  box-shadow: 0px 1px 8px rgba(50, 51, 51, 0.15);
+  position: fixed;
+  width: 96%;
+  height: 35px;
+  padding: 1px 2% 1px;
+  z-index: 3;
+  top: 0px;
+}
+
+ nav.navbar-inner{
+  padding: 0;
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;  
+}
+
+nav.navbar-inner .logo-header{
+  display: inline
+}
+
+.logo-header img{
+  width: 60px;
+  padding-top: 0;
+  float: left;
+  margin-top: -6px;
+
+}
+
+.logo-header .brand{
+  padding: 0;
+  width: auto;
+  float: left;
+  margin: 15px 5px 0 3px;
+  font-size: 23px;
+  color: rgb(96, 193, 207);
+  font-family: NeoTech;
+  display: inline-block;
+  text-shadow: rgb(255, 255, 255) 0px 1px 0px;
+  line-height: 20px;
+}
+
+.logo-header .brand a{
+  font-size: 34px;
+}
+
+.logo-header a.brand span {
+  color: rgb(0, 45, 103);
+}
+
+.logo-header .brand a:hover{
+  text-decoration: none;
+}
+
+.logo-header .brand a:hover span{
+  font-size: 17px;
+  color: #888;
+}
+
+.mobile .dropdown-menu{
+  margin-left: -67px;
+}
+
+ul.oil-portal{
+  width: 463px;
+  height: 36px;
+  padding: 0px 14px;
+  margin-bottom: 0px;
+  display: inline-block;
+  float: left;
+  line-height: 20px;
+  font-size: 14px;
+  margin-left: 2px;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+ul.oil-portal li{
+  display: inline-block;
+  padding: 14px 18px 9px;
+}
+
+ul.oil-portal li:hover{
+  background-color: rgba(152, 152, 152, 0.1);
+  height: 18px;
+  color: #049cdb;
+}
+
+ul.oil-portal li a{
+  color: #555;
+  font-family: OpenSans, Arial, sans-serif;;
+  line-height: 20px;
+}
+
+ul.oil-portal li a:hover{
+  color: rgb(96, 193, 207);
+}
+
+ul.oil-portal li.active{
+  background-color: #fcfcfc;
+  height: 18px;
+  -moz-box-shadow: 0px 9px 0px -1px #FCFCFC;
+  -webkit-box-shadow: 0px 9px 0px -1px #FCFCFC;
+  box-shadow: 0px 9px 0px -1px #FCFCFC;
+}
+
+ul.oil-portal li.active a{
+  color: rgb(96, 193, 207);
+}
+
+ul.pull-right {
+  font-size: 16px;
+}
+
+.mobile{
+  display: none;
+}
+.mobile ul.dropdown-menu{
+  margin-left: -67px;
+  min-width: 90px;
+  background-color: rgb(244, 244, 244);
+  border: none;
+  -webkit-border-top-left-radius: 0px;
+  -moz-border-top-left-radius: 0px;
+  border-top-left-radius: 0px;
+  -webkit-border-top-right-radius: 0px;
+  -moz-border-top-right-radius: 0px;
+  border-top-right-radius: 0px;
+  -webkit-box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+  -moz-box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+  box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+  margin-top: 0px;
+}
+.mobile ul li a:hover{
+  background-color: rgb(65, 173, 218);
+}
+
+.mobile ul li.active a{
+  background-color: #049cdb;
+  background-image: none;
+}
+
+.mobile ul li.active a:hover{
+  background-color: rgb(65, 173, 218);
+  background-image: none;
+}
+
+.mobile ul li.active a:focus{
+  background-color: #049cdb;
+  background-image: none;
+}
+
+.oil-usr-icon {
+  vertical-align: middle;
+}
+
+#oil-usr {
+  color: #555;
+  height: 20px;
+  line-height: 20px;
+  font-size: 14px;
+  text-shadow: rgb(255, 255, 255) 0px 1px 0px;
+}
+
+#oil-usr:hover {
+  color: #555;
+}
+
+@media (max-width: 767px){
+  
+  body {
+    padding-right: 0px;
+    padding-left: 0px;
+    text-rendering: optimizeSpeed;
+  }
+
+  header .navbar ul.nav{
+    margin-top: 0px;
+  }
+
+  .logo-header{
+    float: left;
+  }
+
+  .mobile{
+    float: left;
+    margin-top: 8px;
+    display: inline-block;
+  }
+}
+
+.navbar .dropdown-menu:after, .navbar .dropdown-menu:before {
+    display:none;
+}
+
+@media (min-width: 768px) and (max-width: 979px){
+
+  header.navbar ul{
+    margin-top: 0px    
+  }
+}
