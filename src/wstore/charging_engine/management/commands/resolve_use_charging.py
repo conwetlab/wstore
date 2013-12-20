@@ -42,15 +42,15 @@ class Command(BaseCommand):
 
         if len(args) == 0:
             # Get contracts
-
             for contract in Contract.objects.all():
 
                 pending_sdrs = contract.pending_sdrs
 
-                if len(pending_sdrs) > 0:
+                # If there are subscriptions the renovations are used as triggers
+                if len(pending_sdrs) > 0 and (not 'subscription' in contract.pricing_model):
                     time_stamp = time.mktime(pending_sdrs[0]['time_stamp'].timetuple())
 
-                    if (time_stamp + 2592000) <= now:
+                    if (time_stamp + 2592000) <= now:  # A month
                         # Get the related payment info
                         purchase = contract.purchase
 

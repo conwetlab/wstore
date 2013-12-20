@@ -18,14 +18,17 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+import rdflib
 from django.test import TestCase
 
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 
-
 __test__ = False
 
+
 class UsdlParserTestCase(TestCase):
+
+    tags = ('usdl-test-case',)
 
     def test_basic_parse(self):
 
@@ -125,7 +128,7 @@ class UsdlParserTestCase(TestCase):
         self.assertEqual(len(sla), 1)
         self.assertEqual(sla[0]['name'], 'example service level')
         self.assertEqual(len(sla[0]['slaExpresions']), 1)
-        self.assertEqual(sla[0]['slaExpresions'][0]['description'],'example service level description' )
+        self.assertEqual(sla[0]['slaExpresions'][0]['description'], 'example service level description')
         variables = sla[0]['slaExpresions'][0]['variables']
         self.assertEqual(len(variables), 1)
         self.assertEqual(variables[0]['label'], 'Example variable')
@@ -198,6 +201,98 @@ class UsdlParserTestCase(TestCase):
         self.assertEqual(outputs[0]['label'], 'test output')
         self.assertEqual(outputs[0]['description'], 'test output description')
         self.assertEqual(outputs[0]['interface_element'], 'http://interfaceelementoutput.com')
+
+    def test_parse_price_specification(self):
+
+        f = open('./wstore/store_commons/test/test_usdl5.ttl', 'rb')
+        parser = USDLParser(f.read(), 'text/turtle')
+        f.close()
+
+        parsed_info = parser.parse()
+
+        self.assertEqual(parsed_info['pricing']['title'], 'test offering')
+        self.assertEqual(len(parsed_info['services_included']), 1)
+        self.assertEqual(parsed_info['services_included'][0]['name'], 'example service')
+        self.assertEqual(parsed_info['services_included'][0]['short_description'], 'Short description')
+        self.assertEqual(parsed_info['services_included'][0]['long_description'], 'Long description')
+        self.assertEqual(parsed_info['services_included'][0]['version'], '1.0')
+
+        self.assertEqual(len(parsed_info['pricing']['price_plans']), 1)
+        price_plan = parsed_info['pricing']['price_plans'][0]
+
+        self.assertEqual(price_plan['title'], 'Example price plan')
+        self.assertEqual(price_plan['description'], 'Price plan description')
+
+        self.assertEqual(len(price_plan['price_components']), 2)
+
+        for price_com in price_plan['price_components']:
+
+            if price_com['title'] == 'Price component 1':
+                self.assertEqual(price_com['title'], 'Price component 1')
+                self.assertEqual(price_com['description'], 'price component 1 description')
+                self.assertEqual(price_com['value'], '1.0')
+                self.assertEqual(price_com['currency'], 'EUR')
+                self.assertEqual(price_com['unit'], 'single pay')
+            else:
+                self.assertEqual(price_com['title'], 'Price component 2')
+                self.assertEqual(price_com['description'], 'price component 2 description')
+                self.assertEqual(price_com['value'], '1.0')
+                self.assertEqual(price_com['currency'], 'EUR')
+                self.assertEqual(price_com['unit'], 'single pay')
+
+        self.assertEqual(len(price_plan['taxes']), 1)
+        self.assertEqual(price_plan['taxes'][0]['title'], 'Example tax')
+        self.assertEqual(price_plan['taxes'][0]['description'], 'example tax description')
+        self.assertEqual(price_plan['taxes'][0]['value'], '1.0')
+        self.assertEqual(price_plan['taxes'][0]['currency'], 'EUR')
+        self.assertEqual(price_plan['taxes'][0]['unit'], 'percent')
+
+    def test_parse_price_deductions(self):
+
+        f = open('./wstore/store_commons/test/test_usdl6.ttl', 'rb')
+        parser = USDLParser(f.read(), 'text/turtle')
+        f.close()
+
+        parsed_info = parser.parse()
+
+        self.assertEqual(parsed_info['pricing']['title'], 'test offering')
+        self.assertEqual(len(parsed_info['services_included']), 1)
+        self.assertEqual(parsed_info['services_included'][0]['name'], 'example service')
+        self.assertEqual(parsed_info['services_included'][0]['short_description'], 'Short description')
+        self.assertEqual(parsed_info['services_included'][0]['long_description'], 'Long description')
+        self.assertEqual(parsed_info['services_included'][0]['version'], '1.0')
+
+        self.assertEqual(len(parsed_info['pricing']['price_plans']), 1)
+        price_plan = parsed_info['pricing']['price_plans'][0]
+
+        self.assertEqual(price_plan['title'], 'Example price plan')
+        self.assertEqual(price_plan['description'], 'Price plan description')
+
+        self.assertEqual(len(price_plan['price_components']), 1)
+        self.assertEqual(len(price_plan['deductions']), 1)
+
+        price_com = price_plan['price_components'][0]
+        self.assertEqual(price_com['title'], 'Price component')
+        self.assertEqual(price_com['description'], 'price component description')
+        self.assertEqual(price_com['value'], '1.0')
+        self.assertEqual(price_com['currency'], 'EUR')
+        self.assertEqual(price_com['unit'], 'single pay')
+
+        deduction = price_plan['deductions'][0]
+        self.assertEqual(deduction['title'], 'Price deduction')
+        self.assertEqual(deduction['description'], 'price deduction description')
+        self.assertEqual(deduction['value'], '1.0')
+        self.assertEqual(deduction['currency'], 'EUR')
+        self.assertEqual(deduction['unit'], 'single pay')
+
+        self.assertEqual(len(price_plan['taxes']), 1)
+        self.assertEqual(price_plan['taxes'][0]['title'], 'Example tax')
+        self.assertEqual(price_plan['taxes'][0]['description'], 'example tax description')
+        self.assertEqual(price_plan['taxes'][0]['value'], '1.0')
+        self.assertEqual(price_plan['taxes'][0]['currency'], 'EUR')
+        self.assertEqual(price_plan['taxes'][0]['unit'], 'percent')
+
+    test_parse_price_deductions.tags = ('fiware-ut-27',)
 
     def test_parse_invalid_format(self):
 
@@ -307,3 +402,92 @@ class USDLValidationTestCase(TestCase):
 
         self.assertFalse(valid[0])
         self.assertEquals(valid[1], 'A price component contains an invalid value')
+
+
+class FakeParser(USDLParser):
+
+    def __init__(self, graph):
+        self._graph = graph
+
+
+class PriceFunctionParsingTestCase(TestCase):
+
+    tags = ('usdl-price-func', 'fiware-ut-27')
+
+    def test_price_function_parsing(self):
+
+        # Load price function RDF
+        f = open('wstore/store_commons/test/price_funct_pars.ttl', 'rb')
+        g = rdflib.Graph().parse(data=f.read(), format='n3')
+        # Get price function node
+        price_function = g.subjects(rdflib.RDF.type, rdflib.URIRef('http://spinrdf.org/spin#Function')).next()
+
+        # Avoid constructor checks, not needed for the current test
+        # USDLParser.__init__ = fake_init
+        usdl_parser = FakeParser(g)
+        parsed_function = usdl_parser._parse_function(price_function)
+
+        # Check parsed function
+        self.assertEquals(len(parsed_function['variables']), 2)
+        self.assertEquals(parsed_function['variables']['usage']['label'], 'Usage variable')
+        self.assertEquals(parsed_function['variables']['usage']['type'], 'usage')
+        self.assertEquals(parsed_function['variables']['constant']['label'], 'Constant')
+        self.assertEquals(parsed_function['variables']['constant']['type'], 'constant')
+
+        self.assertEquals(parsed_function['function']['operation'], '+')
+        self.assertEquals(parsed_function['function']['arg1'], 'usage')
+        self.assertEquals(parsed_function['function']['arg2']['operation'], '*')
+        self.assertEquals(parsed_function['function']['arg2']['arg1']['operation'], '*')
+        self.assertEquals(parsed_function['function']['arg2']['arg1']['arg1'], 'constant')
+        self.assertEquals(parsed_function['function']['arg2']['arg1']['arg2'], 'constant')
+        self.assertEquals(parsed_function['function']['arg2']['arg2'], 'usage')
+
+    def test_price_function_exceptions(self):
+
+        # Load testing info
+        usdls = [
+            'wstore/store_commons/test/price_funct_err1.ttl',
+            'wstore/store_commons/test/price_funct_err2.ttl',
+            'wstore/store_commons/test/price_funct_err3.ttl',
+            'wstore/store_commons/test/price_funct_err4.ttl',
+            'wstore/store_commons/test/price_funct_err5.ttl',
+            'wstore/store_commons/test/price_funct_err6.ttl',
+            'wstore/store_commons/test/price_funct_err7.ttl',
+            'wstore/store_commons/test/price_funct_err8.ttl',
+            'wstore/store_commons/test/price_funct_err9.ttl',
+            'wstore/store_commons/test/price_funct_err10.ttl'
+        ]
+        error_messages = [
+            'Only a value is allowed for constants',
+            'Invalid variable type',
+            'Invalid SPARQL method',
+            'Only a bind expression is allowed',
+            'Variable not declared',
+            'Duplicated expression',
+            'Duplicated expression',
+            'Invalid predicate',
+            'An expression must contain an operation per level',
+            'Invalid operation'
+        ]
+        # Test all exceptions that can be raised
+        for i in range(0, 9):
+            # Load price function RDF
+            f = open(usdls[i], 'rb')
+            g = rdflib.Graph().parse(data=f.read(), format='n3')
+            # Get price function node
+            price_function = g.subjects(rdflib.RDF.type, rdflib.URIRef('http://spinrdf.org/spin#Function')).next()
+
+            # Avoid constructor checks, not needed for the current test
+            # USDLParser.__init__ = fake_init
+            usdl_parser = FakeParser(g)
+
+            error = False
+            msg = None
+            try:
+                usdl_parser._parse_function(price_function)
+            except Exception, e:
+                error = True
+                msg = e.message
+
+            self.assertTrue(error)
+            self.assertEquals(msg, 'Invalid price function: ' + error_messages[i])

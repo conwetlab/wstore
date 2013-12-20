@@ -5,8 +5,8 @@
 # This file is part of WStore.
 
 # WStore is free software: you can redistribute it and/or modify
-# it under the terms of the European Union Public Licence (EUPL) 
-# as published by the European Commission, either version 1.1 
+# it under the terms of the European Union Public Licence (EUPL)
+# as published by the European Commission, either version 1.1
 # of the License, or (at your option) any later version.
 
 # WStore is distributed in the hope that it will be useful,
@@ -15,7 +15,7 @@
 # European Union Public Licence for more details.
 
 # You should have received a copy of the European Union Public Licence
-# along with WStore.  
+# along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import rdflib
@@ -43,6 +43,8 @@ TIME = rdflib.Namespace('http://www.w3.org/2006/time#')
 GR = rdflib.Namespace('http://purl.org/goodrelations/v1#')
 DOAP = rdflib.Namespace('http://usefulinc.com/ns/doap#')
 GEO = rdflib.Namespace('http://www.w3.org/2003/01/geo/wgs84_pos#')
+SPIN = rdflib.Namespace('http://spinrdf.org/spin#')
+SP = rdflib.Namespace('http://spinrdf.org/sp#')
 
 
 class USDLParser(object):
@@ -169,7 +171,7 @@ class USDLParser(object):
         result = []
         legal_conditions = self._get_field(USDL, service_uri, 'hasLegalCondition', id_=True)
 
-        # If legal doest not exist the method does nothing
+        # If legal does not exist the method does nothing
         if len(legal_conditions) == 1 and legal_conditions[0] == '':
             return []
 
@@ -316,6 +318,216 @@ class USDLParser(object):
 
         return result
 
+    def _parse_bind_expression(self, expression):
+        result = {}
+        operations = {
+            unicode(SP['Sum']): '+',
+            unicode(SP['Minus']): '-',
+            unicode(SP['Mul']): '*',
+            unicode(SP['Div']): '/'
+        }
+
+        # Check the operation
+        exp_type = self._get_field(RDF, expression, 'type', id_=True)
+        if exp_type[0] == '':
+            raise Exception('Invalid price function: An expression must contain an operation per level')
+
+        try:
+            op = operations[unicode(exp_type[0])]
+        except:
+            raise Exception('Invalid price function: Invalid operation')
+
+        # Get arguments value
+        arg1 = self._get_field(SP, expression, 'arg1', id_=True)[0]
+        arg2 = self._get_field(SP, expression, 'arg2', id_=True)[0]
+
+        if self._get_field(RDF, arg1, 'type', id_=True)[0] == '':
+            # Get variable name
+            result['arg1'] = self._get_field(SP, arg1, 'varName')[0]
+        else:
+            # arg1 is an expression
+            result['arg1'] = self._parse_bind_expression(arg1)
+
+        if self._get_field(RDF, arg2, 'type', id_=True)[0] == '':
+            # Get variable name
+            result['arg2'] = self._get_field(SP, arg2, 'varName')[0]
+        else:
+            # arg2 is an expression
+            result['arg2'] = self._parse_bind_expression(arg2)
+
+        result['operation'] = op
+        return result
+
+    def _parse_function(self, price_function):
+
+        result = {
+            'label': self._get_field(RDFS, price_function, 'label')[0],
+            'variables': {},
+            'function': {}
+        }
+
+        variables = []
+        # Pre-process price variables
+        for variable in self._get_field(PRICE, price_function, 'hasVariable', id_=True):
+            # Check variable type to know if it is a constant or an usage
+            # variable
+            var_label = self._get_field(RDFS, variable, 'label')[0]
+            var_type = self._get_field(RDF, variable, 'type', id_=True)[0]
+
+            if var_type == PRICE['Constant']:
+                val_part = self._get_field(PRICE, variable, 'hasValue', id_=True)[0]
+                const_value = self._get_field(GR, val_part, 'hasValueFloat')
+
+                # Check that the value is valid
+                if len(const_value) == 1 and const_value[0] == '':
+                    const_value = self._get_field(GR, val_part, 'hasValueInteger')
+
+                    if len(const_value) != 1 or const_value[0] == '':
+                        raise Exception('Invalid price function: Only a value is allowed for constants')
+
+                variables.append({
+                    'type': 'constant',
+                    'id': variable,
+                    'label': var_label,
+                    'value': const_value[0]
+                })
+            elif var_type == PRICE['Usage']:
+                variables.append({
+                    'type': 'usage',
+                    'id': variable,
+                    'label': var_label
+                })
+            else:
+                raise Exception('Invalid price function: Invalid variable type')
+
+        # Get body expression
+        function_body = self._get_field(SPIN, price_function, 'body', id_=True)[0]
+        body_type = self._get_field(RDF, function_body, 'type', id_=True)[0]
+
+        if body_type != SP['Select']:
+            raise Exception('Invalid price function: Invalid SPARQL method')
+
+        # Check where clause
+        bind_expression = None
+        matching_exp = {}
+
+        # Iterate over expressions list
+        exp_list = self._get_field(SP, function_body, 'where', id_=True)[0]
+
+        # First element
+        first = self._get_field(RDF, exp_list, 'first', id_=True)[0]
+        # Rest of the list
+        rest = self._get_field(RDF, exp_list, 'rest', id_=True)[0]
+        nil = False
+
+        while not nil:
+            # Get expression node
+            exp = first
+            # Check bind expression
+            exp_type = self._get_field(RDF, exp, 'type', id_=True)
+            if len(exp_type) > 0 and exp_type[0] == SP['Bind']:
+                if bind_expression == None:
+                    bind_expression = exp
+                else:
+                    raise Exception('Invalid price function: Only a bind expression is allowed')
+            else:
+                # Get expression tuple
+                subject = self._get_field(SP, exp, 'subject', id_=True)[0]
+                predicate = self._get_field(SP, exp, 'predicate', id_=True)[0]
+                object_ = self._get_field(SP, exp, 'object', id_=True)[0]
+
+                # Check if the expression defines an aux name
+                if predicate == PRICE['hasValue']:
+                    variable_info = None
+                    found = False
+                    i = 0
+
+                    while not found and i < len(variables):
+                        if variables[i]['id'] == subject:
+                            found = True
+                            variable_info = variables[i]
+                            variable_info['type'] = variables[i]['type']
+                        i += 1
+
+                    if not found:
+                        raise Exception('Invalid price function: Variable not declared')
+
+                    # Get the aux name
+                    aux_name = self._get_field(SP, object_, 'varName')[0]
+
+                    if aux_name in matching_exp:
+                        # Check that is a variable name and not a
+                        # duplicity in the expression
+                        if 'variable_info' in matching_exp[aux_name]:
+                            raise Exception('Invalid price function: Duplicated expression')
+
+                        # The variable name used in the bind expression has
+                        # already been processed
+                        final_name = matching_exp[aux_name]['final_name']
+
+                        # The variable and its name are bound so it is possible to store
+                        # the variable info in the result structure
+                        result['variables'][final_name] = {
+                            'label': variable_info['label'],
+                            'type': variable_info['type']
+                        }
+
+                        if variable_info['type'] == 'constant':
+                            result['variables'][final_name]['value'] = variable_info['value']
+
+                        # Store variable info in matching expression in order to avoid duplicity
+                        matching_exp[aux_name]['variable_info'] = variable_info
+                    else:
+                        matching_exp[aux_name] = {
+                            'variable_info': variable_info
+                        }
+
+                # Check if the expression defines a final name
+                elif predicate == GR['hasValueFloat'] or predicate == GR['hasValueInteger']:
+                    aux_name = self._get_field(SP, subject, 'varName')[0]
+                    final_name = self._get_field(SP, object_, 'varName')[0]
+
+                    if aux_name in matching_exp:
+                        # Check that it contains variable info and
+                        # not a duplicated final name
+                        if 'final_name' in matching_exp[aux_name]:
+                            raise Exception('Invalid price function: Duplicated expression')
+                        # The variable has already been processed so it is possible
+                        # to store the variable info in the result structure
+                        result['variables'][final_name] = {
+                            'label': matching_exp[aux_name]['variable_info']['label'],
+                            'type': matching_exp[aux_name]['variable_info']['type']
+                        }
+                        if matching_exp[aux_name]['variable_info']['type'] == 'constant':
+                            result['variables'][final_name]['value'] = matching_exp[aux_name]['variable_info']['value']
+
+                        # Store the final name in matching expression to avoid duplicity
+                        matching_exp[aux_name]['final_name'] = final_name
+                    else:
+                        matching_exp[aux_name] = {
+                            'final_name': final_name
+                        }
+                else:
+                    raise Exception('Invalid price function: Invalid predicate')
+
+            # Check list pointer
+            if rest == RDF['nil']:
+                # There is not more elements
+                nil = True
+            else:
+                # Update list pointer
+                first = self._get_field(RDF, rest, 'first', id_=True)[0]
+                rest = self._get_field(RDF, rest, 'rest', id_=True)[0]
+
+        # Parse bind expression
+        expression = self._get_field(SP, bind_expression, 'expression', id_=True)[0]
+
+        # Parse the concrete function used to calculate the price
+        result['function'] = self._parse_bind_expression(expression)
+
+        # Build price function
+        return result
+
     def _parse_pricing_info(self):
 
         result = {}
@@ -332,31 +544,67 @@ class USDLParser(object):
 
         result['price_plans'] = []
 
+        # Parse price plans
         for price in price_plans:
             price_plan = {}
             price_plan['title'] = self._get_field(DCTERMS, price, 'title')[0]
             price_plan['description'] = self._get_field(DCTERMS, price, 'description')[0]
 
+            # Get price components
             price_components = self._get_field(PRICE, price, 'hasPriceComponent', id_=True)
 
             if len(price_components) > 1 or price_components[0] != '':
+                # Initialize components and deductions
                 price_plan['price_components'] = []
+                price_plan['deductions'] = []
 
                 for pc in price_components:
+
+                    # Get initial information
                     price_component = {
                         'title': self._get_field(DCTERMS, pc, 'title')[0],
-                        'description': self._get_field(DCTERMS, pc, 'description')[0],
-                        'currency': self._get_field(GR, pc, 'hasCurrency')[0],
+                        'description': self._get_field(DCTERMS, pc, 'description')[0]
                     }
-                    value = self._get_field(GR, pc, 'hasCurrencyValue')
 
-                    if not value:
-                        price_component['value'] = self._get_field(GR, pc, 'hasValueFloat')[0]
+                    # Check if it includes a price specification
+                    price_specification = self._get_field(PRICE, pc, 'hasPrice', id_=True)[0]
+                    function_found = False
+
+                    if price_specification != '':
+                        price_container = price_specification
                     else:
-                        price_component['value'] = value[0]
+                        # Check if a price function exists
+                        price_function = self._get_field(PRICE, pc, 'hasPriceFunction', id_=True)[0]
+                        text_function = self._get_field(PRICE, pc, 'hasTextFunction')[0]
 
-                    price_component['unit'] = self._get_field(GR, pc, 'hasUnitOfMeasurement')[0]
-                    price_plan['price_components'].append(price_component)
+                        if price_function != '' and text_function != '':
+                            function_found = True
+                        else:
+                            price_container = pc
+
+                    if function_found:
+                        # Save price function serialization
+                        price_component['text_function'] = text_function
+                        price_component['price_function'] = self._parse_function(price_function)
+                    else:
+                        # If not price function defined, get the price
+                        price_component['currency'] = self._get_field(GR, price_container, 'hasCurrency')[0]
+                        value = self._get_field(GR, price_container, 'hasCurrencyValue')[0]
+
+                        if not value:
+                            price_component['value'] = self._get_field(GR, price_container, 'hasValueFloat')[0]
+                        else:
+                            price_component['value'] = value
+
+                        price_component['unit'] = self._get_field(GR, price_container, 'hasUnitOfMeasurement')[0]
+
+                    # Check if it is a deduction getting component type
+                    component_type = self._get_field(RDF, pc, 'type', id_=True)[0]
+
+                    if component_type == PRICE['PriceComponent']:
+                        price_plan['price_components'].append(price_component)
+                    elif component_type == PRICE['Deduction']:
+                        price_plan['deductions'].append(price_component)
 
             taxes = self._get_field(PRICE, price, 'hasTax', id_=True)
 
@@ -440,32 +688,33 @@ def validate_usdl(usdl, mimetype):
         currencies = []
         for component in price_components:
 
-            # Validate currency
-            if component['currency'] != 'EUR' and component['currency'] != 'GBP':
-                valid = False
-                reason = 'A price component contains and invalid or unsupported currency'
-                break
-            else:
-                # Check that all price components has the same currency
-                if len(currencies) != 0 and (not component['currency'] in currencies):
+            if not 'price_function' in component:
+                # Validate currency
+                if component['currency'] != 'EUR' and component['currency'] != 'GBP':
                     valid = False
-                    reason = 'All price components must use the same currency'
+                    reason = 'A price component contains and invalid or unsupported currency'
+                    break
                 else:
-                    currencies.append(component['currency'])
+                    # Check that all price components has the same currency
+                    if len(currencies) != 0 and (not component['currency'] in currencies):
+                        valid = False
+                        reason = 'All price components must use the same currency'
+                    else:
+                        currencies.append(component['currency'])
 
-            # Validate unit
-            units = Unit.objects.filter(name=component['unit'].lower())
-            if len(units) == 0:
-                valid = False
-                reason = 'A price component contains an unsupported unit'
-                break
+                # Validate unit
+                units = Unit.objects.filter(name=component['unit'].lower())
+                if len(units) == 0:
+                    valid = False
+                    reason = 'A price component contains an unsupported unit'
+                    break
 
-            # Validate value
-            try:
-                float(component['value'])
-            except:
-                valid = False
-                reason = 'A price component contains an invalid value'
-                break
+                # Validate value
+                try:
+                    float(component['value'])
+                except:
+                    valid = False
+                    reason = 'A price component contains an invalid value'
+                    break
 
     return (valid, reason)

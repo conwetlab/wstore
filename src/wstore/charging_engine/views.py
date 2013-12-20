@@ -50,7 +50,7 @@ class ServiceRecordCollection(Resource):
             # Validate SDR structure
             if not 'offering' in data or not 'customer' in data or not 'time_stamp' in data \
             or not 'correlation_number' in data or not 'record_type' in data or not 'unit' in data \
-            or not 'value' in data:
+            or not 'value' in data or not 'component_label' in data:
                 raise Exception('Invalid JSON content')
 
             # Get the purchase
@@ -114,7 +114,11 @@ class PayPalConfirmation(Resource):
                 payerid=payer_id
             )
             charging_engine = ChargingEngine(purchase)
-            charging_engine.end_charging(pending_info['price'], pending_info['concept'], pending_info['related_model'])
+            accounting = None
+            if 'accounting' in pending_info:
+                accounting = pending_info['accounting']
+
+            charging_engine.end_charging(pending_info['price'], pending_info['concept'], pending_info['related_model'], accounting)
         except:
             rollback(purchase)
             context = {
