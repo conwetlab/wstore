@@ -19,6 +19,7 @@ In order to have WStore up and running the following software is required
 * Pylucene 3.6.2
 * paypalpy 
 * django-crontab
+* django-social-auth
 * wkhtml2pdf
 
 Installation
@@ -235,10 +236,6 @@ Finally, include OAuth2 credentials in your WStore instance by filling the setti
 
     FIWARE_APP_ID = client_id_number
     FIWARE_API_SECRET = client_secret
-
-
-Note, that if you  use this method, all users registered in the corresponding FI-WARE
-instance will have access to your application.
 
 #### WStore Identity Management
 
