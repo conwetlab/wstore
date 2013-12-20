@@ -292,6 +292,8 @@ class UsdlParserTestCase(TestCase):
         self.assertEqual(price_plan['taxes'][0]['currency'], 'EUR')
         self.assertEqual(price_plan['taxes'][0]['unit'], 'percent')
 
+    test_parse_price_deductions.tags = ('fiware-ut-27',)
+
     def test_parse_invalid_format(self):
 
         f = open('./wstore/store_commons/test/basic_usdl.ttl', 'rb')
@@ -402,13 +404,15 @@ class USDLValidationTestCase(TestCase):
         self.assertEquals(valid[1], 'A price component contains an invalid value')
 
 
-def fake_init(instance, graph):
-    instance._graph = graph
+class FakeParser(USDLParser):
+
+    def __init__(self, graph):
+        self._graph = graph
 
 
 class PriceFunctionParsingTestCase(TestCase):
 
-    tags = ('usdl-price-func',)
+    tags = ('usdl-price-func', 'fiware-ut-27')
 
     def test_price_function_parsing(self):
 
@@ -419,8 +423,8 @@ class PriceFunctionParsingTestCase(TestCase):
         price_function = g.subjects(rdflib.RDF.type, rdflib.URIRef('http://spinrdf.org/spin#Function')).next()
 
         # Avoid constructor checks, not needed for the current test
-        USDLParser.__init__ = fake_init
-        usdl_parser = USDLParser(g)
+        # USDLParser.__init__ = fake_init
+        usdl_parser = FakeParser(g)
         parsed_function = usdl_parser._parse_function(price_function)
 
         # Check parsed function
@@ -474,8 +478,8 @@ class PriceFunctionParsingTestCase(TestCase):
             price_function = g.subjects(rdflib.RDF.type, rdflib.URIRef('http://spinrdf.org/spin#Function')).next()
 
             # Avoid constructor checks, not needed for the current test
-            USDLParser.__init__ = fake_init
-            usdl_parser = USDLParser(g)
+            # USDLParser.__init__ = fake_init
+            usdl_parser = FakeParser(g)
 
             error = False
             msg = None

@@ -1,0 +1,411 @@
+[
+    {
+        "pk": "51000aba8e05ac2115f022f9",
+        "model": "auth.user",
+        "fields": {
+            "username": "test_user2",
+            "first_name": "",
+            "last_name": "",
+            "email": "admin@c.com",
+            "password": "sha1$5AphFrMHRX5o$bd3394cfeb25266a67d88683d24ae0c7b0647bd8",
+            "is_staff": false,
+            "is_active": true,
+            "is_superuser": false,
+            "last_login": "2011-10-10 11:27:12",
+            "date_joined": "2011-10-10 11:27:12"
+        }
+    },
+    {
+        "pk": "515ab0738e05ac20b622888b",
+        "model": "sites.site",
+        "fields": {
+            "domain": "http://antares.ls.fi.upm.es:8000",
+            "name": "antares"
+        }
+    },
+    {
+        "pk": "51070aba8e05cc2115f022f9",
+        "model": "auth.user",
+        "fields": {
+            "username": "test_user",
+            "first_name": "",
+            "last_name": "",
+            "email": "admin@c.com",
+            "password": "sha1$5AphFrMHRX5o$bd3394cfeb25266a67d88683d24ae0c7b0647bd8",
+            "is_staff": false,
+            "is_active": true,
+            "is_superuser": false,
+            "last_login": "2011-10-10 11:27:12",
+            "date_joined": "2011-10-10 11:27:12"
+        }
+    },
+    {
+        "pk": "61000aba8e05ac2115f022f9",
+        "model": "wstore.Offering",
+        "fields": {
+            "name": "test_offering",
+            "owner_admin_user": "51000aba8e05ac2115f022f9",
+            "version": "1.0",
+            "state": "published",
+            "marketplaces": [],
+            "rating": "0",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": ["61000bba8e05ac2116f022f9"],
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
+        }
+    },
+    {
+        "pk": "61000bba8e05ac2116f022f9",
+        "model": "wstore.Resource",
+        "fields": {
+            "name": "test_resource",
+            "version": "1.0",
+            "provider": "51000aba8e05ac2115f022f9",
+            "description": "Example resource",
+            "state": "uploaded",
+            "download_link": "",
+            "resource_path": "/media/resources/test_user__test_resource__1.0",
+            "offerings": ["61000aba8e05ac2115f022f0"]
+        }
+    },
+    {
+        "pk": "61004aba5e05acc115f022f0",
+        "model": "wstore.Purchase",
+        "fields": {
+            "ref": "61004aba5e05acc115f022f0",
+            "customer": "51070aba8e05cc2115f022f9",
+            "organization_owned": false,
+            "owner_organization": "",
+            "date": "2013-02-05 17:06:46",
+            "offering": "61000aba8e05ac2115f022f9",
+            "state": "paid",
+            "bill": [],
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
+        }
+    },
+    {
+        "pk": "61000b3a8805ac21161020f9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "pay_per_use": [{
+                    "title": "pay per use",
+                    "text_function": "number of calls plus 2 minus number of minutes",
+                    "price_function": {
+                        "variables": {
+                            "call_var": {
+                                "type": "usage",
+                                "label": "calls"
+                            },
+                            "minute_var": {
+                                "type": "usage",
+                                "label": "minutes"
+                            },
+                            "calls_constant": {
+                            	"type": "constant",
+                            	"label": "multi constant",
+                            	"value": "2"
+                            }  
+                        },
+                        "function": {
+                            "operation": "-",
+                            "arg1": {
+                                "operation": "*",
+                                "arg1": "call_var",
+                                "arg2": "calls_constant"
+                            },
+                            "arg2": "minute_var"
+                        }
+                    }
+                }],
+                "general_currency": "EUR"
+            },
+            "applied_sdrs": [],
+            "pending_sdrs": [{
+                "offering": {
+                    "name": "test_offering",
+                    "organization": "test_organization",
+                    "version": "1.0"
+                },
+                "component_label": "calls",
+                "customer": "test_user",
+                "value": "15",
+                "unit": "call"
+            }, {
+                "offering": {
+                    "name": "test_offering",
+                    "organization": "test_organization",
+                    "version": "1.0"
+                },
+                "component_label": "calls",
+                "customer": "test_user",
+                "value": "5",
+                "unit": "call"
+            }, {
+                "offering": {
+                    "name": "test_offering",
+                    "organization": "test_organization",
+                    "version": "1.0"
+                },
+                "component_label": "minutes",
+                "customer": "test_user",
+                "value": "7",
+                "unit": "minute"
+            }
+            ],
+            "charges": [],
+            "purchase": "61004aba5e05acc115f022f0"
+        }
+    },
+    {
+        "pk": "61004aba5e05acc115f55555",
+        "model": "wstore.Purchase",
+        "fields": {
+            "ref": "61004aba5e05acc115f022f0",
+            "customer": "51070aba8e05cc2115f022f9",
+            "organization_owned": false,
+            "owner_organization": "",
+            "date": "2013-02-05 17:06:46",
+            "offering": "61000aba8e05ac2115f022f9",
+            "state": "paid",
+            "bill": [],
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
+        }
+    },
+    {
+        "pk": "61000b3a8805ac2116166666",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "pay_per_use": [{
+                    "title": "pay per use",
+                    "text_function": "number of calls plus 2 minus number of minutes",
+                    "price_function": {
+                        "variables": {
+                            "call_var": {
+                                "type": "usage",
+                                "label": "calls"
+                            },
+                            "minute_var": {
+                                "type": "usage",
+                                "label": "minutes"
+                            },
+                            "calls_constant": {
+                            	"type": "constant",
+                            	"label": "multi constant",
+                            	"value": "2"
+                            }  
+                        },
+                        "function": {
+                            "operation": "-",
+                            "arg1": {
+                                "operation": "*",
+                                "arg1": "call_var",
+                                "arg2": "calls_constant"
+                            },
+                            "arg2": "minute_var"
+                        }
+                    }
+                }],
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "EUR",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }],
+                "general_currency": "EUR"
+            },
+            "applied_sdrs": [],
+            "pending_sdrs": [{
+                "offering": {
+                    "name": "test_offering",
+                    "organization": "test_organization",
+                    "version": "1.0"
+                },
+                "component_label": "calls",
+                "customer": "test_user",
+                "value": "15",
+                "unit": "call"
+            }, {
+                "offering": {
+                    "name": "test_offering",
+                    "organization": "test_organization",
+                    "version": "1.0"
+                },
+                "component_label": "calls",
+                "customer": "test_user",
+                "value": "5",
+                "unit": "call"
+            }, {
+                "offering": {
+                    "name": "test_offering",
+                    "organization": "test_organization",
+                    "version": "1.0"
+                },
+                "component_label": "minutes",
+                "customer": "test_user",
+                "value": "7",
+                "unit": "minute"
+            }
+            ],
+            "charges": [],
+            "purchase": "61004aba5e05acc115f55555"
+        }
+    },
+    {
+        "pk": "61004aba5e05acc115f77777",
+        "model": "wstore.Purchase",
+        "fields": {
+            "ref": "61004aba5e05acc115f022f0",
+            "customer": "51070aba8e05cc2115f022f9",
+            "organization_owned": false,
+            "owner_organization": "",
+            "date": "2013-02-05 17:06:46",
+            "offering": "61000aba8e05ac2115f022f9",
+            "state": "paid",
+            "bill": [],
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
+        }
+    },
+    {
+        "pk": "61000b3a8805ac2116188888",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "pay_per_use": [{
+                    "title": "pay per use",
+                    "text_function": "number of calls plus 2 minus number of minutes",
+                    "price_function": {
+                        "variables": {
+                            "call_var": {
+                                "type": "usage",
+                                "label": "calls"
+                            },
+                            "minute_var": {
+                                "type": "usage",
+                                "label": "minutes"
+                            },
+                            "calls_constant": {
+                            	"type": "constant",
+                            	"label": "multi constant",
+                            	"value": "2"
+                            }  
+                        },
+                        "function": {
+                            "operation": "-",
+                            "arg1": {
+                                "operation": "*",
+                                "arg1": "call_var",
+                                "arg2": "calls_constant"
+                            },
+                            "arg2": "minute_var"
+                        }
+                    }
+                }],
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "EUR",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }],
+                "deductions": [{
+                    "title": "function deduction",
+                    "text_function": "0.1 plus number of minutes",
+                    "price_function": {
+                        "variables": {
+                            "minute_var": {
+                                "type": "usage",
+                                "label": "minutes"
+                            },
+                            "disc_constant": {
+                            	"type": "constant",
+                            	"label": "disc constant",
+                            	"value": "0.1"
+                            }  
+                        },
+                        "function": {
+                            "operation": "*",
+                            "arg1": "disc_constant",
+                            "arg2": "minute_var"
+                        }
+                    }
+                },{
+                    "title": "deduction 2",
+                    "unit": "call",
+                    "currency": "EUR",
+                    "value": "0.2"
+                }],
+                "general_currency": "EUR"
+            },
+            "applied_sdrs": [],
+            "pending_sdrs": [{
+                "offering": {
+                    "name": "test_offering",
+                    "organization": "test_organization",
+                    "version": "1.0"
+                },
+                "component_label": "calls",
+                "customer": "test_user",
+                "value": "15",
+                "unit": "call"
+            }, {
+                "offering": {
+                    "name": "test_offering",
+                    "organization": "test_organization",
+                    "version": "1.0"
+                },
+                "component_label": "calls",
+                "customer": "test_user",
+                "value": "5",
+                "unit": "call"
+            }, {
+                "offering": {
+                    "name": "test_offering",
+                    "organization": "test_organization",
+                    "version": "1.0"
+                },
+                "component_label": "minutes",
+                "customer": "test_user",
+                "value": "7",
+                "unit": "minute"
+            }
+            ],
+            "charges": [],
+            "purchase": "61004aba5e05acc115f77777"
+        }
+    },
+    {
+        "pk": "91000aba8e06ac2115f022f0",
+        "model": "wstore.Organization",
+        "fields": {
+            "name": "test_organization",
+            "offerings_purchased": [],
+            "managers": [],
+            "private": false
+        }
+    }
+]
