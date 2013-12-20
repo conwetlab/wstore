@@ -477,13 +477,20 @@
             $('<h4></h4>').text(title).appendTo(dom);
 
             for (var i = 0; i < priceElem.length; i++) {
-                $.template('priceElementTemplate', $('#pricing_element_template'));
-                priceTempl = $.tmpl('priceElementTemplate', priceElem[i]);
+                // Check if a price function has been defined
+                if (!priceElem.text_function) {
+                    $.template('priceElementTemplate', $('#pricing_element_template'));
+                    priceTempl = $.tmpl('priceElementTemplate', priceElem[i]);
 
-                if(priceElem[i].renovation_date) {
-                    $('<p></p>').text(priceElem[i].renovation_date).appendTo(priceTempl);
+                    if(priceElem[i].renovation_date) {
+                        $('<p></p>').text(priceElem[i].renovation_date).appendTo(priceTempl);
+                    }
+
+                } else {
+                    $.template('priceElementTemplate', $('#pricing_function_template'));
+                    priceTempl = $.tmpl('priceElementTemplate', priceElem[i]);
                 }
-                priceTempl.appendTo(dom)	
+                priceTempl.appendTo(dom)
             }
         }
     };

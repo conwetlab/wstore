@@ -686,32 +686,33 @@ def validate_usdl(usdl, mimetype):
         currencies = []
         for component in price_components:
 
-            # Validate currency
-            if component['currency'] != 'EUR' and component['currency'] != 'GBP':
-                valid = False
-                reason = 'A price component contains and invalid or unsupported currency'
-                break
-            else:
-                # Check that all price components has the same currency
-                if len(currencies) != 0 and (not component['currency'] in currencies):
+            if not 'price_function' in component:
+                # Validate currency
+                if component['currency'] != 'EUR' and component['currency'] != 'GBP':
                     valid = False
-                    reason = 'All price components must use the same currency'
+                    reason = 'A price component contains and invalid or unsupported currency'
+                    break
                 else:
-                    currencies.append(component['currency'])
+                    # Check that all price components has the same currency
+                    if len(currencies) != 0 and (not component['currency'] in currencies):
+                        valid = False
+                        reason = 'All price components must use the same currency'
+                    else:
+                        currencies.append(component['currency'])
 
-            # Validate unit
-            units = Unit.objects.filter(name=component['unit'].lower())
-            if len(units) == 0:
-                valid = False
-                reason = 'A price component contains an unsupported unit'
-                break
+                # Validate unit
+                units = Unit.objects.filter(name=component['unit'].lower())
+                if len(units) == 0:
+                    valid = False
+                    reason = 'A price component contains an unsupported unit'
+                    break
 
-            # Validate value
-            try:
-                float(component['value'])
-            except:
-                valid = False
-                reason = 'A price component contains an invalid value'
-                break
+                # Validate value
+                try:
+                    float(component['value'])
+                except:
+                    valid = False
+                    reason = 'A price component contains an invalid value'
+                    break
 
     return (valid, reason)
