@@ -180,7 +180,7 @@ class PriceResolver():
 
         if 'deductions' in pricing_model:
             # Calculate deductions
-            price = price - self._pay_per_use_preprocesing(pricing_model['deductions'], accounting_info)
+            price = price - self._pay_per_use_preprocesing(pricing_model['deductions'], accounting_info, discount=True)
 
         # If the price is negative i.e too much deductions
         # the value is set to 0
