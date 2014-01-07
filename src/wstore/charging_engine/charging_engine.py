@@ -57,8 +57,9 @@ class ChargingEngine:
     _purchase = None
     _payment_method = None
     _credit_card_info = None
+    _plan = None
 
-    def __init__(self, purchase, payment_method=None, credit_card=None):
+    def __init__(self, purchase, payment_method=None, credit_card=None, plan=None):
         self._purchase = purchase
         if payment_method != None:
 
@@ -71,6 +72,9 @@ class ChargingEngine:
                     self._credit_card_info = credit_card
 
             self._payment_method = payment_method
+
+        if plan:
+            self._plan = plan
 
     def _timeout_handler(self):
 
@@ -598,9 +602,26 @@ class ChargingEngine:
         parsed_usdl = parser.parse()
 
         usdl_pricing = {}
-        # Only a price plan is supported in this version
+        # Search and validate the corresponding price plan
         if len(parsed_usdl['pricing']['price_plans']) > 0:
-            usdl_pricing = parsed_usdl['pricing']['price_plans'][0]
+            if len(parsed_usdl['pricing']['price_plans']) == 1:
+                usdl_pricing = parsed_usdl['pricing']['price_plans'][0]
+            else:
+                # A plan must have been specified
+                if not self._plan:
+                    raise Exception('The price plan label is required to identify the plan')
+
+                # Search the plan
+                found = False
+                for plan in parsed_usdl['pricing']['price_plans']:
+                    if plan['label'].lower() == self._plan.lower():
+                        usdl_pricing = plan
+                        found = True
+                        break
+
+                # Validate the specified plan
+                if not found:
+                    raise Exception('The specified plan does not exist')
 
         price_model = {}
 

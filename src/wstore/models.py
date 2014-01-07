@@ -126,7 +126,7 @@ def create_user_profile(sender, instance, created, **kwargs):
             user=instance,
             organizations=[{
                 'organization': default_organization[0].pk,
-                'roles': ['customer']
+                'roles': ['customer', 'developer']
             }],
             current_organization=default_organization[0]
         )

@@ -44,6 +44,11 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
     if org_owned:
         organization = profile.current_organization
 
+    plan = None
+    # Check the selected plan
+    if payment_info and 'plan' in payment_info:
+        plan = payment_info['plan']
+
     # Get the effective tax address
     if not 'tax_address' in payment_info:
         if org_owned:
@@ -105,9 +110,9 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
     purchase.save()
 
     if credit_card_info != None:
-        charging_engine = ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card_info)
+        charging_engine = ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card_info, plan=plan)
     else:
-        charging_engine = ChargingEngine(purchase, payment_method='paypal')
+        charging_engine = ChargingEngine(purchase, payment_method='paypal', plan=plan)
 
     redirect_url = charging_engine.resolve_charging(new_purchase=True)
 

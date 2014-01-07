@@ -22,6 +22,8 @@ import rdflib
 
 from django.utils.translation import ugettext as _
 
+from wstore.models import Offering
+
 
 FOAF = rdflib.Namespace('http://xmlns.com/foaf/0.1/')
 RDF = rdflib.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
@@ -550,6 +552,14 @@ class USDLParser(object):
             price_plan['title'] = self._get_field(DCTERMS, price, 'title')[0]
             price_plan['description'] = self._get_field(DCTERMS, price, 'description')[0]
 
+            # Get the label of the price plan
+            label = self._get_field(RDFS, price, 'label')
+
+            if len(label) == 1:
+                price_plan['label'] = label[0]
+            elif len(label) > 1:
+                raise Exception('Only a label is supported for the price plan')
+
             # Get price components
             price_components = self._get_field(PRICE, price, 'hasPriceComponent', id_=True)
 
@@ -655,7 +665,7 @@ class USDLParser(object):
         return result
 
 
-def validate_usdl(usdl, mimetype):
+def validate_usdl(usdl, mimetype, offering_data):
 
     valid = True
     reason = ''
@@ -673,11 +683,52 @@ def validate_usdl(usdl, mimetype):
             valid = False
             reason = 'Only a Service included in the offering is supported'
 
-    # Check that there are not more than one price plan
-    if valid:
-        if len(parsed_document['pricing']['price_plans']) != 1:
+    # Check that if there are more than a price plan all of them contain a label
+    update_plan = False
+    updates = 0
+    developer_plan = False
+    developers = 0
+    if valid and len(parsed_document['pricing']['price_plans']) > 1:
+        labels = []
+        for plan in parsed_document['pricing']['price_plans']:
+            if not 'label' in plan:
+                valid = False
+                reason = 'A label is required if there are more than a price plan'
+                break
+            elif plan['label'].lower() == 'update':
+                update_plan = True
+                updates += 1
+            elif plan['label'].lower() == 'developer':
+                developer_plan = True
+                developers += 1
+            elif plan['label'].lower() in labels:
+                valid = False
+                reason = 'The price plan labels must be unique'
+                break
+            else:
+                labels.append(plan['label'].lower())
+
+    elif valid and len(parsed_document['pricing']['price_plans']) == 1\
+    and 'label' in parsed_document['pricing']['price_plans'][0] \
+    and parsed_document['pricing']['price_plans'][0]['label'].lower() == 'update':
+        update_plan = True
+
+    # Check that it contains at most an update plan and a developer plan
+    if valid and update_plan and updates > 1:
+        valid = False
+        reason = 'Only an updating price plan is allowed'
+
+    if valid and developer_plan and developers > 1:
+        valid = False
+        reason = 'Only a developers plan is allowed'
+    
+    # Check if an update plan has been defined in order to check if a previous version
+    # exists. The update plan is not allowed if it is the first version of the offering
+    if valid and update_plan:
+        offerings = Offering.objects.count(owner_organization=offering_data['organization'], name=offering_data['name'])
+        if offerings == 0:
             valid = False
-            reason = 'Only a price plan is supported'
+            reason = 'It is not possible to define an updating plan without a previous version of the offering'
 
     # Validate price components
     if valid and 'price_components' in parsed_document['pricing']['price_plans'][0]:

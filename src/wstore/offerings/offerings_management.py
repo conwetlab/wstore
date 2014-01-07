@@ -43,7 +43,11 @@ from wstore.models import Marketplace
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
+#from wstore.contracting.views import is_lower_version
+from distutils.version import StrictVersion
 
+def is_lower_version(version1, version2):
+    return StrictVersion(version1) < StrictVersion(version2)
 
 def get_offering_info(offering, user):
 
@@ -336,6 +340,15 @@ def create_offering(provider, json_data):
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise Exception('Invalid version format')
 
+    # Get organization
+    organization = profile.current_organization
+
+    # Check if the version of the offering is lower than an existing one
+    offerings = Offering.objects.filter(owner_organization=organization, name=data['name'])
+    for off in offerings:
+        if is_lower_version(data['version'], off.version):
+            raise Exception('A bigger version of the current offering exists')
+
     # If using the idm, get the applications from the request
     if settings.OILAUTH:
 
@@ -351,9 +364,6 @@ def create_offering(provider, json_data):
             })
 
     data['related_images'] = []
-
-    # Get organization
-    organization = profile.current_organization
 
     # Check if the offering already exists
     existing = True
@@ -464,7 +474,8 @@ def create_offering(provider, json_data):
         raise Exception('No USDL description provided')
 
     # Validate the USDL
-    valid = validate_usdl(usdl, usdl_info['content_type'])
+    data['organization'] = organization
+    valid = validate_usdl(usdl, usdl_info['content_type'], data)
 
     if not valid[0]:
         raise Exception(valid[1])
@@ -626,7 +637,10 @@ def update_offering(offering, data):
     # in the offering model
     if new_usdl:
         # Validate the USDL
-        valid = validate_usdl(usdl, usdl_info['content_type'])
+        valid = validate_usdl(usdl, usdl_info['content_type'], {
+            'name': offering.name,
+            'organization': offering.owner_organization
+        })
 
         if not valid[0]:
             raise Exception(valid[1])
