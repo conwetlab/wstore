@@ -19,6 +19,8 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import rdflib
+from mock import MagicMock
+
 from django.test import TestCase
 
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
@@ -351,54 +353,125 @@ class USDLValidationTestCase(TestCase):
 
     def test_basic_validation(self):
         f = open('./wstore/store_commons/test/val.ttl', 'rb')
-        valid = validate_usdl(f.read(), 'text/turtle')
+        valid = validate_usdl(f.read(), 'text/turtle', {})
 
         self.assertTrue(valid[0])
 
     def test_validate_price_components(self):
         f = open('./wstore/store_commons/test/val_comp.ttl', 'rb')
-        valid = validate_usdl(f.read(), 'text/turtle')
+        valid = validate_usdl(f.read(), 'text/turtle', {})
 
         self.assertTrue(valid[0])
 
     def test_validate_invalid_service(self):
         f = open('./wstore/store_commons/test/val_serv.ttl', 'rb')
-        valid = validate_usdl(f.read(), 'text/turtle')
+        valid = validate_usdl(f.read(), 'text/turtle', {})
 
         self.assertFalse(valid[0])
         self.assertEquals(valid[1], 'Only a Service included in the offering is supported')
 
     def test_validate_invalid_price_plan(self):
-        f = open('./wstore/store_commons/test/val_plan.ttl', 'rb')
-        valid = validate_usdl(f.read(), 'text/turtle')
+
+        from wstore.store_commons.utils import usdlParser
+        usdlParser.USDLParser = MagicMock()
+        parser = MagicMock()
+        parser.parse.return_value = {
+            'services_included': ['service'],
+            'pricing': {
+                'price_plans': [{
+                    'title': 'plan 1',
+                },{
+                    'title': 'plan 2',
+                }]
+            }
+        }
+        usdlParser.USDLParser.return_value = parser
+        valid = usdlParser.validate_usdl('', 'text/turtle', {})
 
         self.assertFalse(valid[0])
-        self.assertEquals(valid[1], 'Only a price plan is supported')
+        self.assertEquals(valid[1], 'A label is required if there are more than a price plan')
+
+        parser.parse.return_value = {
+            'services_included': ['service'],
+            'pricing': {
+                'price_plans': [{
+                    'title': 'plan 1',
+                    'label': 'plan_label'
+                },{
+                    'title': 'plan 2',
+                    'label': 'plan_label'
+                }]
+            }
+        }
+        usdlParser.USDLParser.return_value = parser
+        valid = usdlParser.validate_usdl('', 'text/turtle', {})
+
+        self.assertFalse(valid[0])
+        self.assertEquals(valid[1], 'The price plan labels must be unique')
+
+
+        parser.parse.return_value = {
+            'services_included': ['service'],
+            'pricing': {
+                'price_plans': [{
+                    'title': 'plan 1',
+                    'label': 'update'
+                },{
+                    'title': 'plan 2',
+                    'label': 'update'
+                }]
+            }
+        }
+        usdlParser.USDLParser.return_value = parser
+        valid = usdlParser.validate_usdl('', 'text/turtle', {})
+
+        self.assertFalse(valid[0])
+        self.assertEquals(valid[1], 'Only an updating price plan is allowed')
+
+        parser.parse.return_value = {
+            'services_included': ['service'],
+            'pricing': {
+                'price_plans': [{
+                    'title': 'plan 1',
+                    'label': 'developer'
+                },{
+                    'title': 'plan 2',
+                    'label': 'developer'
+                }]
+            }
+        }
+        usdlParser.USDLParser.return_value = parser
+        valid = usdlParser.validate_usdl('', 'text/turtle', {})
+
+        self.assertFalse(valid[0])
+        self.assertEquals(valid[1], 'Only a developers plan is allowed')
+
+        usdlParser.USDLParser = USDLParser
 
     def test_validate_invalid_currency(self):
         f = open('./wstore/store_commons/test/val_curr.ttl', 'rb')
-        valid = validate_usdl(f.read(), 'text/turtle')
+        valid = validate_usdl(f.read(), 'text/turtle', {})
 
         self.assertFalse(valid[0])
         self.assertEquals(valid[1], 'A price component contains and invalid or unsupported currency')
 
     def test_validate_multiple_currencies(self):
         f = open('./wstore/store_commons/test/val_mul_curr.ttl', 'rb')
-        valid = validate_usdl(f.read(), 'text/turtle')
+        valid = validate_usdl(f.read(), 'text/turtle', {})
 
         self.assertFalse(valid[0])
         self.assertEquals(valid[1], 'All price components must use the same currency')
 
     def test_validate_invalid_unit(self):
         f = open('./wstore/store_commons/test/val_unit.ttl', 'rb')
-        valid = validate_usdl(f.read(), 'text/turtle')
+        valid = validate_usdl(f.read(), 'text/turtle', {})
 
         self.assertFalse(valid[0])
         self.assertEquals(valid[1], 'A price component contains an unsupported unit')
 
     def test_validate_invalid_value(self):
         f = open('./wstore/store_commons/test/val_value.ttl', 'rb')
-        valid = validate_usdl(f.read(), 'text/turtle')
+        valid = validate_usdl(f.read(), 'text/turtle', {})
 
         self.assertFalse(valid[0])
         self.assertEquals(valid[1], 'A price component contains an invalid value')
