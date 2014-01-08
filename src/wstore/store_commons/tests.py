@@ -24,6 +24,7 @@ from mock import MagicMock
 from django.test import TestCase
 
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
+from wstore.models import Organization
 
 __test__ = False
 
@@ -445,6 +446,25 @@ class USDLValidationTestCase(TestCase):
 
         self.assertFalse(valid[0])
         self.assertEquals(valid[1], 'Only a developers plan is allowed')
+
+        parser.parse.return_value = {
+            'services_included': ['service'],
+            'pricing': {
+                'price_plans': [{
+                    'title': 'plan 1',
+                    'label': 'update'
+                },{
+                    'title': 'plan 2',
+                    'label': 'developer'
+                }]
+            }
+        }
+        usdlParser.USDLParser.return_value = parser
+        org = Organization.objects.create(name='org')
+        valid = usdlParser.validate_usdl('', 'text/turtle', {'organization': org, 'name': 'offering'})
+
+        self.assertFalse(valid[0])
+        self.assertEquals(valid[1], 'It is not possible to define an updating plan without a previous version of the offering')
 
         usdlParser.USDLParser = USDLParser
 

@@ -725,7 +725,7 @@ def validate_usdl(usdl, mimetype, offering_data):
     # Check if an update plan has been defined in order to check if a previous version
     # exists. The update plan is not allowed if it is the first version of the offering
     if valid and update_plan:
-        offerings = Offering.objects.count(owner_organization=offering_data['organization'], name=offering_data['name'])
+        offerings = Offering.objects.filter(owner_organization=offering_data['organization'], name=offering_data['name']).count()
         if offerings == 0:
             valid = False
             reason = 'It is not possible to define an updating plan without a previous version of the offering'
