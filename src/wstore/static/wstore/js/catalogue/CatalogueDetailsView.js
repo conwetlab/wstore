@@ -525,6 +525,10 @@
                 if ('taxes' in price_plans[i]) {
                     this.paintPriceElement(price_plans[i].taxes, dom.find('.taxes'), 'taxes');
                 }
+                // Paint a line for separating plans if needed
+                if (i != (price_plans.length - 1)) {
+                    $('<div></div>').addClass('line clear').appendTo(dom);
+                }
             }
         }
     };

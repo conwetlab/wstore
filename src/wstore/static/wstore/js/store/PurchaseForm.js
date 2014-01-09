@@ -21,8 +21,30 @@
 (function(){
 
     var taxAddr;
+    var plan;
     var free = true;
     var caller;
+
+    /**
+     * Handles help popover click events
+     * @param evnt, click event
+     */
+    var helpHandler = function helpHandler(evnt) {
+        var helpId = evnt.target;
+        if (!$(helpId).prop('displayed')) {
+            $(helpId).popover('show');
+            $(helpId).prop('displayed', true);
+            $(helpId).addClass('question-sing-sel');
+            // Add document even
+            event.stopPropagation();
+            $(document).click(function() {
+                $(helpId).popover('hide');
+                $(helpId).prop('displayed', false);
+                $(helpId).removeClass('question-sing-sel');
+                $(document).unbind('click');
+            });
+        }
+    };
 
     /**
      * Manages the success callback of the purchase in case a PayPal redirection is needed
@@ -79,8 +101,11 @@
                 if ($('#back').length > 0) {
                     clearInterval(timer1);
                     // If the function notifyPurchaseEnd is defined means that is a remote purchase
-                    if (notifyPurchaseEnd && typeof(notifyPurchaseEnd) == 'function') {
-                        notifyPurchaseEnd(response);
+                    try {
+                        if (notifyPurchaseEnd && typeof(notifyPurchaseEnd) == 'function') {
+                            notifyPurchaseEnd(response);
+                        }
+                    } catch (e) {
                     }
                 }
             }, 500);
@@ -107,8 +132,11 @@
             if ($('#back').length > 0) {
                 clearInterval(timer);
                 // If the function notifyPurchaseEnd is defined means that is a remote purchase
-                if (notifyPurchaseEnd && typeof(notifyPurchaseEnd) == 'function') {
-                    notifyPurchaseEnd(response);
+                try {
+                    if (notifyPurchaseEnd && typeof(notifyPurchaseEnd) == 'function') {
+                        notifyPurchaseEnd(response);
+                    }
+                } catch (e) {
                 }
             }
         }, 500);
@@ -137,6 +165,9 @@
             request.tax_address = taxAddr;
         }
 
+        if (plan) {
+            request.plan_label = plan;
+        }
         request.payment = {};
         // Add payment info
         if (!free) {
@@ -282,19 +313,18 @@
     };
 
     /**
-     * Dsiplays the form for purchasing an offering
+     * Displays the form for getting the tax address of the customer
      * @param offeringElement, offering to be purchased
      * @param callerObj, Object that creates the form
      */
-    purchaseOffering = function purchaseOffering(offeringElement, callerObj) {
+    showTaxAddressForm = function showTaxAddressForm(offeringElement, callerObj) {
         var nextButton, cancelButton, pricing, action;
         var checked = false;
 
         caller = callerObj;
         free = true;
 
-        // Create the modal
-        MessageManager.showMessage('Purchase offering', '');
+        $('.modal-body').empty();
 
         $('<div></div>').attr('id', 'purchase-error').appendTo('.modal-body');
         $('<div></div>').addClass('space clear').appendTo('.modal-body');
@@ -381,6 +411,106 @@
                 MessageManager.showAlertError('Error', msg, $('#purchase-error'));
             }
         });
+    }
+
+    /**
+     * Dsiplays the form for purchasing an offering
+     * @param offeringElement, offering to be purchased
+     * @param callerObj, Object that creates the form
+     */
+    purchaseOffering = function purchaseOffering(offeringElement, callerObj) {
+        var plans = offeringElement.getPricing().price_plans;
+        // Reset plan value
+        plan = null;
+        // Create the modal
+        MessageManager.showMessage('Purchase offering', '');
+
+        // Check if there are multiple pricing models
+        if (plans.length > 1) {
+            $('<div></div>').attr('id', 'error-message').appendTo('.modal-body');
+            $('<div></div>').addClass('space clear').appendTo('.modal-body');
+
+            // Create the form
+            var form = $('<form></form>').addClass('form').appendTo('.modal-body');
+            var plansContainer = $('<fieldset></fieldset>').appendTo(form);
+            var regularPlans = [];
+            var devPlan, updatePlan, currPlan, helpNeeded = false;
+
+            // Classify price plans
+            for (var i = 0; i < plans.length; i++) {
+                // Check plan for updating
+                if (plans[i].label == 'update') {
+                    updatePlan = plans[i];
+                // Check plan for developers
+                } else if (plans[i].label == 'developer') {
+                    devPlan = plans[i];
+                } else {
+                    regularPlans.push(plans[i]);
+                }
+            }
+            // Append price plans
+            $.template('radioPlanTemplate', $('#radio_plan_template'));
+            $.tmpl('radioPlanTemplate', regularPlans).appendTo(plansContainer);
+
+            // Append update plan if exists
+            if (updatePlan) {
+                $.template('radioPlanHelpTemplate', $('#radio_plan_help_template'));
+                $.tmpl('radioPlanHelpTemplate', {
+                    'type': 'Update',
+                    'title': updatePlan.title,
+                    'label': 'update',
+                    'help': 'This Price plan is thought for updating previous versions of the current offering'
+                }).appendTo(plansContainer);
+                helpNeeded = true;
+            }
+
+            // Append developers plan if exists
+            if (devPlan) {
+                // Check if developer
+                $.template('radioPlanHelpTemplate', $('#radio_plan_help_template'));
+                $.tmpl('radioPlanHelpTemplate', {
+                    'type': 'Developer',
+                    'title': devPlan.title,
+                    'label': 'developer',
+                    'help': 'This Price plan is thought for developers that want to create new offerings using the resources and applications of the current one'
+                }).appendTo(plansContainer);
+                helpNeeded = true;
+            }
+
+            // Add handlers for help messages if needed
+            if (helpNeeded) {
+                $('.special-plan-help').popover({'trigger': 'manual'});
+                $('.special-plan-help').click(helpHandler);
+            }
+
+            $('[name="plan-inp"]').change(function() {
+                plan = $(this).val();
+            });
+
+            // Create next button and set handler
+            $('.modal-footer > .btn').text('Next').click(function(evnt) {
+
+                evnt.preventDefault();
+                evnt.stopPropagation();
+
+                if ($('.special-plan-help').prop('displayed')) {
+                    $('.special-plan-help').popover('hide');
+                    $('.special-plan-help').prop('displayed', false);
+                    $('.special-plan-help').removeClass('question-sing-sel');
+                    $(document).unbind('click');
+                }
+
+                // Check if a plan has been selected
+                if (!plan) {
+                    MessageManager.showAlertError('Error', 'A price plan is needed', $('#error-message'));
+                } else {
+                    showTaxAddressForm(offeringElement, callerObj);
+                }
+                
+            });
+        } else {
+            showTaxAddressForm(offeringElement, callerObj);
+        }
     };
 
 })();

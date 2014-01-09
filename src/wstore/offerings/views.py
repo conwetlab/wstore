@@ -75,7 +75,6 @@ class OfferingCollection(Resource):
     @authentication_required
     def read(self, request):
 
-        # TODO support for xml requests
         # Read the query string in order to know the filter and the page
         filter_ = request.GET.get('filter', 'published')
         user = User.objects.get(username=request.user)
