@@ -51,6 +51,7 @@ FIWARE_LOGOUT_URL = 'https://account.lab.fi-ware.eu/users/sign_out'
 
 FIWARE_PROVIDER_ROLE = 'Offering Provider'
 FIWARE_CUSTOMER_ROLE = 'Offering Customer'
+FIWARE_DEVELOPER_ROLE = 'Offering Developer'
 
 
 
@@ -193,6 +194,8 @@ def fill_internal_user_info(*arg, **kwargs):
                 org_roles.append('provider')
             elif role['name'] == FIWARE_CUSTOMER_ROLE:
                 org_roles.append('customer')
+            elif role['name'] == FIWARE_DEVELOPER_ROLE:
+                org_roles.append('developer')
 
         organizations.append({
             'organization': org_model.pk,
