@@ -20,19 +20,18 @@
 
 import json
 import importlib
-from paypalpy import paypal
 from pymongo import MongoClient
 from bson import ObjectId
 
 from django.conf import settings
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
-authentication_required
+from wstore.store_commons.utils.http import build_response, supported_request_mime_types
 from wstore.models import Purchase
 from wstore.models import UserProfile
-from wstore.models import Organization
 from wstore.charging_engine.charging_engine import ChargingEngine
 from wstore.contracting.purchase_rollback import rollback
 from wstore.contracting.notify_provider import notify_provider
@@ -70,6 +69,7 @@ class PayPalConfirmation(Resource):
 
     # This method is used to receive the PayPal confirmation
     # when the customer is paying using his PayPal account
+    @method_decorator(login_required)
     def read(self, request, reference):
         try:
             token = request.GET.get('token')
@@ -92,6 +92,14 @@ class PayPalConfirmation(Resource):
                 raise Exception('')
 
             purchase = Purchase.objects.get(ref=reference)
+
+            # Check that the request user is authorized to end the payment
+            if purchase.organization_owned:
+                if request.user.userprofile.current_organization != purchase.owner_organization:
+                    raise Exception()
+            else:
+                if request.user != purchase.customer:
+                    raise Exception('')
 
             # If the purchase state value is different from pending means that
             # the timeout function has completely ended before acquire the resource
@@ -127,7 +135,7 @@ class PayPalConfirmation(Resource):
             rollback(purchase)
             context = {
                 'title': 'Payment Canceled',
-                'message': 'Your payment has been canceled. An error occurs or the timeout has finished, if you want to acquire the offering purchase it again in W-Store.'
+                'message': 'Your payment has been canceled. An error occurs or the timeout has finished, if you want to acquire the offering purchase it again in WStore.'
             }
             return render(request, 'store/paypal_template.html', context)
 
@@ -164,18 +172,26 @@ class PayPalCancelation(Resource):
 
     # This method is used when the user cancel a charge
     # when is using a PayPal account
-    @authentication_required
+    @method_decorator(login_required)
     def read(self, request, reference):
         # In case the user cancels the payment is necessary to update
         # the database in order to avoid an inconsistent state
         try:
             purchase = Purchase.objects.get(pk=reference)
+
+            # Check that the request user is authorized to end the payment
+            if purchase.organization_owned:
+                if request.user.userprofile.current_organization != purchase.owner_organization:
+                    raise Exception()
+            else:
+                if request.user != purchase.customer:
+                    raise Exception('')
             rollback(purchase)
         except:
             return build_response(request, 400, 'Invalid request')
 
         context = {
             'title': 'Payment Canceled',
-            'message': 'Your payment has been canceled. If you want to acquire the offering purchase it again in W-Store.'
+            'message': 'Your payment has been canceled. If you want to acquire the offering purchase it again in WStore.'
         }
         return render(request, 'store/paypal_template.html', context)
