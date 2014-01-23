@@ -48,28 +48,22 @@ def fake_renovation_date(unit):
         return datetime(2013, 03, 20, 00, 00, 00)
 
 
-class FakePal():
+class FakeClient():
 
-    COUNTRY_CODES = (('SP', 'test country'),)
-
-    def __init__(self):
+    def __init__(self, purchase):
         pass
 
-    def ShortDate(self, year, month):
-        return 0
+    def start_redirection_payment(self, price, currency):
+        pass
 
-    class PayPal():
+    def end_redirection_payment(self, token, payer_id):
+        pass
 
-        def __init__(self, usr, passwd, singn, url):
-            pass
+    def direct_payment(self, currency, price, credit_card):
+        pass
 
-        def DoDirectPayment(self, **kwargs):
-            pass
-
-        def SetExpressCheckout(self, **kwargs):
-            return {
-                'TOKEN': ['11111111']
-            }
+    def get_checkout_url(self):
+        return 'https://www.sandbox.paypal.com/webscr?cmd=_express-checkout&token=11111111'
 
 
 class FakeThreading():
@@ -124,9 +118,9 @@ class SinglePaymentChargingTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.paypal = FakePal()
         charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         super(SinglePaymentChargingTestCase, cls).setUpClass()
 
     def test_basic_charging_single_payment(self):
@@ -294,7 +288,7 @@ class SubscriptionChargingTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.paypal = FakePal()
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         charging_engine.subprocess = FakeSubprocess()
         super(SubscriptionChargingTestCase, cls).setUpClass()
 
@@ -554,7 +548,7 @@ class PayPerUseChargingTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.paypal = FakePal()
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         super(PayPerUseChargingTestCase, cls).setUpClass()
@@ -1037,7 +1031,7 @@ class AsynchronousPaymentTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.paypal = FakePal()
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         charging_engine.subprocess = FakeSubprocess()
         charging_engine.threading = FakeThreading()
         super(AsynchronousPaymentTestCase, cls).setUpClass()
@@ -1650,7 +1644,7 @@ class PriceFunctionPaymentTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.paypal = FakePal()
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         super(PriceFunctionPaymentTestCase, cls).setUpClass()
