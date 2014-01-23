@@ -19,6 +19,7 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
+import importlib
 from paypalpy import paypal
 from pymongo import MongoClient
 from bson import ObjectId
@@ -72,7 +73,7 @@ class PayPalConfirmation(Resource):
     def read(self, request, reference):
         try:
             token = request.GET.get('token')
-            payer_id = request.GET.get('PayerID')
+            payer_id = request.GET.get('PayerID', '')
 
             connection = MongoClient()
             db = connection[settings.DATABASES['default']['NAME']]
@@ -90,8 +91,6 @@ class PayPalConfirmation(Resource):
             if '_lock' in pre_value and pre_value['_lock']:
                 raise Exception('')
 
-            pp = paypal.PayPal(settings.PAYPAL_USER, settings.PAYPAL_PASSWD, settings.PAYPAL_SIGNATURE, settings.PAYPAL_URL)
-
             purchase = Purchase.objects.get(ref=reference)
 
             # If the purchase state value is different from pending means that
@@ -106,13 +105,18 @@ class PayPalConfirmation(Resource):
 
             pending_info = purchase.contract.pending_payment
 
-            pp.DoExpressCheckoutPayment(
-                paymentrequest_0_paymentaction='Sale',
-                paymentrequest_0_amt=pending_info['price'],
-                paymentrequest_0_currencycode='EUR',
-                token=token,
-                payerid=payer_id
-            )
+            # Get the payment client
+            # Load payment client
+            cln_str = settings.PAYMENT_CLIENT
+            client_class = cln_str.split('.')[-1]
+            client_package = cln_str.partition('.' + client_class)[0]
+
+            payment_client = getattr(importlib.import_module(client_package), client_class)
+
+            # build the payment client
+            client = payment_client(purchase)
+            client.end_redirection_payment(token, payer_id)
+        
             charging_engine = ChargingEngine(purchase)
             accounting = None
             if 'accounting' in pending_info:

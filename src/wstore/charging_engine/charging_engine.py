@@ -26,6 +26,7 @@ import time
 import codecs
 import subprocess
 import threading
+import importlib
 from pymongo import MongoClient
 from bson import ObjectId
 
@@ -130,67 +131,30 @@ class ChargingEngine:
 
     def _charge_client(self, price, concept, currency):
 
-        # Call payment gateway (paypal)
-        # Configure paypal credentials
-        paypal.SKIP_AMT_VALIDATION = True
-        pp = paypal.PayPal(settings.PAYPAL_USER, settings.PAYPAL_PASSWD, settings.PAYPAL_SIGNATURE, settings.PAYPAL_URL)
+        # Load payment client
+        cln_str = settings.PAYMENT_CLIENT
+        client_class = cln_str.split('.')[-1]
+        client_package = cln_str.partition('.' + client_class)[0]
 
-        country_code = self._get_country_code(self._purchase.tax_address['country'])
+        payment_client = getattr(importlib.import_module(client_package), client_class)
 
-        if country_code == None:
-            raise Exception('Country not recognized')
-
+        # build the payment client
+        client = payment_client(self._purchase)
         price = self._fix_price(price)
 
         if self._payment_method == 'credit_card':
-            try:
-                resp = pp.DoDirectPayment(
-                    paymentaction='Sale',
-                    ipaddress='192.168.1.1',
-                    creditcardtype=self._credit_card_info['type'],
-                    acct=self._credit_card_info['number'],
-                    expdate=paypal.ShortDate(int(self._credit_card_info['expire_year']), int(self._credit_card_info['expire_month'])),
-                    cvv2=self._credit_card_info['cvv2'],
-                    firstname=self._purchase.customer.first_name,
-                    lastname=self._purchase.customer.last_name,
-                    street=self._purchase.tax_address['street'],
-                    state='mad',
-                    city=self._purchase.tax_address['city'],
-                    countrycode=country_code,
-                    zip=self._purchase.tax_address['postal'],
-                    amt=price,
-                    currencycode=currency
-                )
-            except Exception, e:
-                raise Exception('Error while creating payment: ' + e.value[0])
+            client.direct_payment(currency, price, self._credit_card_info)
             self._purchase.state = 'paid'
 
         elif self._payment_method == 'paypal':
-            # Set express checkout
-            url = Site.objects.all()[0].domain
-            if url[-1] != '/':
-                url += '/'
+            client.start_redirection_payment(price, currency)
+            # Set timeout for PayPal transaction to 5 minutes
+            t = threading.Timer(300, self._timeout_handler)
+            t.start()
 
-            try:
-                resp = pp.SetExpressCheckout(
-                    paymentrequest_0_paymentaction='Sale',
-                    paymentrequest_0_amt=price,
-                    paymentrequest_0_currencycode=currency,
-                    returnurl=url + 'api/contracting/' + self._purchase.ref + '/accept',
-                    cancelurl=url + 'api/contracting/' + self._purchase.ref + '/cancel',
-                )
-
-                # Set timeout for PayPal transaction to 5 minutes
-                t = threading.Timer(300, self._timeout_handler)
-                t.start()
-
-            except Exception, e:
-                raise Exception('Error while creating payment: ' + e.value[0])
-
-            return settings.PAYPAL_CHECKOUT_URL + '&token=' + resp['TOKEN'][0]
+            return client.get_checkout_url()
         else:
             raise Exception('Invalid payment method')
-
 
     def _generate_cdr_part(self, part, model, cdr_info):
         # Take and increment the correlation number using

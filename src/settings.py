@@ -188,6 +188,8 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
+PAYMENT_CLIENT = 'wstore.charging_engine.payment_client.paypal_client.PayPalClient'
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -214,19 +216,12 @@ AUTHENTICATION_BACKENDS = (
 
 #SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 
-FIWARE_APP_ID = '<fiware_app_id>'
-FIWARE_API_SECRET = '<fiware_secret>'
+FIWARE_APP_ID = 16
+FIWARE_API_SECRET = '594ddd14b4c8185eaa581f94f189a8737610f6f1b32327e6dc98470bfc725cee45be5ec52fccd0fd2fbf19eac61fdb3a85c6723923ae03a0034e4058cc129630'
 
 SOCIAL_AUTH_ENABLED_BACKENDS = ('fiware',)
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
-
-# Paypal creadetials
-PAYPAL_USER = '<your_PayPal_username>'
-PAYPAL_PASSWD = '<your_PayPal_passwd>'
-PAYPAL_SIGNATURE = '<your_PayPal_signature>'
-PAYPAL_URL = 'https://api-3t.sandbox.paypal.com/nvp'
-PAYPAL_CHECKOUT_URL='https://www.sandbox.paypal.com/webscr?cmd=_express-checkout'
 
 # Daily job that checks pending pay-per-use charges
 CRONJOBS = [
