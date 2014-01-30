@@ -240,7 +240,7 @@ class PurchaseCollection(Resource):
         # If the value returned by the create_purchase method is a string means that
         # the purchase is not ended and need user confirmation. response_info contains
         # the URL where redirect the user
-        if isinstance(response_info, str):
+        if isinstance(response_info, str) or isinstance(response_info, unicode):
             response['redirection_link'] = response_info
             status = 200
         else:  # The purchase is finished so the download links are returned
