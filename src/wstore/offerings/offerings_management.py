@@ -781,6 +781,10 @@ def bind_resources(offering, data, provider):
     for res in data:
         resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider.userprofile.current_organization)
 
+        # Check resource state
+        if resource.state == 'deleted':
+            raise Exception('Inavalid resource, the resource is deleted')
+
         if not ObjectId(resource.pk) in offering_resources:
             added_resources.append(resource.pk)
         else:

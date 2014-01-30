@@ -34,7 +34,7 @@ from wstore.models import UserProfile
 from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
 publish_offering, bind_resources, count_offerings, update_offering, comment_offering
-from wstore.offerings.resources_management import register_resource, get_provider_resources
+from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource
 from wstore.store_commons.utils.method_request import MethodRequest
 
 
@@ -242,7 +242,29 @@ class ResourceCollection(Resource):
 
 
 class ResourceEntry(Resource):
-    pass
+
+    @authentication_required
+    def delete(self, request, provider, name, version):
+
+        response = build_response(request, 204, 'No Content')
+        error = False
+        try:
+            # Get the resource
+            resource = Resource.objects.get(provider=provider_org, name=name, version=version)
+        except:
+            # set error response
+            response = build_response(request, 404, 'Resource not found')
+            error = True
+
+        # Try to delete the resource
+        if not error:
+            try:
+                delete_resource(resource)
+            except Exception, e:
+                response = build_response(request, 400, e.message)
+
+        # Return the response
+        return response
 
 
 class PublishEntry(Resource):

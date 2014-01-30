@@ -88,7 +88,8 @@ def register_resource(provider, data, file_=None):
         description=resource_data['description'],
         download_link=resource_data['link'],
         resource_path=resource_data['content_path'],
-        content_type=resource_data['content_type']
+        content_type=resource_data['content_type'],
+        state='created'
     )
 
 
@@ -106,3 +107,14 @@ def get_provider_resources(provider):
         response.append(resource_info)
 
     return response
+
+def delete_resource(resource):
+
+    # If the resource is not included in any offering delete it
+    if len(resource.offerings) == 0:
+        resource.delete()
+    else:
+        # If the resource is part of an offering mark it as deleted
+        resource.state = 'deleted'
+        resource.save()
+
