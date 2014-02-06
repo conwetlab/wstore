@@ -39,6 +39,11 @@ from wstore.models import Resource
 from wstore.models import Offering
 
 
+MAIN_PORTAL_URL = "http://lab.fi-ware.org/"
+CLOUD_PORTAL_URL = "http://cloud.lab.fi-ware.org/"
+MASHUP_PORTAL_URL = "http://mashup.lab.fi-ware.org/"
+ACCOUNT_PORTAL_URL = "https://account.lab.fi-ware.org/"
+
 @login_required
 def home(request):
     context = {
@@ -46,6 +51,13 @@ def home(request):
        'oil': settings.OILAUTH,
        'portal': settings.PORTALINSTANCE
     }
+    # Include Portals URLs if needed
+    if settings.PORTALINSTANCE:
+        context['main'] = MAIN_PORTAL_URL
+        context['cloud'] = CLOUD_PORTAL_URL
+        context['mashup'] = MASHUP_PORTAL_URL
+        context['account'] = ACCOUNT_PORTAL_URL
+
     return render(request, 'index.html', context)
 
 
@@ -56,6 +68,14 @@ def admin(request):
             'oil': settings.OILAUTH,
             'portal': settings.PORTALINSTANCE
         }
+
+        # Include Portals URLs if needed
+        if settings.PORTALINSTANCE:
+            context['main'] = MAIN_PORTAL_URL
+            context['cloud'] = CLOUD_PORTAL_URL
+            context['mashup'] = MASHUP_PORTAL_URL
+            context['account'] = ACCOUNT_PORTAL_URL
+
         return render(request, 'admin/admin.html', context)
     else:
         build_response(request, 403, 'Forbidden')
@@ -72,6 +92,13 @@ def catalogue(request):
         'oil': settings.OILAUTH,
         'portal': settings.PORTALINSTANCE
     }
+    # Include Portals URLs if needed
+    if settings.PORTALINSTANCE:
+        context['main'] = MAIN_PORTAL_URL
+        context['cloud'] = CLOUD_PORTAL_URL
+        context['mashup'] = MASHUP_PORTAL_URL
+        context['account'] = ACCOUNT_PORTAL_URL
+
     return render(request, 'catalogue/catalogue.html', context)
 
 

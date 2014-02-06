@@ -104,7 +104,7 @@
         <script type="text/x-jquery-tmpl" id="alert_warning_template">{% include "alert_warning_template.html" %}</script>
 
         {% if portal %}
-            <script src="https://account.lab.fi-ware.eu/assets/signOut.js" type="text/javascript"></script>
+            <script src="{{ account }}assets/signOut.js" type="text/javascript"></script>
             <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
         {% endif %}
         {% if oil %}

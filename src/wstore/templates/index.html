@@ -74,7 +74,7 @@
         <script type="text/x-jquery-tmpl" id="alert_info_template">{% include "alert_info_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
         {% if portal %}
-            <script src="https://account.lab.fi-ware.eu/assets/signOut.js" type="text/javascript"></script>
+            <script src="{{ account }}assets/signOut.js" type="text/javascript"></script>
             <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
         {% endif %}
     </head>

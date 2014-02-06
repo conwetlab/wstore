@@ -22,10 +22,10 @@
       <nav class="navbar-inner">
 
         <div class="logo-header">
-          <a href="http://lab.fi-ware.eu/" class="logo-header">
+          <a href=" {{ main }}" class="logo-header">
             <img alt="FI-WARE" class="logo" src="{{ STATIC_URL }}oil/img/header-logo.png">
           </a>
-          <a href="http://lab.fi-ware.eu/" class="brand">
+          <a href="{{ main }}" class="brand">
             <span>FI-</span>WARE
           </a>
         </div>
@@ -35,27 +35,27 @@
           </a>
           <ul class="dropdown-menu dropdown-menu-header">
             <li class="cloud">
-              <a href="http://cloud.lab.fi-ware.eu/">
+              <a href="{{ cloud }}">
                 Cloud
               </a>
             </li>
             <li class="active">
-              <a href="http://store.lab.fi-ware.eu/">
+              <a>
                 Store
               </a>
             </li>
             <li class="wirecloud">
-              <a href="http://mashup.lab.fi-ware.eu/">
+              <a href="{{ mashup }}">
                 Mashup
               </a>
             </li>
             <li class="idm">
-              <a href="https://account.lab.fi-ware.eu/">
+              <a href="{{ account }}">
                 Account
               </a>
             </li>
             <li class="info">
-              <a href="http://lab.fi-ware.eu/">
+              <a href="{{ main }}">
                 Help&amp;info
               </a>
             </li>
@@ -64,27 +64,27 @@
 
         <ul class="oil-portal hidden-phone">
           <li class="cloud">
-            <a href="http://cloud.lab.fi-ware.eu/">
+            <a href="{{ cloud }}">
               Cloud
             </a>
           </li>
           <li class="store active">
-            <a href="http://store.lab.fi-ware.eu/">
+            <a>
               Store
             </a>
           </li>
           <li class="wirecloud">
-            <a href="http://mashup.lab.fi-ware.eu/">
+            <a href="{{ mashup }}">
               Mashup
             </a>
           </li>
           <li class="idm">
-            <a href="https://account.lab.fi-ware.eu/">
+            <a href="{{ account }}">
               Account
             </a>
           </li>
           <li class="help-info">
-              <a href="http://lab.fi-ware.eu/">
+              <a href="{{ main }}">
                 Help&amp;info
               </a>
             </li>
