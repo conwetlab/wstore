@@ -216,8 +216,8 @@ AUTHENTICATION_BACKENDS = (
 
 #SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 
-FIWARE_APP_ID = 16
-FIWARE_API_SECRET = '594ddd14b4c8185eaa581f94f189a8737610f6f1b32327e6dc98470bfc725cee45be5ec52fccd0fd2fbf19eac61fdb3a85c6723923ae03a0034e4058cc129630'
+FIWARE_APP_ID = '<app_id>'
+FIWARE_API_SECRET = '<app_secret>'
 
 SOCIAL_AUTH_ENABLED_BACKENDS = ('fiware',)
 
@@ -236,6 +236,4 @@ from django.contrib.sites import models as site_app
 
 signals.post_syncdb.disconnect(create_default_site, site_app)
 
-import lucene
 
-lucene.initVM(lucene.CLASSPATH)
