@@ -20,10 +20,10 @@
 
 import os
 import json
-import lucene
 import rdflib
-from lucene import SimpleFSDirectory, File, Document, Field, \
-StandardAnalyzer, IndexWriter, Version, IndexSearcher, QueryParser
+from whoosh.fields import Schema, TEXT
+from whoosh.index import create_in, open_dir
+from whoosh.qparser import QueryParser
 
 from wstore.models import Offering
 
@@ -52,38 +52,29 @@ class SearchEngine():
 
     def create_index(self, offering):
 
-        # initialize java VM for lucene
-        lucene.getVMEnv().attachCurrentThread()
-
         # Check if the index already exists to avoid overwrite it
-        create = False
-
         if not os.path.exists(self._index_path) or os.listdir(self._index_path) == []:
-            create = True
+            # Create dir if needed
+            if not os.path.exists(self._index_path):
+                os.makedirs(self._index_path)
+
+            # Create schema
+            schema = Schema(id=TEXT(stored=True), content=TEXT)
+            # Create index
+            index = create_in(self._index_path, schema)
+        else:
+            index = open_dir(self._index_path)
 
         # Open the index
-        index = SimpleFSDirectory(File(self._index_path))
-
-        analyzer = StandardAnalyzer(Version.LUCENE_CURRENT)
-
-        index_writer = IndexWriter(index, analyzer, create, IndexWriter.MaxFieldLength.UNLIMITED)
+        index_writer = index.writer()
 
         # Aggregate all the information included in the USDL document in
         # a single string in order to add a new document to the index
         text = self._aggregate_text(offering)
 
         # Add the new document
-        document = Document()
-
-        document.add(Field("content", text, Field.Store.YES, Field.Index.ANALYZED))
-        document.add(Field("id", offering.pk, Field.Store.YES, Field.Index.NOT_ANALYZED))
-        index_writer.addDocument(document)
-
-        # Optimize the index
-        index_writer.optimize()
-
-        # Close the index
-        index_writer.close()
+        index_writer.add_document(id=unicode(offering.pk), content=unicode(text))
+        index_writer.commit()
 
     def full_text_search(self, user, text, state=None, count=False, pagination=None, sort=None):
 
@@ -91,82 +82,79 @@ class SearchEngine():
             raise Exception('The index does not exist')
 
         # Get the index reader
-        lucene.getVMEnv().attachCurrentThread()
-        index = SimpleFSDirectory(File(self._index_path))
-        analyzer = StandardAnalyzer(Version.LUCENE_CURRENT)
-        lucene_searcher = IndexSearcher(index)
+        index = open_dir(self._index_path)
 
-        # perform the query
-        query = QueryParser(Version.LUCENE_CURRENT, 'content', analyzer).parse(text)
+        with index.searcher() as searcher:
 
-        max_number = 1000
-        total_hits = lucene_searcher.search(query, max_number)
+            # perform the query
+            query = QueryParser('content', index.schema).parse(unicode(text))
 
-        result = []
-        # The get_offering_info method is imported inside this method in order to avoid a cross-reference import error
-        from wstore.offerings.offerings_management import get_offering_info
+            search_result = searcher.search(query)
 
-        i = 0
-        for hit in total_hits.scoreDocs:
-            doc = lucene_searcher.doc(hit.doc)
+            result = []
+            # The get_offering_info method is imported inside this method in order to avoid a cross-reference import error
+            from wstore.offerings.offerings_management import get_offering_info
 
-            # Get the offerings
-            offering = Offering.objects.get(pk=doc.get('id'))
-            offering_info = get_offering_info(offering, user)
+            i = 0
+            for hit in search_result:
 
-            # filter the offerings
-            # if no state provided means that all published offerings are wanted
-            if state == None:
-                if offering_info['state'] == 'published' or offering_info['state'] == 'purchased':
-                    if not count:
-                        result.append(offering_info)
-                    else:
-                        i += 1
+                # Get the offerings
+                offering = Offering.objects.get(pk=hit['id'])
+                offering_info = get_offering_info(offering, user)
 
-            elif state == 'purchased':
-                if offering_info['state'] == 'purchased':
-                    if not count:
-                        result.append(offering_info)
-                    else:
-                        i += 1
+                # filter the offerings
+                # if no state provided means that all published offerings are wanted
+                if state == None:
+                    if offering_info['state'] == 'published' or offering_info['state'] == 'purchased':
+                        if not count:
+                            result.append(offering_info)
+                        else:
+                            i += 1
 
-            elif state == 'all':
-                if (offering.owner_admin_user == user) and \
-                (offering.owner_organization == user.userprofile.current_organization):
-                    if not count:
-                        result.append(offering_info)
-                    else:
-                        i += 1
-            else:
-                if (offering.owner_admin_user == user) and (offering_info['state'] == state) \
-                and (offering.owner_organization == user.userprofile.current_organization):
-                    if not count:
-                        result.append(offering_info)
-                    else:
-                        i += 1
+                elif state == 'purchased':
+                    if offering_info['state'] == 'purchased':
+                        if not count:
+                            result.append(offering_info)
+                        else:
+                            i += 1
 
-        if count:
-            result = {'number': i}
-        elif pagination != None and len(result) > 0:
-            # Check if it is possible to retrieve the requested page
-            if pagination['start'] > len(result):
-                raise Exception('Invalid page')
-
-            result = result[pagination['start'] - 1: (pagination['limit'] + (pagination['start'] - 1))]
-
-        # Check if is needed to sort the result
-        rev = True
-        if not count and sort:
-            if sort == 'name':
-                rev = False
-
-            if sort == 'date':
-                if state != 'all' or state != 'purchased':
-                    sort = 'creation_date'
+                elif state == 'all':
+                    if (offering.owner_admin_user == user) and \
+                    (offering.owner_organization == user.userprofile.current_organization):
+                        if not count:
+                            result.append(offering_info)
+                        else:
+                            i += 1
                 else:
-                    sort = 'publication_date'
+                    if (offering.owner_admin_user == user) and (offering_info['state'] == state) \
+                    and (offering.owner_organization == user.userprofile.current_organization):
+                        if not count:
+                            result.append(offering_info)
+                        else:
+                            i += 1
 
-            # Sort the result
-            result = sorted(result, key=lambda off: off[sort], reverse=rev)
+            if count:
+                result = {'number': i}
+            elif pagination != None and len(result) > 0:
+                # Check if it is possible to retrieve the requested page
+                if pagination['start'] > len(result):
+                    raise Exception('Invalid page')
+
+                result = result[pagination['start'] - 1: (pagination['limit'] + (pagination['start'] - 1))]
+
+            # Check if is needed to sort the result
+            rev = True
+            if not count and sort:
+                if sort == 'name':
+                    rev = False
+
+                if sort == 'date':
+                    if state != 'all' or state != 'purchased':
+                        sort = 'creation_date'
+                    else:
+                        sort = 'publication_date'
+
+                # Sort the result
+                result = sorted(result, key=lambda off: off[sort], reverse=rev)
 
         return result
