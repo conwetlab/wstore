@@ -18,7 +18,6 @@ virtualenv-2.7 virtenv
 source virtenv/bin/activate
 
 $WORKSPACE/python-dep-install.sh
-$WORKSPACE/pylucene-install.sh
 
 # Create project directories
 cd $WORKSPACE/src
