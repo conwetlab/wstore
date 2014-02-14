@@ -1,6 +1,7 @@
 #!/bin/bash
 pip install coverage
 pip install mock
+pip install nose-parameterized
 
 cd $WORKSPACE/src
 

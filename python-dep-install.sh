@@ -12,3 +12,4 @@ pip install nose django-nose
 pip install django-social-auth
 pip install django-crontab
 pip install Whoosh
+pip install Stemming

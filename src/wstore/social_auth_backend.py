@@ -42,12 +42,12 @@ from wstore.models import Organization
 
 
 # idm configuration
-FIWARE_AUTHORIZATION_URL = 'https://account.lab.fi-ware.eu/authorize'
-FIWARE_ACCESS_TOKEN_URL = 'https://account.lab.fi-ware.eu/token'
-FIWARE_USER_DATA_URL = 'https://account.lab.fi-ware.eu/user'
-FIWARE_NOTIFICATION_URL = 'https://account.lab.fi-ware.eu/purchases'
-FIWARE_APPLICATIONS_URL = 'https://account.lab.fi-ware.eu/applications.json'
-FIWARE_LOGOUT_URL = 'https://account.lab.fi-ware.eu/users/sign_out'
+FIWARE_AUTHORIZATION_URL = 'https://account.lab.fi-ware.org/authorize'
+FIWARE_ACCESS_TOKEN_URL = 'https://account.lab.fi-ware.org/token'
+FIWARE_USER_DATA_URL = 'https://account.lab.fi-ware.org/user'
+FIWARE_NOTIFICATION_URL = 'https://account.lab.fi-ware.org/purchases'
+FIWARE_APPLICATIONS_URL = 'https://account.lab.fi-ware.org/applications.json'
+FIWARE_LOGOUT_URL = 'https://account.lab.fi-ware.org/users/sign_out'
 
 FIWARE_PROVIDER_ROLE = 'Offering Provider'
 FIWARE_CUSTOMER_ROLE = 'Offering Customer'
