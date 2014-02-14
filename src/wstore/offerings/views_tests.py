@@ -72,7 +72,7 @@ class OfferingCollectionTestCase(TestCase):
         }]
 
         # Mock get offerings method
-        offering_collection = views.OfferingCollection()
+        offering_collection = views.OfferingCollection(permitted_methods=('GET', 'POST'))
         views.get_offerings = MagicMock(name='get_offering')
 
         # Not counting offerings
@@ -221,7 +221,7 @@ class OfferingCollectionTestCase(TestCase):
             'description': 'test offering'
         }
         views.create_offering = MagicMock(name='create_offering')
-        offering_collection = views.OfferingCollection()
+        offering_collection = views.OfferingCollection(permitted_methods=('GET', 'POST'))
 
         request = self.factory.post(
             '/api/offering/offerings',
@@ -252,7 +252,7 @@ class OfferingCollectionTestCase(TestCase):
             'description': 'test offering'
         }
         views.create_offering = MagicMock(name='create_offering')
-        offering_collection = views.OfferingCollection()
+        offering_collection = views.OfferingCollection(permitted_methods=('GET', 'POST'))
 
         request = self.factory.post(
             '/api/offering/offerings',
@@ -286,7 +286,7 @@ class OfferingCollectionTestCase(TestCase):
         views.create_offering = MagicMock(name='create_offering')
         views.create_offering.side_effect = HTTPError('', 500, '', None, None)
 
-        offering_collection = views.OfferingCollection()
+        offering_collection = views.OfferingCollection(permitted_methods=('GET', 'POST'))
 
         request = self.factory.post(
             '/api/offering/offerings',
@@ -320,7 +320,7 @@ class OfferingCollectionTestCase(TestCase):
         views.create_offering = MagicMock(name='create_offering')
         views.create_offering.side_effect = Exception('Error in creation')
 
-        offering_collection = views.OfferingCollection()
+        offering_collection = views.OfferingCollection(permitted_methods=('GET', 'POST'))
 
         request = self.factory.post(
             '/api/offering/offerings',
@@ -375,7 +375,7 @@ class OfferingEntryTestCase(TestCase):
         }
 
         # Mock get offerings method
-        offering_entry = views.OfferingEntry()
+        offering_entry = views.OfferingEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
         views.get_offering_info = MagicMock(name='get_offering_info')
         views.get_offering_info.return_value = return_value
 
@@ -417,7 +417,7 @@ class OfferingEntryTestCase(TestCase):
     def test_get_offering_not_found(self):
 
         # Mock get offerings method
-        offering_entry = views.OfferingEntry()
+        offering_entry = views.OfferingEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
         views.get_offering_info = MagicMock(name='get_offering_info')
 
         request = self.factory.get('/api/offering/offerings/test_user/test_offering/1.0', HTTP_ACCEPT='application/json')
@@ -439,7 +439,7 @@ class OfferingEntryTestCase(TestCase):
     def test_get_offering_exception(self):
 
         # Mock get offerings method
-        offering_entry = views.OfferingEntry()
+        offering_entry = views.OfferingEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
         views.get_offering_info = MagicMock(name='get_offering_info')
         views.get_offering_info.side_effect = Exception('Error getting offering')
 
@@ -485,7 +485,7 @@ class OfferingEntryTestCase(TestCase):
         }
 
         # Mock get offerings method
-        offering_entry = views.OfferingEntry()
+        offering_entry = views.OfferingEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
         views.update_offering = MagicMock(name='update_offering')
 
         request = self.factory.put(
@@ -539,7 +539,7 @@ class OfferingEntryTestCase(TestCase):
         }
 
         # Mock get offerings method
-        offering_entry = views.OfferingEntry()
+        offering_entry = views.OfferingEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
         views.update_offering = MagicMock(name='update_offering')
 
         request = self.factory.put(
@@ -573,7 +573,7 @@ class OfferingEntryTestCase(TestCase):
         }
 
         # Mock get offerings method
-        offering_entry = views.OfferingEntry()
+        offering_entry = views.OfferingEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
         views.update_offering = MagicMock(name='update_offering')
 
         request = self.factory.put(
@@ -631,7 +631,7 @@ class OfferingEntryTestCase(TestCase):
         }
 
         # Mock get offerings method
-        offering_entry = views.OfferingEntry()
+        offering_entry = views.OfferingEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
         views.update_offering = MagicMock(name='update_offering')
         views.update_offering.side_effect = Exception('Update error')
 
@@ -696,7 +696,7 @@ class ResourceColectionTestCase(TestCase):
         }]
 
         # Mock get offerings method
-        resource_collection = views.ResourceCollection()
+        resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))
         views.get_provider_resources = MagicMock(name='get_provider_resources')
 
         views.get_provider_resources.return_value = return_value
@@ -728,7 +728,7 @@ class ResourceColectionTestCase(TestCase):
     def test_get_resources_no_provider(self):
 
         # Mock get offerings method
-        resource_collection = views.ResourceCollection()
+        resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))
         views.get_provider_resources = MagicMock(name='get_provider_resources')
 
         request = self.factory.get('/api/offering/resources', HTTP_ACCEPT='application/json')
@@ -756,7 +756,7 @@ class ResourceColectionTestCase(TestCase):
     def test_get_resources_exception(self):
 
         # Mock get offerings method
-        resource_collection = views.ResourceCollection()
+        resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))
         views.get_provider_resources = MagicMock(name='get_provider_resources')
         views.get_provider_resources.side_effect = Exception('Getting resources error')
 
@@ -791,7 +791,7 @@ class ResourceColectionTestCase(TestCase):
         }
 
         # Mock get offerings method
-        resource_collection = views.ResourceCollection()
+        resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))
         views.register_resource = MagicMock(name='get_provider_resources')
 
         request = self.factory.post(
@@ -830,7 +830,7 @@ class ResourceColectionTestCase(TestCase):
         }
 
         # Mock get offerings method
-        resource_collection = views.ResourceCollection()
+        resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))
         views.register_resource = MagicMock(name='get_provider_resources')
 
         f = StringIO()
@@ -876,7 +876,7 @@ class ResourceColectionTestCase(TestCase):
         }
 
         # Mock get offerings method
-        resource_collection = views.ResourceCollection()
+        resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))
         views.register_resource = MagicMock(name='get_provider_resources')
 
         request = self.factory.post(
@@ -915,7 +915,7 @@ class ResourceColectionTestCase(TestCase):
         }
 
         # Mock get offerings method
-        resource_collection = views.ResourceCollection()
+        resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))
         views.register_resource = MagicMock(name='get_provider_resources')
         views.register_resource.side_effect = Exception('Resource creation exeption')
 
@@ -971,7 +971,7 @@ class PublishEntryTestCase(TestCase):
 
         # Mock publish offering method
         views.publish_offering = MagicMock(name='publish_offering')
-        publish_entry = views.PublishEntry()
+        publish_entry = views.PublishEntry(permitted_methods=('POST',))
 
         offering = Offering.objects.create(
             name='test_offering',
@@ -1012,7 +1012,7 @@ class PublishEntryTestCase(TestCase):
 
         # Mock publish offering method
         views.publish_offering = MagicMock(name='publish_offering')
-        publish_entry = views.PublishEntry()
+        publish_entry = views.PublishEntry(permitted_methods=('POST',))
 
         # Call the view
         response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
@@ -1031,7 +1031,7 @@ class PublishEntryTestCase(TestCase):
 
         # Mock publish offering method
         views.publish_offering = MagicMock(name='publish_offering')
-        publish_entry = views.PublishEntry()
+        publish_entry = views.PublishEntry(permitted_methods=('POST',))
         org = Organization.objects.get(name=self.user.username)
         org.managers = []
         org.save()
@@ -1073,7 +1073,7 @@ class PublishEntryTestCase(TestCase):
         # Mock publish offering method
         views.publish_offering = MagicMock(name='publish_offering')
         views.publish_offering.side_effect = HTTPError('', 500, '', None, None)
-        publish_entry = views.PublishEntry()
+        publish_entry = views.PublishEntry(permitted_methods=('POST',))
 
         offering = Offering.objects.create(
             name='test_offering',
@@ -1109,7 +1109,7 @@ class PublishEntryTestCase(TestCase):
         # Mock publish offering method
         views.publish_offering = MagicMock(name='publish_offering')
         views.publish_offering.side_effect = Exception('Publication error')
-        publish_entry = views.PublishEntry()
+        publish_entry = views.PublishEntry(permitted_methods=('POST',))
 
         offering = Offering.objects.create(
             name='test_offering',
@@ -1208,7 +1208,7 @@ class ApplicationCollectionTestCase(TestCase):
 
             views.urllib2.build_opener.return_value = fake_opener()
 
-        applications_collection = views.ApplicationCollection()
+        applications_collection = views.ApplicationCollection(permitted_methods=('GET',))
         response = applications_collection.read(self.request)
 
         self.assertEqual(response.status_code, 200)
@@ -1269,7 +1269,7 @@ class ApplicationCollectionTestCase(TestCase):
         self.request.user.userprofile.is_user_org = MagicMock(name='is_user_org')
         self.request.user.userprofile.is_user_org.return_value = True
 
-        applications_collection = views.ApplicationCollection()
+        applications_collection = views.ApplicationCollection(permitted_methods=('GET',))
         response = applications_collection.read(self.request)
 
         self.assertEqual(response.status_code, 403)
@@ -1322,7 +1322,7 @@ class CommentEntryTestCase(TestCase):
             notification_url='',
             creation_date='2013-06-03 10:00:00'
         )
-        comment_entry = views.CommentEntry()
+        comment_entry = views.CommentEntry(permitted_methods=('POST',))
         views.comment_offering = MagicMock(name='comment_offering')
         response = comment_entry.create(self.request, 'test_user', 'test_offering', '1.0')
 
@@ -1341,7 +1341,7 @@ class CommentEntryTestCase(TestCase):
             'Invalid content'
         ]
         # Mock comment method
-        comment_entry = views.CommentEntry()
+        comment_entry = views.CommentEntry(permitted_methods=('POST',))
         views.comment_offering = MagicMock(name='comment_offering')
         views.comment_offering.side_effect = Exception('Creation error')
 

@@ -823,7 +823,7 @@ class UpdatingPurchasesTestCase(TestCase):
         context.user_refs = []
         views.Context.objects.get.return_value = context
 
-        purchase_collection = views.PurchaseCollection()
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
 
         response = purchase_collection.create(request)
 
@@ -931,7 +931,7 @@ class UpdatingPurchasesTestCase(TestCase):
         context.user_refs = []
         views.Context.objects.get.return_value = context
 
-        purchase_collection = views.PurchaseCollection()
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
 
         response = purchase_collection.create(request)
 
@@ -1008,7 +1008,7 @@ class UpdatingPurchasesTestCase(TestCase):
             content_type='application/json; charset=utf-8'
         )
         request.user = self._user
-        purchase_collection = views.PurchaseCollection()
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
 
         response = purchase_collection.create(request)
 
@@ -1132,7 +1132,7 @@ class DeveloperPurchaseTestCase(TestCase):
         context.user_refs = []
         views.Context.objects.get.return_value = context
 
-        purchase_collection = views.PurchaseCollection()
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
 
         response = purchase_collection.create(request)
 
@@ -1181,7 +1181,7 @@ class DeveloperPurchaseTestCase(TestCase):
             content_type='application/json; charset=utf-8'
         )
         request.user = self._user
-        purchase_collection = views.PurchaseCollection()
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
 
         response = purchase_collection.create(request)
         # Check response
