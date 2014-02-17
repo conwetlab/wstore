@@ -22,7 +22,7 @@ import json
 
 from django.http import HttpResponse
 
-from wstore.store_commons.utils.http import build_response, authentication_required
+from wstore.store_commons.utils.http import build_response, authentication_required, supported_request_mime_types
 from wstore.store_commons.resource import Resource
 from wstore.social.tagging.recommendation_manager import RecommendationManager
 from wstore.social.tagging.tag_manager import TagManager
@@ -54,7 +54,7 @@ class TagCollection(Resource):
                 # Get recommended tags
                 rec_man = RecommendationManager(offering)
                 response = { 
-                    'tags': rec_man.get_recommended_tags(tags)
+                    'tags': [tag for tag, r in rec_man.get_recommended_tags(tags)]
                 }
             else:
                 return build_response(request, 400, 'Invalid action')
@@ -68,6 +68,7 @@ class TagCollection(Resource):
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
     @authentication_required
+    @supported_request_mime_types(('application/json',))
     def update(self, request, organization, name, version):
 
         # Get offering

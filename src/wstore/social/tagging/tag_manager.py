@@ -20,7 +20,7 @@
 
 import os
 from os import path
-from whoosh.fields import Schema, TEXT, ID
+from whoosh.fields import Schema, TEXT, ID, KEYWORD
 from whoosh.index import create_in, open_dir
 from whoosh.qparser import QueryParser
 from stemming.porter2 import stem
@@ -55,16 +55,18 @@ class TagManager():
             if not os.path.exists(self._index_path):
                 os.makedirs(self._index_path)
             # Create schema
-            schema = Schema(id=ID(stored=True, unique=True), tags=TEXT(stored=True))
+            schema = Schema(id=ID(stored=True, unique=True), tags=KEYWORD(stored=True), named_tags=KEYWORD(stored=True))
             # Create index
             index = create_in(self._index_path, schema)
         else:
             index = open_dir(self._index_path)
 
         text = ''
+        named_text = ''
         # Create tags text
         for tag in tags:
             text += stem(tag) + ' '
+            named_text += tag + ' '
 
         # Check if the document exists
         with index.searcher() as searcher:
@@ -73,10 +75,10 @@ class TagManager():
             index_writer = index.writer()
             if not len(searcher.search(query)):
                 # Add new document
-                index_writer.add_document(id=unicode(offering.pk), tags=unicode(text[:-1]))
+                index_writer.add_document(id=unicode(offering.pk), tags=unicode(text[:-1]), named_tags=unicode(named_text[:-1]))
             else:
                 # Update the index
-                index_writer.update_document(id=unicode(offering.pk), tags=unicode(text[:-1]))
+                index_writer.update_document(id=unicode(offering.pk), tags=unicode(text[:-1]), named_tags=unicode(named_text[:-1]))
 
             index_writer.commit()
 
@@ -94,6 +96,6 @@ class TagManager():
         # Get documents
         with index.searcher() as searcher:
             documents = searcher.search(query)
-            doc_list = [{'id': doc['id'], 'tags': doc['tags']} for doc in documents]
+            doc_list = [{'id': doc['id'], 'tags': doc['tags'], 'named_tags': doc['named_tags']} for doc in documents]
 
         return doc_list

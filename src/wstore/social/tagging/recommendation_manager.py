@@ -81,23 +81,26 @@ class RecommendationManager():
         ]
         # Map tags
         for tag_list in tag_lists:
-            for tag, rank in tag_list:
+            for tag, named_tag, rank in tag_list:
                 if not tag in stemmed_user_tags:
                     if not tag in aux_map:
-                        aux_map[tag] = set([rank])
+                        aux_map[tag] = {
+                            'named_tag': named_tag,
+                            'ranks': set([rank])
+                        }
                     else:
-                        aux_map[tag].append(rank)
+                        aux_map[tag]['ranks'].append(rank)
 
         # Reduce tags
         for tag in aux_map:
             rank = 0
-            for r in aux_map[tag]:
+            for r in aux_map[tag]['ranks']:
                 if r > rank:
                     rank = r
-            result.append((tag, rank))
+            result.append((aux_map[tag]['named_tag'], rank))
 
         # Sort by rank
-        result = [t for t, ra in sorted(result, ken=lambda tag: tag[1], reverse=True)]
+        result = [t for t, ra in sorted(result, ken=lambda tag: tag[2], reverse=True)]
 
         # Only 50 recommendations are shown
         if len(result) > 50:
@@ -134,12 +137,12 @@ class CooccurrenceThead(Thread):
             rank = decimal.Decimal(0)
             # Calculate and sum partial probabilities
             for user_tag in frequency_map['user_tags_freq']:
-                if user_tag in co_tag_prob:
-                    rank += decimal.Decimal(co_tag_prob[user_tag]) / decimal.Decimal(frequency_map['user_tags_freq'][user_tag])
+                if user_tag in co_tag_prob['user_tags']:
+                    rank += decimal.Decimal(co_tag_prob['user_tags'][user_tag]) / decimal.Decimal(frequency_map['user_tags_freq'][user_tag])
 
             # Divide by the number of user tags
             rank = rank / decimal.Decimal(len(frequency_map['user_tags_freq']))
-            self._tag_container.append((co_tag, rank))
+            self._tag_container.append((co_tag, co_tag_prob['named_tag'], rank))
 
     def run(self):
         tag_manager = TagManager()
@@ -162,23 +165,27 @@ class CooccurrenceThead(Thread):
 
             for doc in docs:
                 # Get tags
-                tags = doc['tags'].split(' ')
+                tags = doc['named_tags'].split(' ')
 
                 # Populate the frequencies map: for user tags it contains the absolute
                 # frequency of the tag, for co-occurrence tags it contains the frequency
                 # of the intersection with the corresponding user tag
 
-                for t in tags:
+                for not_stem_tag in tags:
+                    t = stem(not_stem_tag)
                     if self._include_user_tags or (not self._include_user_tags and t != st_tag):
                         if not t in frequency_map['co-tags']:
                             frequency_map['co-tags'][t] = {
-                                st_tag: 1
+                                'named_tag': not_stem_tag,
+                                'user_tags': {
+                                    st_tag: 1
+                                }
                             }
                         else:
-                            if st_tag in frequency_map['co-tags'][t]:
-                                frequency_map['co-tags'][t][st_tag] += 1
+                            if st_tag in frequency_map['co-tags'][t]['user_tags']:
+                                frequency_map['co-tags'][t]['user_tags'][st_tag] += 1
                             else:
-                                frequency_map['co-tags'][t][st_tag] = 1
+                                frequency_map['co-tags'][t]['user_tags'][st_tag] = 1
 
         # Calculate tag rank and populate tag container
         self._rank_tags(frequency_map)

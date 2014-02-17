@@ -21,7 +21,7 @@
 import os
 from mock import MagicMock
 from nose_parameterized import parameterized
-from whoosh.fields import Schema, TEXT, ID
+from whoosh.fields import Schema, TEXT, ID, KEYWORD
 from whoosh.index import create_in, open_dir
 from whoosh.qparser import QueryParser
 
@@ -38,24 +38,30 @@ class TagCooccurrenceTestCase(TestCase):
         search_result = {
             'test': [{
                 'id': '1111111111',
-                'tags': 'thing mock test user'
+                'tags': 'thing mock test user',
+                'named_tags': 'thing mock test user'
             }, {
                 'id': '2222222222',
-                'tags': 'test mock reference use'
+                'tags': 'test mock reference use',
+                'named_tags': 'test mock reference use'
             }],
             'widget': [{
                 'id': '333333333',
-                'tags': 'widget wirecloud mashup platform'
+                'tags': 'widget wirecloud mashup platform',
+                'named_tags': 'widget wirecloud mashup platform'
             }, {
                 'id': '444444444',
-                'tags': 'widget wirecloud'
+                'tags': 'widget wirecloud',
+                'named_tags': 'widget wirecloud'
             }],
             'servic': [{
                 'id': '5555555555',
-                'tags': 'servic soa architecture'
+                'tags': 'servic soa architecture',
+                'named_tags': 'service soa architecture'
             }, {
                 'id': '6666666666',
-                'tags': 'servic user'
+                'tags': 'servic user',
+                'named_tags': 'service user'
             }],
             'notag': []
             }
@@ -68,7 +74,7 @@ class TagCooccurrenceTestCase(TestCase):
         ({'notag'}, (), ()),
         ({'test', 'widget', 'service', 'notag'}, ('thing', 'mock', 'reference', 'use', 'wirecloud', 'mashup', 'platform', 'soa', 'architecture', 'user'), 
          ('0.17', '0.33', '0.17', '0.17', '0.33', '0.17', '0.17', '0.17','0.17', '0.33')),
-        ({'service'}, ('servic', 'soa', 'architecture', 'user'), ('1', '0.5', '0.5', '0.5'), True)
+        ({'service'}, ('service', 'soa', 'architecture', 'user'), ('1', '0.5', '0.5', '0.5'), True)
     ])
     def test_tagging_coocurrence(self, user_tags, tags, scores, use_tags=False):
         # Create mocks
@@ -83,8 +89,8 @@ class TagCooccurrenceTestCase(TestCase):
         # Check results
         self.assertEquals(len(result_list), len(tags))
         for t in result_list:
-            ix = tags.index(t[0])
-            self.assertEquals(str(t[1]), scores[ix])
+            ix = tags.index(t[1])
+            self.assertEquals(str(t[2]), scores[ix])
         
 
 class USDLTagsTestCase(TestCase):
@@ -139,11 +145,11 @@ class TagManagementTestCase(TestCase):
         if create_dir:
             os.makedirs(self._path)
             # Create schema
-            schema = Schema(id=ID(stored=True, unique=True), tags=TEXT(stored=True))
+            schema = Schema(id=ID(stored=True, unique=True), tags=KEYWORD(stored=True), named_tags=KEYWORD(stored=True))
             # Create index
             index = create_in(self._path, schema)
             index_writer = index.writer()
-            index_writer.add_document(id=unicode(pk), tags=unicode('test1 test2'))
+            index_writer.add_document(id=unicode(pk), tags=unicode('test1 test2'), named_tags=unicode('test1 test2'))
             index_writer.commit()
 
         offering = MagicMock()
@@ -185,13 +191,13 @@ class TagManagementTestCase(TestCase):
         # Create indexes
         os.makedirs(self._path)
         # Create schema
-        schema = Schema(id=ID(stored=True, unique=True), tags=TEXT(stored=True))
+        schema = Schema(id=ID(stored=True, unique=True), tags=KEYWORD(stored=True), named_tags=KEYWORD(stored=True))
         # Create index
         index = create_in(self._path, schema)
         index_writer = index.writer()
-        index_writer.add_document(id=unicode('11111'), tags=unicode('test1 test2'))
-        index_writer.add_document(id=unicode('22222'), tags=unicode('test1 test3 test4'))
-        index_writer.add_document(id=unicode('33333'), tags=unicode('test2 test5 test6'))
+        index_writer.add_document(id=unicode('11111'), tags=unicode('test1 test2'), named_tags=unicode('test1 test2'))
+        index_writer.add_document(id=unicode('22222'), tags=unicode('test1 test3 test4'), named_tags=unicode('test1 test3 test4'))
+        index_writer.add_document(id=unicode('33333'), tags=unicode('test2 test5 test6'), named_tags=unicode('test2 test5 test6'))
         index_writer.commit()
 
         tm = tag_manager.TagManager(self._path)
