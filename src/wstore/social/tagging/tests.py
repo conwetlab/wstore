@@ -19,6 +19,7 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import os
+import json
 from mock import MagicMock
 from nose_parameterized import parameterized
 from whoosh.fields import Schema, TEXT, ID, KEYWORD
@@ -26,8 +27,11 @@ from whoosh.index import create_in, open_dir
 from whoosh.qparser import QueryParser
 
 from django.test import TestCase
+from django.test.client import RequestFactory
+from django.contrib.auth.models import User
 
-from wstore.social.tagging import recommendation_manager, tag_manager
+from wstore.social.tagging import recommendation_manager, tag_manager, views
+from wstore.models import Organization
 
 
 class TagCooccurrenceTestCase(TestCase):
@@ -206,3 +210,124 @@ class TagManagementTestCase(TestCase):
         self.assertEquals(len(offerings), 2)
         self.assertTrue('offering1' in offerings)
         self.assertTrue('offering2' in offerings)
+
+
+class TagViewTestCase(TestCase):
+
+    tags = ('tagging',)
+    def setUp(self):
+        # Create request factory
+        self.factory = RequestFactory()
+        # Create testing user
+        self.user = User.objects.create_user(
+            username='test_user',
+            email='',
+            password='passwd'
+        )
+
+    def _get_offering(self, owner_organization=None, name=None, version=None):
+        if name!= 'test_offering':
+            raise Exception('')
+
+        off_object = MagicMock()
+        off_object.tags = ['tag3', 'tag4']
+
+        return off_object
+
+    @parameterized.expand([
+        ({'organization': 'test_org', 'name': 'test_offering', 'version': '1.0'},'recommend', False, ['tag1', 'tag2'], 200),
+        ({'organization': 'test_org', 'name': 'test_offering', 'version': '1.0'}, None, False, ['tag3', 'tag4'], 200),
+        ({'organization': 'test_org', 'name': 'not_found', 'version': '1.0'}, None, True, 'Not found', 404),
+        ({'organization': 'test_org', 'name': 'test_offering', 'version': '1.0'}, 'invalid', True, 'Invalid action', 400)
+    ])
+    def test_tag_retrieving(self, off_data, action, error, response_content, code):
+        # Create mocks
+        org = MagicMock()
+        org.objects.get = MagicMock()
+        org.objects.get.return_value = MagicMock()
+        offering = MagicMock()
+        offering.objects.get = self._get_offering
+
+        rec_manager = MagicMock()
+        rec_manager_instance = MagicMock()
+        rec_manager_instance.get_recommended_tags = MagicMock()
+        rec_manager_instance.get_recommended_tags.return_value = [('tag1', '0.5'),('tag2', '0.5')]
+        rec_manager.return_value = rec_manager_instance
+
+        views.Organization = org
+        views.Offering = offering
+        views.RecommendationManager = rec_manager
+
+        # Create the view
+        tag_collection = views.TagCollection(permitted_methods=('GET', 'PUT'))
+        url = '/api/offering/offerings/' + off_data['organization'] +'/' + off_data['name'] + '/' + off_data['version'] +'/tags'
+
+        if action:
+            url += '?action=' + action
+
+        request = self.factory.get(url,HTTP_ACCEPT='application/json; charset=utf-8')
+        request.user = self.user
+
+        # Get HTTP response
+        response = tag_collection.read(request, off_data['organization'], off_data['name'], off_data['version'])
+
+        parsed_response = json.loads(response.content)
+
+        # Check response
+        self.assertEqual(response.status_code, code)
+        if not error:
+            self.assertEquals(len(parsed_response['tags']), len(response_content))
+            for tag in response_content:
+                self.assertTrue(tag in parsed_response['tags'])
+        else:
+            self.assertEqual(parsed_response['message'], response_content)
+            self.assertEqual(parsed_response['result'], 'error')
+
+    @parameterized.expand([
+        ({'organization': 'test_org', 'name': 'test_offering', 'version': '1.0'}, 'correct', 'OK', 200),
+        ({'organization': 'test_org', 'name': 'test_offering', 'version': '1.0'}, 'error', 'Forbidden', 403),
+        ({'organization': 'test_org', 'name': 'not_found', 'version': '1.0'}, 'error', 'Not found', 404),
+        ({'organization': 'test_org', 'name': 'test_offering', 'version': '1.0'}, 'error', 'Exception', 400)
+    ])
+    def test_tag_update(self, off_data, result, response_content, code):
+        # Create mocks
+        org = Organization.objects.create(name='test_org')
+        offering = MagicMock()
+        offering.objects.get = self._get_offering
+
+        tag_manager = MagicMock()
+        tag_manager_instance = MagicMock()
+        tag_manager_instance.update_tags = MagicMock()
+
+        if code != 403:
+            self.user.userprofile.current_organization = org
+            self.user.userprofile.save()
+        if code == 400:
+            tag_manager_instance.update_tags.side_effect = Exception(response_content)
+
+        tag_manager.return_value = tag_manager_instance
+
+        views.Offering = offering
+        views.Organization = Organization
+        views.TagManager = tag_manager
+
+        # Create the view
+        tag_collection = views.TagCollection(permitted_methods=('GET', 'PUT'))
+        url = '/api/offering/offerings/' + off_data['organization'] +'/' + off_data['name'] + '/' + off_data['version'] +'/tags'
+
+        data = {'tags': ['tag1', 'tag2']}
+        request = self.factory.put(
+            url,
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+        request.user = self.user
+
+        response = tag_collection.update(request, off_data['organization'], off_data['name'], off_data['version'])
+        parsed_response = json.loads(response.content)
+
+        # Check response
+        self.assertEqual(response.status_code, code)
+        self.assertEqual(parsed_response['message'], response_content)
+        self.assertEqual(parsed_response['result'], result)

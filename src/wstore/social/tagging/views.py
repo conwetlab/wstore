@@ -78,6 +78,10 @@ class TagCollection(Resource):
         except:
             return build_response(request, 404, 'Not found')
 
+        # Check that the user has enough rights
+        if request.user.userprofile.current_organization != org:
+            return build_response(request, 403, 'Forbidden')
+
         # Build tag manager
         try:
             data = json.loads(request.raw_post_data)
