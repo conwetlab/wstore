@@ -29,7 +29,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
 
-from wstore.store_commons.utils.error_response import get_json_response, get_xml_response
+from wstore.store_commons.utils.error_response import get_json_response, get_xml_response, get_unicode_response
 from wstore.store_commons.utils import mimeparser
 
 
@@ -39,7 +39,7 @@ def get_html_basic_error_response(request, mimetype, status_code, message):
 FORMATTERS = {
     'application/json; charset=utf-8': get_json_response,
     'application/xml; charset=utf-8': get_xml_response,
-    'text/plain; charset=utf-8': unicode,
+    'text/plain; charset=utf-8': get_unicode_response,
 }
 
 
