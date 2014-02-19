@@ -52,7 +52,7 @@ class RecommendationManager():
         # Create co-occurrence thread
         co_thd = CooccurrenceThead(self._coocurrence_tags, self._user_tags)
         # Get USDL co-occurrence tags
-        co_u_thd = CooccurrenceThead(self._usdl_coocurrence_tags, entities)
+        co_u_thd = CooccurrenceThead(self._usdl_coocurrence_tags, entities, include_user_tags=True)
 
         # Run co-occurrence thread
         co_thd.start()
@@ -89,7 +89,7 @@ class RecommendationManager():
                             'ranks': set([rank])
                         }
                     else:
-                        aux_map[tag]['ranks'].append(rank)
+                        aux_map[tag]['ranks'].add(rank)
 
         # Reduce tags
         for tag in aux_map:
@@ -100,7 +100,7 @@ class RecommendationManager():
             result.append((aux_map[tag]['named_tag'], rank))
 
         # Sort by rank
-        result = [t for t, ra in sorted(result, ken=lambda tag: tag[2], reverse=True)]
+        result = sorted(result, key=lambda tag: tag[1], reverse=True)
 
         # Only 50 recommendations are shown
         if len(result) > 50:
@@ -173,7 +173,7 @@ class CooccurrenceThead(Thread):
 
                 for not_stem_tag in tags:
                     t = stem(not_stem_tag)
-                    if self._include_user_tags or (not self._include_user_tags and t != st_tag):
+                    if t and (self._include_user_tags or (not self._include_user_tags and t != st_tag)):
                         if not t in frequency_map['co-tags']:
                             frequency_map['co-tags'][t] = {
                                 'named_tag': not_stem_tag,
@@ -212,5 +212,4 @@ class USDLEntitiesRetrieving(Thread):
         # Get stemmed tokens
         analyzer = StemmingAnalyzer()
         named_entities = set([token.text for token in analyzer(unicode(text))])
-
         return named_entities

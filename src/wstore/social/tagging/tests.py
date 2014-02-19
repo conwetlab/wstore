@@ -20,18 +20,21 @@
 
 import os
 import json
+import types
+from decimal import Decimal
 from mock import MagicMock
 from nose_parameterized import parameterized
 from whoosh.fields import Schema, TEXT, ID, KEYWORD
 from whoosh.index import create_in, open_dir
 from whoosh.qparser import QueryParser
+from stemming.porter2 import stem
 
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.contrib.auth.models import User
 
 from wstore.social.tagging import recommendation_manager, tag_manager, views
-from wstore.models import Organization
+from wstore.models import Organization, Offering
 
 
 class TagCooccurrenceTestCase(TestCase):
@@ -331,3 +334,135 @@ class TagViewTestCase(TestCase):
         self.assertEqual(response.status_code, code)
         self.assertEqual(parsed_response['message'], response_content)
         self.assertEqual(parsed_response['result'], result)
+
+
+class RecommendationProcessTestCase(TestCase):
+
+    tags = ('tagging',)
+    fixtures = ('tagging.json',)
+    _init_copy = None
+
+    @classmethod
+    def setUpClass(cls):
+        from os import path
+        from django.conf import settings
+        cls._path = path.join(settings.BASEDIR, 'wstore')
+        cls._path = path.join(cls._path, 'test')
+        cls._path = path.join(cls._path, 'test_index2')
+        super(RecommendationProcessTestCase, cls).setUpClass()
+
+    def tearDown(self):
+        if os.path.exists(self._path):
+            for f in os.listdir(self._path):
+                file_path = os.path.join(self._path, f)
+                os.remove(file_path)
+            os.rmdir(self._path)
+        # Restore Tag init
+        if self._init_copy:
+            recommendation_manager.TagManager.__init__ = self._init_copy
+
+    def test_tag_aggregation(self):
+        # Create tag recommendation manager
+        recom_manager = recommendation_manager.RecommendationManager(MagicMock(), ['test1', 'test2', 'test3'])
+        # Load tag lists
+        recom_manager._coocurrence_tags = [
+            ('test1', 'test1', Decimal('0.5')),
+            ('servic', 'service', Decimal('0.17')),
+            ('widget', 'widget', Decimal('0.23')),
+            ('us', 'use', Decimal('0.10'))
+        ]
+        recom_manager._usdl_coocurrence_tags = [
+            ('servic', 'service', Decimal('0.20')),
+            ('thing', 'thing', Decimal('0.15'))
+        ]
+        # Check returned list
+        aggregated_list = recom_manager._aggregate_tags()
+
+        self.assertEquals(len(aggregated_list), 4)
+        expected_result = {
+            'service': Decimal('0.20'),
+            'widget': Decimal('0.23'),
+            'use': Decimal('0.10'),
+            'thing': Decimal('0.15')
+        }
+
+        for tag, rank in aggregated_list:
+            self.assertEquals(expected_result[tag], rank)
+
+    def test_complete_recommendation_process(self):
+        # Test the complete recommendation process
+
+        # Create indexes
+        os.makedirs(self._path)
+        # Create schema
+        schema = Schema(id=ID(stored=True, unique=True), tags=KEYWORD(stored=True), named_tags=KEYWORD(stored=True))
+        # Create index
+        index = create_in(self._path, schema)
+        index_writer = index.writer()
+        for off in Offering.objects.all():
+            # Create stemmed tags text
+            # Create tags text
+            text = ''
+            named_text = ''
+            # Create tags text
+            for tag in off.tags:
+                text += stem(tag) + ' '
+                named_text += tag + ' '
+
+            if text:
+                index_writer.add_document(id=unicode(off.pk), tags=text, named_tags=named_text)
+
+        index_writer.commit()
+
+        # Override TagManager init method in order to avoid default index path
+        def new_init(tag_self, path=None):
+            tag_self._index_path = self._path
+
+        old_init = recommendation_manager.TagManager.__init__
+        self._init_copy = types.FunctionType(old_init.func_code, old_init.func_globals, name = old_init.func_name,
+                       argdefs = old_init.func_defaults,
+                       closure = old_init.func_closure)
+
+        recommendation_manager.TagManager.__init__ = new_init
+
+        # Create recommendation offering
+        main_offering = Offering.objects.get(pk="51100aba8e05ac2115f022f0")
+        # Include USDL
+        from os import path
+        from django.conf import settings
+        usdl_path = path.join(settings.BASEDIR, 'wstore')
+        usdl_path = path.join(usdl_path, 'test')
+        usdl_path = path.join(usdl_path, 'test_usdl.rdf')
+        f = open(usdl_path, 'rb')
+
+        import rdflib
+        graph = rdflib.Graph()
+        graph.parse(data=f.read())
+        main_offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
+        main_offering.save()
+
+        # Launch recommendation process
+        recom_manager = recommendation_manager.RecommendationManager(main_offering, set(['fiware', 'youtube']))
+
+        recommendations = recom_manager.get_recommended_tags()
+
+        # Check recommendation list
+        self.assertEquals(len(recommendations), 12)
+
+        expected_result = {
+            'cloud': Decimal('0.5'),
+            'portal': Decimal('0.5'),
+            'free': Decimal('1'),
+            'multimedia': Decimal('0.5'),
+            'flickr': Decimal('0.5'),
+            'wikipedia': Decimal('0.5'),
+            'widget': Decimal('0.6'),
+            'wirecloud': Decimal('0.6'),
+            'map': Decimal('0.6'),
+            'service': Decimal('0.2'),
+            'pubsub': Decimal('0.2'),
+            'broker': Decimal('0.2')
+        }
+
+        for res in recommendations:
+            self.assertEquals(res[1], expected_result[res[0]])
