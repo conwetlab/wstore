@@ -100,6 +100,7 @@
             'description': this.offeringElement.getDescription()
         }).appendTo('#main-tab');
 
+        // Check if there are screenshots
         screen = this.offeringElement.getScreenshots();
         if (screen.length > 0) {
             for (var i = 0; i < screen.length; i++) {
@@ -119,7 +120,7 @@
         if (this.offeringElement.getState() != 'uploaded') {
             this.paintComments();
         } else {
-            $('h3:contains(Comments)').addClass('hide');
+            $('h2:contains(Comments)').addClass('hide');
         }
 
         this.buildTabs();
