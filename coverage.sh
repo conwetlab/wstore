@@ -6,7 +6,7 @@ pip install nose-parameterized
 cd $WORKSPACE/src
 
 coverage run --branch --source=wstore ./manage.py test --noinput --with-xunit --nologcapture -v 2
-coverage xml
+coverage xml --omit="*urls*"
 
 # Prettify Coverate Report
 COVERAGE_FILE=coverage.xml
