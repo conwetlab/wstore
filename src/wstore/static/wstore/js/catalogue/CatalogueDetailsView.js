@@ -328,7 +328,11 @@
      * Downloads the service model of the offering
      */
     CatalogueDetailsView.prototype.getServiceModel = function getServiceModel () {
-        window.open(this.offeringElement.getOfferingDescriptionURL());
+        window.open(EndpointManager.getEndpoint('USDL_ENTRY', {
+            'organization': this.offeringElement.getOrganization(),
+            'name': this.offeringElement.getName(),
+            'version': this.offeringElement.getVersion()
+        }));
     };
 
     /**

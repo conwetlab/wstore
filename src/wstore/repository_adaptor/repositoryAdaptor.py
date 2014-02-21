@@ -73,7 +73,7 @@ class RepositoryAdaptor():
             url = urljoin(url, self._collection)
             url = urljoin(url, name)
 
-        headers = {'Accept': content_type}
+        headers = {'Accept': '*'}
         request = MethodRequest('GET', url, '', headers)
 
         response = opener.open(request)

@@ -50,8 +50,10 @@
         'ORGANIZATION_USER_ENTRY': '/api/administration/organizations/${org}/user',
         'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}',
         'PUBLISH_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/publish',
+        'TAG_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/tags',
         'BIND_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/bind',
         'RATING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/rating',
+        'USDL_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/usdl',
         'SEARCH_ENTRY': '/api/search/${text}',
         'PURCHASE_ENTRY':   '/api/contracting/${ref}'
     }
