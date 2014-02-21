@@ -90,7 +90,12 @@ class TagManager():
 
     def get_index_doc_by_tag(self, tag):
         # Open the index
-        index = open_dir(self._index_path)
+        try:
+            index = open_dir(self._index_path)
+        except:
+            # The index is not created
+            return []
+
         # Build the query
         query = QueryParser('tags', index.schema).parse(unicode(stem(tag)))
         # Get documents

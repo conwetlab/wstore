@@ -52,9 +52,9 @@ class TagCollection(Resource):
                 tags = set(tags.split(','))
 
                 # Get recommended tags
-                rec_man = RecommendationManager(offering)
+                rec_man = RecommendationManager(offering, tags)
                 response = { 
-                    'tags': [tag for tag, r in rec_man.get_recommended_tags(tags)]
+                    'tags': [tag for tag, r in rec_man.get_recommended_tags()]
                 }
             else:
                 return build_response(request, 400, 'Invalid action')
