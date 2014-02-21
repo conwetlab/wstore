@@ -117,6 +117,30 @@
             $('#screenshots-car').remove();
         }
 
+        // Check tags
+        if (!this.offeringElement.getTags() && 
+                USERPROFILE.getCurrentOrganization() != this.offeringElement.getOrganization()) {
+            $('h2:contains(Tags)').addClass('hide');
+            $('#main-tab .icon-tag').addClass('hide');
+        } else if (this.offeringElement.getTags()) {
+            // Write tags
+            var tags = this.offeringElement.getTags();
+            for (var i = 0; i < tags.length; i++) {
+                $('<a></a>').addClass('tag').text(tags[i]).appendTo('#tags');
+            }
+        }
+        // Include the update Tags button if needed
+        if (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) {
+
+            var updateBtn = $('<input></input>').attr('type', 'button').addClass('btn btn-clasic').attr('value', 'Update tags').click((function() {
+                var tagManager = new TagManager(this.offeringElement, this);
+                tagManager.display();
+            }).bind(this));
+            var clear = $('<div></div>').addClass('space clear');
+            $('#tags').prepend(clear);
+            $('#tags').prepend(updateBtn);
+        }
+
         if (this.offeringElement.getState() != 'uploaded') {
             this.paintComments();
         } else {

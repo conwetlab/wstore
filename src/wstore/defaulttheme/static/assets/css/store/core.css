@@ -456,3 +456,66 @@ h2 {
 .catalogue-form .form {
   width: 221px;
 }
+
+.icon-tag {
+color: rgb(96, 193, 207);
+}
+
+#main-tab .icon-tag {
+  font-size: 20px;
+}
+
+#main-tab h2:nth-last-of-type(2) {
+  display: inline;
+}
+
+#tags .btn {
+  margin-top: 10px;
+}
+
+a.tag {
+  margin-right: 10px;
+}
+
+.included-tag .icon-remove-sign {
+  color: rgb(218, 79, 73);
+  float: right;
+}
+
+.included-tag .icon-remove-sign:hover {
+  cursor: pointer;
+}
+
+.included-tag span {
+  margin: 10px;
+}
+
+#add-tag {
+  margin-bottom: 6px; 
+}
+
+#tag-text {
+  width: 85%;
+}
+
+.suggested-tag {
+  margin-right: 10px;
+}
+
+.suggested-tag .icon-plus-sign {
+  float: right;
+  color: rgb(91, 183, 91);
+}
+
+.suggested-tag .icon-plus-sign:hover {
+  cursor: pointer;
+}
+
+.suggested-tag span {
+  margin: 10px;
+}
+
+.suggested-tag .icon-remove-sign {
+  color: rgb(218, 79, 73);
+  float: right;
+}
