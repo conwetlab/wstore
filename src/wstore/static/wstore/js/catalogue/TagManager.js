@@ -65,20 +65,30 @@
         }
     };
 
+    var addTagHandler = function addTagHandler(self) {
+        if ($.trim($('#tag-text').val()) && self.finalTags.indexOf($.trim($('#tag-text').val())) == -1) {
+            // Add tag to the list
+            self.finalTags.push($.trim($('#tag-text').val()));
+
+            // Create tag entry
+            addTag($.trim($('#tag-text').val()), self);
+        }
+        $('#tag-text').val('');
+    };
+
     /**
      * Set Main listeners of the modal
      */
     TagManager.prototype.setListeners = function setListeners() {
         // Set Add tag listener
         $('#add-tag').click((function() {
-            if ($.trim($('#tag-text').val()) && this.finalTags.indexOf($.trim($('#tag-text').val())) == -1) {
-                // Add tag to the list
-                this.finalTags.push($.trim($('#tag-text').val()));
+            addTagHandler(this);
+        }).bind(this));
 
-                // Create tag entry
-                addTag($.trim($('#tag-text').val()), this);
+        $('#tag-text').on("keypress", (function(e) {
+            if (e.which == 13) {
+                addTagHandler(this);
             }
-            $('#tag-text').val('');
         }).bind(this));
 
         // Set Accept listener
