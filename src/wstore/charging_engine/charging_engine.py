@@ -48,7 +48,7 @@ from wstore.charging_engine.models import Unit
 from wstore.charging_engine.price_resolver import PriceResolver
 from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.contracting.purchase_rollback import rollback
-from wstore.rss_adaptor.rssAdaptor import RSSAdaptorThread
+from wstore.rss_adaptor.rss_adaptor import RSSAdaptorThread
 from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
 
 

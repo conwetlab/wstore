@@ -20,7 +20,7 @@
 
 from django.test import TestCase
 
-from wstore.rss_adaptor import rssAdaptor
+from wstore.rss_adaptor import rss_adaptor
 
 
 __test__ = False
@@ -148,10 +148,10 @@ class RSSAdaptorTestCase(TestCase):
         }]
 
         fake_urllib2 = FakeUrlib2Rss()
-        rssAdaptor.urllib2 = fake_urllib2
+        rss_adaptor.urllib2 = fake_urllib2
 
-        rss_adaptor = rssAdaptor.RSSAdaptor('http://examplerss/fiware_rss/')
-        rss_adaptor.send_cdr(cdr)
+        rss_adap = rss_adaptor.RSSAdaptor('http://examplerss/fiware_rss/')
+        rss_adap.send_cdr(cdr)
 
         opener = fake_urllib2._opener
         self.assertEqual(opener._method, 'POST')
