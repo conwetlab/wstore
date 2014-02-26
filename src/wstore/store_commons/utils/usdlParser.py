@@ -752,7 +752,7 @@ def validate_usdl(usdl, mimetype, offering_data):
                 cont = Context.objects.all()[0]
 
                 valid_currs = {}
-                for c in cont.allowed_currencies:
+                for c in cont.allowed_currencies['allowed']:
                     valid_currs[c['currency'].lower()] = c['in_use']
 
                 # Validate currency

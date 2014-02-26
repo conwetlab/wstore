@@ -36,7 +36,7 @@ class Context(models.Model):
     top_rated = ListField()
     newest = ListField()
     user_refs = DictField()
-    allowed_currencies = ListField()
+    allowed_currencies = DictField()
 
 
 class Organization(models.Model):

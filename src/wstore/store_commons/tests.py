@@ -356,7 +356,7 @@ class USDLValidationTestCase(TestCase):
     def setUp(self):
         # Create default context
         site = Site.objects.create(name='Default', domain='http://localhost:8000/')
-        cnt = Context.objects.create(site=site) 
+        cnt = Context.objects.create(site=site)
 
     def test_basic_validation(self):
         f = open('./wstore/store_commons/test/val.ttl', 'rb')
@@ -366,7 +366,9 @@ class USDLValidationTestCase(TestCase):
 
     def test_validate_price_components(self):
         cnt = Context.objects.all()[0]
-        cnt.allowed_currencies.append({
+        cnt.allowed_currencies['default'] = 'EUR'
+        cnt.allowed_currencies['allowed'] = []
+        cnt.allowed_currencies['allowed'].append({
             'currency': 'EUR',
             'in_use': True
         })
@@ -482,6 +484,9 @@ class USDLValidationTestCase(TestCase):
 
     def test_validate_invalid_currency(self):
         f = open('./wstore/store_commons/test/val_curr.ttl', 'rb')
+        cnt = Context.objects.all()[0]
+        cnt.allowed_currencies['allowed'] = []
+        cnt.save()
         valid = validate_usdl(f.read(), 'text/turtle', {})
 
         self.assertFalse(valid[0])
@@ -489,11 +494,13 @@ class USDLValidationTestCase(TestCase):
 
     def test_validate_multiple_currencies(self):
         cnt = Context.objects.all()[0]
-        cnt.allowed_currencies.append({
+        cnt.allowed_currencies['default'] = 'EUR'
+        cnt.allowed_currencies['allowed'] = []
+        cnt.allowed_currencies['allowed'].append({
             'currency': 'EUR',
             'in_use': True
         })
-        cnt.allowed_currencies.append({
+        cnt.allowed_currencies['allowed'].append({
             'currency': 'GBP',
             'in_use': True
         })
@@ -506,7 +513,9 @@ class USDLValidationTestCase(TestCase):
 
     def test_validate_invalid_unit(self):
         cnt = Context.objects.all()[0]
-        cnt.allowed_currencies.append({
+        cnt.allowed_currencies['default'] = 'EUR'
+        cnt.allowed_currencies['allowed'] = []
+        cnt.allowed_currencies['allowed'].append({
             'currency': 'EUR',
             'in_use': True
         })
@@ -519,7 +528,9 @@ class USDLValidationTestCase(TestCase):
 
     def test_validate_invalid_value(self):
         cnt = Context.objects.all()[0]
-        cnt.allowed_currencies.append({
+        cnt.allowed_currencies['default'] = 'EUR'
+        cnt.allowed_currencies['allowed'] = []
+        cnt.allowed_currencies['allowed'].append({
             'currency': 'EUR',
             'in_use': True
         })
