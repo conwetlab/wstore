@@ -30,7 +30,7 @@ from django.test.client import RequestFactory
 from wstore.contracting import purchases_management
 from wstore.contracting.purchase_rollback import rollback
 from wstore.contracting import notify_provider
-from wstore.models import Offering
+from wstore.models import Offering, Context
 from wstore.models import Organization
 from wstore.models import Purchase
 from wstore.models import UserProfile
@@ -768,6 +768,16 @@ class UpdatingPurchasesTestCase(TestCase):
         self._user = User.objects.get(username='test_user')
 
     def test_basic_purchase_offering_update(self):
+        # Get context
+        cnt = Context.objects.all()[0]
+        cnt.allowed_currencies = {
+            "default": "EUR",
+            "allowed": [{
+                "currency": "EUR",
+                "in_use": True
+            }]
+        }
+        cnt.save()
         self._user.userprofile.offerings_purchased.append('61000aba8e05ac2115f022f9')
         # Create the request
         data = {

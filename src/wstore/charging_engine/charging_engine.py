@@ -39,7 +39,7 @@ from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
 
 from wstore.models import Resource, Organization
-from wstore.models import UserProfile
+from wstore.models import UserProfile, Context as WStore_context
 from wstore.models import Purchase
 from wstore.models import Offering
 from wstore.models import RSS
@@ -658,7 +658,8 @@ class ChargingEngine:
         # If not price components or all price components define a
         # function without currency, load default currency
         if not 'general_currency' in price_model:
-            price_model['general_currency'] = 'EUR'
+            cnt = WStore_context.objects.all()[0]
+            price_model['general_currency'] = cnt.allowed_currencies['default']
 
         # Create the contract entry
         Contract.objects.create(

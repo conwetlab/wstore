@@ -24,6 +24,15 @@
         }
     },
     {
+        "pk": "515ab0738e05ac0000000000",
+        "model": "wstore.Context",
+        "fields": {
+            "site": "515ab0738e05ac20b622888b",
+            "allowed_currencies": {
+            }
+        }
+    },
+    {
         "pk": "61000aba8e05ac2115f022f9",
         "model": "wstore.Offering",
         "fields": {
