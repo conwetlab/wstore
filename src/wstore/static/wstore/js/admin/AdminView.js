@@ -182,6 +182,10 @@
            unitsInfoRequest();
         });
 
+        $('.show-currencies').click(function() {
+            currencyInfoRequest();
+         });
+
         $('.add-market').click(function() {
             main = true;
             paintForm('MARKET_COLLECTION', 'Marketplace');
@@ -207,6 +211,10 @@
 
         $('.add-unit').click(function() {
             paintUnitForm();
+        });
+
+        $('.add-currency').click(function() {
+            paintCurrencyForm();
         });
     };
 

@@ -22,9 +22,10 @@ import rdflib
 from mock import MagicMock
 
 from django.test import TestCase
+from django.contrib.sites.models import Site
 
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
-from wstore.models import Organization
+from wstore.models import Organization, Context
 
 __test__ = False
 
@@ -352,6 +353,11 @@ class USDLValidationTestCase(TestCase):
 
     tags = ('usdl-validation',)
 
+    def setUp(self):
+        # Create default context
+        site = Site.objects.create(name='Default', domain='http://localhost:8000/')
+        cnt = Context.objects.create(site=site) 
+
     def test_basic_validation(self):
         f = open('./wstore/store_commons/test/val.ttl', 'rb')
         valid = validate_usdl(f.read(), 'text/turtle', {})
@@ -359,6 +365,12 @@ class USDLValidationTestCase(TestCase):
         self.assertTrue(valid[0])
 
     def test_validate_price_components(self):
+        cnt = Context.objects.all()[0]
+        cnt.allowed_currencies.append({
+            'currency': 'EUR',
+            'in_use': True
+        })
+        cnt.save()
         f = open('./wstore/store_commons/test/val_comp.ttl', 'rb')
         valid = validate_usdl(f.read(), 'text/turtle', {})
 
@@ -476,6 +488,16 @@ class USDLValidationTestCase(TestCase):
         self.assertEquals(valid[1], 'A price component contains and invalid or unsupported currency')
 
     def test_validate_multiple_currencies(self):
+        cnt = Context.objects.all()[0]
+        cnt.allowed_currencies.append({
+            'currency': 'EUR',
+            'in_use': True
+        })
+        cnt.allowed_currencies.append({
+            'currency': 'GBP',
+            'in_use': True
+        })
+        cnt.save()
         f = open('./wstore/store_commons/test/val_mul_curr.ttl', 'rb')
         valid = validate_usdl(f.read(), 'text/turtle', {})
 
@@ -483,6 +505,12 @@ class USDLValidationTestCase(TestCase):
         self.assertEquals(valid[1], 'All price components must use the same currency')
 
     def test_validate_invalid_unit(self):
+        cnt = Context.objects.all()[0]
+        cnt.allowed_currencies.append({
+            'currency': 'EUR',
+            'in_use': True
+        })
+        cnt.save()
         f = open('./wstore/store_commons/test/val_unit.ttl', 'rb')
         valid = validate_usdl(f.read(), 'text/turtle', {})
 
@@ -490,6 +518,12 @@ class USDLValidationTestCase(TestCase):
         self.assertEquals(valid[1], 'A price component contains an unsupported unit')
 
     def test_validate_invalid_value(self):
+        cnt = Context.objects.all()[0]
+        cnt.allowed_currencies.append({
+            'currency': 'EUR',
+            'in_use': True
+        })
+        cnt.save()
         f = open('./wstore/store_commons/test/val_value.ttl', 'rb')
         valid = validate_usdl(f.read(), 'text/turtle', {})
 

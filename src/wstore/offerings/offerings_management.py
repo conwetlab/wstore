@@ -43,11 +43,12 @@ from wstore.models import Marketplace
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
-#from wstore.contracting.views import is_lower_version
 from distutils.version import StrictVersion
+
 
 def is_lower_version(version1, version2):
     return StrictVersion(version1) < StrictVersion(version2)
+
 
 def get_offering_info(offering, user):
 
@@ -479,6 +480,24 @@ def create_offering(provider, json_data):
 
     if not valid[0]:
         raise Exception(valid[1])
+
+    # Check new currencies used
+    if len(valid) > 2:
+        new_curr = valid[2]
+
+        # Set the currency as used
+        cont = Context.objects.all()[0]
+        currency = None
+        # Search the currency
+        for c in cont.allowed_currencies:
+            if c['currency'].lower() == new_curr.lower():
+                currency = c
+                break
+
+        cont.allowed_currencies.remove(currency)
+        currency['in_use'] = True
+        cont.allowed_currencies.append(currency)
+        cont.save()
 
     # Serialize and store USDL info in json-ld format
     graph = rdflib.Graph()

@@ -30,7 +30,7 @@ authentication_required
 from wstore.store_commons.resource import Resource
 from wstore.models import UserProfile
 from wstore.models import Organization
-from wstore.models import Purchase
+from wstore.models import Purchase, Context
 from wstore.charging_engine.models import Unit
 from django.contrib.auth.decorators import login_required
 
@@ -685,3 +685,84 @@ class OrganizationUserCollection(Resource):
         user.userprofile.save()
 
         return build_response(request, 200, 'OK')
+
+
+class CurrencyCollection(Resource):
+
+    @authentication_required
+    def read(self, request):
+        # Check if the user is an admin
+        if not request.user.is_staff:
+            return build_response(request, 403, 'Forbidden')
+
+        # Get Store context
+        context = Context.objects.all()[0]
+        # Return currencies
+        response = json.dumps({
+            'allowed_currencies': [curr['currency'] for curr in context.allowed_currencies]
+        })
+        return HttpResponse(response, status=200, mimetype='application/json; charset=utf-8')
+
+    @authentication_required
+    @supported_request_mime_types(('application/json',))
+    def create(self, request):
+        # Check if the user is an admin
+        if not request.user.is_staff:
+            return build_response(request, 403, 'Forbidden')
+
+        # Get data
+        data = json.loads(request.raw_post_data)
+        if not 'currency' in data:
+            return build_response(request, 400, 'Invalid JSON content')
+
+        # Get the context
+        context = Context.objects.all()[0]
+
+        error = False
+        # Check that the new currency is not already included
+        for curr in context.allowed_currencies:
+            if curr['currency'].lower() == data['currency']:
+                error = True
+                break
+
+        if error:
+            return build_response(request, 400, 'The currency already exists')
+
+        # Include new currency
+        context.allowed_currencies.append({
+            'currency': data['currency'],
+            'in_use': False
+        })
+        context.save()
+        return build_response(request, 201, 'Created')
+
+
+class CurrencyEntry(Resource):
+
+    @authentication_required
+    def delete(self, request, currency):
+        # Check if the user is an admin
+        if not request.user.is_staff:
+            return build_response(request, 403, 'Forbidden')
+
+        # Get the context
+        context = Context.objects.all()[0]
+
+        del_curr = None
+        # Search the currency
+        for curr in context.allowed_currencies:
+            if curr['currency'].lower() == currency.lower():
+                del_curr = curr
+                break
+        else:
+            return build_response(request, 404, 'Not found')
+
+        # Check if is possible to delete the currency
+        if del_curr['in_use']:
+            return build_response(request, 400, 'The currency cannot be deleted')
+
+        # Remove the currency
+        context.allowed_currencies.remove(del_curr)
+        context.save()
+
+        return build_response(request, 204, 'No content')

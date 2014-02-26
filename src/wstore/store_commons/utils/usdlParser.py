@@ -22,7 +22,7 @@ import rdflib
 
 from django.utils.translation import ugettext as _
 
-from wstore.models import Offering
+from wstore.models import Offering, Context
 
 
 FOAF = rdflib.Namespace('http://xmlns.com/foaf/0.1/')
@@ -669,6 +669,7 @@ def validate_usdl(usdl, mimetype, offering_data):
 
     valid = True
     reason = ''
+    extra = None
     # Parse the USDL document
     try:
         parser = USDLParser(usdl, mimetype)
@@ -730,9 +731,16 @@ def validate_usdl(usdl, mimetype, offering_data):
             valid = False
             reason = 'It is not possible to define an updating plan without a previous version of the offering'
 
-    # Validate price components
-    if valid and 'price_components' in parsed_document['pricing']['price_plans'][0]:
-        price_components = parsed_document['pricing']['price_plans'][0]['price_components']
+    # Validate price components and deductions
+    if valid and ('price_components' in parsed_document['pricing']['price_plans'][0] or \
+    'deductions' in parsed_document['pricing']['price_plans'][0]):
+
+        price_components = []
+        if 'price_components' in parsed_document['pricing']['price_plans'][0]:
+            price_components.extend(parsed_document['pricing']['price_plans'][0]['price_components'])
+
+        if 'deductions' in parsed_document['pricing']['price_plans'][0]:
+            price_components.extend(parsed_document['pricing']['price_plans'][0]['deductions'])
 
         from wstore.charging_engine.models import Unit
 
@@ -740,8 +748,15 @@ def validate_usdl(usdl, mimetype, offering_data):
         for component in price_components:
 
             if not 'price_function' in component:
+                # Get the allowed currencies
+                cont = Context.objects.all()[0]
+
+                valid_currs = {}
+                for c in cont.allowed_currencies:
+                    valid_currs[c['currency'].lower()] = c['in_use']
+
                 # Validate currency
-                if component['currency'] != 'EUR' and component['currency'] != 'GBP':
+                if not component['currency'].lower() in valid_currs:
                     valid = False
                     reason = 'A price component contains and invalid or unsupported currency'
                     break
@@ -752,6 +767,10 @@ def validate_usdl(usdl, mimetype, offering_data):
                         reason = 'All price components must use the same currency'
                     else:
                         currencies.append(component['currency'])
+
+                # Check first use of a currency
+                if not valid_currs[component['currency'].lower()]:
+                    extra = component['currency']
 
                 # Validate unit
                 units = Unit.objects.filter(name=component['unit'].lower())
@@ -768,4 +787,8 @@ def validate_usdl(usdl, mimetype, offering_data):
                     reason = 'A price component contains an invalid value'
                     break
 
-    return (valid, reason)
+    result = (valid, reason)
+    if extra:
+        result = (valid, reason, extra)
+    
+    return result
