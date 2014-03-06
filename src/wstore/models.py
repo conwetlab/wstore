@@ -38,6 +38,17 @@ class Context(models.Model):
     user_refs = DictField()
     allowed_currencies = DictField()
 
+    def is_valid_currency(self, currency):
+        """
+         Checks that a currency is valid for WStore
+       """
+        valid = False
+        if 'allowed' in self.allowed_currencies and len(self.allowed_currencies['allowed']) > 0:
+            for c in self.allowed_currencies['allowed']:
+                if c['currency'].lower() == currency.lower():
+                    valid = True
+                    break
+        return valid
 
 class Organization(models.Model):
 
