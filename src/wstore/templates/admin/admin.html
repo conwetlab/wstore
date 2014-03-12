@@ -12,27 +12,6 @@
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/fonts/fonts.css" />
 
-	    <script type="text/javascript">
-            USERNAME = "{{ user.username }}";
-            // USERROLES = {{ roles }};
-        </script>
-        <link href="https://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
-        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.8.2.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MessageManager.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserProfile.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/OrganizationUsersForm.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/OrganizationForm.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/AdminView.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/UserForm.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/UnitsForm.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/CurrencyForm.js"></script>
-       
         <script type="text/x-jquery-tmpl" id="footer_template">{% include "footer_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_conf_template">{% include "user_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
@@ -58,6 +37,28 @@
             <script src="{{ account }}assets/signOut.js" type="text/javascript"></script>
             <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
         {% endif %}
+	    <script type="text/javascript">
+            USERNAME = "{{ user.username }}";
+            // USERROLES = {{ roles }};
+        </script>
+        <link href="https://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.8.2.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MessageManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/Client.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/AdminForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserProfile.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/OrganizationUsersForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/OrganizationForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/AdminView.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/UserForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/UnitsForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/CurrencyForm.js"></script>
 
     </head>
     <body>
