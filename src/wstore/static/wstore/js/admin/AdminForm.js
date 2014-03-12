@@ -31,6 +31,17 @@
     };
 
     /**
+     * Private method the manager the back action
+     */
+    var backHandler = function backHandler(self) {
+        if (self.main) {
+            paintElementTable();
+        } else {
+            self.elementInfoRequest();
+        }
+    };
+
+    /**
      * Make the request for administration elements
      */
     AdminForm.prototype.elementInfoRequest = function elementInfoRequest() {
@@ -91,8 +102,15 @@
             // of the concrete subclass
             this.fillListInfo(elements);
         } else {
-            var msg = 'No elements registered, you may want to register one'; 
-            MessageManager.showAlertInfo('Elements', msg);
+            var msg = 'No elements registered, you may want to register one';
+            var cont = $('<div></div>').addClass('admin-message');
+
+            $('<a></a>').attr('id', 'back').text('Return').click((function() {
+                backHandler(this);
+            }).bind(this)).appendTo('#admin-container');
+
+            cont.appendTo($('#admin-container'))
+            MessageManager.showAlertInfo('Elements', msg, cont);
         }
         $('#back').click(paintElementTable);
     };
@@ -115,11 +133,7 @@
 
         // Listener for back link
         $('#back').click((function() {
-            if (this.main) {
-                paintElementTable();
-            } else {
-                this.elementInfoRequest();
-            }
+            backHandler(this);
         }).bind(this));
 
         // The concrete subclass may include extra listeners
