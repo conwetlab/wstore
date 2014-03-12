@@ -158,6 +158,8 @@
         $.template('adminElemTemplate', $('#admin_elem_template')); // Create the template
         $.tmpl('adminElemTemplate').appendTo("#admin-container"); // Render and append the template
 
+        var unitForm = new UnitsForm();
+
         $('.show-markets').click(function() {
             adminInfoRequest('MARKET_COLLECTION', 'Marketplaces');
         });
@@ -167,7 +169,7 @@
         });
 
         $('.show-rss').click(function() {
-            adminInfoRequest('RSS_COLLECTION', 'RSS');
+            rssInfoRequest();
         });
 
         $('.show-org').click(function() {
@@ -179,7 +181,7 @@
         });
 
         $('.show-units').click(function() {
-           unitsInfoRequest();
+           unitForm.elementInfoRequest();
         });
 
         $('.show-currencies').click(function() {
@@ -197,8 +199,7 @@
         });
 
         $('.add-rss').click(function() {
-            main = true;
-            paintForm('RSS_COLLECTION', 'RSS');
+            paintRSSForm();
         });
 
         $('.add-org').click(function() {
@@ -210,7 +211,7 @@
         });
 
         $('.add-unit').click(function() {
-            paintUnitForm();
+            unitForm.paintForm();
         });
 
         $('.add-currency').click(function() {
