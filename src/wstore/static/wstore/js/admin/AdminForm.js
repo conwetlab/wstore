@@ -24,10 +24,14 @@
     /**
      * Admin forms constructor
      */
-    AdminForm = function AdminForm(entry, collection, formTemplate) {
+    AdminForm = function AdminForm(entry, collection, formTemplate, formContext) {
         this.main = true;
         this.mainClient = new ServerClient(entry, collection);
         this.formTemplate = formTemplate;
+
+        if (formContext) {
+            this.formContext = formContext;
+        }
     };
 
     /**
@@ -70,7 +74,11 @@
         if (validation.valid) {
             this.mainClient.create(validation.data, this.elementInfoRequest.bind(this));
         } else {
-            MessageManager.showMessage('Error', validation.msg);
+            MessageManager.showAlertError('Error', validation.msg, $('#admin-err-cont'));
+            // Mark invalid elements
+            for (var i = 0; i < validation.errFields.length; i++) {
+                validation.errFields[i].addClass('error');
+            }
         }
     };
 
@@ -126,10 +134,19 @@
      * Paint the create element form
      */
     AdminForm.prototype.paintForm = function paintForm() {
+        var rendTmpl;
+
         $('#admin-container').empty();
 
         $.template('elementFormTemplate', this.formTemplate);
-        $.tmpl('elementFormTemplate').appendTo('#admin-container');
+
+        if (this.formContext) {
+            rendTmpl = $.tmpl('elementFormTemplate', this.formContext);
+        } else {
+            rendTmpl = $.tmpl('elementFormTemplate');
+        }
+
+        rendTmpl.appendTo('#admin-container');
 
         // Listener for back link
         $('#back').click((function() {
