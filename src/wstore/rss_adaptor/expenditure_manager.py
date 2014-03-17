@@ -83,6 +83,7 @@ class ExpenditureManager():
 
     def delete_provider_limit(self):
         endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id)
+        endpoint += '?service=fiware'
         # Make expenditure request
         self._make_request('DELETE', endpoint)
 

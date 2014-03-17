@@ -203,12 +203,58 @@ class RSSEntry(Resource):
         if not request.user.is_staff:
             return build_response(request, 403, 'Forbidden')
 
+        # Get rss entry
         try:
             rss_model = RSS.objects.get(name=rss)
-            rss_model.delete()
         except:
-            return build_response(request, 400, 'Invalid request')
+            return build_response(request, 404, 'Not found')
 
+        error = False
+        try:
+            # Delete expenditure limits
+            exp_manager = ExpenditureManager(rss_model, request.user.userprofile.access_token)
+            exp_manager.delete_provider_limit()
+        except HTTPError as e:
+            if e.code == 401:
+                try:
+                    # Try to refresh the access token
+                    social = request.user.social_auth.filter(provider='fiware')[0]
+                    social.refresh_token()
+
+                    # Update credentials
+                    social = request.user.social_auth.filter(provider='fiware')[0]
+                    credentials = social.extra_data
+
+                    request.user.userprofile.access_token = credentials['access_token']
+                    request.user.userprofile.refresh_token = credentials['refresh_token']
+                    request.user.userprofile.save()
+
+                    # Refresh expenditure manager user info
+                    rss_model = RSS.objects.get(name=rss)
+                    exp_manager = ExpenditureManager(rss_model, credentials['access_token'])
+                    # Make the request again
+                    exp_manager.delete_provider_limit()
+                except:
+                    error = True
+                    code = 401
+                    msg = "You don't have access to the RSS instance requested"
+
+            # Server error
+            else:
+                error = True
+                code = 502
+                msg = 'The RSS has failed deleting the expenditure limits'
+
+        except Exception as e:
+            error = True
+            code = 400
+            msg = e.message
+
+        if error:
+            return build_response(request, code, msg)
+
+        # Delete rss model
+        rss_model.delete()
         return build_response(request, 204, 'No content')
 
     @authentication_required
