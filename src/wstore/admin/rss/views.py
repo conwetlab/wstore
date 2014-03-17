@@ -144,8 +144,6 @@ class RSSCollection(Resource):
 
                     # Refresh expenditure manager user info
                     rss = RSS.objects.get(name=data['name'])
-                    rss.access_token = credentials['access_token']
-                    rss.save()
                     exp_manager = ExpenditureManager(rss, credentials['access_token'])
                     # Make the request again
                     exp_manager.set_provider_limit()
@@ -177,9 +175,8 @@ class RSSCollection(Resource):
         if settings.OILAUTH:
             # Store the credentials for future access
             rss.access_token = request.user.userprofile.access_token
-            rss.refresh_token = request.user.userprofile.request_token
+            rss.refresh_token = request.user.userprofile.refresh_token
             rss.save()
-
 
         return build_response(request, 201, 'Created')
 
@@ -223,3 +220,4 @@ class RSSEntry(Resource):
     @supported_request_mime_types(('application/json',))
     def create(self, request, rss):
         pass
+

@@ -69,6 +69,7 @@ class ExpenditureManager():
 
         # Build expenditure request
         data = {
+            'service': 'fiware',
             'limits': [{
                 'type': limit,
                 'currency': currency,
@@ -76,8 +77,6 @@ class ExpenditureManager():
             } for limit in limits]
         }
         endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id)
-        # Include service field
-        endpoint += '?service=fiware'
 
         # Make expenditure request
         self._make_request('POST', endpoint, data=data)
