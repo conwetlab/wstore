@@ -130,7 +130,7 @@ class RSSAdaptor():
 
         opener = urllib2.build_opener()
 
-        url = urljoin(self._rss_url, 'rss/cdrs')
+        url = urljoin(self._rss_url, 'fiware-rss/rss/cdrs')
         data = etree.tostring(root, pretty_print=True, xml_declaration=True)
 
         headers = {'content-type': 'application/xml'}

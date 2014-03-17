@@ -60,6 +60,7 @@ class Organization(models.Model):
     tax_address = DictField()
     managers = ListField()
     actor_id = models.IntegerField(null=True, blank=True)
+    expenditure_balance = DictField()
 
 
 from wstore.offerings.models import Offering

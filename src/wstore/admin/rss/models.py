@@ -19,14 +19,21 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 from django.db import models
-from djangotoolbox.fields import ListField
+from djangotoolbox.fields import ListField, DictField
 
 
 class RSS(models.Model):
     name = models.CharField(max_length=50)
-    host = models.CharField(max_length=100)
+    host = models.CharField(max_length=500)
+    expenditure_limits = DictField()
     correlation_number = models.IntegerField(default=0)
     pending_cdrs = ListField()
+    in_use = models.BooleanField(default=False)
+    # Not all users of the store are authorized to access the RSS
+    # so a valid access access token and refresh token are stored
+    # when the RSS info is created
+    access_token = models.CharField(max_length=150, null=True, blank=True)
+    refresh_token = models.CharField(max_length=150, null=True, blank=True)
 
     class Meta:
         app_label = 'wstore'

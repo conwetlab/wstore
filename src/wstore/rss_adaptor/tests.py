@@ -156,7 +156,7 @@ class RSSAdaptorTestCase(TestCase):
         opener = fake_urllib2._opener
         self.assertEqual(opener._method, 'POST')
         self.assertEqual(opener._header, 'application/xml')
-        self.assertEqual(opener._url, 'http://examplerss/fiware_rss/rss/cdrs')
+        self.assertEqual(opener._url, 'http://examplerss/fiware_rss/fiware-rss/rss/cdrs')
 
         expected_xml = expected_xml.replace(' ', '')
         expected_xml = expected_xml.replace('\n', '')
