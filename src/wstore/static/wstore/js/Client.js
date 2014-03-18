@@ -84,8 +84,12 @@
      * @param data, JSON info to be sent
      * @param callback, Function to be called on success
      */
-    ServerClient.prototype.create = function create(data, callback) {
-        request(this, 'POST', callback, data, {});
+    ServerClient.prototype.create = function create(data, callback, elemDict) {
+        var cont = {};
+        if (elemDict) {
+            cont = elemDict;
+        }
+        request(this, 'POST', callback, data, cont);
     };
 
     /**

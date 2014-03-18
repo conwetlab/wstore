@@ -25,11 +25,6 @@ from nose_parameterized import parameterized
 from urllib2 import HTTPError
 
 from django.test import TestCase
-from django.test.client import RequestFactory
-from django.contrib.auth.models import User
-from django.contrib.sites.models import Site
-
-from wstore.models import RSS, Context
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock, decorator_mock_callable
 
 
@@ -44,6 +39,9 @@ class ExpenditureMock():
     class ExpAux():
         def __init__(self, classCont):
             self._context = classCont
+
+        def set_credentials(self, cred):
+            pass
 
         def set_provider_limit(self):
             if not self._context._refresh:

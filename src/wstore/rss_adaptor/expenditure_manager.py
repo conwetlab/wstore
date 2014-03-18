@@ -24,6 +24,7 @@ from urllib2 import HTTPError
 from urlparse import urljoin
 
 from wstore.store_commons.utils.method_request import MethodRequest
+from wstore.models import RSS
 
 
 class ExpenditureManager():
@@ -58,6 +59,9 @@ class ExpenditureManager():
 
         return response
 
+    def _refresh_rss(self):
+        self._rss = RSS.objects.get(name=self._rss.name)
+
     def set_provider_limit(self):
         """
            Set the expenditure limit of WStore provider in the RSS
@@ -80,12 +84,17 @@ class ExpenditureManager():
 
         # Make expenditure request
         self._make_request('POST', endpoint, data=data)
+        self._refresh_rss()
 
     def delete_provider_limit(self):
+        """
+        Delete the expenditure limit of a provider
+        """
         endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id)
         endpoint += '?service=fiware'
         # Make expenditure request
         self._make_request('DELETE', endpoint)
+        self._refresh_rss()
 
     def get_provider_limit(self):
         pass

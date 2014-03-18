@@ -129,9 +129,35 @@
      * Display the RSS form and fill the RSS entry info for updating
      */
     RssForm.prototype.fillRSSInfo = function fillRSSInfo(rss) {
+        var limits;
+
+        // Paint the form
         this.paintForm();
+
         // Fill RSS entry info
-        // ...
+        $('#rss-name').val(rss.name);
+        $('#rss-endpoint').val(rss.host).prop('disabled', true);
+
+        // Fill limits
+        limits = rss.limits;
+        if (limits.perTransaction) {
+            $('#perTransaction').val(limits.perTransaction);
+        }
+        if (limits.weekly) {
+            $('#weekly').val(limits.weekly);
+        }
+        if (limits.daily) {
+            $('#daily').val(limits.daily);
+        }
+        if (limits.monthly) {
+            $('#monthly').val(limits.monthly);
+        }
+        // Change register button by an update button
+        $('#elem-submit').val('Update').unbind('click').click((function(evnt) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            this.updateElementRequest({'name': rss.name});
+        }).bind(this));
     };
 
     /**

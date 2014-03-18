@@ -64,6 +64,26 @@
     };
 
     /**
+     * Make the request for updating administration elements
+     * @param context, Contains the context to render the URL properly
+     */
+    AdminForm.prototype.updateElementRequest = function updateElementRequest(context) {
+        // Validation of the form
+        var validation = this.validateFields();
+
+        // Make the request
+        if (validation.valid) {
+            this.mainClient.update(validation.data, this.elementInfoRequest.bind(this), context);
+        } else {
+            MessageManager.showAlertError('Error', validation.msg, $('#admin-err-cont'));
+            // Mark invalid elements
+            for (var i = 0; i < validation.errFields.length; i++) {
+                validation.errFields[i].addClass('error');
+            }
+        }
+    };
+
+    /**
      * Make the request for creation of administration elements
      */
     AdminForm.prototype.createElementRequest = function createElementRequest() {
