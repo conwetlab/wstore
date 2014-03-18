@@ -99,6 +99,19 @@ def supported_request_mime_types(mime_types):
     return wrap
 
 
+def identity_manager_required(func):
+    """
+    Decorator that specifies a functionality that can only be achieved
+    if an identity manager is in use
+    """
+
+    def wrapper(self, request, *args, **kwargs):
+        if not settings.OILAUTH:
+            return build_response(request, 401, 'The requested features are not supported for the current authentication method')
+        return func(self, request, *args, **kwargs)
+    return wrapper
+
+
 def get_current_domain(request=None):
     if hasattr(settings, 'FORCE_DOMAIN'):
         return settings.FORCE_DOMAIN
