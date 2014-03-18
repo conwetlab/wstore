@@ -59,18 +59,18 @@ class RSSViewTestCase(TestCase):
         # Save the reference of the decorators
         cls._old_auth = types.FunctionType(
             http.authentication_required.func_code,
-            http.authentication_required.func_globals, 
-            name = http.authentication_required.func_name,
-            argdefs = http.authentication_required.func_defaults,
-            closure = http.authentication_required.func_closure
+            http.authentication_required.func_globals,
+            name=http.authentication_required.func_name,
+            argdefs=http.authentication_required.func_defaults,
+            closure=http.authentication_required.func_closure
         )
 
         cls._old_supp = types.FunctionType(
             http.supported_request_mime_types.func_code,
-            http.supported_request_mime_types.func_globals, 
-            name = http.supported_request_mime_types.func_name,
-            argdefs = http.supported_request_mime_types.func_defaults,
-            closure = http.supported_request_mime_types.func_closure
+            http.supported_request_mime_types.func_globals,
+            name=http.supported_request_mime_types.func_name,
+            argdefs=http.supported_request_mime_types.func_defaults,
+            closure=http.supported_request_mime_types.func_closure
         )
 
         # Mock class decorators
@@ -276,3 +276,100 @@ class RSSViewTestCase(TestCase):
             self.assertEquals(self.rss_object.access_token, self.user.userprofile.access_token)
         else:
             self.views.RSS.objects.delete.assert_called_once()
+
+    def _not_found(self):
+        self.views.RSS.objects.get = MagicMock()
+        self.views.RSS.objects.get.side_effect = Exception('Not found')
+
+    def _invalid_data(self):
+        self.request.raw_post_data = None
+
+    def _make_limit_failure(self):
+        self.views._make_expenditure_request.return_value = (True, 502, 'RSS failure')
+
+    @parameterized.expand([
+    ({
+        'name': 'test',
+        'limits': {
+            'currency': 'EUR',
+            'weekly': 100.0
+        }
+    }, (200, 'OK', 'correct'), False),
+    ({}, (200, 'OK', 'correct'), False),
+    ({
+        'name': 'test',
+        'limits': {
+            'currency': 'EUR',
+            'weekly': 100.0
+        }
+    }, (404, 'Not found', 'error'), True, _not_found),
+    ({
+        'name': 'test',
+        'limits': {
+            'currency': 'EUR',
+            'weekly': 100.0
+        }
+    }, (403, 'Forbidden', 'error'), True, _revoke_staff),
+    ({}, (400, 'Invalid JSON data', 'error'), True, _invalid_data),
+    ({
+        'name': 'existingrss',
+        'limits': {
+            'currency': 'EUR',
+            'weekly': 100.0
+        }
+    }, (400, 'The selected name is in use', 'error'), True),
+    ({
+        'name': 'test',
+        'limits': {
+            'currency': 'EUR',
+            'weekly': 100.0
+        }
+    }, (502, 'RSS failure', 'error'), True, _make_limit_failure),
+    ])
+    def test_rss_update(self, data, resp, error, side_effect=None):
+        # Mock RSS response
+        self.views.RSS.objects.filter.return_value = [self.rss_object]
+
+        def get_mock(name=''):
+            if name == 'testrss' or name == 'existingrss':
+                return self.rss_object
+            else:
+                raise Exception('')
+
+        self.views.RSS.objects.get = get_mock
+
+        self.request.raw_post_data = json.dumps(data)
+
+        # Mock expenditure manager
+        exp_object = MagicMock()
+        exp_object.set_provider_limit = MagicMock()
+        self.views.ExpenditureManager = MagicMock()
+        self.views.ExpenditureManager.return_value = exp_object
+        # Mock _make_requests
+        self.views._make_expenditure_request = MagicMock()
+        self.views._make_expenditure_request.return_value = (False, None, None)
+
+        self.views._check_limits = MagicMock()
+        self.views._check_limits.return_value = {
+            'currency': 'EUR',
+            'weekly': 100.0
+        }
+
+        if side_effect:
+            side_effect(self)
+
+        # Get entry
+        entry = self.views.RSSEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
+
+        response = entry.update(self.request, 'testrss')
+
+        # Check response
+        val = json.loads(response.content)
+        self.assertEquals(response.status_code, resp[0])
+        self.assertEquals(val['message'], resp[1])
+        self.assertEquals(val['result'], resp[2])
+
+        if not error and 'limits' in data:
+            # Check calls
+            self.views._check_limits.assert_called_with(data['limits'])
+            self.views._make_expenditure_request.assert_called_with(exp_object, exp_object.set_provider_limit, self.user)
