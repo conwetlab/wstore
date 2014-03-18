@@ -80,7 +80,7 @@
         // Get form info
         if (validation.valid) {
             var i, expenditureSet = false;
-            var expTypes = ['transaction', 'weekly', 'monthly', 'daily'];
+            var expTypes = ['perTransaction', 'weekly', 'monthly', 'daily'];
             var invalid = false;
 
             validation.data = {
@@ -100,7 +100,7 @@
                         if (validation.valid) {
                             validation.valid = false;
                             validation.msg = 'Invalid expenditure limit';
-                            validation.errFields = [$('#transaction').parent().parent()];
+                            validation.errFields = [$('#perTransaction').parent().parent()];
                         } else {
                             validation.msg += ' and invalid expenditure limit';
                             validation.errFields.push($('#rss-name').parent().parent());

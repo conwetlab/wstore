@@ -41,10 +41,37 @@ class RSSCollection(Resource):
         for rss in RSS.objects.all():
             response.append({
                 'name': rss.name,
-                'host': rss.host
+                'host': rss.host,
+                'limits': rss.expenditure_limits
             })
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
+
+    def _check_limits(self, user_limits):
+        limits = {}
+        limit_types = ('perTransaction', 'weekly', 'daily', 'monthly')
+
+        cont = Context.objects.all()[0]
+
+        if not 'currency' in user_limits:
+            # Load default currency
+            user_limits['currency'] = cont.allowed_currencies['default']
+
+        elif not cont.is_valid_currency(user_limits['currency']):
+            # Check that the currency is valid
+            raise Exception('Invalid currency')
+
+        # Get valid expenditure limits
+        for t in limit_types:
+            if t in user_limits and (type(user_limits[t]) == float or \
+            type(user_limits[t]) == int or (type(user_limits[t]) == unicode and \
+            user_limits[t].isdigit())):
+                limits[t] = float(user_limits[t])
+
+        if len(limits):
+            limits['currency'] = user_limits['currency']
+
+        return limits
 
     @authentication_required
     @supported_request_mime_types(('application/json',))
@@ -69,44 +96,16 @@ class RSSCollection(Resource):
 
         # Check request limits
         if 'limits' in data:
-            user_limits = data['limits']
-
-            if not 'currency' in user_limits:
-                # Load default currency
-                user_limits['currency'] = cont.allowed_currencies['default']
-
-            elif not cont.is_valid_currency(user_limits['currency']):
-                # Check that the currency is valid
-                return build_response(request, 400, 'Invalid currency')
-
-            if 'transaction' in user_limits and (type(user_limits['transaction']) == float or \
-            type(user_limits['transaction']) == int or (type(user_limits['transaction']) == unicode and \
-            user_limits['transaction'].isdigit())):
-                limits['perTransaction'] = float(user_limits['transaction'])
-
-            if 'weekly' in user_limits and (type(user_limits['weekly']) == float or \
-            type(user_limits['weekly']) == int or (type(user_limits['weekly']) == unicode and \
-            user_limits['weekly'].isdigit())):
-                limits['weekly'] = float(user_limits['weekly'])
-
-            if 'daily' in user_limits and (type(user_limits['daily']) == float or \
-            type(user_limits['daily']) == int or (type(user_limits['daily']) == unicode and \
-            user_limits['daily'].isdigit())):
-                limits['daily'] = float(user_limits['daily'])
-
-            if 'monthly' in user_limits and (type(user_limits['monthly']) == float or \
-            type(user_limits['monthly']) == int or (type(user_limits['monthly']) == unicode and \
-            user_limits['monthly'].isdigit())):
-                limits['monthly'] = float(user_limits['monthly'])
-
-            if len(limits):
-                limits['currency'] = user_limits['currency']
+            try:
+                limits = self._check_limits(data['limits'])
+            except Exception as e:
+                return build_response(request, 400, e.message)
 
         if not len(limits):
             # Set default limits
             limits = {
                 'currency': cont.allowed_currencies['default'],
-                'perTransaction':10000,
+                'perTransaction': 10000,
                 'weekly': 100000,
                 'daily': 10000,
                 'monthly': 100000
@@ -164,7 +163,6 @@ class RSSCollection(Resource):
             code = 400
             msg = e.message
 
-
         if error:
             # Remove created RSS entry
             rss.delete()
@@ -190,7 +188,8 @@ class RSSEntry(Resource):
             rss_model = RSS.objects.get(name=rss)
             response = {
                 'name': rss_model.name,
-                'host': rss_model.host
+                'host': rss_model.host,
+                'limits': rss_model.limits
             }
         except:
             return build_response(request, 400, 'Invalid request')
