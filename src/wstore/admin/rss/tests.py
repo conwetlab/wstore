@@ -424,33 +424,45 @@ class RSSViewTestCase(TestCase):
                 self.assertEquals(limits['currency'], 'EUR')
                 self.assertEquals(limits['monthly'], 500)
 
-    def test_rss_retrieving_entry(self):
+    @parameterized.expand([
+    (False,),
+    (True,)
+    ])
+    def test_rss_retrieving_entry(self, failure):
         # Create mocks
-        rss_1 = MagicMock()
-        rss_1.name = 'test_rss1'
-        rss_1.host = 'http://testrss1.org/'
-        rss_1.expenditure_limits = {
-            'currency': 'EUR',
-            'weekly': 100
-        }
-        self.views.RSS.objects.get = MagicMock()
-        self.views.RSS.objects.get.return_value = rss_1
+        if not failure:
+            rss_1 = MagicMock()
+            rss_1.name = 'test_rss1'
+            rss_1.host = 'http://testrss1.org/'
+            rss_1.expenditure_limits = {
+                'currency': 'EUR',
+                'weekly': 100
+            }
+            self.views.RSS.objects.get = MagicMock()
+            self.views.RSS.objects.get.return_value = rss_1
+        else:
+            self.views.RSS.objects.get.side_effect = Exception('failure')
 
         # Create collection
         entry = self.views.RSSEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
 
         # Check response
         response = entry.read(self.request, 'test_rss1')
-
-        self.views.RSS.objects.get.assert_called_with(name='test_rss1')
         val = json.loads(response.content)
-        self.assertEquals(response.status_code, 200)
 
-        self.assertEquals(val['name'], 'test_rss1')
-        self.assertEquals(val['host'], 'http://testrss1.org/')
-        limits = val['limits']
-        self.assertEquals(limits['currency'], 'EUR')
-        self.assertEquals(limits['weekly'], 100)
+        if not failure:
+            self.views.RSS.objects.get.assert_called_with(name='test_rss1')
+            self.assertEquals(response.status_code, 200)
+
+            self.assertEquals(val['name'], 'test_rss1')
+            self.assertEquals(val['host'], 'http://testrss1.org/')
+            limits = val['limits']
+            self.assertEquals(limits['currency'], 'EUR')
+            self.assertEquals(limits['weekly'], 100)
+        else:
+            self.assertEquals(response.status_code, 400)
+            self.assertEquals(val['message'], 'Invalid request')
+            self.assertEquals(val['result'], 'error')
 
     @parameterized.expand([
     ('test_rss', (204, 'No content', 'correct')),
