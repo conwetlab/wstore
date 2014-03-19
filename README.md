@@ -43,6 +43,11 @@ For instructions on how to install WStore manually, without using any script, ha
 
 * http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/Store\_-\_W-Store\_-\_Installation\_and\_Administration\_Guide
 
+Note that the installation script installs only django and python dependencies; moreover, it uses a virtualenv for installing these dependencies, so it is needed to activate it before running WStore.
+
+<pre>
+$ source <wstore_path>/src/virtenv/bin/activate
+</pre>
 
 ### Troubleshooting
 
