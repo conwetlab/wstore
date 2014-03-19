@@ -197,6 +197,16 @@ class RSSViewTestCase(TestCase):
         'monthly': 100000
     }),
     ({
+        'name': 'testrss',
+        'host': 'http://rss.test.com/',
+        'limits': {
+            'weekly': '1000'
+        }
+    }, False, (201, 'Created', 'correct'), True, {
+        'currency': 'EUR',
+        'weekly': 1000.0,
+    }),
+    ({
         'limits': {
             'currency': 'EUR'
         }
@@ -373,3 +383,100 @@ class RSSViewTestCase(TestCase):
             # Check calls
             self.views._check_limits.assert_called_with(data['limits'])
             self.views._make_expenditure_request.assert_called_with(exp_object, exp_object.set_provider_limit, self.user)
+
+    def test_rss_retrieving(self):
+        # Create mocks
+        rss_1 = MagicMock()
+        rss_1.name = 'test_rss1'
+        rss_1.host = 'http://testrss1.org/'
+        rss_1.expenditure_limits = {
+            'currency': 'EUR',
+            'weekly': 100
+        }
+        rss_2 = MagicMock()
+        rss_2.name = 'test_rss2'
+        rss_2.host = 'http://testrss2.org/'
+        rss_2.expenditure_limits = {
+            'currency': 'EUR',
+            'monthly': 500
+        }
+        self.views.RSS.objects.all = MagicMock()
+        self.views.RSS.objects.all.return_value = [rss_1, rss_2]
+
+        # Create collection
+        coll = self.views.RSSCollection(permitted_methods=('GET', 'POST'))
+
+        response = coll.read(self.request)
+        val = json.loads(response.content)
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(len(val), 2)
+
+        for resp in val:
+            if resp['name'] == 'test_rss1':
+                self.assertEquals(resp['host'], 'http://testrss1.org/')
+                limits = resp['limits']
+                self.assertEquals(limits['currency'], 'EUR')
+                self.assertEquals(limits['weekly'], 100)
+            else:
+                self.assertEquals(resp['name'], 'test_rss2')
+                self.assertEquals(resp['host'], 'http://testrss2.org/')
+                limits = resp['limits']
+                self.assertEquals(limits['currency'], 'EUR')
+                self.assertEquals(limits['monthly'], 500)
+
+    def test_rss_retrieving_entry(self):
+        # Create mocks
+        rss_1 = MagicMock()
+        rss_1.name = 'test_rss1'
+        rss_1.host = 'http://testrss1.org/'
+        rss_1.expenditure_limits = {
+            'currency': 'EUR',
+            'weekly': 100
+        }
+        self.views.RSS.objects.get = MagicMock()
+        self.views.RSS.objects.get.return_value = rss_1
+
+        # Create collection
+        entry = self.views.RSSEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
+
+        # Check response
+        response = entry.read(self.request, 'test_rss1')
+
+        self.views.RSS.objects.get.assert_called_with(name='test_rss1')
+        val = json.loads(response.content)
+        self.assertEquals(response.status_code, 200)
+
+        self.assertEquals(val['name'], 'test_rss1')
+        self.assertEquals(val['host'], 'http://testrss1.org/')
+        limits = val['limits']
+        self.assertEquals(limits['currency'], 'EUR')
+        self.assertEquals(limits['weekly'], 100)
+
+    @parameterized.expand([
+    ('test_rss', (204, 'No content', 'correct')),
+    ('test_rss1', (404, 'Not found', 'error'), _not_found),
+    ('test_rss1', (403, 'Forbidden', 'error'), _revoke_staff),
+    ('test_rss1', (502, 'RSS failure', 'error'), _make_limit_failure)
+    ])
+    def test_rss_deletion(self, name, resp, side_effect=None):
+        # create mocks
+        self.views._make_expenditure_request = MagicMock()
+        self.views._make_expenditure_request.return_value = (False, None, None)
+
+        exp_man = MagicMock()
+        self.views.ExpenditureManager = MagicMock()
+        self.views.ExpenditureManager.return_value = exp_man
+
+        # Create collection
+        entry = self.views.RSSEntry(permitted_methods=('GET', 'PUT', 'DELETE'))
+
+        if side_effect:
+            side_effect(self)
+
+        # Check response
+        response = entry.delete(self.request, name)
+
+        val = json.loads(response.content)
+        self.assertEquals(response.status_code, resp[0])
+        self.assertEquals(val['message'], resp[1])
+        self.assertEquals(val['result'], resp[2])

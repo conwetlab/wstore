@@ -202,7 +202,7 @@ class RSSEntry(Resource):
             response = {
                 'name': rss_model.name,
                 'host': rss_model.host,
-                'limits': rss_model.limits
+                'limits': rss_model.expenditure_limits
             }
         except:
             return build_response(request, 400, 'Invalid request')
