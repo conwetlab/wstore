@@ -147,17 +147,17 @@
                         {% endif %}
                     </ul>
                    {% if not portal %}
-                   <div class="btn btn-success float-right dropdown">
-                       <div href="#" class="dropdown-toggle" data-toggle="dropdown">
+                   <div class="btn btn-blue float-right dropdown">
+                        <div href="#" class="dropdown-toggle" data-toggle="dropdown">
                            <i class="icon-user icon-white"></i>
-                           {{ user.username }}
+                           <span id="user-name">{{ user.username }}</span>
                            <b class="caret"></b>
-                       </div>
-                       <ul class="dropdown-menu">
-                           <li><a id="conf-link">Configuration</a></li>
-                           <li><a href="/logout">Logout</a></li>
-                       </ul>
-                   </div>
+                        </div>
+                        <ul id="settings-menu" class="dropdown-menu">
+                            <li><a id="conf-link">Configuration</a></li>
+                            <li><a href="/logout">Logout</a></li>
+                        </ul>
+                    </div>
                    {% endif %}
                 </div>
             </div>

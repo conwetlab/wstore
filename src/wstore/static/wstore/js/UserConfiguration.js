@@ -282,31 +282,6 @@
 
         $.template('userInfoConfTemplate', $('#user_info_conf_template'));
         $.tmpl('userInfoConfTemplate', context).appendTo('#userinfo-tab');
-
-        // Check if is needed to include a select for organizations change
-        if (!$('#oil-nav').length > 0) {
-            var orgsSelect = $('<select></select>').attr('id', 'org-select');
-            var organizations = this.userProfile.getOrganizations();
-
-            // Load organizations info
-            for (var i = 0; i < organizations.length; i++) {
-                var org;
-                org = $('<option></option>').attr('value', organizations[i].name);
-                org.text(organizations[i].name);
-                org.appendTo(orgsSelect);
-            }
-
-            orgsSelect.appendTo('#org-info');
-
-            // Set initial value for the org select
-            orgsSelect.val(this.userProfile.getCurrentOrganization());
-
-            // Set listener for organization change
-            orgsSelect.change((function() {
-                this.userProfile.changeOrganization($('#org-select').val(), this.display.bind(this));
-            }).bind(this));
-        }
-
     };
 
     /**
@@ -403,7 +378,7 @@ includeFilabOrgMenu = function includeFilabOrgMenu() {
     // Include switch sesion menu if the user belong to
     // any organization
     if (organizations.length > 1) {
-        var ul;
+        var ul, userElem;
         var leftMenu = $('<li></li>').addClass('dropdown-submenu pull-left');
         $('<a></a>').text('Switch session').appendTo(leftMenu);
         $('<i></i>').addClass('icon-caret-right').appendTo(leftMenu);
@@ -413,15 +388,17 @@ includeFilabOrgMenu = function includeFilabOrgMenu() {
         for (var i = 0; i < organizations.length; i++) {
             if (organizations[i].name != USERPROFILE.getCurrentOrganization()) {
                 var li = $('<li></li>');
-                var a = $('<a></a>').text(organizations[i].name).attr('data-placement','left').attr('data-toggle', 'tooltip');
+                var a = $('<a></a>').attr('data-placement','left').attr('data-toggle', 'tooltip');
+                var span = $('<span></span>').text(organizations[i].name).css('vertical-align', 'super').css('margin-left', '6px');
+                a.append(span);
                 a.appendTo(li);
 
                 if (organizations[i].name == USERPROFILE.getUsername()) {
-                    a.text(USERPROFILE.getCompleteName());
-                    a.prepend($('<img></img>').attr('src', '/static/oil/img/user.png'));
+                    span.text(USERPROFILE.getCompleteName());
+                    a.prepend($('<img></img>').attr('src', '/static/oil/img/user.png').css('width', '20px'));
                     ul.prepend(li);
                 } else {
-                    a.prepend($('<img></img>').attr('src', '/static/oil/img/group.png'));
+                    a.prepend($('<img></img>').attr('src', '/static/oil/img/group.png').css('width', '20px'));
                     ul.append(li);
                 }
                 // Set listeners for organizations switching
@@ -433,10 +410,24 @@ includeFilabOrgMenu = function includeFilabOrgMenu() {
             }
         }
 
-        ul.css('display', 'none');
-        ul.css('position', 'absolute');
-        ul.css('top', '10px');
-        ul.css('right', '157px');
+        // Load styles depending on the fi-lab bar
+        if ($('#oil-bar').length) {
+            ul.css('display', 'none');
+            ul.css('position', 'absolute');
+            ul.css('top', '10px');
+            ul.css('right', '157px');
+            userElem = $('#oil-usr');
+
+        } else {
+            $('#settings-menu').css('right', '0');
+            $('#settings-menu').css('left', 'initial');
+            leftMenu.css('width', '100%')
+            ul.css('display', 'none');
+            ul.css('position', 'absolute');
+            ul.css('top', '0px');
+            ul.css('left', '-158px');
+            userElem = $('#user-name')
+        }
 
         leftMenu.on('mouseover', function() {
             ul.css('display', 'block');
@@ -445,16 +436,18 @@ includeFilabOrgMenu = function includeFilabOrgMenu() {
         leftMenu.on('mouseout', function() {
             ul.css('display', 'none');
         });
-
         $('#settings-menu').prepend(leftMenu);
 
-        // Set username
         if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
             $('.oil-usr-icon').attr('src', '/static/oil/img/user.png');
-            $('#oil-usr').text(USERPROFILE.getCompleteName());
+            userElem.text(USERPROFILE.getCompleteName());
         } else {
             $('.oil-usr-icon').attr('src', '/static/oil/img/group.png');
-            $('#oil-usr').text(USERPROFILE.getCurrentOrganization());
+            userElem.text(USERPROFILE.getCurrentOrganization());
+        }
+        if (!$('#oil-bar').length && $.trim(userElem.text()).length > 12) {
+            var shortName = userElem.text().substring(0, 9) + '...';
+            userElem.text(shortName);
         }
     }
 };
@@ -463,12 +456,7 @@ $(document).ready(function() {
     var userForm;
 
     USERPROFILE = new UserProfile()
-
-    if ($('#oil-nav').length > 0) {
-        USERPROFILE.fillUserInfo(includeFilabOrgMenu);
-    } else {
-        USERPROFILE.fillUserInfo();
-    }
+    USERPROFILE.fillUserInfo(includeFilabOrgMenu);
 
     userForm = new UserConfForm(USERPROFILE);
 

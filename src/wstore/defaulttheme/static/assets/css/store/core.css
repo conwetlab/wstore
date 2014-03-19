@@ -1,3 +1,7 @@
+.dropdown-menu>li>a:hover {
+  background-color: rgb(0, 43, 103)
+}
+
 #login-header {
     position: absolute;
     left: 50%;
@@ -52,6 +56,13 @@
 .title_wrapper span {
     position: relative;
     top: -6px;
+}
+
+.navigation .icon-caret-right {
+  position: absolute;
+  top: 10px;
+  left: 145px;
+  color: rgb(0, 43, 103);
 }
 
 .store_title {
