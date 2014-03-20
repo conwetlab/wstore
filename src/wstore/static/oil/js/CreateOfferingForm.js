@@ -109,7 +109,7 @@
             $(helpId).prop('displayed', true);
             $(helpId).addClass('question-sing-sel');
             // Add document even
-            event.stopPropagation();
+            evnt.stopPropagation();
             $(document).click(function() {
                 $(helpId).popover('hide');
                 $(helpId).prop('displayed', false);
