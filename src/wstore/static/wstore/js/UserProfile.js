@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ *
+ * This file is part of WStore.
+ *
+ * WStore is free software: you can redistribute it and/or modify
+ * it under the terms of the European Union Public Licence (EUPL) 
+ * as published by the European Commission, either version 1.1 
+ * of the License, or (at your option) any later version.
+ *
+ * WStore is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * European Union Public Licence for more details.
+ *
+ * You should have received a copy of the European Union Public Licence
+ * along with WStore.  
+ * If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
+ */
+
 (function() {
 
     UserProfile = function UserProfile() {
@@ -6,6 +26,8 @@
     UserProfile.prototype.buildProfile = function buildProfile(userInfo) {
         this.username = userInfo.username;
         this.completeName = userInfo.complete_name;
+
+        this.notificationUrl = userInfo.notification_url;
 
         if (userInfo.tax_address) {
             this.taxAddress = userInfo.tax_address;
@@ -63,18 +85,9 @@
     UserProfile.prototype.providerRequested = function providerRequested() {
         return this.providerRequest;
     };
-    UserProfile.prototype.getCurrentNotification = function getCurrentNotification() {
-        var found = false;
-        var url = '';
-        for (var i = 0; i < this.organizations.length && !found; i++) {
-            if (this.currentOrganization == this.organizations[i].name) {
-                found = true;
-                if (this.organizations[i].notification_url) {
-                    url = this.organizations[i].notification_url;
-                }
-            }
-        }
-        return url;
+
+    UserProfile.prototype.getNotificationUrl = function getNotificationUrl() {
+        return this.notificationUrl;
     };
 
     UserProfile.prototype.getCurrentRoles = function getCurrentRoles() {
@@ -106,7 +119,7 @@
             data: JSON.stringify(request),
             success: (function (response) {
                 // Update user info
-                ORGANIZATION = organization; 
+                ORGANIZATION = organization;
                 this.fillUserInfo(callback);
                 refreshView();
             }).bind(this),
@@ -157,7 +170,15 @@
             dataType: "json",
             success: (function (response) {
                 this.buildProfile(response);
-                if (callback) {
+                // Create the organization profile if needed
+                if (USERPROFILE.getCurrentOrganization() != USERPROFILE.getUsername()) {
+                    ORGANIZATIONPROFILE = new OrganizationProfile();
+                    if (callback) {
+                        ORGANIZATIONPROFILE.fillUserInfo(callback);
+                    } else {
+                        ORGANIZATIONPROFILE.fillUserInfo(includeFilabOrgMenu);
+                    }
+                } else if(callback) {
                     callback();
                 }
             }).bind(this),

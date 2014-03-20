@@ -25,7 +25,7 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.contrib.auth.models import User
 
-from wstore.admin import views
+from wstore.admin.organizations import views
 from wstore.models import Organization
 
 

@@ -24,7 +24,8 @@
      * Constructs the configuration form of an user profile
      * @param userProfile Object with user info
      */
-    UserConfForm = function UserConfForm(userProfile) {
+    UserConfForm = function UserConfForm(userProfile, isOrg) {
+        this.isOrg = isOrg;
         this.userProfile = userProfile;
         this.userDisplayed = false;
         this.addrDisplayed = false;
@@ -47,29 +48,34 @@
     UserConfForm.prototype.makeUpdateProfileRequest = function makeUpdateProfileRequest() {
         var filled, msg, error = false;
         var request = {};
+        var notification = $.trim($('#not-input').val());
+        var errorFields = [];
 
-        // Load user info
-        request.username = this.userProfile.getUsername();
-        request.complete_name = $.trim($('#complete-name').val());
-        request.organization = $('#org-name').text();
-        request.roles = []
-        request.notification_url = $.trim($('#not-input').val());
-
-
-        if ($('#admin').prop('checked')) {
-            request.roles.push('admin');
+        // Check notification URL format
+        var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+        if (notification && !urlReg.test(notification)) {
+            error = true;
+            msg = 'The notification URL provided has an invalid format';
+            errorFields.push($('#not-input'));
+        } else {
+            request.notification_url = notification;
         }
 
-        if ($('#provider').prop('checked')) {
-            request.roles.push('provider');
+        if (!this.isOrg) {
+            // Load user info
+            request.username = this.userProfile.getUsername();
+            request.complete_name = $.trim($('#complete-name').val());
+        } else {
+            request.name = this.userProfile.getUsername();
         }
-
         // Load tax address
         filled = 0;
 
         $('.tax-input').each(function(evnt) {
             if ($.trim($(this).val()).length != 0) {
                 filled += 1;
+            } else {
+                errorFields.push($(this));
             }
         });
 
@@ -118,13 +124,26 @@
             this.userProfile.updateProfile(request, this.display.bind(this), this.manageError.bind(this));
         } else {
             MessageManager.showAlertError('Error', msg, $('#error-message'));
-            $('#error-message .close').remove();
+            for (var i = 0; i < errorFields.length; i++) {
+                errorFields[i].addClass('error-input');
+            }
+            //$('#error-message .close').remove();
         }
     };
 
     UserConfForm.prototype.manageError = function manageError() {
         this.modalCreated = false;
     };
+
+    var getRolesString = function getRolesString(self) {
+        var roles = '';
+        var currentRoles = self.userProfile.getCurrentRoles();
+
+        for (var i = 0; i < currentRoles.length; i++) {
+            roles += (' ' + currentRoles[i] + ',');
+        }
+        return roles;
+    }
     /**
      * Displays the form for updating the user info
      */
@@ -138,21 +157,18 @@
 
             // Load the user info
             context = {
-                'username': this.userProfile.getUsername(),
-                'complete_name': this.userProfile.getCompleteName()
+                'name': this.userProfile.getUsername(),
+                'url': this.userProfile.getNotificationUrl()
             }
 
-            $.template('userInfoFormTemplate', $('#user_info_form_template'));
-            $.tmpl('userInfoFormTemplate', context).appendTo('#main-info');
-
-            $('#not-url').remove();
-            $('<input></input>').attr('type', 'text').val(this.userProfile.getCurrentNotification()).attr('id', 'not-input').appendTo('#org-info');
-            if (this.userProfile.getUserRoles().indexOf('admin') != -1) {
-                $('#admin').prop('checked', true);
+            if (!this.isOrg) {
+                context['complete_name'] = this.userProfile.getCompleteName();
+                context['roles'] = getRolesString(this);
+                $.template('infoFormTemplate', $('#user_info_form_template'));
+            } else {
+                $.template('infoFormTemplate', $('#org_info_form_template'));
             }
-            if (this.userProfile.getCurrentRoles().indexOf('provider') != -1) {
-                $('#provider').prop('checked', true);
-            }
+            $.tmpl('infoFormTemplate', context).appendTo('#main-info');
         }
     };
 
@@ -173,7 +189,6 @@
                     'street': taxAddr.street,
                     'postal': taxAddr.postal,
                     'city': taxAddr.city,
-                    'country': taxAddr.country
                 };
             } else {
                 context = {
@@ -186,6 +201,10 @@
 
             $.template('addressConfFormTemplate', $('#address_conf_form_template'));
             $.tmpl('addressConfFormTemplate', context).appendTo('#taxaddr-tab');
+            // Fill country
+            if (taxAddr) {
+                $('#country').val(taxAddr.country);
+            }
         }
     };
 
@@ -262,26 +281,24 @@
      * Paint basic user info
      */
     UserConfForm.prototype.paintUserInfo = function paintUserInfo() {
-        var context, roles = '';
-        var currentRoles = this.userProfile.getCurrentRoles();
-
-        this.userDisplayed = true;
-
-        for (var i = 0; i < currentRoles.length; i++) {
-            roles += (' ' + currentRoles[i] + ',');
-        }
-
-        // Load the user info
+        var context;
         context = {
-                'username': this.userProfile.getUsername(),
-                'complete_name': this.userProfile.getCompleteName(),
-                'roles': roles,
-                'organization': this.userProfile.getCurrentOrganization(),
-                'url': this.userProfile.getCurrentNotification()
+            'name': this.userProfile.getUsername(),
+            'url': this.userProfile.getNotificationUrl()
         }
+        if (!this.isOrg) {
+            
 
-        $.template('userInfoConfTemplate', $('#user_info_conf_template'));
-        $.tmpl('userInfoConfTemplate', context).appendTo('#userinfo-tab');
+            // Load the user info
+            context['complete_name'] = this.userProfile.getCompleteName();
+            context['roles'] = getRolesString(this);
+
+            $.template('infoConfTemplate', $('#user_info_conf_template'));
+        } else {
+            $.template('infoConfTemplate', $('#org_info_conf_template'));
+        }
+        $.tmpl('infoConfTemplate', context).appendTo('#userinfo-tab');
+        this.userDisplayed = true;
     };
 
     /**
@@ -356,10 +373,22 @@
      * Implements the method defined in ModalForm
      */
     UserConfForm.prototype.setListeners = function setListeners() {
-     // Set edit listener
-        $('#user-edit').click((function() {
-            this.displayEditProfileForm();
-        }).bind(this));
+        var editable = true;
+
+        // Set edit listener
+        if (this.isOrg) {
+            // Check manager role
+            if (USERPROFILE.getCurrentRoles().indexOf('manager') < 0) {
+                editable = false;
+            }
+        }
+        if (editable) {
+            $('#user-edit').click((function() {
+                this.displayEditProfileForm();
+            }).bind(this));
+        } else {
+            $('#user-edit').remove();
+        }
 
         $('#message').on('hidden', (function() {
             this.modalCreated = false;
@@ -419,8 +448,6 @@ includeFilabOrgMenu = function includeFilabOrgMenu() {
             userElem = $('#oil-usr');
 
         } else {
-            $('#settings-menu').css('right', '0');
-            $('#settings-menu').css('left', 'initial');
             leftMenu.css('width', '100%')
             ul.css('display', 'none');
             ul.css('position', 'absolute');
@@ -450,17 +477,40 @@ includeFilabOrgMenu = function includeFilabOrgMenu() {
             userElem.text(shortName);
         }
     }
+    if(!$('#oil-bar').length) {
+        $('#settings-menu').css('right', '0');
+        $('#settings-menu').css('left', 'initial');
+    }
 };
 
-$(document).ready(function() {
+var checkOrg = function checkOrg() {
+    // Check if organization info is needed
+    if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
+        includeFilabOrgMenu();
+    } else {
+        ORGANIZATIONPROFILE = new OrganizationProfile();
+        ORGANIZATIONPROFILE.fillUserInfo(includeFilabOrgMenu);
+    }
+}
+
+readyHandler = function readyHandler() {
     var userForm;
 
     USERPROFILE = new UserProfile()
-    USERPROFILE.fillUserInfo(includeFilabOrgMenu);
-
-    userForm = new UserConfForm(USERPROFILE);
+    USERPROFILE.fillUserInfo(checkOrg);
 
     $('#conf-link').click(function() {
+        var profile = USERPROFILE;
+        var isOrg = false;
+
+        if (USERPROFILE.getCurrentOrganization() != USERPROFILE.getUsername()) {
+            profile = ORGANIZATIONPROFILE;
+            isOrg = true;
+        }
+        userForm = new UserConfForm(profile, isOrg);
         userForm.display();
     });
-});
+
+}
+
+$(document).ready(readyHandler);

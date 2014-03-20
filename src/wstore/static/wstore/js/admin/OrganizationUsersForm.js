@@ -33,6 +33,10 @@
             roles.push('customer');
         }
 
+        if ($('#org-manager').prop('checked')) {
+            roles.push('manager');
+        }
+
         if (user && roles.length > 0) {
             var csrfToken = $.cookie('csrftoken');
             var request = {}

@@ -26,6 +26,8 @@ from wstore.admin import views as admin_views
 from wstore.admin.markets import views as market_views
 from wstore.admin.repositories import views as rep_views
 from wstore.admin.rss import views as rss_views
+from wstore.admin.users import views as user_views
+from wstore.admin.organizations import views as org_views
 from wstore.offerings import views as offering_views
 from wstore.contracting import views as contracting_views
 from wstore.search import views as search_views
@@ -45,18 +47,18 @@ urlpatterns = patterns('',
     url(r'^api/administration/repositories/?$', rep_views.RepositoryCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/rss/?$', rss_views.RSSCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/rss/(?P<rss>[\w -]+)/?$', rss_views.RSSEntry(permitted_methods=('GET', 'DELETE', 'PUT'))),
-    url(r'^api/administration/profiles/?$', admin_views.UserProfileCollection(permitted_methods=('GET', 'POST'))),
-    url(r'^api/administration/organizations/?$', admin_views.OrganizationCollection(permitted_methods=('GET', 'POST'))),
+    url(r'^api/administration/profiles/?$', user_views.UserProfileCollection(permitted_methods=('GET', 'POST'))),
+    url(r'^api/administration/organizations/?$', org_views.OrganizationCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/units/?$', admin_views.UnitCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/currency/?$', admin_views.CurrencyCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/currency/(?P<currency>[\w -]+)/?$', admin_views.CurrencyEntry(permitted_methods=('DELETE', 'PUT'))),
     url(r'^api/administration/marketplaces/(?P<market>[\w -]+)/?$', market_views.MarketplaceEntry(permitted_methods=('GET', 'PUT', 'DELETE'))),
     url(r'^api/administration/repositories/(?P<repository>[\w -]+)/?$', rep_views.RepositoryEntry(permitted_methods=('DELETE',))),
-    url(r'^api/administration/profiles/(?P<username>[\w -]+)?$', admin_views.UserProfileEntry(permitted_methods=('GET', 'PUT'))),
-    url(r'^api/administration/profiles/(?P<username>[\w -]+)/reset?$', 'wstore.admin.views.reset_user', name='reset_user'),
-    url(r'^api/administration/organizations/change', 'wstore.admin.views.change_current_organization', name='change_current_organization'),
-    url(r'^api/administration/organizations/(?P<org>[\w -]+)?$', admin_views.OrganizationEntry(permitted_methods=('PUT',))),
-    url(r'^api/administration/organizations/(?P<org>[\w -]+)/users?$', admin_views.OrganizationUserCollection(permitted_methods=('POST',))),
+    url(r'^api/administration/profiles/(?P<username>[\w -]+)?$', user_views.UserProfileEntry(permitted_methods=('GET', 'PUT'))),
+    url(r'^api/administration/profiles/(?P<username>[\w -]+)/reset?$', 'wstore.admin.users.views.reset_user', name='reset_user'),
+    url(r'^api/administration/organizations/change', 'wstore.admin.organizations.views.change_current_organization', name='change_current_organization'),
+    url(r'^api/administration/organizations/(?P<org>[\w -]+)?$', org_views.OrganizationEntry(permitted_methods=('PUT', 'GET'))),
+    url(r'^api/administration/organizations/(?P<org>[\w -]+)/users?$', org_views.OrganizationUserCollection(permitted_methods=('POST',))),
     url(r'^api/offering/offerings/?$', offering_views.OfferingCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/offering/offerings/newest?$', offering_views.NewestCollection(permitted_methods=('GET',))),
     url(r'^api/offering/offerings/toprated?$', offering_views.TopRatedCollection(permitted_methods=('GET',))),
