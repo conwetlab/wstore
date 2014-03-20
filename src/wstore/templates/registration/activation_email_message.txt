@@ -1,0 +1,8 @@
+{% load i18n %}
+Welcome to WStore {{ user.username }},
+
+to activate their new account, click the following:
+{{ site }}{{ activation_url }}
+This link will expire after {{ expiration_days }} days of shipment.
+
+Thank you.

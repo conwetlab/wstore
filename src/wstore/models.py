@@ -143,6 +143,9 @@ def create_user_profile(sender, instance, created, **kwargs):
             }],
             current_organization=default_organization[0]
         )
+        if instance.first_name and instance.last_name:
+            profile.complete_name = instance.first_name + ' ' + instance.last_name
+            profile.save()
 
 
 def create_context(sender, instance, created, **kwargs):

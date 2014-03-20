@@ -49,6 +49,32 @@
     top: 220px;
 }
 
+#signup-form {
+    border: solid 1px rgb(190, 190, 190);
+    padding: 20px;
+    border-radius: 6px;
+    width: 325px;
+    background-color: rgb(250, 250, 260);
+    position: absolute;
+    left: 50%;
+    margin-left: -162px;
+    top: 400px;
+}
+
+.form-backend {
+    background-color: rgb(250, 250, 260);
+    border: solid 1px rgb(190, 190, 190);
+    border-radius: 6px;
+}
+
+.input-form {
+    width: 285px;
+}
+
+.item-center {
+    text-align: center;
+}
+
 #id_username {
     width: 285px;
 }

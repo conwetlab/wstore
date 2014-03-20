@@ -1,0 +1,54 @@
+{% load url from future %}
+<form class="well form-horizontal form-backend" method="post" action="{% url 'signup' %}">
+  {% csrf_token %}
+  <fieldset>
+    <div class="control-group{% if not form.first_name.errors and form.first_name.value %} success{% endif %}">
+      <label class="control-label">Full name:</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" name="{{ form.first_name.html_name }}" placeholder="{{ form.first_name.label }}" maxlength="30" value="{% if form.first_name.value %}{{ form.first_name.value }}{% endif %}" />
+        {% for error in form.first_name.errors %}<p class="help-block" style="color: red;">{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+    <div class="control-group{% if not form.last_name.errors and form.last_name.value %} success{% endif %}">
+      <label class="control-label"></label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" name="{{ form.last_name.html_name }}" placeholder="{{ form.last_name.label }}" maxlength="30" value="{% if form.last_name.value %}{{ form.last_name.value }}{% endif %}" />
+        {% for error in form.last_name.errors %}<p class="help-block" style="color: red;">{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+    <div class="control-group{% if not form.email.errors and form.email.value %} success{% endif %}">
+      <label class="control-label">{{ form.email.label }}:</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" name="{{ form.email.html_name }}" placeholder="{{ form.email.label }}" maxlength="254" value="{% if form.email.value %}{{ form.email.value }}{% endif %}" />
+        {% for error in form.email.errors %}<p class="help-block" style="color: red;">{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+    <div class="control-group{% if not form.username.errors and form.username.value %} success{% endif %}">
+      <label class="control-label">{{ form.username.label }}:</label>
+      <div class="controls">
+        <input type="text" class="input-xlarge" name="{{ form.username.html_name }}" placeholder="{{ form.username.label }}" maxlength="30" value="{% if form.username.value %}{{ form.username.value }}{% endif %}" />
+        {% for error in form.username.errors %}<p class="help-block" style="color: red;">{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+    <div class="control-group{% if not form.password.errors and form.password.value %} success{% endif %}">
+      <label class="control-label">{{ form.password.label }}:</label>
+      <div class="controls">
+        <input type="password" class="input-xlarge" name="{{ form.password.html_name }}" placeholder="{{ form.password.label }}" maxlength="254" value="{% if form.password.value %}{{ form.password.value }}{% endif %}" />
+        {% for error in form.password.errors %}<p class="help-block" style="color: red;">{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+    <div class="control-group{% if not form.password_check.errors and form.password_check.value %} success{% endif %}">
+      <label class="control-label"></label>
+      <div class="controls">
+        <input type="password" class="input-xlarge" name="{{ form.password_check.html_name }}" placeholder="{{ form.password_check.label }}" maxlength="254" value="{% if form.password_check.value %}{{ form.password_check.value }}{% endif %}" />
+        {% for error in form.password_check.errors %}<p class="help-block" style="color: red;">{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+          <input type="submit" class="btn btn-blue" value="Sign up" />
+      </div>
+    </div>
+    <input type="hidden" name="page" value="signup" />
+  </fieldset>
+</form>

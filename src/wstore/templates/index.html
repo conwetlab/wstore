@@ -130,6 +130,16 @@
                     {% endif %}
                 </div>
             </div>
+            {% if messages %}
+            <div class="row-fluid">
+                <div class="span4">
+                    <div class="alert alert-success">
+                        <button class="close" data-dismiss="alert">&times;</button>
+                        <strong>Success!</strong> You have just activated your user account.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             <div class="row-fluid title_wrapper">
                 <span>Store</span>
             </div>

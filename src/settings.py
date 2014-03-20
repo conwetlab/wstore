@@ -208,7 +208,10 @@ INSTALLED_APPS = (
     'django_crontab',
     'django_nose',
     'social_auth',
+    'wstore.registration'
 )
+
+ACTIVATION_DAYS = 2
 
 AUTHENTICATION_BACKENDS = (
     'wstore.social_auth_backend.FiwareBackend',

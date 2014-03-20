@@ -22,6 +22,7 @@ from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 
 import wstore.urls
+import wstore.registration.urls as registration
 from wstore.views import ServeMedia
 
 admin.autodiscover()
@@ -34,3 +35,4 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += wstore.urls.urlpatterns
+urlpatterns += registration.urlpatterns
