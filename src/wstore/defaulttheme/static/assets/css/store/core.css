@@ -203,18 +203,26 @@
     margin-top: 50px;
 }
 
+/* Fixed position in Details and Catalogue Tab */
 .tab-content {
     padding: 5px;
+    overflow: auto;
+    height: 356px;
+    width: 97%;
 }
 
 .catalogue-form {
     width: 200px;
 }
 
+/* Fixed position in Search options in the store view */
 .search-container {
     position: absolute;
     top: 300px;
     left: 250px;
+    overflow: auto;
+    height: 118%;
+    width: 82%;
 }
 
 .menu-offering {
@@ -575,4 +583,10 @@ a.tag {
 .suggested-tag .icon-remove-sign {
   color: rgb(218, 79, 73);
   float: right;
+}
+
+/* Fixed position in Footer */
+footer {
+    position: fixed;
+    bottom: 0;
 }

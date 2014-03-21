@@ -185,7 +185,6 @@
             }
             templ.appendTo(target)
         }
-        setFooter();
     };
 
     setNextPage = function setNextPage (nextPag) {

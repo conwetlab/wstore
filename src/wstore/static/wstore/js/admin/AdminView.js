@@ -93,18 +93,6 @@
         calculatePositions();
     };
 
-    setFooter = function setFooter() {
-        // Append the terms and conditions bar
-        // Check if the bar is included
-        if ($('footer').length > 0) {
-            $('footer').remove();
-        }
-        // Create the new footer
-        $.template('footerTemplate', $('#footer_template'));
-        $.tmpl('footerTemplate').appendTo('body');
-        $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
-    }
-
     calculatePositions = function calculatePositions() {
         var filabInt = $('#oil-nav').length > 0;
         // Check window width
@@ -128,7 +116,6 @@
             userBtn.prepend($('<i></i>').addClass('icon-user icon-white'));
             userBtn.append($('<b></b>').addClass('caret'));
         }
-        setFooter();
     }
     $(window).resize(calculatePositions);
 })()

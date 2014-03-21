@@ -213,6 +213,9 @@
      */
     CatalogueDetailsView.prototype.calculatePositions = function calculatePositions() {
         var position = $('.tabbable').offset();
+        // Fixed position in: Details and Catalogue Tab
+        var offset;
+        var width;
 
         // Calculate tabs width
         $('.detailed-info').css('width', ($(window).width() - position.left) + 'px');
@@ -237,7 +240,10 @@
             }
             $('.detailed-info').css('top', '246px');
         }
-        setTimeout(setFooter, 600);
+        offset = $(window).height() - $('.tab-content').offset().top - 30;
+        width = $(window).width() - $('.tab-content').offset().left -10;
+        $('.tab-content').css('height', offset.toString() + 'px');
+        $('.tab-content').css('width', width.toString() + 'px');
     };
 
     /**
@@ -761,4 +767,5 @@
         this.appLoaded = false;
         this.showView();
     };
+
 })();
