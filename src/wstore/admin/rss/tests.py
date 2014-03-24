@@ -26,6 +26,7 @@ from urllib2 import HTTPError
 
 from django.test import TestCase
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock, decorator_mock_callable
+from wstore.admin.rss import views
 
 
 class ExpenditureMock():
@@ -77,7 +78,7 @@ class RSSViewTestCase(TestCase):
         http.authentication_required = decorator_mock
         http.supported_request_mime_types = decorator_mock_callable
 
-        from wstore.admin.rss import views
+        reload(views)
         cls.views = views
         cls.views.build_response = build_response_mock
         super(RSSViewTestCase, cls).setUpClass()

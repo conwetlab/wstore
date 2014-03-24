@@ -616,6 +616,8 @@ class ProviderNotificationTestCase(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+        self.user.userprofile.user = self.user
+        self.user.userprofile.save()
 
     def test_provider_notification(self):
 
