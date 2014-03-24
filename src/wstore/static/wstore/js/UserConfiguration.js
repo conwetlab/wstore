@@ -33,6 +33,11 @@
         this.userFormDisplayed = false;
         this.addrFormDisplayed = false;
         this.paymentFormDisplayed = false;
+
+        if($('#expenditure-tab').lenght) {
+            this.expenditureDisplayed = false;
+            this.expenditureFormDisplayed = false;
+        }
     };
 
     /**
@@ -94,30 +99,25 @@
             }
         }
 
-        // Load Payment info
-        /*filled = 0;
-
-        $('.payment-input').each(function() {
-            if ($.trim($(this).val()).length != 0) {
-                filled += 1;
+        if ($('#expenditure-tab').length) {
+            var limitTypes = ['perTransaction', 'daily', 'weekly', 'monthly'];
+            // Load expenditure limits
+            request.limits = {}
+            for (var i = 0; i < limitTypes.length; i++) {
+                // Check if the field is filled
+                if ($.trim($('#' + limitTypes[i]).val())) {
+                    var value = $.trim($('#' + limitTypes[i]).val());
+                    // Check that the value is a number
+                    if ($.isNumeric(value) && Number(value) > 0) {
+                        request.limits[limitTypes[i]] = value;
+                    } else {
+                        error = true;
+                        msg = 'Expenditure limits must be positive numbers';
+                        errorFields.push($('#' + limitTypes[i]));
+                    }
+                }
             }
-        });
-
-        // If any field is filled all fields must be filled
-        if (filled != 0) {
-            if (filled != 5) {
-                error = true;
-                msg = 'If a field of payment info is filed all fields must be filled';
-            } else {
-                request.payment_info = {
-                    'type': $('#type').val(),
-                    'number': $.trim($('#number').val()),
-                    'expire_month': $('#expire-month').val(),
-                    'expire_year': $.trim($('#expire-year').val()),
-                    'cvv2': $.trim($('#cvv2').val())
-                };
-            }
-        }*/
+        }
 
         // If not error occurred
         if (!error) {
@@ -246,6 +246,20 @@
         }
     };
 
+    UserConfForm.prototype.paintExpenditureForm = function paintExpenditureForm() {
+        if (!this.expenditureFormDisplayed) {
+            var expenditureInfo = this.userProfile.getExpenditureInfo();
+
+            $('#expenditure-tab').empty();
+            $.template('expenditureInfoFormTemplate', $('#expenditure_conf_form_template'));
+            if (expenditureInfo) {
+                $.tmpl('expenditureInfoFormTemplate', expenditureInfo).appendTo('#expenditure-tab');
+            } else {
+                $.tmpl('expenditureInfoFormTemplate', expenditureInfo).appendTo('#expenditure-tab');
+            }
+        }
+    };
+
     /**
      * Switch the user configuration form from display to edit mode
      */
@@ -258,6 +272,11 @@
         this.paintEditUserInfoForm();
         this.paintEditTaxAddrForm();
         this.paintEditPaymentInfoForm();
+
+        if($('#expenditure-tab').length) {
+            this.expenditureFormDisplayed = false;
+            this.paintExpenditureForm();
+        }
 
         //Remove edit button
         $('#user-edit').remove();
@@ -355,6 +374,23 @@
 
     };
 
+    /**
+     * Paint user's expenditure limits
+     */
+    UserConfForm.prototype.paintExpenditureInfo = function paintExpenditureInfo() {
+        var expenditureInfo = this.userProfile.getExpenditureInfo();
+
+        this.expenditureDisplayed = true;
+
+        if (!$.isEmptyObject(expenditureInfo)) {
+            $.template('expenditureInfoTemplate', $('#expenditure_conf_template'));
+            $.tmpl('expenditureInfoTemplate', expenditureInfo).appendTo('#expenditure-tab');
+        } else {
+            var msg = 'No expenditure limits included in your profile. Edit your profile to provide them';
+            MessageManager.showAlertInfo('No expenditure limits', msg, $('#expenditure-tab'));
+        }
+    };
+
     /** 
      * Implements the method defined in ModalForm
      */
@@ -367,6 +403,9 @@
         this.paintUserInfo();
         this.paintAddressInfo();
         this.paintPaymentInfo();
+        if($('#expenditure-tab').length) {
+            this.paintExpenditureInfo();
+        }
     };
 
     /**
@@ -395,6 +434,7 @@
             this.userFormDisplayed = false;
             this.addrFormDisplayed = false;
             this.paymentFormDisplayed = false;
+            this.expenditureFormDisplayed = false;
         }.bind(this)));
     };
 

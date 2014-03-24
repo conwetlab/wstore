@@ -19,6 +19,7 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
+from urllib2 import HTTPError
 
 from django.contrib.auth.models import User
 from django.http import HttpResponse
@@ -27,10 +28,12 @@ from django.conf import settings
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
 from wstore.store_commons.resource import Resource
-from wstore.models import UserProfile
+from wstore.models import UserProfile, RSS
 from wstore.models import Organization
 from wstore.models import Purchase
 from wstore.admin.views import is_hidden_credit_card, is_valid_credit_card
+from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
+from wstore.admin.rss.views import _check_limits
 
 
 class UserProfileCollection(Resource):
@@ -197,13 +200,13 @@ class UserProfileEntry(Resource):
             user_org = Organization.objects.get(name=user.username)
         else:
             user_org = Organization.objects.get(actor_id=profile.actor_id)
+            user_profile['limits'] = user_org.expenditure_limits
 
         # Include user organizations info
         user_profile['current_organization'] = profile.current_organization.name
         user_profile['organizations'] = []
 
         # Include notification URL for the user
-        
         user_profile['notification_url'] = user_org.notification_url
 
         # Include organizations name
@@ -313,10 +316,30 @@ class UserProfileEntry(Resource):
                 elif 'complete_name' in data:
                     user_profile.complete_name = data['complete_name']
             else:
+                user_org = Organization.objects.get(actor_id=user.userprofile.actor_id);
                 if 'notification_url' in data and 'provider' in user_profile.get_user_roles():
-                    user_org = Organization.objects.get(actor_id=user.userprofile.actor_id);
                     user_org.notification_url = data['notification_url']
                     user_org.save()
+
+                    # Check if expenditure limits are included in the request
+                    if 'limits' in data:
+                        limits = _check_limits(data['limits'])
+                        currency = limits['currency']
+                        # Get default RSS instance
+                        rss_instance = RSS.objects.all()[0]
+                        # Create limits in the RSS
+                        try:
+                            exp_manager = ExpenditureManager(rss_instance, rss_instance.access_token)
+                            exp_manager.set_actor_limit(limits, user.userprofile)
+                        except HTTPError as e:
+                            if e.code == 401:
+                                rss_instance.refresh_token()
+                                exp_manager.set_credentials(rss_instance.access_token)
+                                exp_manager.set_actor_limit(limits, user.userprofile)
+                        # Save limits
+                        limits['currency'] = currency
+                        user_org.expenditure_limits = limits
+                        user_org.save()
 
             if 'tax_address' in data:
                 user_profile.tax_address = {

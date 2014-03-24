@@ -19,6 +19,7 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
+from urllib2 import HTTPError
 
 from django.contrib.auth.models import User
 from django.http import HttpResponse
@@ -28,9 +29,11 @@ from django.conf import settings
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
 from wstore.store_commons.resource import Resource
-from wstore.models import Organization
+from wstore.models import Organization, RSS
 from django.contrib.auth.decorators import login_required
 from wstore.admin.views import is_hidden_credit_card, is_valid_credit_card
+from wstore.admin.rss.views import _check_limits
+from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
 
 
 def get_organization_info(org):
@@ -55,6 +58,7 @@ def get_organization_info(org):
                 'expire_month': org.payment_info['expire_month'],
                 'cvv2': org.payment_info['cvv2'],
             }
+        org_element['limits'] = org.expenditure_limits
     else:
         raise Exception('Private organization')
 
@@ -156,7 +160,7 @@ class OrganizationEntry(Resource):
         except:
             return build_response(request, 404, 'Not found')
 
-        if not request.user.is_staff or not request.user.pk in organization.managers:
+        if not request.user.is_staff and not request.user.pk in organization.managers:
             return build_response(request, 403, 'Forbidden')
 
         try:
@@ -196,6 +200,25 @@ class OrganizationEntry(Resource):
                     'expire_month': data['payment_info']['expire_month'],
                     'cvv2': data['payment_info']['cvv2']
                 }
+
+            if 'limits' in data:
+                limits = _check_limits(data['limits'])
+                currency = limits['currency']
+                # Get default RSS
+                rss = RSS.objects.all()[0]
+                exp_manager = ExpenditureManager(rss, rss.access_token)
+
+                try:
+                    exp_manager.set_actor_limit(limits, organization)
+                except HTTPError as e:
+                    if e.code == 401:
+                        rss.refresh_token()
+                        exp_manager.set_credentials(rss.access_token)
+                        exp_manager.set_actor_limit(limits, organization)
+
+                # Save limits
+                limits['currency'] = currency 
+                organization.expenditure_limits = limits
 
             organization.payment_info = new_payment
             organization.save()

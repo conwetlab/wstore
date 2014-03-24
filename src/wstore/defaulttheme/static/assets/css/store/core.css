@@ -207,7 +207,6 @@
 .tab-content {
     padding: 5px;
     overflow: auto;
-    height: 356px;
     width: 97%;
 }
 
@@ -413,7 +412,7 @@
 }
 
 #user-edit {
-    right: 15px;
+    right: 30px;
 }
 
 .btn-advanced {

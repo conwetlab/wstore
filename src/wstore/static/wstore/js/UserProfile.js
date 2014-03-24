@@ -51,6 +51,7 @@
             this.providerRequest = false;
         }
 
+        this.expenditureLimits = userInfo.limits;
         // Notify the views that the userprofile is created
         refreshView();
     }
@@ -88,6 +89,10 @@
 
     UserProfile.prototype.getNotificationUrl = function getNotificationUrl() {
         return this.notificationUrl;
+    };
+
+    UserProfile.prototype.getExpenditureInfo = function getExpenditureInfo() {
+        return this.expenditureLimits;
     };
 
     UserProfile.prototype.getCurrentRoles = function getCurrentRoles() {

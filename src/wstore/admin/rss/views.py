@@ -22,7 +22,6 @@ import json
 from urllib2 import HTTPError
 
 from django.http import HttpResponse
-from django.conf import settings
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \

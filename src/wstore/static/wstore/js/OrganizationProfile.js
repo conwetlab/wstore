@@ -40,6 +40,7 @@
             this.paymentInfo = null;
         }
 
+        this.limits = orgInfo.limits;
         // Notify the views that the organization profile is created
         refreshView();
     };
@@ -58,6 +59,10 @@
 
     OrganizationProfile.prototype.getNotificationUrl = function getNotificationUrl() {
         return this.notificationUrl;
+    };
+
+    OrganizationProfile.prototype.getExpenditureInfo = function getExpenditureInfo() {
+        return this.limits;
     };
 
     OrganizationProfile.prototype.updateProfile = function updateProfile(orgInfo, callback, errorCallback) {

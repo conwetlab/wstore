@@ -99,8 +99,24 @@ class ExpenditureManager():
     def get_provider_limit(self):
         pass
 
-    def set_actor_limit(self):
-        pass
+    def set_actor_limit(self, limits, actor_profile):
+        """
+        Create the expenditure limit of a provider
+        """
+        currency = limits['currency']
+        del(limits['currency'])
+
+        data = {
+            'service': 'fiware',
+            'limits': [{
+                'type': limit,
+                'currency': currency,
+                'maxAmount': limits[limit]
+            } for limit in limits]
+        }
+
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id + '/' + str(actor_profile.actor_id))
+        self._make_request('POST', endpoint, data)
 
     def get_actor_limit(self):
         pass
