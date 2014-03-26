@@ -300,7 +300,7 @@ class ChargingEngine:
                         cdrs.append(self._generate_cdr_part(use_part, 'Pay per use event', cdr_info))
 
             # Send the created CDRs to the Revenue Sharing System
-            r = RSSAdaptorThread(rss.host, cdrs)
+            r = RSSAdaptorThread(rss, cdrs)
             r.start()
 
     def _generate_invoice(self, price, applied_parts, type_):

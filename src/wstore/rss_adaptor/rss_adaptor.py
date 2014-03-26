@@ -29,26 +29,22 @@ from wstore.store_commons.utils.method_request import MethodRequest
 
 class RSSAdaptorThread(threading.Thread):
 
-    def __init__(self, rss_url, cdr_info):
+    def __init__(self, rss, cdr_info):
         threading.Thread.__init__(self)
-        self.url = rss_url
+        self.rss = rss
         self.cdr = cdr_info
 
     def run(self):
-        r = RSSAdaptor(self.url)
+        r = RSSAdaptor(self.rss)
         r.send_cdr(self.cdr)
 
 
 class RSSAdaptor():
 
-    _rss_url = None
+    _rss = None
 
-    def __init__(self, rss_url):
-
-        self._rss_url = rss_url
-
-        if not rss_url.endswith('/'):
-            self._rss_url += '/'
+    def __init__(self, rss):
+        self._rss = rss
 
     def send_cdr(self, cdr_info):
 
@@ -128,12 +124,19 @@ class RSSAdaptor():
 
             root.append(node)
 
+        rss_url = self._rss.host
         opener = urllib2.build_opener()
 
-        url = urljoin(self._rss_url, 'fiware-rss/rss/cdrs')
+        if not rss_url.endswith('/'):
+            rss_url += '/'
+
+        url = urljoin(rss_url, 'fiware-rss/rss/cdrs')
         data = etree.tostring(root, pretty_print=True, xml_declaration=True)
 
-        headers = {'content-type': 'application/xml'}
+        headers = {
+            'content-type': 'application/xml',
+            'X-Auth-Token': self._rss.access_token
+        }
         request = MethodRequest('POST', url, data, headers)
 
         response = opener.open(request)
