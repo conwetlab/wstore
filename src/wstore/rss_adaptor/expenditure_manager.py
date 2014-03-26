@@ -118,8 +118,34 @@ class ExpenditureManager():
         endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id + '/' + str(actor_profile.actor_id))
         self._make_request('POST', endpoint, data)
 
-    def get_actor_limit(self):
-        pass
+    def check_balance(self, charge, actor_profile):
+        """
+        Check the balance of an actor in order to determine
+        if it has enough balance
+        """
+        data = {
+            'service': 'fiware',
+            'appProvider': self._provider_id,
+            'currency': charge['currency'],
+            'amount': charge['amount'],
+            'chargeType': 'C'
+        }
+        endpoint = urljoin(self._rss.host, 'expenditureLimit/balanceAccumulated/' + str(actor_profile.actor_id))
+        self._make_request('POST', endpoint, data)
+
+    def update_balance(self, charge, actor_profile):
+        """
+        Update  the balance of an actor when it makes a purchase
+        """
+        data = {
+            'service': 'fiware',
+            'appProvider': self._provider_id,
+            'currency': charge['currency'],
+            'amount': charge['amount'],
+            'chargeType': 'C'
+        }
+        endpoint = urljoin(self._rss.host, 'expenditureLimit/balanceAccumulated/' + str(actor_profile.actor_id))
+        self._make_request('PUT', endpoint, data)
 
     def set_credentials(self, credentials):
         self._credentials = credentials

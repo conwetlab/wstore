@@ -489,14 +489,14 @@ def create_offering(provider, json_data):
         cont = Context.objects.all()[0]
         currency = None
         # Search the currency
-        for c in cont.allowed_currencies:
+        for c in cont.allowed_currencies['allowed']:
             if c['currency'].lower() == new_curr.lower():
                 currency = c
                 break
 
-        cont.allowed_currencies.remove(currency)
+        cont.allowed_currencies['allowed'].remove(currency)
         currency['in_use'] = True
-        cont.allowed_currencies.append(currency)
+        cont.allowed_currencies['allowed'].append(currency)
         cont.save()
 
     # Serialize and store USDL info in json-ld format

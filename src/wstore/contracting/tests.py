@@ -605,6 +605,7 @@ class FakeUrlib2Notify():
 class ProviderNotificationTestCase(TestCase):
 
     fixtures = ['notify.json']
+    tags = ('prov-not',)
 
     _urllib = None
 

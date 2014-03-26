@@ -29,6 +29,7 @@ import threading
 import importlib
 from pymongo import MongoClient
 from bson import ObjectId
+from urllib2 import HTTPError
 
 from datetime import datetime
 from paypalpy import paypal
@@ -50,6 +51,7 @@ from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.contracting.purchase_rollback import rollback
 from wstore.rss_adaptor.rss_adaptor import RSSAdaptorThread
 from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
+from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
 
 
 class ChargingEngine:
@@ -76,6 +78,8 @@ class ChargingEngine:
 
         if plan:
             self._plan = plan
+
+        self._expenditure_used = False
 
     def _timeout_handler(self):
 
@@ -783,6 +787,97 @@ class ChargingEngine:
 
         self._purchase.contract.save()
 
+    def _check_expenditure_limits(self, price):
+        """
+        Check if the user can purchase the offering depending on its
+        expenditure limits and ir accumulated balance thought the RSS
+        """
+        # Check is an RSS instance is registered
+        if not RSS.objects.all():
+            return
+        else:
+            rss = RSS.objects.all()[0]
+
+        actor = None
+        # Check who is the charging actor (user or organization)
+        if self._purchase.organization_owned:
+            actor = self._purchase.owner_organization
+        else:
+            client = self._purchase.customer
+            actor = Organization.objects.get(actor_id=client.userprofile.actor_id)
+
+        # Check if the actor has defined expenditure limits
+        if not actor.expenditure_limits:
+            return
+
+        charge = {
+            'currency': self._price_model['general_currency'],
+            'amount': price
+        }
+
+        # Check balance
+        request_failure = None
+        try:
+            exp_manager = ExpenditureManager(rss, rss.access_token)
+            exp_manager.check_balance(charge, actor)
+        except HTTPError as e:
+            # Check if it is needed to refresh the access token
+            if e.code == 401:
+                rss.refresh_token()
+                exp_manager.set_credentials(rss.access_token)
+                try:
+                    exp_manager.check_balance(charge, actor)
+                # The user may be unauthorized, an error occurs, or the 
+                # actor balance is not enough
+                except:
+                    request_failure = e
+
+            # Check if the error is due to an insufficient balance
+            else:
+                request_failure = e
+        except:
+            request_failure = e
+
+        # Raise  the correct failure
+        if request_failure:
+            if type(request_failure) == HTTPError and request_failure.code == 404\
+             and json.loads(request_failure.read())['exceptionId'] == 'SVC3705':
+                    raise Exception('There is not enough balance. Check your expenditure limits')
+            else:
+                raise request_failure
+
+        self._expenditure_used = True
+
+    def _update_actor_balance(self, price):
+        rss = RSS.objects.all()[0]
+
+        actor = None
+        # Check who is the charging actor (user or organization)
+        if self._purchase.organization_owned:
+            actor = self._purchase.owner_organization
+        else:
+            client = self._purchase.customer
+            actor = Organization.objects.get(actor_id=client.userprofile.actor_id)
+
+        charge = {
+            'currency': self._price_model['general_currency'],
+            'amount': price
+        }
+
+        # Check balance
+        try:
+            exp_manager = ExpenditureManager(rss, rss.access_token)
+            exp_manager.update_balance(charge, actor)
+        except HTTPError as e:
+            # Check if it is needed to refresh the access token
+            if e.code == 401:
+                rss.refresh_token()
+                exp_manager.set_credentials(rss.access_token)
+                exp_manager.update_balance(charge, actor)
+            # Check if the error is due to an insufficient balance
+            else:
+                raise e
+
     def end_charging(self, price, concept, related_model, accounting=None):
 
         # Update purchase state
@@ -862,9 +957,11 @@ class ChargingEngine:
         # customer being charged twice
         contract.save()
 
-        # If the customer has been charged create the CDR
+        # If the customer has been charged create the CDR and update balance
         if price > 0:
             self._generate_cdr(related_model, str(time_stamp))
+            if self._expenditure_used:
+                self._update_actor_balance(price)
 
     def resolve_charging(self, new_purchase=False, sdr=False):
 
@@ -889,6 +986,10 @@ class ChargingEngine:
                 # Call the price resolver
                 resolver = PriceResolver()
                 price = resolver.resolve_price(related_model)
+
+                # Check user expenditure limits and accumulated balance
+                self._check_expenditure_limits(price)
+
                 # Make the charge
                 redirect_url = self._charge_client(price, 'initial charge', self._price_model['general_currency'])
             else:
@@ -949,6 +1050,10 @@ class ChargingEngine:
 
                 # Deductions can make the price 0
                 if price > 0:
+                    # If not use made, check expenditure limits and accumulated balance
+                    if not accounting_info:
+                        self._check_expenditure_limits(price)
+
                     redirect_url = self._charge_client(price, 'Renovation', self._price_model['general_currency'])
 
                 if len(unmodified) > 0:

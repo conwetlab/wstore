@@ -321,25 +321,25 @@ class UserProfileEntry(Resource):
                     user_org.notification_url = data['notification_url']
                     user_org.save()
 
-                    # Check if expenditure limits are included in the request
-                    if 'limits' in data:
-                        limits = _check_limits(data['limits'])
-                        currency = limits['currency']
-                        # Get default RSS instance
-                        rss_instance = RSS.objects.all()[0]
-                        # Create limits in the RSS
-                        try:
-                            exp_manager = ExpenditureManager(rss_instance, rss_instance.access_token)
+                # Check if expenditure limits are included in the request
+                if 'limits' in data:
+                    limits = _check_limits(data['limits'])
+                    currency = limits['currency']
+                    # Get default RSS instance
+                    rss_instance = RSS.objects.all()[0]
+                    # Create limits in the RSS
+                    try:
+                        exp_manager = ExpenditureManager(rss_instance, rss_instance.access_token)
+                        exp_manager.set_actor_limit(limits, user.userprofile)
+                    except HTTPError as e:
+                        if e.code == 401:
+                            rss_instance.refresh_token()
+                            exp_manager.set_credentials(rss_instance.access_token)
                             exp_manager.set_actor_limit(limits, user.userprofile)
-                        except HTTPError as e:
-                            if e.code == 401:
-                                rss_instance.refresh_token()
-                                exp_manager.set_credentials(rss_instance.access_token)
-                                exp_manager.set_actor_limit(limits, user.userprofile)
-                        # Save limits
-                        limits['currency'] = currency
-                        user_org.expenditure_limits = limits
-                        user_org.save()
+                    # Save limits
+                    limits['currency'] = currency
+                    user_org.expenditure_limits = limits
+                    user_org.save()
 
             if 'tax_address' in data:
                 user_profile.tax_address = {

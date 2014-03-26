@@ -26,6 +26,7 @@ import rdflib
 from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
+from mock import MagicMock
 
 from django.test import TestCase
 from django.conf import settings
@@ -170,6 +171,8 @@ class SinglePaymentChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
@@ -242,6 +245,8 @@ class SinglePaymentChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
@@ -340,6 +345,8 @@ class SubscriptionChargingTestCase(TestCase):
         charging._calculate_renovation_date = fake_renovation_date
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
         contract = purchase.contract
@@ -409,6 +416,8 @@ class SubscriptionChargingTestCase(TestCase):
         charging._calculate_renovation_date = fake_renovation_date
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
         contract = purchase.contract
@@ -481,6 +490,8 @@ class SubscriptionChargingTestCase(TestCase):
         charging._calculate_renovation_date = fake_renovation_date
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
         contract = purchase.contract
@@ -929,6 +940,8 @@ class PayPerUseChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
@@ -983,6 +996,8 @@ class PayPerUseChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(sdr=True)
 
         purchase = Purchase.objects.get(pk='61077ab75e07a7c415f372f2')
@@ -1095,6 +1110,8 @@ class AsynchronousPaymentTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.end_charging(contract.pending_payment['price'], contract.pending_payment['concept'], contract.pending_payment['related_model'])
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
