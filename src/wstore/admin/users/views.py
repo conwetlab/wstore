@@ -92,8 +92,8 @@ class UserProfileCollection(Resource):
             if user.is_staff:
                 user_profile['roles'].append('admin')
 
+            user_profile['payment_info'] = {}
             if 'number' in profile.payment_info:
-                user_profile['payment_info'] = {}
                 number = profile.payment_info['number']
                 number = 'xxxxxxxxxxxx' + number[-4:]
                 user_profile['payment_info']['number'] = number
@@ -272,7 +272,7 @@ class UserProfileEntry(Resource):
             # If WStore is not integrated with the accounts enabler
             # update user info and roles
             if not settings.OILAUTH:
-                if request.user.is_staff and 'roles' in data: # The user cannot change its roles
+                if request.user.is_staff and 'roles' in data:  # The user cannot change its roles
                     if 'admin' in data['roles'] and request.user.is_staff:
                         user.is_staff = True
 
@@ -316,7 +316,7 @@ class UserProfileEntry(Resource):
                 elif 'complete_name' in data:
                     user_profile.complete_name = data['complete_name']
             else:
-                user_org = Organization.objects.get(actor_id=user.userprofile.actor_id);
+                user_org = Organization.objects.get(actor_id=user.userprofile.actor_id)
                 if 'notification_url' in data and 'provider' in user_profile.get_user_roles():
                     user_org.notification_url = data['notification_url']
                     user_org.save()
@@ -381,24 +381,3 @@ class UserProfileEntry(Resource):
             return build_response(request, 400, 'Invalid content')
 
         return build_response(request, 200, 'OK')
-
-    @authentication_required
-    def delete(self, request, username):
-        pass
-
-
-def reset_user(request, username):
-
-    user = User.objects.get(username=username)
-    user.userprofile.offerings_purchased = []
-    user.userprofile.save()
-
-    purchases = Purchase.objects.filter(customer=user)
-    for p in purchases:
-        try:
-            p.contract.delete()
-        except:
-            pass
-        p.delete()
-
-    return build_response(request, 200, 'OK')

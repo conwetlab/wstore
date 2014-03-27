@@ -59,3 +59,14 @@ def build_response_mock(request, code, msg):
     })
     response.status_code = code
     return response
+
+class HTTPResponseMock():
+
+    data = None
+    status = None
+    mimetype = None
+
+    def __init__(self, data, status=None, mimetype=None):
+        self.data = data
+        self.status = status
+        self.mimetype = mimetype
