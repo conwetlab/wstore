@@ -45,6 +45,9 @@
             url = EndpointManager.getEndpoint(self.entryURL, elemDict);
         }
 
+        $('#loading').removeClass('hide');  // Loading view when waiting for requests
+        $('#loading').css('height', $(window).height() + 'px');
+        $('#message').modal('hide');
         // Make request
         $.ajax({
             headers: {
@@ -56,6 +59,7 @@
             contentType: 'application/json',
             data: JSON.stringify(data),
             success: function (response) {
+                $('#loading').addClass('hide');
                 if (method == 'GET') {
                     callback(response);
                 } else {
@@ -63,6 +67,7 @@
                 }
             },
             error: function (xhr) {
+                $('#loading').addClass('hide');
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
                 MessageManager.showMessage('Error', msg);

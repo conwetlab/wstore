@@ -81,6 +81,9 @@
         if (!error) {
             var csrfToken = $.cookie('csrftoken');
 
+            $('#loading').removeClass('hide');  // Loading view when waiting for requests
+            $('#loading').css('height', $(window).height() + 'px');
+            $('#message').modal('hide');
             $.ajax({
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -91,10 +94,12 @@
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
+                    $('#loading').addClass('hide');
                     main = true; 
                     orgInfoRequest(paintOrganizations);
                 },
                 error: function (xhr) {
+                    $('#loading').addClass('hide');
                     var resp = xhr.responseText;
                     var msg = JSON.parse(resp).message;
                     MessageManager.showMessage('Error', msg);
@@ -143,11 +148,15 @@
     }
     
     orgInfoRequest = function orgInfoRequest(callback, arg) {
+        $('#loading').removeClass('hide');    // Loading view when waiting for requests
+        $('#loading').css('height', $(window).height() + 'px');
+        $('#message').modal('hide');
         $.ajax({
             type: "GET",
             url: EndpointManager.getEndpoint('ORGANIZATION_COLLECTION'),
             dataType: "json",
             success: function (response) {
+                $('#loading').addClass('hide');
                 if (!arg) {
                     callback(response);
                 } else {
@@ -155,6 +164,7 @@
                 }
             },
             error: function (xhr) {
+                $('#loading').addClass('hide');
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
                 MessageManager.showMessage('Error', msg);

@@ -43,6 +43,9 @@
 
             request.user = user;
             request.roles = roles;
+            $('#loading').removeClass('hide');    // Loading view when waiting for requests
+            $('#loading').css('height', $(window).height() + 'px');
+            $('#message').modal('hide');
             $.ajax({
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -55,10 +58,12 @@
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
+                    $('#loading').addClass('hide');
                     $('#message').modal('hide');
                     MessageManager.showMessage('Added', 'The user has been added');
                 },
                 error: function (xhr) {
+                    $('#loading').addClass('hide');
                     var resp = xhr.responseText;
                     var msg = JSON.parse(resp).message;
                     $('#message').modal('hide');

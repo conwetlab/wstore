@@ -43,6 +43,9 @@
                 'default': $('#is-default').prop('checked')
             };
 
+            $('#loading').removeClass('hide');  // Loading view when waiting for requests
+            $('#loading').css('height', $(window).height() + 'px');
+            $('#message').modal('hide');
             $.ajax({
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -53,9 +56,11 @@
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
+                    $('#loading').addClass('hide');
                     currencyInfoRequest();
                 },
                 error: function (xhr) {
+                    $('#loading').addClass('hide');
                     var resp = xhr.responseText;
                     var msg = JSON.parse(resp).message;
                     MessageManager.showMessage('Error', msg);
@@ -68,6 +73,10 @@
 
     var makeCurrencyEntryRequest = function makeCurrencyEntryRequest(currency, method) {
         var csrfToken = $.cookie('csrftoken');
+
+        $('#loading').removeClass('hide');  // Loading view when waiting for requests
+        $('#loading').css('height', $(window).height() + 'px');
+        $('#message').modal('hide');
         $.ajax({
             headers: {
                 'X-CSRFToken': csrfToken,
@@ -76,9 +85,11 @@
             url: EndpointManager.getEndpoint('CURRENCY_ENTRY',  {'currency': currency}),
             dataType: 'json',
             success: function (response) {
+                $('#loading').addClass('hide');
                 currencyInfoRequest();
             },
             error: function (xhr) {
+                $('#loading').addClass('hide');
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
                 MessageManager.showMessage('Error', msg);
@@ -169,16 +180,21 @@
     currencyInfoRequest = function currencyInfoRequest() {
         main = true;
 
+        $('#loading').removeClass('hide');  // Loading view when waiting for requests
+        $('#loading').css('height', $(window).height() + 'px');
+        $('#message').modal('hide');
         // Make request asking for the registered currencies
         $.ajax({
             type: "GET",
             url: EndpointManager.getEndpoint('CURRENCY_COLLECTION'),
             dataType: "json",
             success: function (response) {
+                $('#loading').addClass('hide');
                 // Print currency list
                 paintCurrencies(response);
             },
             error: function (xhr) {
+                $('#loading').addClass('hide');
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
                 MessageManager.showMessage('Error', msg);

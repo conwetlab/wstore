@@ -130,6 +130,9 @@
             offeringInfo.related_images = screenShots;
         }
 
+        $('#loading').removeClass('hide');  // Loading view when waiting for requests
+        $('#loading').css('height', $(window).height() + 'px');
+        $('#message').modal('hide');
         $.ajax({
             headers: {
                 'X-CSRFToken': csrfToken,
@@ -140,6 +143,7 @@
             contentType: 'application/json',
             data: JSON.stringify(offeringInfo),
             success: function (response) {
+                $('#loading').addClass('hide');
                 var msg = 'Your offering has been created. You have to publish your offering before making it available to third parties.';
                 $('#message').modal('hide');
                 MessageManager.showMessage('Created', msg);
@@ -148,6 +152,7 @@
                 }
             },
             error: function (xhr) {
+                $('#loading').addClass('hide');
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
                 $('#message').modal('hide');
