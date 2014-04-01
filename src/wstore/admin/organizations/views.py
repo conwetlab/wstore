@@ -18,6 +18,7 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+import re
 import json
 from urllib2 import HTTPError
 
@@ -166,7 +167,17 @@ class OrganizationEntry(Resource):
         try:
             # Load request data
             data = json.loads(request.raw_post_data)
-            organization.notification_url = data['notification_url']
+            if 'notification_url' in data:
+                if data['notification_url'] and not re.match(re.compile(
+                    r'^https?://'
+                    r'(?:(?:[\w0-9](?:[\w0-9-]{0,61}[\w0-9])?\.)+[\w]{2,6}\.?|'
+                    r'localhost|'
+                    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+                    r'(?::\d+)?'
+                    r'(?:/?|[/?]\S+)$', re.IGNORECASE), data['notification_url']):
+                    raise Exception('Invalid notification URL')
+
+                organization.notification_url = data['notification_url']
 
             # Load the tax address
             new_taxaddr = {}
@@ -191,7 +202,7 @@ class OrganizationEntry(Resource):
                     is_hidden_credit_card(number, organization.payment_info['number']):
                         number = organization.payment_info['number']
                     else:
-                        raise Exception('')
+                        raise Exception('Invalid credit card number')
 
                 new_payment = {
                     'type': data['payment_info']['type'],
@@ -215,15 +226,20 @@ class OrganizationEntry(Resource):
                         rss.refresh_token()
                         exp_manager.set_credentials(rss.access_token)
                         exp_manager.set_actor_limit(limits, organization)
+                    else:
+                        raise e
 
                 # Save limits
-                limits['currency'] = currency 
+                limits['currency'] = currency
                 organization.expenditure_limits = limits
 
             organization.payment_info = new_payment
             organization.save()
-        except:
-            return build_response(request, 400, 'Invalid Content')
+        except Exception as e:
+            msg = 'Invalid content'
+            if e.message:
+                msg = e.message
+            return build_response(request, 400, msg)
 
         return build_response(request, 200, 'OK')
 
@@ -273,7 +289,7 @@ class OrganizationUserCollection(Resource):
         # Check if the organization is private
         if organization.private:
             return build_response(request, 403, 'Forbidden')
-    
+
         # Check if the user can include users in the organization
         if not request.user.is_staff and not request.user.pk in organization.managers:
             return build_response(request, 403, 'Forbidden')
