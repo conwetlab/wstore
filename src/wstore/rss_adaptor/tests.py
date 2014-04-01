@@ -18,11 +18,15 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+import json
 from mock import MagicMock
+from urllib2 import HTTPError
 
 from django.test import TestCase
 
 from wstore.rss_adaptor import rss_adaptor
+from wstore.rss_adaptor import expenditure_manager
+from wstore.store_commons.utils.testing import mock_request
 
 
 __test__ = False
@@ -169,3 +173,161 @@ class RSSAdaptorTestCase(TestCase):
         body = opener._body.replace(' ', '')
         body = body.replace('\n', '')
         self.assertEqual(expected_xml, body)
+
+
+class ExpenditureManagerTestCase(TestCase):
+
+    tags = ('exp-manager',)
+
+    @classmethod
+    def setUpClass(cls):
+        # Create Mocks
+        cls.rss_mock = MagicMock()
+        cls.opener = MagicMock()
+        cls.mock_response = MagicMock()
+        cls.opener.open.return_value = cls.mock_response
+        expenditure_manager.RSS = MagicMock()
+        expenditure_manager.RSS.objects.get.return_value = cls.rss_mock
+        expenditure_manager.urllib2 = MagicMock()
+        expenditure_manager.urllib2.build_opener.return_value = cls.opener
+        expenditure_manager.MethodRequest = mock_request
+        super(ExpenditureManagerTestCase, cls).setUpClass()
+
+    def setUp(self):
+        self.rss_mock.reset_mock()
+        self.rss_mock.host = 'http://testrss.com/'
+        # Create tested object
+        self.manager = expenditure_manager.ExpenditureManager(self.rss_mock, 'accesstoken')
+        self.manager._provider_id = 'test_store'
+
+    def test_make_request(self):
+        # Test correct call
+        self.mock_response.code = 200
+        data = {
+            'limits': {}
+        }
+        response = self.manager._make_request('GET', 'http://testurl.com', data)
+        self.assertEquals(response, self.mock_response)
+        self.opener.open.assert_called_with({
+            'method': 'GET',
+            'url': 'http://testurl.com',
+            'data': json.dumps(data),
+            'headers': {
+                'content-type': 'application/json',
+                'X-Auth-Token': 'accesstoken'
+            }
+        })
+        # Test invalid call
+        self.mock_response.code = 500
+        try:
+            self.manager._make_request('GET', 'http://testurl.com', data)
+        except HTTPError as e:
+            error = True
+            code = e.code
+
+        self.assertTrue(error)
+        self.assertEquals(code, 500)
+
+    def test_set_provider_limit(self):
+        # Create _make_request_mock
+        self.manager._make_request = MagicMock()
+        # Include limits
+        self.manager._rss.expenditure_limits = {
+            'currency': 'EUR',
+            'perTransaction': '100',
+            'weekly': '150'
+        } 
+        expected_data = {
+            'service': 'fiware',
+            'limits': [{
+                'currency': 'EUR',
+                'type': 'perTransaction',
+                'maxAmount': '100',
+            }, {
+                'currency': 'EUR',
+                'type': 'weekly',
+                'maxAmount': '150',
+            }]
+        }
+        self.manager.set_provider_limit()
+        self.manager._make_request.assert_called_with('POST', 'http://testrss.com/expenditureLimit/limitManagement/test_store', data=expected_data)
+
+    def test_delete_provider_limit(self):
+        # Create _make_request_mock
+        self.manager._make_request = MagicMock()
+
+        # Call the method
+        self.manager.delete_provider_limit()
+        self.manager._make_request.assert_called_with('DELETE', 'http://testrss.com/expenditureLimit/limitManagement/test_store?service=fiware')
+
+    def test_set_actor_limit(self):
+        # Create _make_request_mock
+        self.manager._make_request = MagicMock()
+        # Include limits
+        limits = {
+            'currency': 'EUR',
+            'perTransaction': '100',
+            'weekly': '150'
+        } 
+        expected_data = {
+            'service': 'fiware',
+            'limits': [{
+                'currency': 'EUR',
+                'type': 'perTransaction',
+                'maxAmount': '100',
+            }, {
+                'currency': 'EUR',
+                'type': 'weekly',
+                'maxAmount': '150',
+            }]
+        }
+        profile = MagicMock()
+        profile.actor_id = 1
+        self.manager.set_actor_limit(limits, profile)
+        self.manager._make_request.assert_called_with('POST', 'http://testrss.com/expenditureLimit/limitManagement/test_store/1', expected_data)
+
+    def test_check_balance(self):
+        # Create _make_request_mock
+        self.manager._make_request = MagicMock()
+        profile = MagicMock()
+        profile.actor_id = 1
+
+        charge = {
+            'currency': 'EUR',
+            'amount': 10
+        }
+
+        expected_data = {
+            'service': 'fiware',
+            'appProvider': 'test_store',
+            'currency': 'EUR',
+            'amount': 10,
+            'chargeType': 'C'
+        }
+
+        # Make the call
+        self.manager.check_balance(charge, profile)
+        self.manager._make_request.assert_called_with('POST', 'http://testrss.com/expenditureLimit/balanceAccumulated/1', expected_data)
+
+    def test_update_balance(self):
+        # Create _make_request_mock
+        self.manager._make_request = MagicMock()
+        profile = MagicMock()
+        profile.actor_id = 1
+
+        charge = {
+            'currency': 'EUR',
+            'amount': 10
+        }
+
+        expected_data = {
+            'service': 'fiware',
+            'appProvider': 'test_store',
+            'currency': 'EUR',
+            'amount': 10,
+            'chargeType': 'C'
+        }
+
+        # Make the call
+        self.manager.update_balance(charge, profile)
+        self.manager._make_request.assert_called_with('PUT', 'http://testrss.com/expenditureLimit/balanceAccumulated/1', expected_data)

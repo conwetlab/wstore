@@ -96,9 +96,6 @@ class ExpenditureManager():
         self._make_request('DELETE', endpoint)
         self._refresh_rss()
 
-    def get_provider_limit(self):
-        pass
-
     def set_actor_limit(self, limits, actor_profile):
         """
         Create the expenditure limit of a provider
