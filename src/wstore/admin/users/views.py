@@ -280,9 +280,9 @@ class UserProfileEntry(Resource):
                         # Append the provider role to the user
                         orgs = []
                         for o in user_profile.organizations:
-                            if Organization.objects.get(pk=o['organization']).name == user.username:
-                                if not 'provider' in o['roles']:
-                                    o['roles'].append('provider')
+                            if Organization.objects.get(pk=o['organization']).name == user.username \
+                            and not 'provider' in o['roles']:
+                                o['roles'].append('provider')
 
                             orgs.append(o)
 
@@ -336,6 +336,9 @@ class UserProfileEntry(Resource):
                             rss_instance.refresh_token()
                             exp_manager.set_credentials(rss_instance.access_token)
                             exp_manager.set_actor_limit(limits, user.userprofile)
+                        else:
+                            raise e
+
                     # Save limits
                     limits['currency'] = currency
                     user_org.expenditure_limits = limits

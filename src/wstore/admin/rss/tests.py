@@ -49,6 +49,11 @@ class ExpenditureMock():
                 self._context._refresh = True
                 raise HTTPError('http://rss.test.com', 401, 'Unauthorized', None, None)
 
+        def set_actor_limit(self, limits, userprofile):
+            if not self._context._refresh:
+                self._context._refresh = True
+                raise HTTPError('http://rss.test.com', 401, 'Unauthorized', None, None)
+
 
 class RSSViewTestCase(TestCase):
 
