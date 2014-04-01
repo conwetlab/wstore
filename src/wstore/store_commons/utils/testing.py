@@ -60,6 +60,7 @@ def build_response_mock(request, code, msg):
     response.status_code = code
     return response
 
+
 class HTTPResponseMock():
 
     data = None
@@ -70,3 +71,12 @@ class HTTPResponseMock():
         self.data = data
         self.status = status
         self.mimetype = mimetype
+
+
+def mock_request(method, url, data, headers):
+    return {
+        'method': method,
+        'url': url,
+        'data': data,
+        'headers': headers
+    }
