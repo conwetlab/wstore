@@ -423,8 +423,10 @@ class UserEntryTestCase(TestCase):
         self.request.user.username = 'user3'
 
     def _unauthorized(self):
+        exp_object = MagicMock()
+        exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 401, 'Unauthorized', None, None)
         views.ExpenditureManager = MagicMock()
-        views.ExpenditureManager.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 401, 'Unauthorized', None, None)
+        views.ExpenditureManager.return_value = exp_object
 
     @parameterized.expand([
     ({
@@ -496,7 +498,7 @@ class UserEntryTestCase(TestCase):
             'perTransaction': '100',
             'weekly': '150',
         }
-    }, 'user4', True, (400, 'Invalid content', 'error'), True, _unauthorized),
+    }, 'user3', True, (400, 'Invalid content', 'error'), True, _unauthorized),
     ({
         'roles': [],
         'payment_info': {
