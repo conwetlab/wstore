@@ -177,7 +177,7 @@ class RSSAdaptorTestCase(TestCase):
 
 class ExpenditureManagerTestCase(TestCase):
 
-    tags = ('exp-manager',)
+    tags = ('exp-manager', 'fiware-ut-31')
 
     @classmethod
     def setUpClass(cls):

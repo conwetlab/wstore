@@ -181,6 +181,12 @@ class OrganizationEntryTestCase(TestCase):
         exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 401, 'Unauthorized', None, None)
         views.ExpenditureManager.return_value = exp_object
 
+    def _rss_failure(self):
+        views.ExpenditureManager = MagicMock()
+        exp_object = MagicMock()
+        exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 500, 'Server error', None, None)
+        views.ExpenditureManager.return_value = exp_object
+
     @parameterized.expand([
     ({
         'notification_url': 'http://notificationurl.com',
@@ -227,6 +233,12 @@ class OrganizationEntryTestCase(TestCase):
             'weekly': '150'
         }
     }, (400, 'Invalid content', 'error'), True, _unauthorized),
+    ({
+        'limits': {
+            'perTransaction': '100',
+            'weekly': '150'
+        }
+    }, (400, 'Invalid content', 'error'), True, _rss_failure),
     ({
         'payment_info': {
             'number': '1234',

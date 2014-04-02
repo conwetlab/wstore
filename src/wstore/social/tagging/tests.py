@@ -39,7 +39,7 @@ from wstore.models import Organization, Offering
 
 class TagCooccurrenceTestCase(TestCase):
 
-    tags = ('tagging',)
+    tags = ('tagging', 'fiware-ut-30')
 
     def _search_mock(self, tag):
         search_result = {
@@ -102,12 +102,12 @@ class TagCooccurrenceTestCase(TestCase):
 
 class USDLTagsTestCase(TestCase):
 
-    tags = ('tagging', )
+    tags = ('tagging', 'fiware-ut-30')
 
     def _aggregate_mock(self, offering):
         return "CoNWeT   Terms and conditions Description of the terms and conditions applied to this widget Android 2011-12-01 2011-12-31  Map viewer free use   Map viewer description"
     
-    def test_usdl_tagging_recomendation(self):
+    def test_usdl_tagging_recommendation(self):
         # Create mocks
         recommendation_manager.SearchEngine = MagicMock
         recommendation_manager.SearchEngine._aggregate_text = self._aggregate_mock
@@ -125,7 +125,7 @@ class USDLTagsTestCase(TestCase):
 
 class TagManagementTestCase(TestCase):
 
-    tags = ('tagging',)
+    tags = ('tagging', 'fiware-ut-30')
     _path = None
 
     @classmethod
@@ -217,7 +217,7 @@ class TagManagementTestCase(TestCase):
 
 class TagViewTestCase(TestCase):
 
-    tags = ('tagging',)
+    tags = ('tagging', 'fiware-ut-30')
     def setUp(self):
         # Create request factory
         self.factory = RequestFactory()
@@ -338,7 +338,7 @@ class TagViewTestCase(TestCase):
 
 class RecommendationProcessTestCase(TestCase):
 
-    tags = ('tagging',)
+    tags = ('tagging', 'fiware-ut-30')
     fixtures = ('tagging.json',)
     _init_copy = None
 

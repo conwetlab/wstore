@@ -428,6 +428,12 @@ class UserEntryTestCase(TestCase):
         views.ExpenditureManager = MagicMock()
         views.ExpenditureManager.return_value = exp_object
 
+    def _rss_failure(self):
+        exp_object = MagicMock()
+        exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 500, 'Server error', None, None)
+        views.ExpenditureManager = MagicMock()
+        views.ExpenditureManager.return_value = exp_object
+
     @parameterized.expand([
     ({
         'roles': ['admin', 'provider'],
@@ -499,6 +505,13 @@ class UserEntryTestCase(TestCase):
             'weekly': '150',
         }
     }, 'user3', True, (400, 'Invalid content', 'error'), True, _unauthorized),
+    ({
+        'notification_url': 'http://newnotificationurl.com',
+        'limits': {
+            'perTransaction': '100',
+            'weekly': '150',
+        }
+    }, 'user3', True, (400, 'Invalid content', 'error'), True, _rss_failure),
     ({
         'roles': [],
         'payment_info': {
