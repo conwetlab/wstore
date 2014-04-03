@@ -42,32 +42,22 @@ class MarketplaceCollection(Resource):
         if not request.user.is_staff:  # Only an admin could register the store in a marketplace
             return build_response(request, 403, 'Forbidden')
 
-        content_type = get_content_type(request)[0]
-
         name = None
         host = None
-        # Content types json and xml are supported
-        if content_type == 'application/json':
 
-            try:
-                content = json.loads(request.raw_post_data)
-                name = content['name']
-                host = content['host']
-            except:
-                msg = "Request body is not valid JSON data"
-                return build_response(request, 400, msg)
-
-        else:
-
-            try:
-                content = etree.fromstring(request.raw_post_data)
-                name = content.xpath('/marketplace/name')[0].text
-                host = content.xpath('/marketplace/host')[0].text
-            except:
-                msg = "Request body is not a valid XML data"
-                return build_response(request, 400, msg)
-
+        # Get contents from the request
         try:
+            content = json.loads(request.raw_post_data)
+            name = content['name']
+            host = content['host']
+        except:
+            msg = "Request body is not valid JSON data"
+            return build_response(request, 400, msg)
+
+        code = 201
+        msg = 'Created'
+        try:
+            # Register the store in the selected marketplace
             register_on_market(name, host, get_current_site(request).domain)
         except Exception, e:
             if e.message == 'Bad Gateway':
@@ -77,40 +67,17 @@ class MarketplaceCollection(Resource):
                 code = 400
                 msg = 'Bad request'
 
-            return build_response(request, code, msg)
-
-        return build_response(request, 201, 'Created')
+        return build_response(request, code, msg)
 
     @authentication_required
     def read(self, request):
 
-        # Read Accept header to know the response mime type, JSON by default
-        accept = request.META.get('ACCEPT', '')
-        response = None
-        mime_type = None
+        try:
+            response = json.dumps(get_marketplaces())
+        except:
+            return build_response(request, 400, 'Invalid request')
 
-        result = get_marketplaces()
-        if accept == '' or accept.find('application/JSON') > -1:
-            response = json.dumps(result)
-            mime_type = 'application/JSON; charset=UTF-8'
-
-        elif accept.find('application/xml') > -1:
-            root_elem = etree.Element('Marketplaces')
-
-            for market in result:
-                market_elem = etree.SubElement(root_elem, 'Marketplace')
-                name_elem = etree.SubElement(market_elem, 'Name')
-                name_elem.text = market['name']
-                host_elem = etree.SubElement(market_elem, 'Host')
-                host_elem.text = market['host']
-
-            response = etree.tounicode(root_elem)
-            mime_type = 'application/xml; charset=UTF-8'
-
-        else:
-            return build_response(request, 400, 'Invalid requested type')
-
-        return HttpResponse(response, status=200, mimetype=mime_type)
+        return HttpResponse(response, status=200, mimetype='application/JSON; charset=UTF-8')
 
 
 class MarketplaceEntry(Resource):
