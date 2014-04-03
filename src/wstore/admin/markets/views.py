@@ -37,7 +37,7 @@ class MarketplaceCollection(Resource):
     # add the marketplace info needed for access in
     # the database
     @authentication_required
-    @supported_request_mime_types(('application/json', 'application/xml'))
+    @supported_request_mime_types(('application/json',))
     def create(self, request):
         if not request.user.is_staff:  # Only an admin could register the store in a marketplace
             return build_response(request, 403, 'Forbidden')
@@ -81,14 +81,6 @@ class MarketplaceCollection(Resource):
 
 
 class MarketplaceEntry(Resource):
-
-    @authentication_required
-    def read(self, request, market):
-        pass
-
-    @authentication_required
-    def update(self, request, market):
-        pass
 
     @authentication_required
     def delete(self, request, market):

@@ -35,74 +35,40 @@ class RepositoryCollection(Resource):
     # in order to be able to upload and
     # download resources
     @authentication_required
-    @supported_request_mime_types(('application/json', 'application/xml'))
+    @supported_request_mime_types(('application/json',))
     def create(self, request):
 
         if not request.user.is_staff:  # Only an admin could register a new repository
             return build_response(request, 403, 'Forbidden')
 
-        content_type = get_content_type(request)[0]
-
+        # Get request info
         name = None
         host = None
-        # Content types json and xml are supported
-        if content_type == 'application/json':
+        try:
+            content = json.loads(request.raw_post_data)
+            name = content['name']
+            host = content['host']
+        except:
+            msg = "Request body is not valid JSON data"
+            return build_response(request, 400, msg)
 
-            try:
-                content = json.loads(request.raw_post_data)
-                name = content['name']
-                host = content['host']
-            except:
-                msg = "Request body is not valid JSON data"
-                return build_response(request, 400, msg)
-
-        else:
-
-            try:
-                content = etree.fromstring(request.raw_post_data)
-                name = content.xpath('/marketplace/name')[0].text
-                host = content.xpath('/marketplace/host')[0].text
-            except:
-                msg = "Request body is not valid XML data"
-                return build_response(request, 400, msg)
-
+        # Register repository
         try:
             register_repository(name, host)
         except Exception, e:
             return build_response(request, 400, e.message)
 
-        return build_response(request, 201, 'Created')  # TODO use a generic method
+        return build_response(request, 201, 'Created')
 
     @authentication_required
     def read(self, request):
 
-        # Read Accept header to know the response mime type, JSON by default
-        accept = request.META.get('ACCEPT', '')
-        response = None
-        mime_type = None
-        repositories = get_repositories()
+        try:
+            response = json.dumps(get_repositories())
+        except:
+            return build_response(request, 400, 'Invalid request')
 
-        if accept == '' or accept.find('application/JSON') > -1:
-            response = json.dumps(repositories)
-            mime_type = 'application/JSON; charset=UTF-8'
-
-        elif accept.find('application/xml') > -1:
-            root_elem = etree.Element('Repositories')
-
-            for rep in repositories:
-                rep_elem = etree.SubElement(root_elem, 'Repository')
-                name_elem = etree.SubElement(rep_elem, 'Name')
-                name_elem.text = rep['name']
-                host_elem = etree.SubElement(rep_elem, 'Host')
-                host_elem.text = rep['host']
-
-            response = etree.tounicode(root_elem)
-            mime_type = 'application/xml; charset=UTF-8'
-
-        else:
-            return build_response(request, 400, 'Invalid requested type')
-
-        return HttpResponse(response, status=200, mimetype=mime_type)
+        return HttpResponse(response, status=200, mimetype='application/JSON; charset=UTF-8')
 
 
 class RepositoryEntry(Resource):
