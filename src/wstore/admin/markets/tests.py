@@ -18,15 +18,23 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+import json
+import types
 from urllib2 import HTTPError
+from mock import MagicMock
+from nose_parameterized import parameterized
 
 from django.test import TestCase
 
 from wstore.admin.markets import markets_management
 from wstore.models import Marketplace
+from wstore.admin.markets import views
+from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
+decorator_mock_callable, HTTPResponseMock
 
 
 __test__ = False
+
 
 class FakeMarketAdaptor():
 
@@ -133,3 +141,111 @@ class UnregisteringFromMarketplaceTestCase(TestCase):
             error = True
 
         self.assertTrue(error)
+
+
+class MarketplaceViewTestCase(TestCase):
+
+    tags = ('market-view',)
+
+    @classmethod
+    def setUpClass(cls):
+        from wstore.store_commons.utils import http
+        # Save the reference of the decorators
+        cls._old_auth = types.FunctionType(
+            http.authentication_required.func_code,
+            http.authentication_required.func_globals,
+            name=http.authentication_required.func_name,
+            argdefs=http.authentication_required.func_defaults,
+            closure=http.authentication_required.func_closure
+        )
+
+        cls._old_supp = types.FunctionType(
+            http.supported_request_mime_types.func_code,
+            http.supported_request_mime_types.func_globals,
+            name=http.supported_request_mime_types.func_name,
+            argdefs=http.supported_request_mime_types.func_defaults,
+            closure=http.supported_request_mime_types.func_closure
+        )
+
+        # Mock class decorators
+        http.authentication_required = decorator_mock
+        http.supported_request_mime_types = decorator_mock_callable
+
+        reload(views)
+        views.build_response = build_response_mock
+
+        # Mock get_current_site methods
+        views.get_current_site = MagicMock()
+        site_obj = MagicMock()
+        site_obj.domain = 'http://teststore.org'
+        views.get_current_site.return_value = site_obj
+        super(MarketplaceViewTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        # Restore mocked decorators
+        from wstore.store_commons.utils import http
+        http.authentication_required = cls._old_auth
+        http.supported_request_mime_types = cls._old_supp
+        super(MarketplaceViewTestCase, cls).tearDownClass()
+
+    def setUp(self):
+        # Mock market management methods
+        views.register_on_market = MagicMock()
+        self.request = MagicMock()
+
+    def _forbidden(self):
+        self.request.user.is_staff = False
+
+    def _market_failure(self):
+        views.register_on_market.side_effect = Exception('Bad Gateway')
+
+    def _bad_request(self):
+        views.register_on_market.side_effect = Exception('Bad request')
+
+    @parameterized.expand([
+    ({
+        'name': 'test_market',
+        'host': 'http://testmarket.com'
+    }, (201, 'Created', 'correct'), False),
+    ({
+        'name': 'test_market',
+        'host': 'http://testmarket.com'
+    }, (403, 'Forbidden', 'error'), True, _forbidden),
+    ({
+        'invalid': 'test_market',
+        'host': 'http://testmarket.com'
+    }, (400, 'Request body is not valid JSON data', 'error'), True),
+    ({
+        'name': 'test_market',
+        'host': 'http://testmarket.com'
+    }, (502, 'Bad Gateway', 'error'), True, _market_failure),
+    ({
+        'name': 'test_market',
+        'host': 'http://testmarket.com'
+    }, (400, 'Bad request', 'error'), True, _bad_request)
+    ])
+    def test_market_api_create(self, data, exp_resp, error, side_effect=None):
+        # Create request data
+        self.request.raw_post_data = json.dumps(data)
+
+        if side_effect:
+            side_effect(self)
+
+        # Create the view
+        market_collection = views.MarketplaceCollection(permitted_methods=('POST', 'GET'))
+
+        response = market_collection.create(self.request)
+
+        # Check response
+        content = json.loads(response.content)
+        self.assertEquals(response.status_code, exp_resp[0])
+        self.assertEquals(content['message'], exp_resp[1])
+        self.assertEquals(content['result'], exp_resp[2])
+
+        # Check calls
+        if not error:
+            views.register_on_market.assert_called_with(data['name'], data['host'], 'http://teststore.org')
+
+    def test_market_api_get(self):
+        pass
