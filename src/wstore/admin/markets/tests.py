@@ -36,25 +36,6 @@ decorator_mock_callable, HTTPResponseMock
 __test__ = False
 
 
-class FakeMarketAdaptor():
-
-    def __init__(self, url):
-        pass
-
-    def add_service(self, store, info):
-        pass
-
-    def delete_service(self, store, ser):
-        pass
-
-    def add_store(self, store_info):
-        if store_info['store_uri'] == 'http://currentsiteerr.com':
-            raise HTTPError('site', 500, 'Internal server error', None, None)
-
-    def delete_store(self, store):
-        pass
-
-
 class RegisteringOnMarketplaceTestCase(TestCase):
 
     tags = ('fiware-ut-7',)
