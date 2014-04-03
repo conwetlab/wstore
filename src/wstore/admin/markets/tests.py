@@ -58,27 +58,51 @@ class FakeMarketAdaptor():
 class RegisteringOnMarketplaceTestCase(TestCase):
 
     tags = ('fiware-ut-7',)
-    fixtures = ['reg_mark.json']
 
     @classmethod
     def setUpClass(cls):
-        markets_management.MarketAdaptor = FakeMarketAdaptor
+        markets_management.settings = MagicMock()
+        markets_management.settings.STORE_NAME = 'test_store'
         super(RegisteringOnMarketplaceTestCase, cls).setUpClass()
 
-    def test_basic_registering_on_market(self):
+    def setUp(self):
+        self.adaptor_object = MagicMock()
+        markets_management.MarketAdaptor = MagicMock()
+        markets_management.MarketAdaptor.return_value = self.adaptor_object
+        markets_management.Marketplace = MagicMock()
+        markets_management.Marketplace.objects.get.side_effect = Exception('Not found')
 
-        markets_management.register_on_market('test_market', 'http://testmarket.com', 'http://currentsite.com')
+    @parameterized.expand([
+    ({
+        'name': 'test_market',
+        'host': 'http://testmarket.com',
+        'site': 'http://currentsite.com'
+    },),
+    ({
+        'name': 'test_market1',
+        'host': 'http://testmarket.com/',
+        'site': 'http://currentsite.com/'
+    },)
+    ])
+    def test_basic_registering_on_market(self, data):
 
-        market = Marketplace.objects.get(name='test_market')
+        markets_management.register_on_market(data['name'], data['host'], data['site'])
 
-        self.assertEqual(market.name, 'test_market')
-        self.assertEqual(market.host, 'http://testmarket.com/')
+        # Check calls
+        markets_management.MarketAdaptor.assert_called_with('http://testmarket.com/')
+        markets_management.Marketplace.objects.get.assert_called_with(name=data['name'])
+        self.adaptor_object.add_store.assert_called_with({
+            'store_name': 'test_store',
+            'store_uri': data['site']
+        })
+        markets_management.Marketplace.objects.create.assert_called_with(name=data['name'], host='http://testmarket.com/')
 
     def test_registering_already_registered(self):
 
+        self.adaptor_object.add_store.side_effect = HTTPError('site', 500, 'Internal server error', None, None)
         try:
             markets_management.register_on_market('test_market', 'http://testmarket.com', 'http://currentsiteerr.com')
-        except Exception, e:
+        except Exception as e:
             error = True
             msg = e.message
 
@@ -87,15 +111,31 @@ class RegisteringOnMarketplaceTestCase(TestCase):
 
     def test_registering_existing_name(self):
 
+        markets_management.Marketplace.objects.get.side_effect = None
         error = False
         try:
             markets_management.register_on_market('test_market1', 'http://testmarket.com', 'http://currentsite.com')
-        except Exception, e:
+        except Exception as e:
             error = True
             msg = e.message
 
         self.assertTrue(error)
-        self.assertEquals(msg, 'Marketplace name already in use')
+        self.assertEquals(msg, 'Marketplace already registered')
+
+    def test_registering_creation_error(self):
+        # Mock Marketplace
+        markets_management.Marketplace.objects.create.side_effect = Exception('Creation error')
+
+        error = False
+        msg = None
+        try:
+            markets_management.register_on_market('test_market', 'http://testmarket.com', 'http://currentsite.com')
+        except Exception as e:
+            error = True
+            msg = e.message
+
+        self.assertTrue(error)
+        self.assertEquals('Creation error', msg)
 
 
 class MarketPlacesRetievingTestCase(TestCase):
@@ -118,22 +158,46 @@ class MarketPlacesRetievingTestCase(TestCase):
 class UnregisteringFromMarketplaceTestCase(TestCase):
 
     tags = ('fiware-ut-8',)
-    fixtures = ['del_mark.json']
 
     @classmethod
     def setUpClass(cls):
-        markets_management.MarketAdaptor = FakeMarketAdaptor
+        markets_management.settings = MagicMock()
+        markets_management.settings.STORE_NAME = 'test_store'
         super(UnregisteringFromMarketplaceTestCase, cls).setUpClass()
 
-    def test_basic_unregistering_from_market(self):
+    def setUp(self):
+        markets_management.Marketplace = MagicMock()
+        self.adaptor_object = MagicMock()
+        markets_management.MarketAdaptor = MagicMock()
+        markets_management.MarketAdaptor.return_value = self.adaptor_object
 
+    def _market_mock1(self):
+        mock_market = MagicMock()
+        mock_market.host = 'http://testmarket.org'
+        markets_management.Marketplace.objects.get.return_value = mock_market
+
+    def _market_mock2(self):
+        mock_market = MagicMock()
+        mock_market.host = 'http://testmarket.org/'
+        markets_management.Marketplace.objects.get.return_value = mock_market
+
+    @parameterized.expand([
+    (_market_mock1,),
+    (_market_mock2,),
+    ])
+    def test_basic_unregistering_from_market(self, mock):
+
+        # Build the related Mock
+        mock(self)
         markets_management.unregister_from_market('test_market')
 
-        market = Marketplace.objects.all()
-        self.assertEquals(len(market), 0)
+        markets_management.Marketplace.objects.get.assert_called_with(name='test_market')
+        self.adaptor_object.delete_store.assert_called_with('test_store')
 
     def test_unregistering_already_unregistered(self):
 
+        self._market_mock1()
+        markets_management.Marketplace.objects.get.side_effect = Exception('Not found')
         error = False
         try:
             markets_management.unregister_from_market('test_market1')
@@ -141,6 +205,24 @@ class UnregisteringFromMarketplaceTestCase(TestCase):
             error = True
 
         self.assertTrue(error)
+
+    def test_unregistering_bad_gateway(self):
+
+        # Mock Marketplace
+        self._market_mock1()
+        self.adaptor_object.delete_store.side_effect = HTTPError('http://testmarket.org', 500, 'Server error', None, None)
+
+        error = False
+        msg = None
+        try:
+            markets_management.unregister_from_market('test_market')
+        except Exception as e:
+            error = True
+            msg = e.message
+
+        self.assertTrue(error)
+        self.assertEquals(msg, 'Bad Gateway')
+        self.adaptor_object.delete_store.assert_called_with('test_store')
 
 
 class MarketplaceViewTestCase(TestCase):

@@ -45,18 +45,19 @@ def register_on_market(name, host, site):
     # Check that the market name is not in use
     existing = True
 
+    if host[-1] != '/':
+        host += '/'
+
     try:
         Marketplace.objects.get(name=name)
+        Marketplace.objects.get(host=host)
     except:
         existing = False
 
     if existing:
-        raise Exception('Marketplace name already in use')
+        raise Exception('Marketplace already registered')
 
     store_name = settings.STORE_NAME
-
-    if host[-1] != '/':
-        host += '/'
 
     marketadaptor = MarketAdaptor(host)
 
