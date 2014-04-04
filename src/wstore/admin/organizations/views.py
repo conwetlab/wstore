@@ -131,7 +131,7 @@ class OrganizationCollection(Resource):
                 continue
 
             # Check if payment information is displayed
-            if (not request.user.is_staff or request.user.pk in org.managers)\
+            if (not request.user.is_staff and not request.user.pk in org.managers)\
             and 'payment_info' in org_element:
                 del(org_element['payment_info'])
 
@@ -152,7 +152,7 @@ class OrganizationEntry(Resource):
             return build_response(request, 404, 'Not found')
 
         # Check if the user can know the org payment info
-        if (not request.user.is_staff or not request.user.pk in org.managers)\
+        if (not request.user.is_staff and not request.user.pk in org.managers)\
         and 'payment_info' in org_info:
             del(org_info['payment_info'])
 

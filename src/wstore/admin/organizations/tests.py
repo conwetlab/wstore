@@ -125,6 +125,7 @@ class OrganizationEntryTestCase(TestCase):
 
         reload(views)
         views.build_response = build_response_mock
+        views.HttpResponse = HTTPResponseMock
         views.RSS = MagicMock()
         rss_object = MagicMock()
         views.RSS.objects.all.return_value = [rss_object]
@@ -285,6 +286,58 @@ class OrganizationEntryTestCase(TestCase):
             if 'limits' in data:
                 data['limits']['currency'] = 'EUR'
                 self.assertEquals(data['limits'], self.org_object.expenditure_limits)
+
+    def _revoke_staff(self):
+        self.request.user.is_staff = False
+
+    @parameterized.expand([
+    (False, False, ),
+    (False, True, _revoke_staff),
+    (True, False, _not_found)
+    ])
+    def test_get_organization(self, error, not_staff, side_effect=None):
+
+        self.request.user.is_staff = True
+        # Mock get_organization_info
+        data = {
+            'name': 'test_org1',
+            'notification_url': 'http://notificationurl.com',
+            'payment_info': {
+                'number': 'xxxxxxxxxxxx1234',
+                'type': 'visa',
+                'expire_year': '2018',
+                'expire_month': '5',
+                'cvv2': '111'
+            }
+        }
+        views.get_organization_info = MagicMock()
+        views.get_organization_info.return_value = data.copy()
+
+        # Mock organization all method
+        org_object = MagicMock()
+        views.Organization.objects.get = MagicMock()
+        views.Organization.objects.return_value = org_object
+
+        # Create the view
+        org_entry = views.OrganizationEntry(permitted_methods=('GET', 'PUT'))
+
+        if side_effect:
+            side_effect(self)
+
+        response = org_entry.read(self.request, 'test_org')
+
+        if not error:
+            # Check response
+            if not_staff:
+                del(data['payment_info'])
+
+            self.assertEquals(response.status, 200)
+            self.assertEquals(json.loads(response.data), data)
+        else:
+            body_response = json.loads(response.content)
+            self.assertEquals(response.status_code, 404)
+            self.assertEquals(body_response['message'], 'Not found')
+            self.assertEquals(body_response['result'], 'error')
 
 
 class OrganizationCollectionTestCase(TestCase):
