@@ -30,6 +30,7 @@ from django.conf import settings
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
 from wstore.store_commons.resource import Resource
+from wstore.store_commons.utils.url import is_valid_url
 from wstore.models import Organization, RSS
 from django.contrib.auth.decorators import login_required
 from wstore.admin.views import is_hidden_credit_card, is_valid_credit_card
@@ -78,6 +79,9 @@ class OrganizationCollection(Resource):
         try:
             data = json.loads(request.raw_post_data)
 
+            if data['notification_url'] and not is_valid_url(data['notification_url']):
+                raise Exception('Invalid notification URL format')
+
             tax_address = {}
             if 'tax_address' in data:
                 tax_address = {
@@ -104,10 +108,13 @@ class OrganizationCollection(Resource):
                 notification_url=data['notification_url'],
                 tax_address=tax_address,
                 payment_info=payment_info,
-        private=False
+                private=False
             )
-        except:
-            return build_response(request, 400, 'Inavlid content')
+        except Exception as e:
+            msg = e.message
+            if not msg.startswith('Invalid'):
+                msg = 'Invalid content'
+            return build_response(request, 400, msg)
 
         return build_response(request, 201, 'Created')
 
@@ -168,13 +175,7 @@ class OrganizationEntry(Resource):
             # Load request data
             data = json.loads(request.raw_post_data)
             if 'notification_url' in data:
-                if data['notification_url'] and not re.match(re.compile(
-                    r'^https?://'
-                    r'(?:(?:[\w0-9](?:[\w0-9-]{0,61}[\w0-9])?\.)+[\w]{2,6}\.?|'
-                    r'localhost|'
-                    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
-                    r'(?::\d+)?'
-                    r'(?:/?|[/?]\S+)$', re.IGNORECASE), data['notification_url']):
+                if data['notification_url'] and not is_valid_url(data['notification_url']):
                     raise Exception('Invalid notification URL')
 
                 organization.notification_url = data['notification_url']
