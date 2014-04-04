@@ -27,7 +27,6 @@ from nose_parameterized import parameterized
 from django.test import TestCase
 
 from wstore.admin.markets import markets_management
-from wstore.models import Marketplace
 from wstore.admin.markets import views
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
 decorator_mock_callable, HTTPResponseMock
@@ -236,6 +235,7 @@ class MarketplaceViewTestCase(TestCase):
 
         reload(views)
         views.build_response = build_response_mock
+        views.HttpResponse = HTTPResponseMock
 
         # Mock get_current_site methods
         views.get_current_site = MagicMock()
@@ -310,5 +310,76 @@ class MarketplaceViewTestCase(TestCase):
         if not error:
             views.register_on_market.assert_called_with(data['name'], data['host'], 'http://teststore.org')
 
-    def test_market_api_get(self):
-        pass
+    @parameterized.expand([
+    (False,),
+    (True,)
+    ])
+    def test_market_api_get(self, error):
+        # Mock get marketplaces method
+        views.get_marketplaces = MagicMock()
+
+        # Create the view
+        market_collection = views.MarketplaceCollection(permitted_methods=('GET', 'POST'))
+
+        # Set return value for get_marketplaces
+        data = None
+        if not error:
+            data = {
+                'marketplaces': [{
+                    'name': 'test_marketplace',
+                    'host': 'http://testmarketplace.org'
+                }]
+            }
+            views.get_marketplaces.return_value = data
+        else:
+            views.get_marketplaces.side_effect = Exception('Market error')
+
+        # Call the marketplace view
+        response = market_collection.read(self.request)
+
+        # Check response
+        if not error:
+            self.assertEquals(response.status, 200)
+            self.assertEquals(response.mimetype, 'application/JSON; charset=UTF-8')
+            self.assertEquals(json.loads(response.data), data)
+        else:
+            content = json.loads(response.content)
+            self.assertEquals(response.status_code, 400)
+            self.assertEquals(content['message'], 'Invalid request')
+            self.assertEquals(content['result'], 'error')
+
+    def _bad_gateway_unreg(self):
+        views.unregister_from_market.side_effect = Exception('Bad Gateway')
+
+    def _not_found_unreg(self):
+        views.unregister_from_market.side_effect = Exception('Not found')
+
+    def _market_failure_unreg(self):
+        views.unregister_from_market.side_effect = Exception('Bad request')
+
+    @parameterized.expand([
+    ((204, 'No content', 'correct'),),
+    ((403, 'Forbidden', 'error'), _forbidden),
+    ((502, 'Bad Gateway', 'error'), _bad_gateway_unreg),
+    ((404, 'Not found', 'error'), _not_found_unreg),
+    ((400, 'Bad request', 'error'), _market_failure_unreg)
+    ])
+    def test_market_api_delete(self, exp_result, side_effect=None):
+        # Mock unregister_form_market
+        views.unregister_from_market = MagicMock()
+
+        # Check if side effect
+        if side_effect:
+            side_effect(self)
+
+        # Create the view
+        market_entry = views.MarketplaceEntry(permitted_methods=('DELETE',))
+
+        # Call the view
+        response = market_entry.delete(self.request, 'test_market')
+
+        # Check response
+        content = json.loads(response.content)
+        self.assertEquals(response.status_code, exp_result[0])
+        self.assertEquals(content['message'], exp_result[1])
+        self.assertEquals(content['result'], exp_result[2])
