@@ -28,6 +28,7 @@
 
         var unitForm = new UnitsForm();
         var rssForm = new RssForm();
+        var organizationForm = new OrganizationForm();
         var marketplaceForm = EndpointFormBuilder('marketplace');
         var repositoryForm = EndpointFormBuilder('repository');
 
@@ -44,7 +45,7 @@
         });
 
         $('.show-org').click(function() {
-            orgInfoRequest(paintOrganizations);
+            organizationForm.elementInfoRequest();
         });
 
         $('.show-prof').click(function() {
@@ -72,7 +73,7 @@
         });
 
         $('.add-org').click(function() {
-            paintOrganizationForm();
+            organizationForm.paintForm();
         });
 
         $('.add-prof').click(function() {

@@ -68,6 +68,11 @@
      * @param context, Contains the context to render the URL properly
      */
     AdminForm.prototype.updateElementRequest = function updateElementRequest(context) {
+        // Clean error fields
+        $('.control-group').each(function() {
+            $(this).attr('class', 'control-group');
+        });
+
         // Validation of the form
         var validation = this.validateFields();
 
@@ -87,6 +92,11 @@
      * Make the request for creation of administration elements
      */
     AdminForm.prototype.createElementRequest = function createElementRequest() {
+        // Clean error fields
+        $('.control-group').each(function() {
+            $(this).attr('class', 'control-group');
+        });
+
         // Validation of the form
         var validation = this.validateFields();
 
