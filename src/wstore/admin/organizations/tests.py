@@ -31,7 +31,7 @@ from django.contrib.auth.models import User
 from wstore.admin.organizations import views
 from wstore.models import Organization
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
-decorator_mock_callable
+decorator_mock_callable, HTTPResponseMock
 from wstore.admin.rss.tests import ExpenditureMock
 
 
@@ -285,3 +285,238 @@ class OrganizationEntryTestCase(TestCase):
             if 'limits' in data:
                 data['limits']['currency'] = 'EUR'
                 self.assertEquals(data['limits'], self.org_object.expenditure_limits)
+
+
+class OrganizationCollectionTestCase(TestCase):
+
+    tags = ('org-admin',)
+
+    @classmethod
+    def setUpClass(cls):
+        from wstore.store_commons.utils import http
+        # Save the reference of the decorators
+        cls._old_auth = types.FunctionType(
+            http.authentication_required.func_code,
+            http.authentication_required.func_globals,
+            name=http.authentication_required.func_name,
+            argdefs=http.authentication_required.func_defaults,
+            closure=http.authentication_required.func_closure
+        )
+
+        cls._old_supp = types.FunctionType(
+            http.supported_request_mime_types.func_code,
+            http.supported_request_mime_types.func_globals,
+            name=http.supported_request_mime_types.func_name,
+            argdefs=http.supported_request_mime_types.func_defaults,
+            closure=http.supported_request_mime_types.func_closure
+        )
+
+        # Mock class decorators
+        http.authentication_required = decorator_mock
+        http.supported_request_mime_types = decorator_mock_callable
+
+        reload(views)
+        views.build_response = build_response_mock
+        views.HttpResponse = HTTPResponseMock
+        super(OrganizationCollectionTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        # Restore mocked decorators
+        from wstore.store_commons.utils import http
+        http.authentication_required = cls._old_auth
+        http.supported_request_mime_types = cls._old_supp
+        super(OrganizationCollectionTestCase, cls).tearDownClass()
+
+    def setUp(self):
+        # Create organization mock 1
+        org_mock_1 = MagicMock()
+        org_mock_1.private = False
+        org_mock_1.name = 'test_org1'
+        org_mock_1.notification_url = 'http://notification.com'
+        org_mock_1.tax_address = {
+            'street': 'fake street 123',
+            'country': 'Country'
+        }
+        org_mock_1.expenditure_limits = {}
+        org_mock_1.payment_info = {
+            'number': '1234123412341234',
+            'type': 'visa',
+            'expire_year': '2018',
+            'expire_month': '5',
+            'cvv2': '111'
+        }
+
+        # Create organization mock 2
+        org_mock_2 = MagicMock()
+        org_mock_2.private = False
+        org_mock_2.name = 'test_org2'
+        org_mock_2.notification_url = 'http://notification2.com'
+        org_mock_2.expenditure_limits = {}
+
+        # Create organization mock 3
+        org_mock_3 = MagicMock()
+        org_mock_3.private = True
+
+        self.organizations = {
+            'org1': org_mock_1,
+            'org2': org_mock_2,
+            'org3': org_mock_3
+        }
+        # Create request mock
+        self.request = MagicMock()
+        self.request.user.is_staff = True
+
+        # Create organization object mock
+        views.Organization = MagicMock()
+
+    @parameterized.expand([
+    ({
+        'name': 'test_org1',
+        'notification_url': 'http://notification.com',
+        'tax_address': {
+            'street': 'fake street 123',
+            'country': 'Country'
+        },
+        'payment_info': {
+            'number': 'xxxxxxxxxxxx1234',
+            'type': 'visa',
+            'expire_year': '2018',
+            'expire_month': '5',
+            'cvv2': '111'
+        },
+        'limits': {}
+    }, 'org1'),
+    ({
+        'name': 'test_org2',
+        'notification_url': 'http://notification2.com',
+        'limits': {}
+    }, 'org2'),
+    ('Private organization', 'org3', True)
+    ])
+    def test_get_organization_info(self, exp_data, org_id, exp_error=False):
+
+        # Call the mocked function
+        error = False
+        msg = None
+        try:
+            org_info = views.get_organization_info(self.organizations[org_id])
+        except Exception as e:
+            error = True
+            msg = e.message
+
+        if not exp_error:
+            # Check organization info
+            self.assertFalse(error)
+            self.assertEquals(org_info, exp_data)
+        else:
+            self.assertTrue(error)
+            self.assertEquals(msg, exp_data)
+
+    @parameterized.expand([
+    ({
+        'name': 'test_org1',
+        'notification_url': 'http://notificationurl.com',
+        'tax_address': {
+            'city': 'city',
+            'street': 'fake street 123',
+            'country': 'country',
+            'postal': '12344'
+        },
+        'payment_info': {
+            'number': '1234123412341234',
+            'type': 'visa',
+            'expire_year': '2018',
+            'expire_month': '5',
+            'cvv2': '111'
+        }
+    }, (201, 'Created', 'correct')),
+    ({
+        'name': 'test_org1',
+        'notification_url': 'http://notificationurl.com'
+    }, (201, 'Created', 'correct')),
+    ({
+        'invalid_name': 'test_org1',
+        'notification_url': 'http://notificationurl.com'
+    }, (400, 'Invalid content', 'error'), False),
+    ({
+        'name': 'test_org1',
+        'notification_url': 'http:notificationurl.com'
+    }, (400, 'Invalid notification URL format', 'error'), False)
+    ])
+    def test_organization_creation(self, data, exp_resp, created=True):
+
+        # Load request data
+        self.request.raw_post_data = json.dumps(data)
+
+        # Create the view
+        org_collection = views.OrganizationCollection(permitted_methods=('POST', 'GET'))
+
+        # Call the view
+        response = org_collection.create(self.request)
+
+        # Check response
+        content = json.loads(response.content)
+        self.assertEquals(response.status_code, exp_resp[0])
+        self.assertEquals(content['message'], exp_resp[1])
+        self.assertEquals(content['result'], exp_resp[2])
+
+        # Check calls
+        if created:
+            tax = {}
+            if 'tax_address' in data:
+                tax = data['tax_address']
+
+            pay = {}
+            if 'payment_info' in data:
+                pay = data['payment_info']
+
+            views.Organization.objects.create.assert_called_with(
+                name=data['name'],
+                notification_url=data['notification_url'],
+                tax_address=tax,
+                payment_info=pay,
+                private=False
+            )
+
+    def _revoke_staff(self):
+        self.request.user.is_staff = False
+
+    @parameterized.expand([
+    (False, ),
+    (True, _revoke_staff),
+    ])
+    def test_organization_retrieving(self, not_staff, side_effect=None):
+
+        # Mock get_organization_info
+        data = {
+            'name': 'test_org1',
+            'notification_url': 'http://notificationurl.com',
+            'payment_info': {
+                'number': 'xxxxxxxxxxxx1234',
+                'type': 'visa',
+                'expire_year': '2018',
+                'expire_month': '5',
+                'cvv2': '111'
+            }
+        }
+        views.get_organization_info = MagicMock()
+        views.get_organization_info.return_value = data.copy()
+
+        # Mock organization all method
+        views.Organization.objects.all.return_value = [self.organizations['org1'], self.organizations['org2']]
+
+        # Create the view
+        org_collection = views.OrganizationCollection(permitted_methods=('POST', 'GET'))
+
+        if side_effect:
+            side_effect(self)
+
+        response = org_collection.read(self.request)
+
+        # Check response
+        if not_staff:
+            del(data['payment_info'])
+
+        self.assertEquals(response.status, 200)
+        self.assertEquals(json.loads(response.data), [data, data])

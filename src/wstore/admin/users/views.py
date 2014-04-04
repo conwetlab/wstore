@@ -30,7 +30,6 @@ authentication_required
 from wstore.store_commons.resource import Resource
 from wstore.models import UserProfile, RSS
 from wstore.models import Organization
-from wstore.models import Purchase
 from wstore.admin.views import is_hidden_credit_card, is_valid_credit_card
 from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
 from wstore.admin.rss.views import _check_limits
