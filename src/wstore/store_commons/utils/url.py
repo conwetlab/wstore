@@ -18,8 +18,20 @@
 # along with WStore.  
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+import re
 import urllib
 import urlparse
+
+
+def is_valid_url(url):
+    return re.match(re.compile(
+        r'^https?://'
+        r'(?:(?:[\w0-9](?:[\w0-9-]{0,61}[\w0-9])?\.)+[\w]{2,6}\.?|'
+        r'localhost|'
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+        r'(?::\d+)?'
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE), url)
+
 
 def url_fix(s, charset='utf-8'):
     if isinstance(s, unicode):

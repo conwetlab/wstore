@@ -24,7 +24,7 @@ from urllib import urlencode
 from urlparse import urljoin, urlparse
 
 from wstore.store_commons.utils.method_request import MethodRequest
-from wstore.store_commons.utils.fix_url import url_fix
+from wstore.store_commons.utils.url import url_fix
 
 
 class MarketAdaptor(object):
