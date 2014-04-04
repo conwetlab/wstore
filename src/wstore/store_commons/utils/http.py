@@ -107,7 +107,7 @@ def identity_manager_required(func):
 
     def wrapper(self, request, *args, **kwargs):
         if not settings.OILAUTH:
-            return build_response(request, 401, 'The requested features are not supported for the current authentication method')
+            return build_response(request, 403, 'The requested features are not supported for the current authentication method')
         return func(self, request, *args, **kwargs)
     return wrapper
 
