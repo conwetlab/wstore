@@ -73,7 +73,7 @@ def send_mail_from_gmail(toaddr, subject, message):
     username = settings.WSTOREMAIL
     password = settings.WSTOREMAILPASS
     fromaddr = settings.WSTOREMAILUSER
-    server = smtplib.SMTP('smtp.gmail.com:587')
+    server = smtplib.SMTP(settings.SMTPSERVER)
     server.starttls()
     server.login(username, password)
     message = 'Subject:' + subject + message

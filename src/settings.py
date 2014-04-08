@@ -87,13 +87,6 @@ STATIC_ROOT = path.join(BASEDIR, 'static')
 # Example: "http://media.lawrence.com/static/"
 STATIC_URL = '/static/'
 
-# Additional locations of static files
-STATICFILES_DIRS = (
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
-
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -111,7 +104,7 @@ if OILAUTH:
 else:
     LOGIN_URL = '/login/'
 
-USDL_EDITOR_URL = "http://wstore.lab.fi-ware.eu/usdl-editor"
+USDL_EDITOR_URL = "http://store.lab.fi-ware.eu/usdl-editor"
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '8p509oqr^68+z)y48_*pv!ceun)gu7)yw6%y9j2^0=o14)jetr'
@@ -152,6 +145,7 @@ MIDDLEWARE_CLASSES = (
 WSTOREMAILUSER = '<mail_user'
 WSTOREMAIL = '<email>'
 WSTOREMAILPASS = '<email_passwd>'
+SMTPSERVER = 'smtp.gmail.com:587'
 
 WSTOREPROVIDERREQUEST = '<provider_requests_email>'
 
@@ -181,12 +175,6 @@ ROOT_URLCONF = 'urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'wsgi.application'
-
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
 
 PAYMENT_CLIENT = 'wstore.charging_engine.payment_client.paypal_client.PayPalClient'
 
@@ -218,10 +206,10 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-#SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 
 FIWARE_APP_ID = '<app_id>'
 FIWARE_API_SECRET = '<app_secret>'
+FIWARE_IDM_ENDPOINT = 'https://account.lab.fi-ware.org'
 
 SOCIAL_AUTH_ENABLED_BACKENDS = ('fiware',)
 
