@@ -20,6 +20,7 @@
 
 import os
 import codecs
+from pymongo import MongoClient
 from sys import stdin
 import subprocess
 
@@ -27,7 +28,6 @@ import django.conf
 from django.core.management.base import CommandError
 from django.core.management.base import BaseCommand
 from django.template import loader, Context
-from django.contrib.sites.models import Site
 
 
 def exec_external_cmd(cmd):
@@ -175,13 +175,16 @@ class Command(BaseCommand):
         # Execute final commands
         exec_external_cmd(syn_command)
         exec_external_cmd('python manage.py collectstatic --noinput')
+        exec_external_cmd('python manage.py createsite ' + site_name + ' ' + site_domain)
 
         # Reload the settings
         reload(django.conf)
 
-        # Create the site 
-        site = Site.objects.create(name=site_name, domain=site_domain)
-        settings['site_id'] = site.pk
+        # Get site pk to include it as site_id, raw mongo access since it is not
+        # possible to change the database dynamically
+        client = MongoClient()
+        db = client[settings['database']]
+        settings['site_id'] = unicode(db.django_site.find_one({'name': site_name})['_id'])
 
         # Create final settings file including site_id
         settings_content = template.render(Context(settings))
@@ -192,4 +195,3 @@ class Command(BaseCommand):
         f.write(settings_content)
         f.truncate()
         f.close()
-
