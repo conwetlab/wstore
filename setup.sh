@@ -24,4 +24,11 @@ cd $WORKSPACE/src
 mkdir -p media/{bills,resources}
 mkdir -p wstore/search/index
 
+# Test installation
 $WORKSPACE/coverage.sh
+
+# Configure installation
+if [[ "$1" != "--noinput" ]]
+  then
+    $WORKSPACE/configure.sh
+fi
