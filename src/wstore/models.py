@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
@@ -152,7 +154,16 @@ def create_user_profile(sender, instance, created, **kwargs):
 def create_context(sender, instance, created, **kwargs):
 
     if created:
-        Context.objects.get_or_create(site=instance)
+        import ipdb; ipdb.set_trace()
+        context = Context.objects.get_or_create(site=instance)[0]
+        context.allowed_currencies = {
+            'allowed': [{
+                'currency': 'EUR',
+                'in_use': False
+            }],
+            'default': 'EUR'
+        }
+        context.save()
 
 
 #Creates a new user profile when an user is created
