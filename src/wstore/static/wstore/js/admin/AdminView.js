@@ -96,18 +96,29 @@
     };
 
     calculatePositions = function calculatePositions() {
+        var position;
         var filabInt = $('#oil-nav').length > 0;
+
+        $('.admin-element').removeAttr('style');
         // Check window width
         if (filabInt) {
             if ($(window).width() < 981) {
-                // Change headers position to avoid problems with bootstrap responsive
                 $('.title_wrapper').css('top', '-30px');
                 $('.navigation').css('top', '-109px');
+                $('.admin-element').css('top', '-60px');
             } else {
+                var offset;
+                var width;  
                 $('.title_wrapper').css('top', '140px');
                 $('.navigation').css('top', '60px');
             }
         }
+        // Fixed position in admin view
+        offset = $(window).height() - $('.admin-element').offset().top - 30;
+        width = $(window).width() - $('.admin-element').offset().left -10;
+        $('.admin-element').css('height', offset.toString() + 'px');
+        $('.admin-element').css('width', width.toString() + 'px');
+
         // Check username length to avoid display problems
         if ($.trim($('div.btn.btn-blue > div.dropdown-toggle span').text()).length > 12) {
             var shortName = ' '+ USERPROFILE.getCompleteName().substring(0, 9) + '...';
@@ -115,7 +126,7 @@
             var userBtn = $('div.btn.btn-blue > div.dropdown-toggle span');
             userBtn.empty();
             userBtn.text(shortName);
-        }
+      }
     }
     $(window).resize(calculatePositions);
 })()

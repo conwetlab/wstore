@@ -358,7 +358,6 @@
             userBtn.text(shortName);
         }
     }
-
     $(window).resize(calculatePositions);
 
 })();

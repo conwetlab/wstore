@@ -214,12 +214,18 @@
     width: 200px;
 }
 
-/* Fixed position in Search options in the store view */
+/* Fixed position in Store View */
+#container-rated-newest {
+    overflow: auto;
+    position: absolute;
+}
+
+/* Fixed position in View All options in the store view */
 .search-container {
+    overflow: auto;
     position: absolute;
     top: 300px;
     left: 250px;
-    overflow: auto;
     height: 118%;
     width: 82%;
 }
@@ -601,6 +607,6 @@ a.tag {
 
 /* Fixed position in Footer */
 footer {
-    position: fixed;
-    bottom: 0;
+  position: fixed;
+  bottom: 0;
 }

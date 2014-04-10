@@ -217,12 +217,13 @@
     };
 
     calculatePositions = function calculatePositions() {
+        var position;
         var filabInt = $('#oil-nav').length > 0;
 
         // Check window width
         if ($(window).width() < 981) {
-            // Change headers position to avoid problems with bootstrap responsive
 
+            // Change headers position to avoid problems with bootstrap responsive
             if (filabInt) {
                 $('.title_wrapper').css('top', '-30px');
                 $('.navigation').css('top', '-109px');
@@ -267,6 +268,15 @@
                     $('.search-container').css('height', offset.toString() + 'px');
                     $('.search-container').css('width', searchWidth.toString() + 'px');
                 }
+            } else if ($('#container-rated-newest').length > 0) {
+                // Fixed position in: Homepage in the store view
+                var offsetStore;
+                var storeWidth;
+
+                offsetStore = $(window).height() - $('#container-rated-newest').offset().top - 30;
+                storeWidth = $(window).width() - $('#container-rated-newest').offset().left;
+                $('#container-rated-newest').css('height', offsetStore.toString() + 'px');
+                $('#container-rated-newest').css('width', storeWidth.toString() + 'px');
             }
         } else {
             if (filabInt) {
@@ -289,7 +299,19 @@
                 $('.search-container').css('height', offset.toString() + 'px');
                 $('.search-container').css('width', searchWidth.toString() + 'px');
             }
+            
+            if ($('#container-rated-newest').length > 0) {
+                // Fixed position in: Homepage in the store view
+                var offsetStore;
+                var storeWidth;
+
+                offsetStore = $(window).height() - $('#container-rated-newest').offset().top - 30;
+                storeWidth = $(window).width() - $('#container-rated-newest').offset().left;
+                $('#container-rated-newest').css('height', offsetStore.toString() + 'px');
+                $('#container-rated-newest').css('width', storeWidth.toString() + 'px');
+            }
         }
+
         // Check username length to avoid display problems
         if ($.trim($('div.btn.btn-blue > div.dropdown-toggle span').text()).length > 12) {
             var shortName = ' '+ USERPROFILE.getCompleteName().substring(0, 9) + '...';

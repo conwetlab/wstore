@@ -1,6 +1,10 @@
 
 .admin-element {
     margin-top: 100px;
+    overflow: auto;
+    position: absolute;
+    top: 100px;
+    left: 7px;
 }
 
 .admin-form {
