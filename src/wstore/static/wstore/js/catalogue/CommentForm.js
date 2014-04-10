@@ -59,6 +59,7 @@
         MessageManager.showMessage('Comment', '');
 
         $('<div></div>').attr('id', 'error-message').appendTo('.modal-body');
+        $('<div></div>').addClass('clear').appendTo('.modal-body');
 
         $('<p></p>').text('Rating').appendTo('.modal-body');
 
