@@ -79,8 +79,11 @@ class OrganizationCollection(Resource):
         try:
             data = json.loads(request.raw_post_data)
 
-            if data['notification_url'] and not is_valid_url(data['notification_url']):
-                raise Exception('Invalid notification URL format')
+            if 'notification_url' in data:
+                if data['notification_url'] and not is_valid_url(data['notification_url']):
+                    raise Exception('Invalid notification URL format')
+            else:
+                data['notification_url'] = ''
 
             tax_address = {}
             if 'tax_address' in data:

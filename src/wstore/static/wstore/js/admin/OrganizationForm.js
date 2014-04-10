@@ -56,16 +56,7 @@
         }
 
         // Check the notification url
-        if (!notification_url) {
-            if (validation.valid) {
-                validation.valid = false;
-                validation.msg = 'Missing required field';
-                validation.errFields = [$('input[id="id_notification_url"]').parent().parent()];
-            } else {
-                validation.errFields.push($('input[id="id_notification_url"]').parent().parent());
-            }
-            return validation;
-        } else {
+        if (notification_url) {
             var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
             if (!urlReg.test(notification_url)) {
                 if (!validation.valid) {
@@ -81,6 +72,8 @@
             } else {
                 validation.data.notification_url = notification_url;
             }
+        } else {
+            validation.data.notification_url = notification_url;
         }
 
         // Get the credit card's input fields
