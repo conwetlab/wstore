@@ -54,10 +54,10 @@
                                     'data': encoded
                                 });
                             } else if (type == 'logo') {
-                                logo.push({
+                                logo = [{
                                     'name': file.name,
                                     'data': encoded
-                                });
+                                }];
                             }
                             readImages(images);
                         };
