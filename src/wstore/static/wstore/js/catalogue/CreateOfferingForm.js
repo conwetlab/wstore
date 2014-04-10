@@ -470,9 +470,18 @@
             name = $.trim($('[name="app-name"]').val());
             version = $.trim($('[name="app-version"]').val());
 
-            if (!name || !version || !logo) {
+            if (!name || !version || !logo.length) {
                 error = true;
-                msg = 'Missing required field';
+                msg = 'Missing required field(s):';
+                if (!name) {
+                    msg += ' Name';
+                }
+                if(!version) {
+                    msg += ' Version';
+                }
+                if(!logo.length) {
+                    msg += ' Logo';
+                }
             }
 
             // Get the notification URL
