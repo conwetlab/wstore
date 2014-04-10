@@ -102,15 +102,10 @@
         // Get provider user info
         if ($('input[id="id_rol_provider"]').prop('checked')) {
             var notification_url = $.trim($('input[id="id_notification_url"]').val());
-            var url_re = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+            var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
 
             // Check the notification url
-            if (!notification_url) {
-                validation.valid = false;
-                validation.msg = 'Missing required field';
-                validation.errFields = [$('input[id="id_notification_url"]').parent().parent()];
-                return validation;
-            } else if (!urlReg.test(notification_url)) {
+            if (notification_url && !urlReg.test(notification_url)) {
                 validation.valid = false;
                 validation.msg = 'Invalid URL format';
                 validation.errFields = [$('input[id="id_notification_url"]').parent().parent()];
