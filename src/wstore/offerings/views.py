@@ -299,7 +299,7 @@ class PublishEntry(Resource):
         site = get_current_site(request)
         context = Context.objects.get(site=site)
 
-        if len(context.newest) < 4:
+        if len(context.newest) < 8:
             context.newest.insert(0, offering.pk)
         else:
             context.newest.pop()

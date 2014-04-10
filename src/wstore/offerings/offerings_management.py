@@ -749,14 +749,14 @@ def delete_offering(offering):
             # Remove the offering from the newest list
             newest = context.newest
 
-            if len(newest) < 4:
+            if len(newest) < 8:
                 newest.remove(offering.pk)
             else:
-                # Get the 4 newest offerings using the publication date for sorting
+                # Get the 8 newest offerings using the publication date for sorting
                 connection = MongoClient()
                 db = connection[settings.DATABASES['default']['NAME']]
                 offerings = db.wstore_offering
-                newest_off = offerings.find({'state': 'published'}).sort('publication_date', -1).limit(4)
+                newest_off = offerings.find({'state': 'published'}).sort('publication_date', -1).limit(8)
 
                 newest = []
                 for n in newest_off:
@@ -769,14 +769,14 @@ def delete_offering(offering):
         if offering.pk in context.top_rated:
             # Remove the offering from the top rated list
             top_rated = context.top_rated
-            if len(top_rated) < 4:
+            if len(top_rated) < 8:
                 top_rated.remove(offering.pk)
             else:
                 # Get the 4 top rated offerings
                 connection = MongoClient()
                 db = connection[settings.DATABASES['default']['NAME']]
                 offerings = db.wstore_offering
-                top_off = offerings.find({'state': 'published', 'rating': {'$gt': 0}}).sort('rating', -1).limit(4)
+                top_off = offerings.find({'state': 'published', 'rating': {'$gt': 0}}).sort('rating', -1).limit(8)
 
                 top_rated = []
                 for t in top_off:
@@ -882,7 +882,7 @@ def comment_offering(offering, comment, user):
     top_rated = context.top_rated
 
     # If there is a place append the offering
-    if len(top_rated) < 4:
+    if len(top_rated) < 8:
 
         # If the offering is not included append it
         if not offering.pk in top_rated:
