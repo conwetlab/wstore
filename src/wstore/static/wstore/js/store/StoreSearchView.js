@@ -35,7 +35,7 @@
 
     var getNextOfferings = function getNextOfferings(nextPage) {
         if (numberOfPages == 0) {
-            var msg = 'Your search has not produce any results';
+            var msg = 'Your search has not produced any results';
             refreshPagination(nextPage);
 
             MessageManager.showAlertInfo('No offerings', msg, $('.search-container'))
