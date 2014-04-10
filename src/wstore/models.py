@@ -154,7 +154,6 @@ def create_user_profile(sender, instance, created, **kwargs):
 def create_context(sender, instance, created, **kwargs):
 
     if created:
-        import ipdb; ipdb.set_trace()
         context = Context.objects.get_or_create(site=instance)[0]
         context.allowed_currencies = {
             'allowed': [{
