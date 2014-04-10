@@ -29,6 +29,7 @@
         var unitForm = new UnitsForm();
         var rssForm = new RssForm();
         var organizationForm = new OrganizationForm();
+        var userForm = new UserForm();
         var marketplaceForm = EndpointFormBuilder('marketplace');
         var repositoryForm = EndpointFormBuilder('repository');
 
@@ -49,7 +50,7 @@
         });
 
         $('.show-prof').click(function() {
-            userInfoRequest();
+            userForm.elementInfoRequest();
         });
 
         $('.show-units').click(function() {
@@ -77,7 +78,7 @@
         });
 
         $('.add-prof').click(function() {
-            paintUserForm();
+            userForm.paintForm();
         });
 
         $('.add-unit').click(function() {

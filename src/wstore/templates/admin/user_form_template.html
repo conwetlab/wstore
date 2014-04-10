@@ -1,100 +1,139 @@
 
 <a id="back">Return</a>
+<div class="row row-fluid">
 <form class="form form-vertical admin-form double-column">
+    <div id="admin-err-cont" />
+    <h2>User</h2>
     <fieldset>
-    <h2 id="user-title">User profile</h2>
+    <section class="span6">
+        <div class="control-group">
+            <label for="id_full_name" class="control-label">Full name</label>
+            <div class="controls span5" style="margin-left: 0px;">
+                <input type="text" id="id_first_name" class="span12" placeholder="First name" />
+            </div><!-- /.controls -->
+            <div class="controls span5">
+                <input type="text" id="id_last_name" class="span12" placeholder="Last name" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group">
+            <label for="id_user_name" class="control-label">Username</label>
+            <div class="controls">
+                <input type="text" id="id_user_name" class="span10" placeholder="Enter at least 5 characters" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group" style="margin-bottom: 13px;">
+            <label for="id_roles" class="control-label">Roles <small style="color: #999;">(opcional)</small></label>
+            <div class="controls">
+                <label class="checkbox inline"><input type="checkbox" id="id_rol_provider" /> Provider</label>
+                <label class="checkbox inline"><input type="checkbox" id="id_rol_admin" /> Admin</label>
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+    </section>
+    <section class="span6">
+        <div class="control-group">
+            <label for="id_password1" class="control-label">Password</label>
+            <div class="controls">
+                <input type="password" id="id_password1" class="span10" placeholder="Enter at least 5 characters" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group">
+            <label for="id_password2" class="control-label">Password confirmation</label>
+            <div class="controls">
+                <input type="password" id="id_password2" class="span10" placeholder="Enter the same password as above" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group hide">
+            <label for="id_notification_url" class="control-label">Notification URL</label>
+            <div class="controls">
+                <input type="text" id="id_notification_url" class="span10" placeholder="Notification URL" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+    </section>
+    <div class="space clear"></div>
+    <div class="line clear"></div>
+    <section class="span6" style="margin-left: 0px;">
+        <h3>Payment Form <small>(opcional)</small></h3>
+        <div class="control-group">
+            <label for="id_card_type" class="control-label" >Card type</label>
+            <div class="controls">
+                <select id="id_card_type" class="span10">
+                    <option value="0" selected>Choose the card type</option>
+                    <option value="Visa">Visa</option>
+                    <option value="MasterCard">MasterCard</option>
+                </select>
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group">
+            <label for="id_card_number" class="control-label">Card number</label>
+            <div class="controls">
+                <input type="text" id="id_card_number" class="span10" placeholder="Card number" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group">
+            <label for="id_card_code" class="control-label">Card code</label>
+            <div class="controls">
+                <input type="text" id="id_card_code" class="span10" placeholder="CVV2 / CVC2" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group">
+            <label for="id_expiry_date" class="control-label">Expiry date</label>
+            <div class="controls span5" style="margin-left: 0px;">
+                <select id="id_card_month" class="span12">
+                    <option value="0" selected>Month</option>
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+            </div><!-- /.controls -->
+            <div class="controls span5">
+                <input type="text" id="id_card_year" class="span12" placeholder="Year" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+    </section>
+    <section class="span6">
+        <h3>Tax Address <small>(opcional)</small></h3>
+        <div class="control-group">
+            <label for="id_tax_street" class="control-label">Street</label>
+            <div class="controls">
+                <input type="text" id="id_tax_street" class="span10" placeholder="Street" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group">
+            <label for="id_tax_postcode" class="control-label">Postcode</label>
+            <div class="controls">
+                <input type="text" id="id_tax_postcode" class="span10" placeholder="Postcode" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group">
+            <label for="id_tax_city" class="control-label">City</label>
+            <div class="controls">
+                <input type="text" id="id_tax_city" class="span10" placeholder="City" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+        <div class="control-group">
+            <label for="id_tax_country" class="control-label">Country</label>
+            <div class="controls">
+                <input type="text" id="id_tax_country" class="span10" placeholder="Country" />
+            </div><!-- /.controls -->
+        </div><!-- /.control-group -->
+    </section>
+    <div class="space clear"></div>
+    <div class="line clear"></div>
+    <div class="space clear"></div>
     <div class="control-group">
-    <section class="span4">
-        <h3>User Info</h3>
-        <label class="control-label" for="user-name">User Name</label>
-        <div class="controls">
-            <input type="text" class="input" id="user-name" placeholder="User Name"/>
-        </div>
-        <label class="control-label" for="first-name">First name</label>
-        <div class="controls">
-            <input type="text" class="input" id="first-name" placeholder="First name"/>
-        </div>
-        <label class="control-label" for="last-name">Last name</label>
-        <div class="controls">
-            <input type="text" class="input" id="last-name" placeholder="Last name"/>
-        </div>
-        <div id="passwd">
-        </div>
-    </section>
-    <section>
-        <h3>Roles</h3>
-        <label class="checkbox">
-            <input type="checkbox" class="input" id="provider"/>
-            Provider
-        </label>
-        <label class="checkbox">
-            <input type="checkbox" class="input" id="admin"/>
-            Admin
-        </label>
-        <h3 class="hide">Notification URL</h3>
-        <input type="text" placeholder="Notification URL" id="notification" class="hide"></input>
-    </section>
-    <div class="space clear"/>
-    <div class="line clear"/>
-    <section class="span4">
-        <h3>Credit card</h3>
-        <label class="control-label" for="type">Type</label>
-        <select id=type>
-            <option value="0">------</option>
-            <option value="Visa">Visa</option>
-            <option value="MasterCard">MasterCard</option>
-        </select>
-        <label class="control-label" for="number">Number</label>
-        <div class="controls">
-            <input type="text" class="input credit-input" id="number" placeholder="Number"/>
-        </div>
-        <label for="expire-month">Expire month</label>
-        <select id="expire-month">
-            <option value="0">------</option>
-    	    <option value="1">January</option>
-    	    <option value="2">February</option>
-    	    <option value="3">March</option>
-    	    <option value="4">April</option>
-    	    <option value="5">May</option>
-    	    <option value="6">June</option>
-    	    <option value="7">July</option>
-    	    <option value="8">August</option>
-    	    <option value="9">September</option>
-    	    <option value="10">October</option>
-    	    <option value="11">November</option>
-    	    <option value="12">December</option>
-        </select>
-        <label class="control-label" for="expire-year">Expire year</label>
-        <div class="controls">
-            <input type="text" class="input credit-input" id="expire-year" placeholder="Expire year"/>
-        </div>
-        <label class="control-label" for="cvv2">cvv2</label>
-        <div class="controls">
-            <input type="text" class="input credit-input" id="cvv2" placeholder="cvv2"/>
-        </div>
-    </section>
-    <section>
-        <h3>Tax address</h3>
-        <label class="control-label" for="street">Street</label>
-        <div class="controls">
-            <input type="text" class="input addr-input" id="street" placeholder="Street"/>
-        </div>
-        <label class="control-label" for="postal">Postal code</label>
-        <div class="controls">
-            <input type="text" class="input addr-input" id="postal" placeholder="Postal"/>
-        </div>
-        <label class="control-label" for="city">City</label>
-        <div class="controls">
-            <input type="text" class="input addr-input" id="city" placeholder="City"/>
-        </div>
-        <label class="control-label" for="country">Country</label>
-        <div class="controls">
-            <input type="text" class="input addr-input" id="country" placeholder="Country"/>
-        </div>
-    </section>
-    </div>
-    <div class="space clear"/>
-    <div class="line clear"/>
-    <div class="btn btn-blue admin-submit" id="user-submit">Register</div>
+        <div class="controls" style="text-align: center;">
+            <input type="button" class="btn btn-blue" id="elem-submit" value="Register" />
+        </div><!-- /.controls -->
+    </div><!-- /.control-group -->
   </fieldset>
 </form>
+</div>

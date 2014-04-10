@@ -70,7 +70,7 @@
     AdminForm.prototype.updateElementRequest = function updateElementRequest(context) {
         // Clean error fields
         $('.control-group').each(function() {
-            $(this).attr('class', 'control-group');
+            $(this).removeClass('error');
         });
 
         // Validation of the form
@@ -94,7 +94,7 @@
     AdminForm.prototype.createElementRequest = function createElementRequest() {
         // Clean error fields
         $('.control-group').each(function() {
-            $(this).attr('class', 'control-group');
+            $(this).removeClass('error');
         });
 
         // Validation of the form

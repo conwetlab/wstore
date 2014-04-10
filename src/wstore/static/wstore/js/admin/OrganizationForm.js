@@ -37,19 +37,22 @@
      * Organization form and get form info
      */
     OrganizationForm.prototype.validateFields = function validateFields() {
-        var validation = {};
+        var validation = {}, tax_address = {}, credit_card = {};
         var filled = 0, fields = 0;
 
         validation.valid = true;
+        validation.data = {};
 
-        var name = $.trim($('#org-name').val());
-        var notification_url = $.trim($('#notify-url').val());
+        var name = $.trim($('input[id="id_orgname"]').val());
+        var notification_url = $.trim($('input[id="id_notification_url"]').val());
 
         // Check the name
         if (!name) {
             validation.valid = false;
             validation.msg = 'Missing required field';
-            validation.errFields = [$('#org-name').parent().parent()];
+            validation.errFields = [$('input[id="id_orgname"]').parent().parent()];
+        } else {
+            validation.data.name = name;
         }
 
         // Check the notification url
@@ -57,9 +60,9 @@
             if (validation.valid) {
                 validation.valid = false;
                 validation.msg = 'Missing required field';
-                validation.errFields = [$('#notify-url').parent().parent()];
+                validation.errFields = [$('input[id="id_notification_url"]').parent().parent()];
             } else {
-                validation.errFields.push($('#notify-url').parent().parent());
+                validation.errFields.push($('input[id="id_notification_url"]').parent().parent());
             }
             return validation;
         } else {
@@ -68,18 +71,20 @@
                 if (!validation.valid) {
                     // Change validation message to indicate that more that an error exists
                     validation.msg += ' and invalid URL format';
-                    validation.errFields.push($('#notify-url').parent().parent());
+                    validation.errFields.push($('input[id="id_notification_url"]').parent().parent());
                 } else {
                     validation.valid = false;
                     validation.msg = 'Invalid URL format';
-                    validation.errFields = [$('#notify-url').parent().parent()];
+                    validation.errFields = [$('input[id="id_notification_url"]').parent().parent()];
                 }
                 return validation;
+            } else {
+                validation.data.notification_url = notification_url;
             }
         }
 
         // Get the credit card's input fields
-        $('.credit-input').each(function() {
+        $('input[id^="id_card"]').each(function() {
             if ($.trim($(this).val()).length != 0) {
                 filled += 1;
             }
@@ -87,7 +92,7 @@
         });
 
         // Get the credit card's select fields
-        $('.credit-select').each(function() {
+        $('select[id^="id_card"]').each(function() {
             if ($.trim($(this).val()) != 0) {
                 filled += 1;
             }
@@ -100,26 +105,35 @@
             validation.valid = false;
             validation.msg = 'To provide a credit card all fields are required';
             validation.errFields = [];
-            $('.credit-input').each(function() {
+            $('input[id^="id_card"]').each(function() {
                 if ($.trim($(this).val()).length == 0) {
-                filled += 1;
-                validation.errFields.push($(this).parent().parent());
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
                 }
             });
-            $('.credit-select').each(function() {
+            $('select[id^="id_card"]').each(function() {
                 if ($.trim($(this).val()) == 0) {
-                filled += 1;
-                validation.errFields.push($(this).parent().parent());
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
                 }
             });
             return validation;
+        }
+        
+        if (filled != 0 && filled == fields) {
+            credit_card.type = $.trim($('select[id="id_card_type"]').val());
+            credit_card.number = $.trim($('input[id="id_card_number"]').val());
+            credit_card.cvv2 = $.trim($('input[id="id_card_code"]').val());
+            credit_card.expire_month = $.trim($('select[id="id_card_month"]').val());
+            credit_card.expire_year = $.trim($('select[id="id_card_year"]').val());
+            validation.data.payment_info = credit_card;
         }
 
         filled = 0;
         fields = 0;
 
         // Get the tax address
-        $('.addr-input').each(function() {
+        $('input[id^="id_tax"]').each(function() {
             if ($.trim($(this).val()).length != 0) {
                 filled += 1;
             }
@@ -132,14 +146,23 @@
             validation.valid = false;
             validation.msg = 'To provide a tax address all fields are required';
             validation.errFields = [];
-            $('.addr-input').each(function() {
+            $('input[id^="id_tax"]').each(function() {
                 if ($.trim($(this).val()).length == 0) {
-                filled += 1;
-                validation.errFields.push($(this).parent().parent());
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
                 }
             });
+            return validation;
         }
         
+        if (filled != 0 && filled == fields) {
+            tax_address.street = $.trim($('input[id="id_tax_street"]').val());
+            tax_address.postal = $.trim($('input[id="id_tax_postcode"]').val());
+            tax_address.city = $.trim($('input[id="id_tax_city"]').val());
+            tax_address.country = $.trim($('input[id="id_tax_country"]').val());
+            validation.data.tax_address = tax_address;
+        }
+
         return validation;
     };
 
@@ -147,29 +170,36 @@
      * Display the Organization form and fill the Organization entry info for updating
      */
     OrganizationForm.prototype.fillOrganizationInfo = function fillOrganizationInfo(organization) {
+        var credit_card, tax_address;
 
         // Paint the form
         this.paintForm();
 
-        // Fill Organization entry info        
-        $('#org-name').val(organization.name).prop('readonly', true);
-        $('#notify-url').val(organization.notification_url);
+        // Fill Organization entry info
+        $('input[id="id_orgname"]').val(organization.name).prop('readonly', true);
+        $('input[id="id_notification_url"]').val(organization.notification_url);
+
+        // Set add users button listener
+        $('input[id="id_organization_add_user"]').removeClass('hide');
+        $('input[id="id_organization_add_user"]').click(function() {
+            displayOrganizationUsersForm(organization.name);
+        });
 
         if (organization.payment_info) {
             credit_card = organization.payment_info
-            $('#type').val(credit_card.type);
-            $('#number').val(credit_card.number);
-            $('#expire-month').val(credit_card.expire_month);
-            $('#expire-year').val(credit_card.expire_year);
-            $('#cvv2').val(credit_card.cvv2);
+            $('input[id="id_card_type"]').val(credit_card.type);
+            $('input[id="id_card_number"]').val(credit_card.number);
+            $('input[id="id_card_month"]').val(credit_card.expire_month);
+            $('input[id="id_card_year"]').val(credit_card.expire_year);
+            $('input[id="id_card_code"]').val(credit_card.cvv2);
         }
 
         if (organization.tax_address) {
             tax_address = organization.tax_address;
-            $('#street').val(tax_address.street);
-            $('#postal').val(tax_address.postal);
-            $('#city').val(tax_address.city);
-            $('#country').val(tax_address.country);
+            $('input[id="id_tax_street"]').val(tax_address.street);
+            $('input[id="id_tax_postcode"]').val(tax_address.postal);
+            $('input[id="id_tax_city"]').val(tax_address.city);
+            $('input[id="id_tax_country"]').val(tax_address.country);
         }
         // Change register button by an update button
         $('#elem-submit').val('Update').unbind('click').click((function(evnt) {
@@ -221,6 +251,6 @@
      * Implementation of setFormListeners abstract method, creates
      * extra listeners included in the form
      */
-    OrganizationForm.prototype.setFromListeners = function setFormListeners() {};
+    OrganizationForm.prototype.setFormListeners = function setFormListeners() {};
 
 })();

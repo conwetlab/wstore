@@ -20,309 +20,342 @@
 
 (function() {
 
-    var main = true;
+    /*
+     * User Form constructor
+     */
+    UserForm = function UserForm() {};
 
-    var fillUserInfo = function fillUserInfo(userInfo) {
-        var credit_card, tax_address;
+    /*
+     * User form is a subclass of AdminForm
+     */
+    UserForm.prototype = new AdminForm('USERPROFILE_ENTRY', 'USERPROFILE_COLLECTION', $('#user_form_template'));
+    UserForm.prototype.constructor = UserForm;
 
-        $('#user-name').val(userInfo.username).prop('readonly', true);
-        $('#first-name').val(userInfo.first_name);
-        $('#last-name').val(userInfo.last_name);
+    /*
+     * Implementation of validateFields abstract method, validate
+     * User form and get form info
+     */
+    UserForm.prototype.validateFields = function validateFields() {
+        var validation = {}, filled = 0, fields = 0, fullname_valid = true;
+        var roles = [], tax_address = {}, credit_card = {};
 
-        if (userInfo.roles.indexOf('provider') != -1) {
-            $('#provider').prop('checked', true);
-            $('h3:contains(Notification URL)').removeClass('hide');
-            $('#notification').removeClass('hide');
-            $('#notification').val(userInfo.notification_url);
-        }
-
-        if (userInfo.roles.indexOf('admin') != -1) {
-            $('#admin').prop('checked', true);
-        }
-
-        if (userInfo.payment_info) {
-            credit_card = userInfo.payment_info
-            $('#type').val(credit_card.type);
-            $('#number').val(credit_card.number);
-            $('#expire-month').val(credit_card.expire_month);
-            $('#expire-year').val(credit_card.expire_year);
-            $('#cvv2').val(credit_card.cvv2);
-        }
-
-        if (userInfo.tax_address) {
-            tax_address = userInfo.tax_address;
-            $('#street').val(tax_address.street);
-            $('#postal').val(tax_address.postal);
-            $('#city').val(tax_address.city);
-            $('#country').val(tax_address.country);
-        }
-        $('#user-submit').text('Update');
-    };
-
-    var paintUsers = function paintUsers(users) {
-
-        $('#admin-container').empty();
-
-        if (users.length > 0) {
-            $.template('listTemplate', $('#list_template'));
-            $.tmpl('listTemplate', {'title': 'User profile'}).appendTo('#admin-container');
-
-            for (var i = 0; i < users.length; i++) {
-                var row, column, div;
-                $.template('elemTemplate', $('#element_template'));
-                row = $.tmpl('elemTemplate', {'name': users[i].username})
-                row.appendTo('#table-list');
-
-                column = $('<td></td>');
-                div = $('<div></div>').addClass('update').appendTo(column);
-                $('<i></i>').addClass('icon-edit').appendTo(div);
-                column.appendTo(row);
-
-                div.click((function(user) {
-                    return function() {
-                        paintUserForm(user);
-                    }
-                })(users[i]));
-            }
-
-            $('#back').click(paintElementTable);
-
-            $('.add').click(function () {
-                main = false;
-                paintUserForm();
-            });
-            $('.delete').click(function (event) {
-                var clicked_elem = event.target;
-                makeRemoveRequest(clicked_elem, endpoint, title)
-            });
-        }
-    };
-
-    var makeProfileRequest = function makeProfileRequest(endpoint, method) {
-        var username, firstName, lastName, notification;
-        var roles = [];
-        var request = {};
-        var filled = 0, inputs = 0, error = false;
+        validation.valid = true;
+        validation.data = {};
 
         // Get basic user info
-        username = $.trim($('#user-name').val());
-        firstName = $.trim($('#first-name').val());
-        lastName = $.trim($('#last-name').val());
-        notification = $.trim($('#notification').val());
+        var firstname = $.trim($('input[id="id_first_name"]').val());
+        var lastname = $.trim($('input[id="id_last_name"]').val());
+        var username = $.trim($('input[id="id_user_name"]').val());
+        var password = $.trim($('input[id="id_password1"]').val());
+        var password_check = $.trim($('input[id="id_password2"]').val());
+        // Check the full name
+        if (!firstname || !lastname) {
+            validation.valid = false;
+            validation.msg = 'Missing required field';
+            validation.errFields = [$('input[id="id_first_name"]').parent().parent()];
+        } else {
+            var name_re = new RegExp(/^[a-zA-Z\s]+$/);
 
-        if (method == 'POST' || ($('#passwd-input').length > 0)) {
-            var passwd, passConf;
-
-            // If is creating a new user the password is required
-            passwd = $.trim($('#passwd-input').val());
-            passConf = $.trim($('#passwd-conf').val());
-
-            if (passwd == '' || passConf == '') {
-                error = true;
-                msg = 'Missing required password field';
-            } else if(passwd != passConf) {
-                error = true;
-                msg = 'The password and password confirm do not match';
+            if (!name_re.test(firstname) || !name_re.test(lastname)) {
+                fullname_valid = false;
+                validation.valid = false;
+                validation.msg = 'Invalid full name field';
+                validation.errFields = [$('input[id="id_first_name"]').parent().parent()];
             } else {
-                request.password = passwd;
+                validation.data.first_name = firstname;
+                validation.data.last_name = lastname;
             }
-        } 
-
-        if ($('#provider').prop('checked')) {
-            roles.push('provider');
         }
-        if ($('#admin').prop('checked')) {
+
+        // Check the username
+        if (!username) {
+            if (validation.valid) {
+                validation.valid = false;
+                validation.msg = 'Missing required field';
+                validation.errFields = [$('input[id="id_user_name"]').parent().parent()];
+                
+            } else {
+                if (!fullname_valid) {
+                    validation.msg += ' and missing required field';
+                }
+                validation.errFields.push($('input[id="id_user_name"]').parent().parent());
+            }
+            return validation;
+        } else {
+            var username_re = new RegExp(/^[\w.@+-]{5,}$/);
+
+            if (!username_re.test(username)) {
+                if (validation.valid) {
+                    validation.valid = false;
+                    validation.msg = 'Invalid username field';
+                    validation.errFields = [$('input[id="id_user_name"]').parent().parent()];
+                } else {
+                    validation.msg += ' and invalid username field';
+                    validation.errFields.push($('input[id="id_user_name"]').parent().parent());
+                }
+                return validation;
+            } else {
+                validation.data.username = username;
+            }
+        }
+
+        // Get provider user info
+        if ($('input[id="id_rol_provider"]').prop('checked')) {
+            var notification_url = $.trim($('input[id="id_notification_url"]').val());
+            var url_re = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+
+            // Check the notification url
+            if (!notification_url) {
+                validation.valid = false;
+                validation.msg = 'Missing required field';
+                validation.errFields = [$('input[id="id_notification_url"]').parent().parent()];
+                return validation;
+            } else if (!urlReg.test(notification_url)) {
+                validation.valid = false;
+                validation.msg = 'Invalid URL format';
+                validation.errFields = [$('input[id="id_notification_url"]').parent().parent()];
+                return validation;
+            } else {
+                roles.push('provider');
+                validation.data.notification_url = notification_url;
+            }
+        }
+
+        // Get admin user info
+        if ($('input[id="id_rol_admin"]').prop('checked')) {
             roles.push('admin');
         }
 
-        if (!username || !firstName || !lastName) {
-            error = true
-            msg = 'Missing a required field';
-        }
-        request.username = username;
-        request.first_name = firstName;
-        request.last_name = lastName;
-        request.roles = roles;
+        validation.data.roles = roles;
 
-        if (notification != '') {
-            request.notification_url = notification;
-        }
-
-        // Get the tax address
-        $('.addr-input').each(function() {
+        // Check the password
+        var is_required = $('label[for="id_password1"]').text() == 'Password';
+        
+        $('input[id^="id_password"]').each(function() {
             if ($.trim($(this).val()).length != 0) {
                 filled += 1;
             }
-            inputs += 1;
+            fields += 1;
+        });
+        
+        if ((filled != 0 && filled != fields) || (filled == 0 && is_required)) {
+            validation.valid = false;
+            validation.msg = 'Missing required field';
+            validation.errFields = [];
+            $('input[id^="id_password"]').each(function() {
+                if ($.trim($(this).val()).length == 0) {
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
+                }
+            });
+            return validation;
+        } else {
+            if (password && password_check) {
+                if (password.length < 5) {
+                    validation.valid = false;
+                    validation.msg = 'Invalid password field';
+                    validation.errFields = [$('input[id="id_password1"]').parent().parent()];
+                    return validation;
+                }
+                if (password != password_check) {
+                    validation.valid = false;
+                    validation.msg = 'Passwords do not match';
+                    validation.errFields = [$('input[id="id_password2"]').parent().parent()];
+                    return validation;
+                }
+                validation.data.password = password;
+            }
+        }
+
+        filled = 0;
+        fields = 0;
+
+        // Get the credit card's input fields
+        $('input[id^="id_card"]').each(function() {
+            if ($.trim($(this).val()).length != 0) {
+                filled += 1;
+            }
+            fields += 1;
+        });
+
+        // Get the credit card's select fields
+        $('select[id^="id_card"]').each(function() {
+            if ($.trim($(this).val()) != 0) {
+                filled += 1;
+            }
+            fields += 1;
+        });
+
+        // The credit card info is not required; however, if it is wanted to
+        // provide it all fields are required.
+        if (filled != 0 && filled != fields) {
+            validation.valid = false;
+            validation.msg = 'To provide a credit card all fields are required';
+            validation.errFields = [];
+            $('input[id^="id_card"]').each(function() {
+                if ($.trim($(this).val()).length == 0) {
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
+                }
+            });
+            $('select[id^="id_card"]').each(function() {
+                if ($.trim($(this).val()) == 0) {
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
+                }
+            });
+            return validation;
+        }
+
+        if (filled != 0 && filled == fields) {
+            credit_card.type = $.trim($('select[id="id_card_type"]').val());
+            credit_card.number = $.trim($('input[id="id_card_number"]').val());
+            credit_card.cvv2 = $.trim($('input[id="id_card_code"]').val());
+            credit_card.expire_month = $.trim($('select[id="id_card_month"]').val());
+            credit_card.expire_year = $.trim($('select[id="id_card_year"]').val());
+            validation.data.payment_info = credit_card;
+        }
+
+        filled = 0;
+        fields = 0;
+
+        // Get the tax address
+        $('input[id^="id_tax"]').each(function() {
+            if ($.trim($(this).val()).length != 0) {
+                filled += 1;
+            }
+            fields += 1;
         });
 
         // The tax address is not required; however, if it is wanted to
         // provide it all fields are required.
-        if (filled != 0 && filled == inputs) {
-            var taxAddr = {
-                'street': $.trim($('#street').val()),
-                'postal': $.trim($('#postal').val()),
-                'city': $.trim($('#city').val()),
-                'country': $.trim($('#country').val())
-            }
-            request.tax_address = taxAddr;
-        } else if (filled != 0) {
-            error = true;
-            msg = 'To provide a tax address all fields are required';
-        }
-
-        filled = 0;
-        inputs = 0;
-        // The credit card info is not required; however, if it is wanted to
-        // provide it all fields are required.
-        $('.credit-input').each(function() {
-            if ($.trim($(this).val()).length != 0) {
-                filled += 1;
-            }
-            inputs += 1;
-        });
-
-        if (filled != 0 && filled == inputs && $('#type').val() != 0 && $('#expire-month').val() != 0) {
-            var creditCard = {
-                'type': $('#type').val(),
-                'number': $.trim($('#number').val()),
-                'expire_month': $('#expire-month').val(),
-                'expire_year': $.trim($('#expire-year').val()),
-                'cvv2': $.trim($('#cvv2').val())
-            }
-            request.payment_info = creditCard;
-        } else if (filled != 0) {
-            error = true;
-            msg = 'To provide a credit card all fields are required';
-        }
-
-        // if all the info provided is correct make the request
-        if (!error) {
-            var csrfToken = $.cookie('csrftoken');
-
-            $('#loading').removeClass('hide');  // Loading view when waiting for requests
-            $('#loading').css('height', $(window).height() + 'px');
-            $('#message').modal('hide');
-            $.ajax({
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                },
-                type: method,
-                url: endpoint,
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify(request),
-                success: function (response) {
-                    $('#loading').addClass('hide');
-                    userInfoRequest();
-                },
-                error: function (xhr) {
-                    $('#loading').addClass('hide');
-                    var resp = xhr.responseText;
-                    var msg = JSON.parse(resp).message;
-                    MessageManager.showMessage('Error', msg);
+        if (filled != 0 && filled != fields) {
+            validation.valid = false;
+            validation.msg = 'To provide a tax address all fields are required';
+            validation.errFields = [];
+            $('input[id^="id_tax"]').each(function() {
+                if ($.trim($(this).val()).length == 0) {
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
                 }
             });
-        } else {
-            MessageManager.showMessage('Error', msg);
+            return validation;
+        }
+
+        if (filled != 0 && filled == fields) {
+            tax_address.street = $.trim($('input[id="id_tax_street"]').val());
+            tax_address.postal = $.trim($('input[id="id_tax_postcode"]').val());
+            tax_address.city = $.trim($('input[id="id_tax_city"]').val());
+            tax_address.country = $.trim($('input[id="id_tax_country"]').val());
+            validation.data.tax_address = tax_address;
+        }
+
+        return validation;
+    };
+
+    /*
+     * Display the User form and fill the User entry info for updating
+     */
+    UserForm.prototype.fillUserInfo = function fillUserInfo(user) {
+        var credit_card, tax_address;
+
+        // Paint the form
+        this.paintForm();
+
+        // Fill User entry info
+        $('input[id="id_user_name"]').val(user.username).prop('readonly', true);
+        $('input[id="id_first_name"]').val(user.first_name);
+        $('input[id="id_last_name"]').val(user.last_name);
+
+        if (user.roles.indexOf('provider') != -1) {
+            $('input[id="id_rol_provider"]').prop('checked', true);
+            $('input[id="id_notification_url"]').val(user.notification_url)
+                .parent().parent().removeClass('hide');
+        }
+
+        if (user.roles.indexOf('admin') != -1) {
+            $('input[id="id_rol_admin"]').prop('checked', true);
+        }
+
+        $('label[for="id_password1"]').text('Change Password');
+
+        if (user.payment_info) {
+            credit_card = user.payment_info;
+            $('input[id="id_card_type"]').val(credit_card.type);
+            $('input[id="id_card_number"]').val(credit_card.number);
+            $('input[id="id_card_month"]').val(credit_card.expire_month);
+            $('input[id="id_card_year"]').val(credit_card.expire_year);
+            $('input[id="id_card_code"]').val(credit_card.cvv2);
+        }
+
+        if (user.tax_address) {
+            tax_address = user.tax_address;
+            $('input[id="id_tax_street"]').val(tax_address.street);
+            $('input[id="id_tax_postcode"]').val(tax_address.postal);
+            $('input[id="id_tax_city"]').val(tax_address.city);
+            $('input[id="id_tax_country"]').val(tax_address.country);
+        }
+
+        // Change register button by an update button
+        $('#elem-submit').val('Update').unbind('click').click((function(evnt) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            this.updateElementRequest({'username': user.username});
+        }).bind(this));
+    };
+
+    /*
+     * Implementation of fillListInfo abstract method, includes
+     * Users in the list view
+     */
+    UserForm.prototype.fillListInfo = function fillListInfo(users) {
+        $.template('elementTemplate', $('#element_template'));
+
+        for (var i = 0; i < users.length; i++) {
+            var editIcon;
+
+            var template = $.tmpl('elementTemplate', {
+                'name': users[i].username,
+            });
+            
+            // Include edit icon
+            editIcon = $('<i></i>').addClass('icon-edit').click((function(self, userEntry) {
+                return function() {
+                    self.fillUserInfo(userEntry);
+                };
+            })(this, users[i]));
+            
+            template.find('#elem-info').append(editIcon);
+
+            // Include delete listener
+            template.find('.delete').click((function(self, userEntry) {
+                return function() {
+                    var urlContext = {
+                        'name': userEntry.username
+                    }
+                    self.mainClient.remove(self.elementInfoRequest.bind(self), urlContext);
+                };
+            })(this, users[i]));
+
+            // Append entry
+            template.appendTo('#table-list');
         }
     };
 
-    var paintCompleteUserForm = function paintCompleteUserForm(orgs, user) {
-        $('#admin-container').empty();
-        $.template('userTemplate', $('#user_form_template')); // Create the template
-        $.tmpl('userTemplate').appendTo("#admin-container"); // Render and append the template
-
-        if (user) {
-            var checkPass;
-
-            // Include the user info
-            fillUserInfo(user);
-
-            // Add the password inputs
-            $('<p></p>').text('Change password').appendTo('#passwd');
-            checkPass =$('<input></input>').attr('type', 'checkbox').attr('id', 'passwd-check').appendTo('#passwd');
-            $('<div></div>').attr('id', 'passwd-cont').appendTo('#passwd');
-            checkPass.change(function() {
-                // If the fields are no displayed
-                if ($('#passwd-input').length == 0){
-                    $('<input></input>').attr('type', 'password').attr('id', 'passwd-input').attr('placeholder', 'Password').appendTo('#passwd-cont');
-                    $('<input></input>').attr('type', 'password').attr('id', 'passwd-conf').attr('placeholder', 'Confirm password').appendTo('#passwd-cont');
-                } else {
-                    $('#passwd-cont').empty();
-                }
-            })
-            $('#back').click(userInfoRequest);
-            $('#user-submit').click(function(event) {
-                var endpoint, method;
-
-                if ($.trim($('#user-name').val()).length != 0) {
-                    endpoint = EndpointManager.getEndpoint('USERPROFILE_ENTRY', {'username': user.username});
-                    method = 'PUT';
-                } else {
-                    endpoint = EndpointManager.getEndpoint('USERPROFILE_COLLECTION');
-                    method = 'POST';
-                }
-                makeProfileRequest(endpoint, method);
-            });
-        } else {
-            // Add the password inputs
-            $('<p></p>').text('Password').appendTo('#passwd');
-            $('<input></input>').attr('type', 'password').attr('id', 'passwd-input').attr('placeholder', 'Password').appendTo('#passwd');
-            $('<input></input>').attr('type', 'password').attr('id', 'passwd-conf').attr('placeholder', 'Confirm password').appendTo('#passwd');
-
-            // Check the previous page to return
-            if (main){
-                $('#back').click(paintElementTable);
-            } else {
-                $('#back').click(userInfoRequest);
-                main = true;
-            }
-
-            // Add the submit handler
-            $('#user-submit').click(function() {
-                var endpoint = EndpointManager.getEndpoint('USERPROFILE_COLLECTION');
-                makeProfileRequest(endpoint, 'POST');
-            });
-        }
-        $('#provider').change(function() {
+    /*
+     * Implementation of setFormListeners abstract method, creates
+     * extra listeners included in the form
+     */
+    UserForm.prototype.setFormListeners = function setFormListeners() {
+        $('input[id="id_rol_provider"]').change(function() {
             if($(this).prop('checked')) {
-                $('h3:contains(Notification URL)').removeClass('hide');
-                $('#notification').removeClass('hide');
+                $('input[id="id_notification_url"]')
+                    .parent().parent().removeClass('hide');
             } else {
-                $('h3:contains(Notification URL)').addClass('hide');
-                $('#notification').addClass('hide');
-                $('#notification').val('');
-            }
-        });
-    }
-
-    userInfoRequest = function userInfoRequest() {
-        $('#loading').removeClass('hide');  // Loading view when waiting for requests
-        $('#loading').css('height', $(window).height() + 'px');
-        $('#message').modal('hide');
-        $.ajax({
-            type: "GET",
-            url: EndpointManager.getEndpoint('USERPROFILE_COLLECTION'),
-            dataType: "json",
-            success: function (response) {
-                $('#loading').addClass('hide');
-                paintUsers(response);
-            },
-            error: function (xhr) {
-                $('#loading').addClass('hide');
-                var resp = xhr.responseText;
-                var msg = JSON.parse(resp).message;
-                MessageManager.showMessage('Error', msg);
+                $('input[id="id_notification_url"]').val('')
+                    .parent().parent().addClass('hide');
             }
         });
     };
 
-    paintUserForm = function paintUserForm(user) {
-        if (!user) {
-            orgInfoRequest(paintCompleteUserForm);
-        } else {
-            orgInfoRequest(paintCompleteUserForm, user);
-        }
-    };
 })();
