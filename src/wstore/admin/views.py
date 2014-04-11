@@ -244,10 +244,10 @@ class CurrencyEntry(Resource):
 
         # Check if is possible to delete the currency
         if  context.allowed_currencies['default'].lower() == currency.lower():
-            return build_response(request, 400, 'The currency cannot be deleted: It is the default currency')
+            return build_response(request, 403, 'The currency cannot be deleted: It is the default currency')
 
         if del_curr['in_use']:
-            return build_response(request, 400, 'The currency cannot be deleted: An offering is using it')
+            return build_response(request, 403, 'The currency cannot be deleted: An offering is using it')
 
         # Remove the currency
         context.allowed_currencies['allowed'].remove(del_curr)
