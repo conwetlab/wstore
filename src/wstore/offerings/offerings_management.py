@@ -43,11 +43,7 @@ from wstore.models import Marketplace
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
-from distutils.version import StrictVersion
-
-
-def is_lower_version(version1, version2):
-    return StrictVersion(version1) < StrictVersion(version2)
+from wstore.store_commons.utils.version import is_lower_version
 
 
 def get_offering_info(offering, user):
@@ -344,6 +340,17 @@ def create_offering(provider, json_data):
     # Get organization
     organization = profile.current_organization
 
+    # Check if the offering already exists
+    existing = True
+
+    try:
+        Offering.objects.get(name=data['name'], owner_organization=organization, version=data['version'])
+    except:
+        existing = False
+
+    if existing:
+        raise Exception('The offering already exists')
+
     # Check if the version of the offering is lower than an existing one
     offerings = Offering.objects.filter(owner_organization=organization, name=data['name'])
     for off in offerings:
@@ -365,17 +372,6 @@ def create_offering(provider, json_data):
             })
 
     data['related_images'] = []
-
-    # Check if the offering already exists
-    existing = True
-
-    try:
-        Offering.objects.get(name=data['name'], owner_organization=organization, version=data['version'])
-    except:
-        existing = False
-
-    if existing:
-        raise Exception('The offering already exists')
 
     # Check the URL to notify the provider
     notification_url = ''

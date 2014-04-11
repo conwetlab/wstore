@@ -20,7 +20,6 @@
 
 import json
 from urlparse import urlunparse, urlparse
-from distutils.version import StrictVersion
 
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
@@ -33,6 +32,7 @@ from django.contrib.auth.decorators import login_required
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
 authentication_required
+from wstore.store_commons.utils.version import is_lower_version
 from wstore.offerings.offerings_management import get_offering_info
 from wstore.contracting.purchases_management import create_purchase
 from wstore.charging_engine.charging_engine import ChargingEngine
@@ -40,10 +40,6 @@ from wstore.models import Offering, Organization, Context
 from wstore.models import Purchase
 from wstore.models import Resource as store_resource
 from wstore.contracting.purchase_rollback import rollback
-
-
-def is_lower_version(version1, version2):
-    return StrictVersion(version1) < StrictVersion(version2)
 
 
 class PurchaseFormCollection(Resource):
