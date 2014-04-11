@@ -846,6 +846,10 @@ def comment_offering(offering, comment, user):
     if not 'title' in comment or not 'rating' in comment or not 'comment' in comment:
         raise Exception('Invalid comment')
 
+    # Check comment length
+    if len(comment['comment']):
+        raise Exception('The comment cannot contain more that 200 characters')
+
     # Check rating
     if comment['rating'] < 0 or comment['rating'] > 5:
         raise Exception('Invalid rating')

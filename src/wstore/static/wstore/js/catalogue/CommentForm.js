@@ -6,6 +6,9 @@
     var makeCreateCommentRequest = function makeCreateCommentRequest(offElement) {
         var csrfToken = $.cookie('csrftoken');
         var title, comment, request = {};
+        var error = false;
+        var msg;
+
         var offeringContext = {
             'organization': offElement.getOrganization(),
             'name': offElement.getName(),
@@ -15,8 +18,26 @@
         title = $.trim($('#comment-title').val());
         comment = $.trim($('#comment-text').val());
 
+        // Check that required fields contains a value
+        if (!title || ! comment) {
+            error = true;
+            msg = 'Missing required field(s):';
+            if (!title) {
+                msg += ' Title';
+            }
+            if (!comment) {
+                msg += ' Comment';
+            }
+        }
+
+        // Check the length of the comment
+        if (!error && comment.length > 200) {
+            error = true;
+            msg = 'The comment cannot contain more than 200 characters';
+        }
+
         // If the fields are correctly filled make the request
-        if (title != '' && comment != '') {
+        if (!error) {
             request.title = title;
             request.comment = comment;
             request.rating = rating;
@@ -47,7 +68,6 @@
                 }
             });
         } else {
-            var msg = 'Missing required fields';
             MessageManager.showAlertError('Error', msg, $('#error-message'));
         }
     };
