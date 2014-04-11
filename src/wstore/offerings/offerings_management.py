@@ -715,17 +715,16 @@ def delete_offering(offering):
 
     if offering.state == 'uploaded':
 
-        if offering.related_images or offering.resources:
-            # If the offering has media files delete them
-            dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
-            path = os.path.join(settings.MEDIA_ROOT, dir_name)
-            files = os.listdir(path)
+        # If the offering has media files delete them
+        dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
+        path = os.path.join(settings.MEDIA_ROOT, dir_name)
+        files = os.listdir(path)
 
-            for f in files:
-                file_path = os.path.join(path, f)
-                os.remove(file_path)
+        for f in files:
+            file_path = os.path.join(path, f)
+            os.remove(file_path)
 
-            os.rmdir(path)
+        os.rmdir(path)
 
         offering.delete()
     else:
