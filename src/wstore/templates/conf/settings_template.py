@@ -55,7 +55,6 @@ THEME_ACTIVE = 'defaulttheme'
 # Language code for this installation.
 LANGUAGE_CODE = 'en'
 
-#SITE_ID = u'533ea3a98e05ac1bdcbf61f5'
 SITE_ID=u'{{ site_id }}'
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
