@@ -78,7 +78,7 @@ def admin(request):
 
         return render(request, 'admin/admin.html', context)
     else:
-        build_response(request, 403, 'Forbidden')
+        return build_response(request, 403, 'Forbidden')
 
 
 @login_required
