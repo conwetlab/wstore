@@ -359,8 +359,8 @@ class CommentEntry(Resource):
         try:
             data = json.loads(request.raw_post_data)
             comment_offering(offering, data, request.user)
-        except:
-            return build_response(request, 400, 'Invalid content')
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         return build_response(request, 201, 'Created')
 
