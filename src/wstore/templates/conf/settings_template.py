@@ -58,17 +58,6 @@ LANGUAGE_CODE = 'en'
 #SITE_ID = u'533ea3a98e05ac1bdcbf61f5'
 SITE_ID=u'{{ site_id }}'
 
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
-USE_I18N = True
-
-# If you set this to False, Django will not format dates, numbers and
-# calendars according to the current locale.
-USE_L10N = True
-
-# If you set this to False, Django will not use timezone-aware datetimes.
-USE_TZ = True
-
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = path.join(BASEDIR, 'media')
@@ -178,7 +167,7 @@ ROOT_URLCONF = 'urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'wsgi.application'
 
-PAYMENT_CLIENT = 'wstore.charging_engine.payment_client.fipay_client.FiPayClient'
+PAYMENT_CLIENT = 'wstore.charging_engine.paypal_client.fipay_client.PayPalClient'
 
 INSTALLED_APPS = (
     'django.contrib.auth',
