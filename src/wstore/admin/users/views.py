@@ -321,11 +321,14 @@ class UserProfileEntry(Resource):
                     user_org.save()
 
                 # Check if expenditure limits are included in the request
-                if 'limits' in data:
+                if 'limits' in data and data['limits']:
                     limits = _check_limits(data['limits'])
                     currency = limits['currency']
                     # Get default RSS instance
-                    rss_instance = RSS.objects.all()[0]
+                    try:
+                        rss_instance = RSS.objects.all()[0]
+                    except:
+                        raise Exception('No RSS instance registered: An RSS instance is needed for setting up expenditure limits')
                     # Create limits in the RSS
                     try:
                         exp_manager = ExpenditureManager(rss_instance, rss_instance.access_token)
@@ -379,7 +382,10 @@ class UserProfileEntry(Resource):
             user.save()
             user_profile.save()
 
-        except:
-            return build_response(request, 400, 'Invalid content')
+        except Exception as e:
+            msg = 'Invalid content'
+            if e.message:
+                msg = e.message
+            return build_response(request, 400, msg)
 
         return build_response(request, 200, 'OK')
