@@ -1111,6 +1111,8 @@ class OfferingDeletionTestCase(TestCase):
 
     def test_delete_uploaded_offering(self):
         offering = Offering.objects.get(name='test_offering')
+        # Mock os
+        offerings_management.os = MagicMock()
         offerings_management.delete_offering(offering)
         error = False
         try:
@@ -1198,7 +1200,7 @@ class OfferingRatingTestCase(TestCase):
         org.save()
         self.user.userprofile.save()
 
-        self.offering.rating = 3.0
+        self.offering.rating = 5.0
         self.offering.comments = [{
             'title': 'initial comment',
             'rating': 3,
@@ -1242,11 +1244,11 @@ class OfferingRatingTestCase(TestCase):
 
         offerings_management.comment_offering(self.offering, comment, self.user)
         self.offering = Offering.objects.get(pk=self.offering.pk)
-        self.assertEquals(self.offering.rating, 4.0)
+        self.assertEquals(self.offering.rating, 5.0)
         self.assertEquals(len(self.offering.comments), 2)
         self.assertEquals(self.offering.comments[0]['title'], 'comment')
 
-        self.assertEquals(len(context.top_rated), 4)
+        self.assertEquals(len(context.top_rated), 5)
         self.assertEquals(context.top_rated[0], self.offering.pk)
 
     def test_comment_offering_top_rated_sorting(self):

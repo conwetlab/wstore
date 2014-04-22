@@ -846,7 +846,7 @@ def comment_offering(offering, comment, user):
         raise Exception('Invalid comment')
 
     # Check comment length
-    if len(comment['comment']):
+    if len(comment['comment']) > 200:
         raise Exception('The comment cannot contain more that 200 characters')
 
     # Check rating

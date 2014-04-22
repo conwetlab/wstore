@@ -36,7 +36,6 @@ from paypalpy import paypal
 
 from django.conf import settings
 from django.template import loader, Context
-from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
 
 from wstore.models import Resource, Organization

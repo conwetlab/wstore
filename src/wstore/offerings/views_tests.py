@@ -1338,7 +1338,7 @@ class CommentEntryTestCase(TestCase):
         errors = [
             'Not found',
             'Forbidden',
-            'Invalid content'
+            'Creation error'
         ]
         # Mock comment method
         comment_entry = views.CommentEntry(permitted_methods=('POST',))
