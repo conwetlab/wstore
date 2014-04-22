@@ -12,7 +12,7 @@ class RegistrationForm(forms.ModelForm):
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
     username = forms.RegexField(
-        regex=r'^[\w.@+-]{5,}$', max_length=30,
+        regex=r'^[\w -]{5,}$', max_length=30,
         error_messages={
             'invalid': _("Enter at least 5 characters (letters, digits or"
                          " @/./+/-/_)."),

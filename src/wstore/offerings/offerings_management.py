@@ -44,6 +44,7 @@ from wstore.models import Purchase
 from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 from wstore.store_commons.utils.version import is_lower_version
+from wstore.store_commons.utils.name import is_valid_id
 
 
 def get_offering_info(offering, user):
@@ -336,6 +337,9 @@ def create_offering(provider, json_data):
 
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise Exception('Invalid version format')
+
+    if not is_valid_id(data['name']):
+        raise Exception('Invalid name format')
 
     # Get organization
     organization = profile.current_organization

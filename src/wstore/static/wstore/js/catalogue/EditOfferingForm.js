@@ -23,13 +23,25 @@
     var screenShots = [];
     var usdl = {};
     var caller;
+    var logoFailure = false;
+    var screenFailure = false;
 
+    /**
+     * Handles the selection of images, including the validation and
+     * encoding
+     * @param evnt Event thrown by the file input
+     * @param type Type of image (Logo or screenshot)
+     */
     var handleImageFileSelection = function handleImageFileSelection(evnt, type) {
         var files = evnt.target.files;
-        logo = [];
-        screenShots = [];
-
         var imagesList = [];
+
+        if (type == 'screenshots') {
+            screenShots = [];
+            screenFailure = false;
+        } else {
+            logoFailure = false;
+        }
 
         var reader = new FileReader();
 
@@ -44,18 +56,30 @@
                         return function(e) {
                             var binaryContent = e.target.result;
                             var encoded = btoa(binaryContent);
+                            var imgReg = new RegExp(/^[\w\s-]+\.[\w]+$/);
+
                             if (type == 'screenshots') {
-                                screenShots.push({
-                                    'name': file.name,
-                                    'data': encoded
-                                });
+                                if (!imgReg.test(file.name)) {
+                                    screenFailure = true;
+                                } else {
+                                    screenShots.push({
+                                        'name': file.name,
+                                        'data': encoded
+                                    });
+                                }
                             } else if (type == 'logo') {
-                                logo.push({
-                                    'name': file.name,
-                                    'data': encoded
-                                });
+                                if (!imgReg.test(file.name)) {
+                                    logoFailure = true;
+                                } else {
+                                    logo = [{
+                                        'name': file.name,
+                                        'data': encoded
+                                    }];
+                                }
                             }
-                            readImages(images);
+                            if (!screenFailure && !logoFailure) {
+                                readImages(images);
+                            }
                         };
                     })(img);
                     reader.readAsBinaryString(img);
@@ -129,6 +153,17 @@
             provided = true;
         }
 
+        // Check failures in image loading
+        if (logoFailure) {
+            error = true;
+            msg = 'The provided logo is not valid: Unsupported character in file name';
+        }
+
+        // Check failures in image loading
+        if (screenFailure) {
+            error = true;
+            msg = 'Invalid screenshot(s): Unsupported character in file name';
+        }
         // Check and get new USDL description
         if ($('#usdl-doc').length > 0) {
             if (usdl.data && usdl.content_type) {
@@ -185,14 +220,21 @@
                 msg = 'Missing USDL Link';
 
             } else {
-                request.description_url = usdlLink;
-                provided = true;
+                // Check link format
+                var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+                if (!urlReg.test(usdlLink)) {
+                    error = true;
+                    msg = 'Invalid URL format';
+                } else {
+                    request.description_url = usdlLink;
+                    provided = true;
+                }
             }
         }
 
-        if (!provided) {
+        if (!error && !provided) {
             error = true
-            msg = 'Not information provided';
+            msg = 'No information provided';
         }
 
         if (!error) {

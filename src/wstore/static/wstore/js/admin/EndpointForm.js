@@ -82,11 +82,36 @@
             host = $.trim($('#elem-host').val());
 
             if (name && host) {
+                var urlReg, nameReg, msg = '', errFields = [];
+
                 validation.valid = true;
-                validation.data = {
-                    'name': name,
-                    'host': host
-                };
+
+                // Check name format
+                nameReg = = new RegExp(/^[\w\s-]+$/);
+                if (!nameReg.test(name)) {
+                    validation.valid = false;
+                    msg += 'Invalid name format';
+                    errFields.push($('#elem-name').parent().parent())
+                }
+                
+                // Check host format
+                var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+                if (!urlReg.test(host)) {
+                    validation.valid = false;
+                    msg += 'Invalid name format';
+                    errFields.push($('#elem-host').parent().parent());
+                }
+
+                // Fill validation missing info
+                if (validation.valid) {
+                    validation.data = {
+                        'name': name,
+                        'host': host
+                    };
+                } else {
+                    validation.msg = msg;
+                    validation.errFields = errFields;
+                }
             } else {
                 validation.valid = false;
                 validation.msg = "Both fields are required";

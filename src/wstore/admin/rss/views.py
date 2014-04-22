@@ -24,6 +24,8 @@ from urllib2 import HTTPError
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
+from wstore.store_commons.utils.url import is_valid_url
+from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required, identity_manager_required
 from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
@@ -139,6 +141,14 @@ class RSSCollection(Resource):
 
         if not 'name' in data or not 'host':
             return build_response(request, 400, 'Invalid JSON content')
+
+        # Check name regex
+        if not is_valid_id(data['name']):
+            return build_response(request, 400, 'Invalid name format')
+
+        # Check url regex
+        if not is_valid_url(data['host']):
+            return build_response(request, 400, 'Invalid URL format')
 
         # Check if the information provided is not already registered
         if len(RSS.objects.filter(name=data['name'])) > 0 or \

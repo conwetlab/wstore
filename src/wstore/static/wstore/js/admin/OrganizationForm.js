@@ -52,7 +52,14 @@
             validation.msg = 'Missing required field';
             validation.errFields = [$('input[id="id_orgname"]').parent().parent()];
         } else {
-            validation.data.name = name;
+            var nameReg = new RegExp(/^[\w\s-]+$/);
+            if (!nameReg.test(name)) {
+                validation.valid = false;
+                validation.msg = 'Invalid name format';
+                validation.errFields = [$('input[id="id_orgname"]').parent().parent()];
+            } else {
+                validation.data.name = name;
+            }
         }
 
         // Check the notification url

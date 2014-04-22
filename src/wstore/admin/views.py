@@ -25,6 +25,7 @@ from django.http import HttpResponse
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
 from wstore.store_commons.resource import Resource
+from wstore.store_commons.utils.name import is_valid_id
 from wstore.models import Context
 from wstore.charging_engine.models import Unit
 
@@ -155,6 +156,10 @@ class CurrencyCollection(Resource):
         data = json.loads(request.raw_post_data)
         if not 'currency' in data:
             return build_response(request, 400, 'Invalid JSON content')
+
+        # Check currency regex
+        if not is_valid_id(data['currency']):
+            return build_response(request, 400, 'Invalid currency format')
 
         # Get the context
         context = Context.objects.all()[0]

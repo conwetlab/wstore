@@ -19,13 +19,14 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-from lxml import etree
 
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types,\
+from wstore.store_commons.utils.url import is_valid_url
+from wstore.store_commons.utils.name import is_valid_id
+from wstore.store_commons.utils.http import build_response, supported_request_mime_types,\
  authentication_required
 from wstore.admin.markets.markets_management import get_marketplaces, register_on_market, unregister_from_market
 
@@ -54,6 +55,13 @@ class MarketplaceCollection(Resource):
             msg = "Request body is not valid JSON data"
             return build_response(request, 400, msg)
 
+        # Check data formats
+        if not is_valid_id(name):
+            return build_response(request, 400, 'Invalid name format')
+
+        if not is_valid_url(host):
+            return build_response(request, 400, 'Invalid URL format')
+        
         code = 201
         msg = 'Created'
         try:

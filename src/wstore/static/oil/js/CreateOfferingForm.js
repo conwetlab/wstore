@@ -24,6 +24,8 @@
     var usdl;
     var logo = [];
     var offeringInfo = {};
+    var logoFailure = false;
+    var screenFailure = false;
 
     /**
      * Handles the selection of images, including the validation and
@@ -34,6 +36,13 @@
     var handleImageFileSelection = function handleImageFileSelection(evnt, type) {
         var files = evnt.target.files;
         var imagesList = [];
+
+        if (type == 'screenshots') {
+            screenShots = [];
+            screenFailure = false;
+        } else {
+            logoFailure = false;
+        }
 
         var reader = new FileReader();
 
@@ -48,18 +57,30 @@
                         return function(e) {
                             var binaryContent = e.target.result;
                             var encoded = btoa(binaryContent);
+                            var imgReg = new RegExp(/^[\w\s-]+\.[\w]+$/);
+
                             if (type == 'screenshots') {
-                                screenShots.push({
-                                    'name': file.name,
-                                    'data': encoded
-                                });
+                                if (!imgReg.test(file.name)) {
+                                    screenFailure = true;
+                                } else {
+                                    screenShots.push({
+                                        'name': file.name,
+                                        'data': encoded
+                                    });
+                                }
                             } else if (type == 'logo') {
-                                logo = [{
-                                    'name': file.name,
-                                    'data': encoded
-                                }];
+                                if (!imgReg.test(file.name)) {
+                                    logoFailure = true;
+                                } else {
+                                    logo = [{
+                                        'name': file.name,
+                                        'data': encoded
+                                    }];
+                                }
                             }
-                            readImages(images);
+                            if (!screenFailure && !logoFailure) {
+                                readImages(images);
+                            }
                         };
                     })(img);
                     reader.readAsBinaryString(img);
@@ -333,7 +354,14 @@
                 var usdlLink = $.trim($('#usdl-url').val());
 
                 if (usdlLink) {
-                    offeringInfo.description_url = usdlLink;
+                    // Check link format
+                    var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+                    if (!urlReg.test(usdlLink)) {
+                        error = true;
+                        msg = 'Invalid URL format';
+                    } else {
+                        offeringInfo.description_url = usdlLink;
+                    }
                 } else {
                     error = true;
                     msg = 'USDL info is missing'
@@ -575,6 +603,27 @@
                 if(!logo.length) {
                     msg += ' Logo';
                 }
+            }
+
+            // Check name format
+            if (name) {
+                var nameReg = new RegExp(/^[\w\s-]+$/);
+                if (!nameReg.test(name)) {
+                    error = true;
+                    msg = 'Invalid name format: Unsupported character';
+                }
+            }
+
+            // Check failures in image loading
+            if (logoFailure) {
+                error = true;
+                msg = 'The provided logo is not valid: Unsupported character in file name';
+            }
+
+            // Check failures in image loading
+            if (screenFailure) {
+                error = true;
+                msg = 'Invalid screenshot(s): Unsupported character in file name';
             }
 
             // Get the notification URL

@@ -50,6 +50,13 @@
             validation.valid = false;
             validation.msg = 'Missing required field';
             validation.errFields = [$('#rss-name').parent().parent()];
+        } else {
+            var nameReg = new RegExp(/^[\w\s-]+$/);
+            if (!nameReg.test(name)) {
+                validation.valid = false;
+                validation.msg = 'Invalid name format';
+                validation.errFields = [$('#rss-name').parent().parent()];
+            }
         }
 
         // Check the endpoint

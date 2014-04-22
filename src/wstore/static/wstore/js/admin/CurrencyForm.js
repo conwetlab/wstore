@@ -29,9 +29,15 @@
         var name = $.trim($('#currency-name').val());
 
         // Check unit name
-        if (name == '') {
+        if (!name) {
             error = true;
             msg = "Name field is required";
+        } else {
+            var nameReg = new RegExp(/^[\w\s-]+$/);
+            if (!nameReg.test(name)) {
+                error = true;
+                msg = "Invalid name format";
+            }
         }
 
         // Id the form is correctly filled make the request

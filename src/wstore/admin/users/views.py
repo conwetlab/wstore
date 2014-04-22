@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import json
 from urllib2 import HTTPError
 
@@ -27,6 +29,8 @@ from django.conf import settings
 
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
+from wstore.store_commons.utils.name import is_valid_id
+from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.resource import Resource
 from wstore.models import UserProfile, RSS
 from wstore.models import Organization
@@ -121,6 +125,10 @@ class UserProfileCollection(Resource):
         or (not 'last_name' in data) or (not 'password' in data):
             return build_response(request, 400, 'Missing required field')
 
+        # Check username format
+        if not len(data['username']) > 4 or not is_valid_id(data['username']):
+            return build_response(request, 400, 'Invalid username format')
+
         # Create the user
         try:
             user = User.objects.create(username=data['username'], first_name=data['first_name'], last_name=data['last_name'])
@@ -138,6 +146,10 @@ class UserProfileCollection(Resource):
             user_profile.complete_name = data['first_name'] + ' ' + data['last_name']
 
             if 'notification_url' in data:
+                # Check notification URL format
+                if data['notification_url'] and not is_valid_url(data['notification_url']):
+                    raise Exception('Invalid notification URL format')
+
                 user_profile.current_organization.notification_url = data['notification_url']
                 user_profile.current_organization.save()
 
@@ -171,8 +183,8 @@ class UserProfileCollection(Resource):
 
             user_profile.save()
 
-        except:
-            return build_response(request, 400, 'Invalid content')
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         return build_response(request, 201, 'Created')
 

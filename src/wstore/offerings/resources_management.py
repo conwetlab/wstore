@@ -25,6 +25,8 @@ import re
 from django.conf import settings
 
 from wstore.models import Resource
+from wstore.store_commons.utils.name import is_valid_id, is_valid_file
+from wstore.store_commons.utils.url import is_valid_url
 
 
 def register_resource(provider, data, file_=None):
@@ -43,6 +45,9 @@ def register_resource(provider, data, file_=None):
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise Exception('Invalid version format')
 
+    if not is_valid_id(data['name']):
+        raise Exception('Invalid name format')
+
     resource_data = {
         'name': data['name'],
         'version': data['version'],
@@ -53,6 +58,10 @@ def register_resource(provider, data, file_=None):
     if file_ is None:
         if 'content' in data:
             resource = data['content']
+
+            # Check file name format
+            if not is_valid_file(resource['name']):
+                raise Exception('Invalid file name format: Unsupported character')
 
             #decode the content and save the media file
             file_name = current_organization.name + '__' + data['name'] + '__' + data['version'] + '__' + resource['name']
@@ -67,11 +76,19 @@ def register_resource(provider, data, file_=None):
 
         elif 'link' in data:
             # Add the download link
+            # Check link format
+            if not is_valid_url(data['link']):
+                raise Exception('Invalid Resource link format')
+
             resource_data['link'] = data['link']
             resource_data['content_path'] = ''
 
     else:
         #decode the content and save the media file
+        # Check file name format
+        if not is_valid_file(file_.name):
+            raise Exception('Invalid file name format: Unsupported character')
+
         file_name = current_organization.name + '__' + data['name'] + '__' + data['version'] + '__' + file_.name
         path = os.path.join(settings.MEDIA_ROOT, 'resources')
         file_path = os.path.join(path, file_name)

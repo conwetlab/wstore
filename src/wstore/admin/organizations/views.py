@@ -31,6 +31,7 @@ from wstore.store_commons.utils.http import build_response, supported_request_mi
 authentication_required
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.url import is_valid_url
+from wstore.store_commons.utils.name import is_valid_id
 from wstore.models import Organization, RSS
 from django.contrib.auth.decorators import login_required
 from wstore.admin.views import is_hidden_credit_card, is_valid_credit_card
@@ -78,6 +79,9 @@ class OrganizationCollection(Resource):
 
         try:
             data = json.loads(request.raw_post_data)
+
+            if not len(data['name']) > 4 or not is_valid_id(data['name']):
+                raise Exception('Invalid name format')
 
             if 'notification_url' in data:
                 if data['notification_url'] and not is_valid_url(data['notification_url']):
