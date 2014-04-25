@@ -19,19 +19,19 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-from paypalpy import paypal
+import importlib
 from pymongo import MongoClient
 from bson import ObjectId
 
 from django.conf import settings
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
-authentication_required
+from wstore.store_commons.utils.http import build_response, supported_request_mime_types
 from wstore.models import Purchase
 from wstore.models import UserProfile
-from wstore.models import Organization
 from wstore.charging_engine.charging_engine import ChargingEngine
 from wstore.contracting.purchase_rollback import rollback
 from wstore.contracting.notify_provider import notify_provider
@@ -50,7 +50,7 @@ class ServiceRecordCollection(Resource):
             # Validate SDR structure
             if not 'offering' in data or not 'customer' in data or not 'time_stamp' in data \
             or not 'correlation_number' in data or not 'record_type' in data or not 'unit' in data \
-            or not 'value' in data:
+            or not 'value' in data or not 'component_label' in data:
                 raise Exception('Invalid JSON content')
 
             # Get the purchase
@@ -69,10 +69,11 @@ class PayPalConfirmation(Resource):
 
     # This method is used to receive the PayPal confirmation
     # when the customer is paying using his PayPal account
+    @method_decorator(login_required)
     def read(self, request, reference):
         try:
             token = request.GET.get('token')
-            payer_id = request.GET.get('PayerID')
+            payer_id = request.GET.get('PayerID', '')
 
             connection = MongoClient()
             db = connection[settings.DATABASES['default']['NAME']]
@@ -90,9 +91,15 @@ class PayPalConfirmation(Resource):
             if '_lock' in pre_value and pre_value['_lock']:
                 raise Exception('')
 
-            pp = paypal.PayPal(settings.PAYPAL_USER, settings.PAYPAL_PASSWD, settings.PAYPAL_SIGNATURE, settings.PAYPAL_URL)
-
             purchase = Purchase.objects.get(ref=reference)
+
+            # Check that the request user is authorized to end the payment
+            if purchase.organization_owned:
+                if request.user.userprofile.current_organization != purchase.owner_organization:
+                    raise Exception()
+            else:
+                if request.user != purchase.customer:
+                    raise Exception('')
 
             # If the purchase state value is different from pending means that
             # the timeout function has completely ended before acquire the resource
@@ -106,20 +113,29 @@ class PayPalConfirmation(Resource):
 
             pending_info = purchase.contract.pending_payment
 
-            pp.DoExpressCheckoutPayment(
-                paymentrequest_0_paymentaction='Sale',
-                paymentrequest_0_amt=pending_info['price'],
-                paymentrequest_0_currencycode='EUR',
-                token=token,
-                payerid=payer_id
-            )
+            # Get the payment client
+            # Load payment client
+            cln_str = settings.PAYMENT_CLIENT
+            client_class = cln_str.split('.')[-1]
+            client_package = cln_str.partition('.' + client_class)[0]
+
+            payment_client = getattr(importlib.import_module(client_package), client_class)
+
+            # build the payment client
+            client = payment_client(purchase)
+            client.end_redirection_payment(token, payer_id)
+        
             charging_engine = ChargingEngine(purchase)
-            charging_engine.end_charging(pending_info['price'], pending_info['concept'], pending_info['related_model'])
+            accounting = None
+            if 'accounting' in pending_info:
+                accounting = pending_info['accounting']
+
+            charging_engine.end_charging(pending_info['price'], pending_info['concept'], pending_info['related_model'], accounting)
         except:
             rollback(purchase)
             context = {
                 'title': 'Payment Canceled',
-                'message': 'Your payment has been canceled. An error occurs or the timeout has finished, if you want to acquire the offering purchase it again in W-Store.'
+                'message': 'Your payment has been canceled. An error occurs or the timeout has finished, if you want to acquire the offering purchase it again in WStore.'
             }
             return render(request, 'store/paypal_template.html', context)
 
@@ -156,18 +172,26 @@ class PayPalCancelation(Resource):
 
     # This method is used when the user cancel a charge
     # when is using a PayPal account
-    @authentication_required
+    @method_decorator(login_required)
     def read(self, request, reference):
         # In case the user cancels the payment is necessary to update
         # the database in order to avoid an inconsistent state
         try:
             purchase = Purchase.objects.get(pk=reference)
+
+            # Check that the request user is authorized to end the payment
+            if purchase.organization_owned:
+                if request.user.userprofile.current_organization != purchase.owner_organization:
+                    raise Exception()
+            else:
+                if request.user != purchase.customer:
+                    raise Exception('')
             rollback(purchase)
         except:
             return build_response(request, 400, 'Invalid request')
 
         context = {
             'title': 'Payment Canceled',
-            'message': 'Your payment has been canceled. If you want to acquire the offering purchase it again in W-Store.'
+            'message': 'Your payment has been canceled. If you want to acquire the offering purchase it again in WStore.'
         }
         return render(request, 'store/paypal_template.html', context)

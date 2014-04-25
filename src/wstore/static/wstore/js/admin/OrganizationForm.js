@@ -4,8 +4,8 @@
  * This file is part of WStore.
  *
  * WStore is free software: you can redistribute it and/or modify
- * it under the terms of the European Union Public Licence (EUPL) 
- * as published by the European Commission, either version 1.1 
+ * it under the terms of the European Union Public Licence (EUPL)
+ * as published by the European Commission, either version 1.1
  * of the License, or (at your option) any later version.
  *
  * WStore is distributed in the hope that it will be useful,
@@ -14,220 +14,243 @@
  * European Union Public Licence for more details.
  *
  * You should have received a copy of the European Union Public Licence
- * along with WStore.  
+ * along with WStore.
  * If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
  */
 
 (function() {
 
-    var main = true;
+    /*
+     * Organization Form constructor
+     */
+    OrganizationForm = function OrganizationForm() {
+    };
 
-    var makeCreateOrganizatonRequest = function makeCreateOrganizationRequest(endpoint, method) {
-        var request = {}
-        var error = false;
-        var msg, filled = 0, inputs = 0;
+    /*
+     * Organization form is a subclass of AdminForm
+     */
+    OrganizationForm.prototype = new AdminForm('ORGANIZATION_ENTRY', 'ORGANIZATION_COLLECTION', $('#organization_form_template'));
+    OrganizationForm.prototype.constructor = OrganizationForm;
 
-        request.name = $.trim($('#org-name').val());
-        request.notification_url = $.trim($('#notify-url').val());
+    /*
+     * Implementation of validateFields abstract method, validate
+     * Organization form and get form info
+     */
+    OrganizationForm.prototype.validateFields = function validateFields() {
+        var validation = {}, tax_address = {}, credit_card = {};
+        var filled = 0, fields = 0;
 
-        // Get the tax address
-        $('.addr-input').each(function() {
+        validation.valid = true;
+        validation.data = {};
+
+        var name = $.trim($('input[id="id_orgname"]').val());
+        var notification_url = $.trim($('input[id="id_notification_url"]').val());
+
+        // Check the name
+        if (!name) {
+            validation.valid = false;
+            validation.msg = 'Missing required field';
+            validation.errFields = [$('input[id="id_orgname"]').parent().parent()];
+        } else {
+            var nameReg = new RegExp(/^[\w\s-]+$/);
+            if (!nameReg.test(name)) {
+                validation.valid = false;
+                validation.msg = 'Invalid name format';
+                validation.errFields = [$('input[id="id_orgname"]').parent().parent()];
+            } else {
+                validation.data.name = name;
+            }
+        }
+
+        // Check the notification url
+        if (notification_url) {
+            var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+            if (!urlReg.test(notification_url)) {
+                if (!validation.valid) {
+                    // Change validation message to indicate that more that an error exists
+                    validation.msg += ' and invalid URL format';
+                    validation.errFields.push($('input[id="id_notification_url"]').parent().parent());
+                } else {
+                    validation.valid = false;
+                    validation.msg = 'Invalid URL format';
+                    validation.errFields = [$('input[id="id_notification_url"]').parent().parent()];
+                }
+                return validation;
+            } else {
+                validation.data.notification_url = notification_url;
+            }
+        } else {
+            validation.data.notification_url = notification_url;
+        }
+
+        // Get the credit card's input fields
+        $('input[id^="id_card"]').each(function() {
             if ($.trim($(this).val()).length != 0) {
                 filled += 1;
             }
-            inputs += 1;
+            fields += 1;
+        });
+
+        // Get the credit card's select fields
+        $('select[id^="id_card"]').each(function() {
+            if ($.trim($(this).val()) != 0) {
+                filled += 1;
+            }
+            fields += 1;
+        });
+
+        // The credit card info is not required; however, if it is wanted to
+        // provide it all fields are required.
+        if (filled != 0 && filled != fields) {
+            validation.valid = false;
+            validation.msg = 'To provide a credit card all fields are required';
+            validation.errFields = [];
+            $('input[id^="id_card"]').each(function() {
+                if ($.trim($(this).val()).length == 0) {
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
+                }
+            });
+            $('select[id^="id_card"]').each(function() {
+                if ($.trim($(this).val()) == 0) {
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
+                }
+            });
+            return validation;
+        }
+        
+        if (filled != 0 && filled == fields) {
+            credit_card.type = $.trim($('select[id="id_card_type"]').val());
+            credit_card.number = $.trim($('input[id="id_card_number"]').val());
+            credit_card.cvv2 = $.trim($('input[id="id_card_code"]').val());
+            credit_card.expire_month = $.trim($('select[id="id_card_month"]').val());
+            credit_card.expire_year = $.trim($('select[id="id_card_year"]').val());
+            validation.data.payment_info = credit_card;
+        }
+
+        filled = 0;
+        fields = 0;
+
+        // Get the tax address
+        $('input[id^="id_tax"]').each(function() {
+            if ($.trim($(this).val()).length != 0) {
+                filled += 1;
+            }
+            fields += 1;
         });
 
         // The tax address is not required; however, if it is wanted to
         // provide it all fields are required.
-        if (filled != 0 && filled == inputs) {
-            var taxAddr = {
-                'street': $.trim($('#street').val()),
-                'postal': $.trim($('#postal').val()),
-                'city': $.trim($('#city').val()),
-                'country': $.trim($('#country').val())
-            }
-            request.tax_address = taxAddr;
-        } else if (filled != 0) {
-            error = true;
-            msg = 'To provide a tax address all fields are required';
-        }
-
-        filled = 0;
-        inputs = 0;
-        // The credit card info is not required; however, if it is wanted to
-        // provide it all fields are required.
-        $('.credit-input').each(function() {
-            if ($.trim($(this).val()).length != 0) {
-                filled += 1;
-            }
-            inputs += 1;
-        });
-
-        if (filled != 0 && filled == inputs && $('#type').val() != 0 && $('#expire-month').val() != 0) {
-            var creditCard = {
-                'type': $('#type').val(),
-                'number': $.trim($('#number').val()),
-                'expire_month': $('#expire-month').val(),
-                'expire_year': $.trim($('#expire-year').val()),
-                'cvv2': $.trim($('#cvv2').val())
-            }
-            request.payment_info = creditCard;
-        } else if (filled != 0) {
-            error = true;
-            msg = 'To provide a credit card all fields are required';
-        }
-
-        if (!error) {
-            var csrfToken = $.cookie('csrftoken');
-
-            $.ajax({
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                },
-                type: method,
-                url: endpoint,
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify(request),
-                success: function (response) {
-                    main = true; 
-                    orgInfoRequest(paintOrganizations);
-                },
-                error: function (xhr) {
-                    var resp = xhr.responseText;
-                    var msg = JSON.parse(resp).message;
-                    MessageManager.showMessage('Error', msg);
+        if (filled != 0 && filled != fields) {
+            validation.valid = false;
+            validation.msg = 'To provide a tax address all fields are required';
+            validation.errFields = [];
+            $('input[id^="id_tax"]').each(function() {
+                if ($.trim($(this).val()).length == 0) {
+                    filled += 1;
+                    validation.errFields.push($(this).parent().parent());
                 }
             });
-        } else {
-            MessageManager.showMessage('Error', msg);
+            return validation;
         }
-    }
-
-    paintOrganizations = function paintOrganizations(orgs) {
-        $('#admin-container').empty();
-
-        if (orgs.length > 0) {
-            $.template('listTemplate', $('#list_template'));
-            $.tmpl('listTemplate', {'title': 'Organizations'}).appendTo('#admin-container');
-
-            for (var i = 0; i < orgs.length; i++) {
-                var row, column, div;
-                $.template('elemTemplate', $('#element_template'));
-                row = $.tmpl('elemTemplate', {'name': orgs[i].name})
-                row.appendTo('#table-list');
-
-                column = $('<td></td>');
-                div = $('<div></div>').addClass('update').appendTo(column);
-                $('<i></i>').addClass('icon-edit').appendTo(div);
-                column.appendTo(row);
-
-                div.click((function(org) {
-                    return function() {
-                        main = false
-                        paintOrganizationForm(org);
-                    }
-                })(orgs[i]));
-
-            }
-            $('.add').click(function() {
-                main = false;
-                paintOrganizationForm();
-            })
-        } else {
-            var msg = 'No organizations registered, you may want to register one'; 
-            MessageManager.showAlertInfo('Organizations', msg);
+        
+        if (filled != 0 && filled == fields) {
+            tax_address.street = $.trim($('input[id="id_tax_street"]').val());
+            tax_address.postal = $.trim($('input[id="id_tax_postcode"]').val());
+            tax_address.city = $.trim($('input[id="id_tax_city"]').val());
+            tax_address.country = $.trim($('input[id="id_tax_country"]').val());
+            validation.data.tax_address = tax_address;
         }
-        $('#back').click(paintElementTable);
-    }
-    
-    orgInfoRequest = function orgInfoRequest(callback, arg) {
-        $.ajax({
-            type: "GET",
-            url: EndpointManager.getEndpoint('ORGANIZATION_COLLECTION'),
-            dataType: "json",
-            success: function (response) {
-                if (!arg) {
-                    callback(response);
-                } else {
-                    callback(response, arg);
-                }
-            },
-            error: function (xhr) {
-                var resp = xhr.responseText;
-                var msg = JSON.parse(resp).message;
-                MessageManager.showMessage('Error', msg);
-            }
-        })
-    }
 
-    var fillOrganizationForm = function fillOrganizationForm(org) {
+        return validation;
+    };
 
-        $('#org-name').val(org.name).prop('readonly', true);
-        $('#notify-url').val(org.notification_url);
+    /**
+     * Display the Organization form and fill the Organization entry info for updating
+     */
+    OrganizationForm.prototype.fillOrganizationInfo = function fillOrganizationInfo(organization) {
+        var credit_card, tax_address;
 
-        $('#org-user-btn').removeClass('hide');
+        // Paint the form
+        this.paintForm();
+
+        // Fill Organization entry info
+        $('input[id="id_orgname"]').val(organization.name).prop('readonly', true);
+        $('input[id="id_notification_url"]').val(organization.notification_url);
 
         // Set add users button listener
-        $('#org-user-btn').click(function() {
-            displayOrganizationUsersForm(org.name);
+        $('input[id="id_organization_add_user"]').removeClass('hide');
+        $('input[id="id_organization_add_user"]').click(function() {
+            displayOrganizationUsersForm(organization.name);
         });
 
-        if (org.payment_info) {
-            credit_card = org.payment_info
-            $('#type').val(credit_card.type);
-            $('#number').val(credit_card.number);
-            $('#expire-month').val(credit_card.expire_month);
-            $('#expire-year').val(credit_card.expire_year);
-            $('#cvv2').val(credit_card.cvv2);
+        if (organization.payment_info) {
+            credit_card = organization.payment_info
+            $('input[id="id_card_type"]').val(credit_card.type);
+            $('input[id="id_card_number"]').val(credit_card.number);
+            $('input[id="id_card_month"]').val(credit_card.expire_month);
+            $('input[id="id_card_year"]').val(credit_card.expire_year);
+            $('input[id="id_card_code"]').val(credit_card.cvv2);
         }
 
-        if (org.tax_address) {
-            tax_address = org.tax_address;
-            $('#street').val(tax_address.street);
-            $('#postal').val(tax_address.postal);
-            $('#city').val(tax_address.city);
-            $('#country').val(tax_address.country);
+        if (organization.tax_address) {
+            tax_address = organization.tax_address;
+            $('input[id="id_tax_street"]').val(tax_address.street);
+            $('input[id="id_tax_postcode"]').val(tax_address.postal);
+            $('input[id="id_tax_city"]').val(tax_address.city);
+            $('input[id="id_tax_country"]').val(tax_address.country);
         }
-        $('#org-submit').text('Update');
+        // Change register button by an update button
+        $('#elem-submit').val('Update').unbind('click').click((function(evnt) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            this.updateElementRequest({'org': organization.name});
+        }).bind(this));
     };
 
-    var paintCompleteOrganizationForm = function paintCompleteOrganizationForm(org) {
-        var form;
+    /*
+     * Implementation of fillListInfo abstract method, includes
+     * Organizations in the list view
+     */
+    OrganizationForm.prototype.fillListInfo = function fillListInfo(organizations) {
+        $.template('elementTemplate', $('#element_template'));
 
-        $('#admin-container').empty();
+        for (var i = 0; i < organizations.length; i++) {
+            var editIcon;
 
-        // Create the form
-        $.template('orgFormTemplate', $('#organization_form_template'));
-        $.tmpl('orgFormTemplate').appendTo('#admin-container');
+            var template = $.tmpl('elementTemplate', {
+                'name': organizations[i].name,
+            });
 
-        // Set listeners
-        $('#org-submit').click(function() {
-            if (org) {
-                makeCreateOrganizatonRequest(EndpointManager.getEndpoint('ORGANIZATION_ENTRY', {'org': org.name}), 'PUT');
-            } else {
-                makeCreateOrganizatonRequest(EndpointManager.getEndpoint('ORGANIZATION_COLLECTION'), 'POST');
-            }
-        });
+            // Include edit icon
+            editIcon = $('<i></i>').addClass('icon-edit').click((function(self, organizationEntry) {
+                return function() {
+                    self.fillOrganizationInfo(organizationEntry);
+                };
+            })(this, organizations[i]));
+            
+            template.find('#elem-info').append(editIcon);
 
-        $('#back').click(function() {
-            if (main) {
-                paintElementTable();
-            } else {
-                orgInfoRequest(paintOrganizations);
-                main = true;
-            }
-        })
+            // Include delete listener
+            template.find('.delete').click((function(self, organizationEntry) {
+                return function() {
+                    var urlContext = {
+                        'name': organizationEntry.name
+                    }
+                    self.mainClient.remove(self.elementInfoRequest.bind(self), urlContext);
+                };
+            })(this, organizations[i]));
+
+            // Append entry
+            template.appendTo('#table-list');
+        }
     };
 
-    paintOrganizationForm = function paintOraganizationForm(org) {
+    /*
+     * Implementation of setFormListeners abstract method, creates
+     * extra listeners included in the form
+     */
+    OrganizationForm.prototype.setFormListeners = function setFormListeners() {};
 
-        if (org) {
-            paintCompleteOrganizationForm(org);
-            fillOrganizationForm(org);
-        } else {
-            paintCompleteOrganizationForm();
-        }
-    }
 })();

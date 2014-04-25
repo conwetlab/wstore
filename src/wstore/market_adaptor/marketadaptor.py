@@ -24,7 +24,7 @@ from urllib import urlencode
 from urlparse import urljoin, urlparse
 
 from wstore.store_commons.utils.method_request import MethodRequest
-from wstore.store_commons.utils.fix_url import url_fix
+from wstore.store_commons.utils.url import url_fix
 
 
 class MarketAdaptor(object):
@@ -32,7 +32,7 @@ class MarketAdaptor(object):
     _marketplace_uri = None
     _session_id = None
 
-    def __init__(self, marketplace_uri, user='wirecloud', passwd='wirecloud'):
+    def __init__(self, marketplace_uri, user='store_conwet', passwd='store_conwet'):
         self._marketplace_uri = marketplace_uri
         self._user = user
         self._passwd = passwd

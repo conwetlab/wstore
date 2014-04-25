@@ -289,22 +289,6 @@
         paintCatalogue();
     };
 
-    setFooter = function setFooter() {
-        // Append the terms and conditions bar
-        // Check if the bar is included
-        if ($('footer').length > 0) {
-            $('footer').remove();
-        }
-        // Create the new footer
-        $.template('footerTemplate', $('#footer_template'));
-        $.tmpl('footerTemplate').appendTo('body');
-        if ($(window).height() < $(document).height()) {
-            $('footer').css('position', 'absolute').css('top', ($(document).height()) + 'px');
-        } else {
-            $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
-        }
-    }
-
     calculatePositions = function calculatePositions() {
         var position;
         var filabInt = $('#oil-nav').length > 0;
@@ -330,6 +314,8 @@
                 $('.offerings-container').css('left', '10px');
                 $('.catalogue-form .form').css('width', '100%');
             } else {
+                var offset;
+                var width;
                 if (filabInt) {
                     $('.offerings-container').css('top', '0');
                 } else {
@@ -337,32 +323,41 @@
                 }
 
                 $('.offerings-container').css('left', '228px');
+                // Fixed position in: Tab content in catalogue view
+                offset = $(window).height() - $('.tab-content').offset().top - 30;
+                width = $(window).width() - $('.tab-content').offset().left -10;
+                $('.tab-content').css('height', offset.toString() + 'px');
+                $('.tab-content').css('width', width.toString() + 'px');
             }
         } else {
+            var offset;
+            var width;
             if (filabInt) {
                 $('.title_wrapper').css('top', '140px');
                 $('.navigation').css('top', '60px');
             }
             $('.offerings-container').css('top', '176px');
             $('.offerings-container').css('left', '228px');
+
+            // Fixed position in: Tab content in catalogue view
+            offset = $(window).height() - $('.tab-content').offset().top - 30;
+            width = $(window).width() - $('.tab-content').offset().left -10;
+            $('.tab-content').css('height', offset.toString() + 'px');
+            $('.tab-content').css('width', width.toString() + 'px');
         }
         // Calculate tabs width, at the end to avoid problems with position changes
         position = $('.tabbable').offset();
         $('.offerings-container').css('width', ($(window).width() - position.left) + 'px');
 
         // Check username length to avoid display problems
-        if ($.trim($('div.btn.btn-success > div.dropdown-toggle').text()).length > 12) {
-            var shortName = ' '+ USERNAME.substring(0, 9) + '...';
+        if ($.trim($('div.btn.btn-blue > div.dropdown-toggle span').text()).length > 12) {
+            var shortName = ' '+ USERPROFILE.getCompleteName().substring(0, 9) + '...';
             // Replace user button contents
-            var userBtn = $('div.btn.btn-success > div.dropdown-toggle');
+            var userBtn = $('div.btn.btn-blue > div.dropdown-toggle span');
             userBtn.empty();
             userBtn.text(shortName);
-            userBtn.prepend($('<i></i>').addClass('icon-user icon-white'));
-            userBtn.append($('<b></b>').addClass('caret'));
         }
-        setFooter();
     }
-
     $(window).resize(calculatePositions);
 
 })();

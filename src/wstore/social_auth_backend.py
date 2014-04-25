@@ -32,6 +32,7 @@ By default account id and token expiration time are stored in extra_data
 field, check OAuthBackend class for details on how to extend it.
 """
 from urllib import urlencode
+from urlparse import urljoin
 
 from django.utils import simplejson
 from django.conf import settings
@@ -42,15 +43,16 @@ from wstore.models import Organization
 
 
 # idm configuration
-FIWARE_AUTHORIZATION_URL = 'https://account.lab.fi-ware.eu/authorize'
-FIWARE_ACCESS_TOKEN_URL = 'https://account.lab.fi-ware.eu/token'
-FIWARE_USER_DATA_URL = 'https://account.lab.fi-ware.eu/user'
-FIWARE_NOTIFICATION_URL = 'https://account.lab.fi-ware.eu/purchases'
-FIWARE_APPLICATIONS_URL = 'https://account.lab.fi-ware.eu/applications.json'
-FIWARE_LOGOUT_URL = 'https://account.lab.fi-ware.eu/users/sign_out'
+FIWARE_AUTHORIZATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/authorize')
+FIWARE_ACCESS_TOKEN_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/token')
+FIWARE_USER_DATA_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/user')
+FIWARE_NOTIFICATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/purchases')
+FIWARE_APPLICATIONS_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/applications.json')
+FIWARE_LOGOUT_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/users/sign_out')
 
-FIWARE_PROVIDER_ROLE = 'Offering Provider'
-FIWARE_CUSTOMER_ROLE = 'Offering Customer'
+FIWARE_PROVIDER_ROLE = 'ST Provider'
+FIWARE_CUSTOMER_ROLE = 'ST Customer'
+FIWARE_DEVELOPER_ROLE = 'ST Developer'
 
 
 
@@ -193,6 +195,8 @@ def fill_internal_user_info(*arg, **kwargs):
                 org_roles.append('provider')
             elif role['name'] == FIWARE_CUSTOMER_ROLE:
                 org_roles.append('customer')
+            elif role['name'] == FIWARE_DEVELOPER_ROLE:
+                org_roles.append('developer')
 
         organizations.append({
             'organization': org_model.pk,

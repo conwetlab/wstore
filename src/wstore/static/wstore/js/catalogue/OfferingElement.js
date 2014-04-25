@@ -43,7 +43,11 @@
         this.shortDescription = this.servicesOffered[0].short_description;
         this.updated = this.servicesOffered[0].modified;
         this.created = offeringData.creation_date;
-        this.published = offeringData.publication_date;
+
+        // Display only publication date (not hour or seconds)
+        if (offeringData.publication_date) {
+            this.published = offeringData.publication_date.substring(0, 10);
+        }
         this.description = this.servicesOffered[0].long_description;
         this.offeringDescriptionURL = offeringData.description_url;
         this.legal = this.servicesOffered[0].legal;

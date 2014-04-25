@@ -32,6 +32,7 @@ from django.contrib.auth.decorators import login_required
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
 authentication_required
+from wstore.store_commons.utils.version import is_lower_version
 from wstore.offerings.offerings_management import get_offering_info
 from wstore.contracting.purchases_management import create_purchase
 from wstore.charging_engine.charging_engine import ChargingEngine
@@ -39,7 +40,6 @@ from wstore.models import Offering, Organization, Context
 from wstore.models import Purchase
 from wstore.models import Resource as store_resource
 from wstore.contracting.purchase_rollback import rollback
-
 
 
 class PurchaseFormCollection(Resource):
@@ -163,6 +163,20 @@ class PurchaseCollection(Resource):
                 if 'credit_card' in data['payment']:
                     payment_info['credit_card'] = data['payment']['credit_card']
 
+                # Check the selected price plan
+                update_plan = False
+                developer_plan = False
+                if 'plan_label' in data:
+                    payment_info['plan'] = data['plan_label']
+                    # Classify the plan
+                    # Check if the plan is an update
+                    if data['plan_label'].lower() == 'update':
+                        update_plan = True
+
+                    # Check if the plan is a developer purchase
+                    elif data['plan_label'].lower() == 'developer':
+                        developer_plan = True
+
                 # Check if the user is purchasing for an organization
 
                 org_owned = True
@@ -170,10 +184,35 @@ class PurchaseCollection(Resource):
                     org_owned = False
 
                 # Check if the user has the customer role for the organization
+                roles = user.userprofile.get_current_roles()
                 if org_owned:
-                    roles = user.userprofile.get_current_roles()
 
-                    if not 'customer' in roles:
+                    if not 'customer' in roles and not developer_plan:
+                        return build_response(request, 403, 'Forbidden')
+
+                    # Load the purchased offerings if it is an update in
+                    # order to check versions later
+                    if update_plan:
+                        purchased_offerings = user.userprofile.current_organization.offerings_purchased
+                    
+                elif update_plan:
+                    purchased_offerings = user.userprofile.offerings_purchased
+                    
+                # Check if the plan is an update
+                if update_plan:
+                    # Check if the user has purchased a previous version
+                    found = False
+                    offerings = Offering.objects.filter(owner_organization=offering.owner_organization, name=offering.name)
+
+                    for off in offerings:
+                        if off.pk in purchased_offerings and is_lower_version(off.version, offering.version):
+                            found = True
+                            break
+
+                    if not found:
+                        return build_response(request, 403, 'Forbidden')
+
+                if developer_plan and not 'developer' in roles:
                         return build_response(request, 403, 'Forbidden')
 
                 response_info = create_purchase(user, offering, org_owned=org_owned, payment_info=payment_info)
@@ -197,7 +236,7 @@ class PurchaseCollection(Resource):
         # If the value returned by the create_purchase method is a string means that
         # the purchase is not ended and need user confirmation. response_info contains
         # the URL where redirect the user
-        if isinstance(response_info, str):
+        if isinstance(response_info, str) or isinstance(response_info, unicode):
             response['redirection_link'] = response_info
             status = 200
         else:  # The purchase is finished so the download links are returned
@@ -219,7 +258,7 @@ class PurchaseCollection(Resource):
             response['bill'] = response_info.bill
             status = 201
 
-        # Check if there are to redirect the user
+        # Check if it is needed to redirect the user
         token = offering.pk + user.pk
 
         site = get_current_site(request)

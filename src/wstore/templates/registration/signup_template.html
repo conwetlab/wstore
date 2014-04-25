@@ -1,0 +1,34 @@
+{% load i18n %}{% load url from future %}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>WStore Sign up</title>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/aplication.css" />
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap-responsive.css" />
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
+    <link href="http://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <a class="btn" href="{% url 'home' %}">< Back</a>
+    <div class="row">
+      <div class="container">
+        {% if success %}
+          <div class="row">
+            <div class="span4 offset4">
+              <div class="alert alert-success">
+                <strong>Well done!</strong> WStore has sent an activation e-mail to {{ form.email.value }}. Please, check it out.
+              </div><!-- /.alert -->
+            </div>
+          </div><!-- /.row -->
+        {% else %}
+          <div class="span6 offset3">
+            {% include 'registration/registration_form.html' %}
+          </div><!-- /.span9 -->
+        {% endif %}
+      </div>
+    </div><!-- /.row -->
+    <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.8.2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
+  </body>
+</html>

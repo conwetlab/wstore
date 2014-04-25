@@ -85,28 +85,31 @@
         var priceStr = 'Free';
 
         if (pricing.price_plans && pricing.price_plans.length > 0) {
-            var pricePlan = pricing.price_plans[0];
-            
-            if (pricePlan.price_components && pricePlan.price_components.length > 0) {
-             // Check if it is a single payment
-                if (pricePlan.price_components.length == 1) {
-                    var component = pricePlan.price_components[0];
-                    if (component.unit.toLowerCase() == 'single payment') {
-                        priceStr = component.value;
-                        if (component.currency == 'EUR') {
-                            priceStr = priceStr + ' €';
+            if (pricing.price_plans.length == 1) {
+                var pricePlan = pricing.price_plans[0];
+                
+                if (pricePlan.price_components && pricePlan.price_components.length > 0) {
+                 // Check if it is a single payment
+                    if (pricePlan.price_components.length == 1) {
+                        var component = pricePlan.price_components[0];
+                        if (component.unit.toLowerCase() == 'single payment') {
+                            priceStr = component.value;
+                            if (component.currency == 'EUR') {
+                                priceStr = priceStr + ' €';
+                            } else {
+                                priceStr = priceStr + ' £';
+                            }
                         } else {
-                            priceStr = priceStr + ' £';
+                            priceStr = 'View pricing';
                         }
+                    // Check if is a complex pricing
                     } else {
                         priceStr = 'View pricing';
                     }
-                // Check if is a complex pricing
-                } else {
-                    priceStr = 'View pricing';
                 }
+            } else {
+                priceStr = 'View pricing';
             }
-            
         }
 
         return priceStr;
@@ -182,7 +185,6 @@
             }
             templ.appendTo(target)
         }
-        setFooter();
     };
 
     setNextPage = function setNextPage (nextPag) {

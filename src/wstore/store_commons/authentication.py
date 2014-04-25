@@ -38,10 +38,13 @@ def logout(request):
         # Check if the logout request is originated in a different domain
         if 'HTTP_ORIGIN' in request.META:
             origin = request.META['HTTP_ORIGIN']
+
+            from wstore.views import ACCOUNT_PORTAL_URL, CLOUD_PORTAL_URL, MASHUP_PORTAL_URL
+
             allowed_origins = [
-                'https://account.lab.fi-ware.eu',
-                'https://cloud.lab.fi-ware.eu',
-                'https://mashup.lab.fi-ware.eu']
+                ACCOUNT_PORTAL_URL,
+                CLOUD_PORTAL_URL,
+                MASHUP_PORTAL_URL]
 
             if origin in allowed_origins:
                 headers = {

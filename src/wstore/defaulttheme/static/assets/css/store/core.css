@@ -1,3 +1,31 @@
+.dropdown-menu>li>a:hover {
+  background-color: rgb(0, 43, 103)
+}
+
+.error-input {
+  border-color: rgb(185,74,72);
+  color: rgb(185,74,72);
+}
+
+.error-input::-webkit-input-placeholder { /* WebKit browsers */
+    color: rgb(185, 74, 72);
+}
+
+.error-input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color: rgb(185, 74, 72);
+}
+.error-input::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color: rgb(185, 74, 72);
+}
+.error-input:-ms-input-placeholder { /* Internet Explorer 10+ */
+    color: rgb(185, 74, 72);
+}
+
+.error-input:focus {
+  border-color: rgb(149,59,57);
+  box-shadow: 0 0 6px rgb(213, 147, 146);
+}
+
 #login-header {
     position: absolute;
     left: 50%;
@@ -19,6 +47,32 @@
     left: 50%;
     margin-left: -162px;
     top: 220px;
+}
+
+#signup-form {
+    border: solid 1px rgb(190, 190, 190);
+    padding: 20px;
+    border-radius: 6px;
+    width: 325px;
+    background-color: rgb(250, 250, 260);
+    position: absolute;
+    left: 50%;
+    margin-left: -162px;
+    top: 400px;
+}
+
+.form-backend {
+    background-color: rgb(250, 250, 260);
+    border: solid 1px rgb(190, 190, 190);
+    border-radius: 6px;
+}
+
+.input-form {
+    width: 285px;
+}
+
+.item-center {
+    text-align: center;
 }
 
 #id_username {
@@ -54,6 +108,13 @@
     top: -6px;
 }
 
+.navigation .icon-caret-right {
+  position: absolute;
+  top: 10px;
+  left: 145px;
+  color: rgb(0, 43, 103);
+}
+
 .store_title {
     position: relative;
     left: 89px;
@@ -87,10 +148,6 @@
 
 .inline {
     display: inline;
-}
-
-.admin-element {
-    margin-top: 100px;
 }
 
 .main-menu {
@@ -146,18 +203,31 @@
     margin-top: 50px;
 }
 
+/* Fixed position in Details and Catalogue Tab */
 .tab-content {
     padding: 5px;
+    overflow: auto;
+    width: 97%;
 }
 
 .catalogue-form {
     width: 200px;
 }
 
+/* Fixed position in Store View */
+#container-rated-newest {
+    overflow: auto;
+    position: absolute;
+}
+
+/* Fixed position in View All options in the store view */
 .search-container {
+    overflow: auto;
     position: absolute;
     top: 300px;
     left: 250px;
+    height: 118%;
+    width: 82%;
 }
 
 .menu-offering {
@@ -348,7 +418,7 @@
 }
 
 #user-edit {
-    right: 15px;
+    right: 30px;
 }
 
 .btn-advanced {
@@ -455,4 +525,88 @@ h2 {
 
 .catalogue-form .form {
   width: 221px;
+}
+
+.icon-tag {
+color: rgb(96, 193, 207);
+}
+
+#main-tab .icon-tag {
+  font-size: 20px;
+}
+
+#main-tab h2:nth-last-of-type(2) {
+  display: inline;
+}
+
+#tags .btn {
+  margin-top: 10px;
+}
+
+a.tag {
+  margin-right: 10px;
+}
+
+.included-tag .icon-remove-sign {
+  color: rgb(218, 79, 73);
+  float: right;
+}
+
+.included-tag .icon-remove-sign:hover {
+  cursor: pointer;
+}
+
+.included-tag span {
+  margin: 10px;
+}
+
+#add-tag {
+  margin-bottom: 6px; 
+}
+
+#tag-text {
+  width: 85%;
+}
+
+.suggested-tag {
+  margin-right: 10px;
+}
+
+.suggested-tag .icon-plus-sign {
+  float: right;
+  color: rgb(91, 183, 91);
+}
+
+.suggested-tag .icon-plus-sign:hover {
+  cursor: pointer;
+}
+
+.suggested-tag span {
+  margin: 10px;
+}
+
+.suggested-tag .icon-remove-sign {
+  color: rgb(218, 79, 73);
+  float: right;
+}
+
+/* Loading view when waiting for requests */
+#loading {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.4) url(/static/assets/img/loading.gif) no-repeat center;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  padding: 0;
+  margin: 0;
+}
+
+/* Fixed position in Footer */
+footer {
+  position: fixed;
+  bottom: 0;
 }

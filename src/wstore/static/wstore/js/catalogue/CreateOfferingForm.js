@@ -24,6 +24,8 @@
     var usdl;
     var logo = [];
     var offeringInfo = {};
+    var logoFailure = false;
+    var screenFailure = false;
 
     /**
      * Handles the selection of images, including the validation and
@@ -34,6 +36,13 @@
     var handleImageFileSelection = function handleImageFileSelection(evnt, type) {
         var files = evnt.target.files;
         var imagesList = [];
+
+        if (type == 'screenshots') {
+            screenShots = [];
+            screenFailure = false;
+        } else {
+            logoFailure = false;
+        }
 
         var reader = new FileReader();
 
@@ -48,18 +57,30 @@
                         return function(e) {
                             var binaryContent = e.target.result;
                             var encoded = btoa(binaryContent);
+                            var imgReg = new RegExp(/^[\w\s-]+\.[\w]+$/);
+
                             if (type == 'screenshots') {
-                                screenShots.push({
-                                    'name': file.name,
-                                    'data': encoded
-                                });
+                                if (!imgReg.test(file.name)) {
+                                    screenFailure = true;
+                                } else {
+                                    screenShots.push({
+                                        'name': file.name,
+                                        'data': encoded
+                                    });
+                                }
                             } else if (type == 'logo') {
-                                logo.push({
-                                    'name': file.name,
-                                    'data': encoded
-                                });
+                                if (!imgReg.test(file.name)) {
+                                    logoFailure = true;
+                                } else {
+                                    logo = [{
+                                        'name': file.name,
+                                        'data': encoded
+                                    }];
+                                }
                             }
-                            readImages(images);
+                            if (!screenFailure && !logoFailure) {
+                                readImages(images);
+                            }
                         };
                     })(img);
                     reader.readAsBinaryString(img);
@@ -109,7 +130,7 @@
             $(helpId).prop('displayed', true);
             $(helpId).addClass('question-sing-sel');
             // Add document even
-            event.stopPropagation();
+            evnt.stopPropagation();
             $(document).click(function() {
                 $(helpId).popover('hide');
                 $(helpId).prop('displayed', false);
@@ -130,6 +151,9 @@
             offeringInfo.related_images = screenShots;
         }
 
+        $('#loading').removeClass('hide');  // Loading view when waiting for requests
+        $('#loading').css('height', $(window).height() + 'px');
+        $('#message').modal('hide');
         $.ajax({
             headers: {
                 'X-CSRFToken': csrfToken,
@@ -140,17 +164,17 @@
             contentType: 'application/json',
             data: JSON.stringify(offeringInfo),
             success: function (response) {
+                $('#loading').addClass('hide');
                 var msg = 'Your offering has been created. You have to publish your offering before making it available to third parties.';
-                $('#message').modal('hide');
                 MessageManager.showMessage('Created', msg);
                 if (getCurrentTab() == '#provided-tab') {
                     getUserOfferings('#provided-tab', paintProvidedOfferings, EndpointManager.getEndpoint('OFFERING_COLLECTION'), false);
                 }
             },
             error: function (xhr) {
+                $('#loading').addClass('hide');
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
-                $('#message').modal('hide');
                 MessageManager.showMessage('Error', msg);
             }
         });
@@ -328,7 +352,14 @@
                 var usdlLink = $.trim($('#usdl-url').val());
 
                 if (usdlLink) {
-                    offeringInfo.description_url = usdlLink;
+                    // Check link format
+                    var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+                    if (!urlReg.test(usdlLink)) {
+                        error = true;
+                        msg = 'Invalid URL format';
+                    } else {
+                        offeringInfo.description_url = usdlLink;
+                    }
                 } else {
                     error = true;
                     msg = 'USDL info is missing'
@@ -467,9 +498,39 @@
             name = $.trim($('[name="app-name"]').val());
             version = $.trim($('[name="app-version"]').val());
 
-            if (!name || !version || !logo) {
+            if (!name || !version || !logo.length) {
                 error = true;
-                msg = 'Missing required field';
+                msg = 'Missing required field(s):';
+                if (!name) {
+                    msg += ' Name';
+                }
+                if(!version) {
+                    msg += ' Version';
+                }
+                if(!logo.length) {
+                    msg += ' Logo';
+                }
+            }
+
+            // Check name format
+            if (name) {
+                var nameReg = new RegExp(/^[\w\s-]+$/);
+                if (!nameReg.test(name)) {
+                    error = true;
+                    msg = 'Invalid name format: Unsupported character';
+                }
+            }
+
+            // Check failures in image loading
+            if (logoFailure) {
+                error = true;
+                msg = 'The provided logo is not valid: Unsupported character in file name';
+            }
+
+            // Check failures in image loading
+            if (screenFailure) {
+                error = true;
+                msg = 'Invalid screenshot(s): Unsupported character in file name';
             }
 
             // Get the notification URL

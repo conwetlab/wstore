@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import json
 import rdflib
 import re
@@ -43,6 +45,8 @@ from wstore.models import Marketplace
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
+from wstore.store_commons.utils.version import is_lower_version
+from wstore.store_commons.utils.name import is_valid_id
 
 
 def get_offering_info(offering, user):
@@ -336,6 +340,29 @@ def create_offering(provider, json_data):
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise Exception('Invalid version format')
 
+    if not is_valid_id(data['name']):
+        raise Exception('Invalid name format')
+
+    # Get organization
+    organization = profile.current_organization
+
+    # Check if the offering already exists
+    existing = True
+
+    try:
+        Offering.objects.get(name=data['name'], owner_organization=organization, version=data['version'])
+    except:
+        existing = False
+
+    if existing:
+        raise Exception('The offering already exists')
+
+    # Check if the version of the offering is lower than an existing one
+    offerings = Offering.objects.filter(owner_organization=organization, name=data['name'])
+    for off in offerings:
+        if is_lower_version(data['version'], off.version):
+            raise Exception('A bigger version of the current offering exists')
+
     # If using the idm, get the applications from the request
     if settings.OILAUTH:
 
@@ -351,20 +378,6 @@ def create_offering(provider, json_data):
             })
 
     data['related_images'] = []
-
-    # Get organization
-    organization = profile.current_organization
-
-    # Check if the offering already exists
-    existing = True
-
-    try:
-        Offering.objects.get(name=data['name'], owner_organization=organization, version=data['version'])
-    except:
-        existing = False
-
-    if existing:
-        raise Exception('The offering already exists')
 
     # Check the URL to notify the provider
     notification_url = ''
@@ -464,10 +477,29 @@ def create_offering(provider, json_data):
         raise Exception('No USDL description provided')
 
     # Validate the USDL
-    valid = validate_usdl(usdl, usdl_info['content_type'])
+    data['organization'] = organization
+    valid = validate_usdl(usdl, usdl_info['content_type'], data)
 
     if not valid[0]:
         raise Exception(valid[1])
+
+    # Check new currencies used
+    if len(valid) > 2:
+        new_curr = valid[2]
+
+        # Set the currency as used
+        cont = Context.objects.all()[0]
+        currency = None
+        # Search the currency
+        for c in cont.allowed_currencies['allowed']:
+            if c['currency'].lower() == new_curr.lower():
+                currency = c
+                break
+
+        cont.allowed_currencies['allowed'].remove(currency)
+        currency['in_use'] = True
+        cont.allowed_currencies['allowed'].append(currency)
+        cont.save()
 
     # Serialize and store USDL info in json-ld format
     graph = rdflib.Graph()
@@ -626,7 +658,10 @@ def update_offering(offering, data):
     # in the offering model
     if new_usdl:
         # Validate the USDL
-        valid = validate_usdl(usdl, usdl_info['content_type'])
+        valid = validate_usdl(usdl, usdl_info['content_type'], {
+            'name': offering.name,
+            'organization': offering.owner_organization
+        })
 
         if not valid[0]:
             raise Exception(valid[1])
@@ -686,17 +721,16 @@ def delete_offering(offering):
 
     if offering.state == 'uploaded':
 
-        if offering.related_images or offering.resources:
-            # If the offering has media files delete them
-            dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
-            path = os.path.join(settings.MEDIA_ROOT, dir_name)
-            files = os.listdir(path)
+        # If the offering has media files delete them
+        dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
+        path = os.path.join(settings.MEDIA_ROOT, dir_name)
+        files = os.listdir(path)
 
-            for f in files:
-                file_path = os.path.join(path, f)
-                os.remove(file_path)
+        for f in files:
+            file_path = os.path.join(path, f)
+            os.remove(file_path)
 
-            os.rmdir(path)
+        os.rmdir(path)
 
         offering.delete()
     else:
@@ -716,14 +750,14 @@ def delete_offering(offering):
             # Remove the offering from the newest list
             newest = context.newest
 
-            if len(newest) < 4:
+            if len(newest) < 8:
                 newest.remove(offering.pk)
             else:
-                # Get the 4 newest offerings using the publication date for sorting
+                # Get the 8 newest offerings using the publication date for sorting
                 connection = MongoClient()
                 db = connection[settings.DATABASES['default']['NAME']]
                 offerings = db.wstore_offering
-                newest_off = offerings.find({'state': 'published'}).sort('publication_date', -1).limit(4)
+                newest_off = offerings.find({'state': 'published'}).sort('publication_date', -1).limit(8)
 
                 newest = []
                 for n in newest_off:
@@ -736,14 +770,14 @@ def delete_offering(offering):
         if offering.pk in context.top_rated:
             # Remove the offering from the top rated list
             top_rated = context.top_rated
-            if len(top_rated) < 4:
+            if len(top_rated) < 8:
                 top_rated.remove(offering.pk)
             else:
                 # Get the 4 top rated offerings
                 connection = MongoClient()
                 db = connection[settings.DATABASES['default']['NAME']]
                 offerings = db.wstore_offering
-                top_off = offerings.find({'state': 'published', 'rating': {'$gt': 0}}).sort('rating', -1).limit(4)
+                top_off = offerings.find({'state': 'published', 'rating': {'$gt': 0}}).sort('rating', -1).limit(8)
 
                 top_rated = []
                 for t in top_off:
@@ -766,6 +800,10 @@ def bind_resources(offering, data, provider):
 
     for res in data:
         resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider.userprofile.current_organization)
+
+        # Check resource state
+        if resource.state == 'deleted':
+            raise Exception('Inavalid resource, the resource is deleted')
 
         if not ObjectId(resource.pk) in offering_resources:
             added_resources.append(resource.pk)
@@ -813,6 +851,10 @@ def comment_offering(offering, comment, user):
     if not 'title' in comment or not 'rating' in comment or not 'comment' in comment:
         raise Exception('Invalid comment')
 
+    # Check comment length
+    if len(comment['comment']) > 200:
+        raise Exception('The comment cannot contain more that 200 characters')
+
     # Check rating
     if comment['rating'] < 0 or comment['rating'] > 5:
         raise Exception('Invalid rating')
@@ -845,7 +887,7 @@ def comment_offering(offering, comment, user):
     top_rated = context.top_rated
 
     # If there is a place append the offering
-    if len(top_rated) < 4:
+    if len(top_rated) < 8:
 
         # If the offering is not included append it
         if not offering.pk in top_rated:

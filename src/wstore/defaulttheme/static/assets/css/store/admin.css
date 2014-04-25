@@ -1,0 +1,42 @@
+
+.admin-element {
+    margin-top: 100px;
+    overflow: auto;
+    position: absolute;
+    top: 100px;
+    left: 7px;
+}
+
+.admin-form {
+  border: solid 1px rgb(190, 190, 190);
+  padding: 20px;
+  border-radius: 6px;
+  width: 424px;
+  background-color: rgb(250, 250, 255);
+  position: absolute;
+  left: 50%;
+  margin-left: -212px;
+}
+
+.double-column {
+  width: 650px;
+  margin-left: -345px;
+}
+
+#admin-err-cont > .alert {
+  width: 100%;
+}
+
+.error ::-webkit-input-placeholder { /* WebKit browsers */
+    color: rgb(185, 74, 72);
+}
+
+.error :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color: rgb(185, 74, 72);
+}
+.error ::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color: rgb(185, 74, 72);
+}
+.error :-ms-input-placeholder { /* Internet Explorer 10+ */
+    color: rgb(185, 74, 72);
+}

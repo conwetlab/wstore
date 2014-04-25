@@ -16,9 +16,10 @@ In order to have WStore up and running the following software is required
 * rdflib 3.2.0+
 * rdflib-jsonld
 * Pymongo
-* Pylucene 3.6.2
+* Whoosh
 * paypalpy 
 * django-crontab
+* django-social-auth
 * wkhtml2pdf
 
 Installation
@@ -32,42 +33,6 @@ This script will create a virtual environment for the project with the correspon
 packages, resolve all needed python and django dependences, and execute a complete test in order to ensure that 
 WStore is correctly installed. To use this script you need virtualenv2.7 and python 2.7.
 
-The script setup.sh download, extract and install pylucene 3.6.2 package. To do 
-that setup.sh uses pylucene-install.sh and pylucene-patch-make-env.sh. This scripts install
-lucene for a Ubuntu 11.10 like configuration, this cofiguration is setup in the pylucene-patch-make-env.sh 
-script that modifies pylucene Makefile uncommenting and modifying the corresponding lines. 
-The default configuartion is:
-
-    # Linux     (Ubuntu 11.10 64-bit, Python 2.7.2, OpenJDK 1.7, setuptools 0.6.16)
-    # Be sure to also set JDK['linux2'] in jcc's setup.py to the JAVA_HOME value
-    # used below for ANT (and rebuild jcc after changing it).
-    PREFIX_PYTHON=<wstore_path>/virtenv
-    ANT=JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64 /usr/bin/ant
-    PYTHON=$(PREFIX_PYTHON)/bin/python
-    JCC=$(PYTHON) -m jcc --shared
-    NUM_FILES=4
-
-If you have a different enviroment you can modify pylucene-patch-make-env.sh to uncomment and 
-modify the lines that match with your environment. Note that the PREFIX\_PYTHON variable is 
-pointing to the python executable in your system by default; however, if you are using the 
-provided scripts or a virtualenv by your own, you have to modify this variable to point to 
-the python executable in your virtualenv, as can be seen in the example above.
-
-If you do not want to modify this script, you can manually execute the script python-dep-install.sh
-to resolve python dependences, manually install pylucene 3.6.2. and then, executng coverage.sh to 
-perform the test. Note that the virtualenv is created in the setup.sh script so if you want to use 
-a virtual environment you will need to install and activate it manually before installing any component;
-otherwise, you will need to provide superuser credentials and all dependences will be installed in 
-your system.
-
-To manually install pylucene package have a look to pylucene documentation:
-
-* http://lucene.apache.org/pylucene/install.html
-
-Note that you will need to resolve Pylucene dependences (Java, ANT) before installing WStore, as can
-be seen above, pyluene is configured to work with openjdk-7 as Java virtual machine. If you want
-to use a different vm you will need to configure it manually as stated before.
-
 WStore uses wkhtml2pdf for the creation of invoices, this software requires an X Server to work. If 
 you do not have one, WStore will try to run Xvfb on the display :98. To install Xvfb use the following
 command.
@@ -78,6 +43,11 @@ For instructions on how to install WStore manually, without using any script, ha
 
 * http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/Store\_-\_W-Store\_-\_Installation\_and\_Administration\_Guide
 
+Note that the installation script installs only django and python dependencies; moreover, it uses a virtualenv for installing these dependencies, so it is needed to activate it before running WStore.
+
+<pre>
+$ source <wstore_path>/src/virtenv/bin/activate
+</pre>
 
 ### Troubleshooting
 
@@ -86,12 +56,6 @@ compilation are missing, to avoid this problem you can install them manually bef
 installing lxml itself by executing:
 
     $ apt-get install libxslt1-dev
-
-Installation of JCC when installing pylucene requires python headers. if they are 
-not installed, you can install them by executing:
-
-    $ apt-get install python2.7-dev
-
 
 Configuration
 -------------
@@ -221,24 +185,21 @@ WStore uses the following URL as as callback URL for OAuth2 authentication:
     <host_wstore>/complete/fiware 
 
 Once you have registered your WStore instance, get OAuth2 credentials needed for the 
-authenticacion of your application. You will need to create two roles in your 
-application, one for offering provider and other for offering customer. This roles 
+authenticacion of your application. You will need to create some roles in your 
+application, one for offering provider, other for offering customer, and a role for developers. This roles 
 will be used in the organizations with access to your WStore instance in order to grant
 organization user the corresponding rights for purchasing and creating offerings for a 
-complete organizations. To include the name you have specified for that roles, you have 
+complete organization. To include the name you have specified for that roles, you have 
 to fill the following settings in social\_auth\_backend.py:
 
     FIWARE_PROVIDER_ROLE='Name of the role'
     FIWARE_CUSTOMER_ROLE='Name of the role' 
+    FIWARE_DEVELOPER_ROLE='Name of the role' 
 
 Finally, include OAuth2 credentials in your WStore instance by filling the settings:
 
     FIWARE_APP_ID = client_id_number
     FIWARE_API_SECRET = client_secret
-
-
-Note, that if you  use this method, all users registered in the corresponding FI-WARE
-instance will have access to your application.
 
 #### WStore Identity Management
 

@@ -19,9 +19,9 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import os
-import lucene
-from lucene import SimpleFSDirectory, File, Document, Field, \
-StandardAnalyzer, IndexWriter, Version, IndexSearcher, QueryParser
+from whoosh.fields import Schema, TEXT
+from whoosh.index import create_in, open_dir
+from whoosh.qparser import QueryParser
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -35,6 +35,7 @@ from wstore.contracting.models import Purchase
 
 
 __test__ = False
+
 
 class FakeUSDLParser():
 
@@ -72,18 +73,16 @@ class IndexCreationTestCase(TestCase):
         se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
         se.create_index(offering)
 
-        lucene.initVM()
-        index = SimpleFSDirectory(File(settings.BASEDIR + '/wstore/test/test_index'))
-        analyzer = StandardAnalyzer(Version.LUCENE_CURRENT)
-        lucene_searcher = IndexSearcher(index)
-        query = QueryParser(Version.LUCENE_CURRENT, 'content', analyzer).parse('widget')
+        # Get the index reader
+        index = open_dir(settings.BASEDIR + '/wstore/test/test_index')
 
-        max_number = 1000
-        total_hits = lucene_searcher.search(query, max_number)
+        with index.searcher() as searcher:
+            query = QueryParser('content', index.schema).parse(unicode('widget'))
+            total_hits = searcher.search(query)
 
-        self.assertEqual(len(total_hits.scoreDocs), 1)
-        doc = lucene_searcher.doc(total_hits.scoreDocs[0].doc)
-        self.assertEqual(offering.pk, doc.get('id'))
+            self.assertEqual(len(total_hits), 1)
+            doc = total_hits[0]
+            self.assertEqual(offering.pk, doc['id'])
 
 
 class FullTextSearchTestCase(TestCase):
@@ -94,41 +93,27 @@ class FullTextSearchTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         # Create the test index
-        lucene.initVM()
         index_path = settings.BASEDIR + '/wstore/test/test_index'
-        index = SimpleFSDirectory(File(index_path))
-        analyzer = StandardAnalyzer(Version.LUCENE_CURRENT)
-        index_writer = IndexWriter(index, analyzer, True, IndexWriter.MaxFieldLength.UNLIMITED)
+        os.makedirs(index_path)
+        schema = Schema(id=TEXT(stored=True), content=TEXT)
+        index = create_in(index_path, schema)
+        index_writer = index.writer()
+
         # Add documents  to the index
-        document = Document()
+
         text1 = 'first test index offering'
-        document.add(Field("content", text1, Field.Store.YES, Field.Index.ANALYZED))
-        document.add(Field("id", "61000aba8e05ac2115f022f9", Field.Store.YES, Field.Index.NOT_ANALYZED))
-        index_writer.addDocument(document)
+        index_writer.add_document(id=unicode("61000aba8e05ac2115f022f9"), content=unicode(text1))
 
         text2 = 'second test index offering'
-        document = Document()
-        document.add(Field("content", text2, Field.Store.YES, Field.Index.ANALYZED))
-        document.add(Field("id", "61000aba8e05ac2115f022ff", Field.Store.YES, Field.Index.NOT_ANALYZED))
-        index_writer.addDocument(document)
-        document = Document()
-        document.add(Field("content", "uploaded", Field.Store.YES, Field.Index.ANALYZED))
-        document.add(Field("id", "61000aba8e05ac2115f022f0", Field.Store.YES, Field.Index.NOT_ANALYZED))
+        index_writer.add_document(id=unicode("61000aba8e05ac2115f022ff"), content=unicode(text2))
 
-        index_writer.addDocument(document)
+        index_writer.add_document(id=unicode("61000aba8e05ac2115f022f0"), content=unicode("uploaded"))
 
-        document = Document()
-        document.add(Field("content", "purchased", Field.Store.YES, Field.Index.ANALYZED))
-        document.add(Field("id", "61000a0a8905ac2115f022f0", Field.Store.YES, Field.Index.NOT_ANALYZED))
-        index_writer.addDocument(document)
+        index_writer.add_document(id=unicode("61000a0a8905ac2115f022f0"), content=unicode("purchased"))
 
-        document = Document()
-        document.add(Field("content", "multiple", Field.Store.YES, Field.Index.ANALYZED))
-        document.add(Field("id", "6108888a8905ac2115f022f0", Field.Store.YES, Field.Index.NOT_ANALYZED))
-        index_writer.addDocument(document)
+        index_writer.add_document(id=unicode("6108888a8905ac2115f022f0"), content=unicode("multiple"))
 
-        index_writer.optimize()
-        index_writer.close()
+        index_writer.commit()
 
         from wstore.offerings import offerings_management
         offerings_management.USDLParser = FakeUSDLParser

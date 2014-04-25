@@ -36,6 +36,7 @@
         'NEWEST_COLLECTION': '/api/offering/offerings/newest',
         'TOPRATED_COLLECTION': '/api/offering/offerings/toprated',
         'UNIT_COLLECTION': '/api/administration/units',
+        'CURRENCY_COLLECTION': '/api/administration/currency',
         'CHANGE_ORGANIZATION': '/api/administration/organizations/change',
         'REQUEST_PROVIDER': '/api/provider'
     };
@@ -50,9 +51,12 @@
         'ORGANIZATION_USER_ENTRY': '/api/administration/organizations/${org}/user',
         'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}',
         'PUBLISH_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/publish',
+        'TAG_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/tag',
         'BIND_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/bind',
         'RATING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/rating',
+        'USDL_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/usdl',
         'SEARCH_ENTRY': '/api/search/${text}',
+        'CURRENCY_ENTRY': '/api/administration/currency/${currency}',
         'PURCHASE_ENTRY':   '/api/contracting/${ref}'
     }
 

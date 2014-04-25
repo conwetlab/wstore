@@ -100,6 +100,7 @@
             'description': this.offeringElement.getDescription()
         }).appendTo('#main-tab');
 
+        // Check if there are screenshots
         screen = this.offeringElement.getScreenshots();
         if (screen.length > 0) {
             for (var i = 0; i < screen.length; i++) {
@@ -116,10 +117,34 @@
             $('#screenshots-car').remove();
         }
 
+        // Check tags
+        if (!this.offeringElement.getTags() && 
+                USERPROFILE.getCurrentOrganization() != this.offeringElement.getOrganization()) {
+            $('h2:contains(Tags)').addClass('hide');
+            $('#main-tab .icon-tag').addClass('hide');
+        } else if (this.offeringElement.getTags()) {
+            // Write tags
+            var tags = this.offeringElement.getTags();
+            for (var i = 0; i < tags.length; i++) {
+                $('<a></a>').addClass('tag').text(tags[i]).appendTo('#tags');
+            }
+        }
+        // Include the update Tags button if needed
+        if (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) {
+
+            var updateBtn = $('<input></input>').attr('type', 'button').addClass('btn btn-clasic').attr('value', 'Update tags').click((function() {
+                var tagManager = new TagManager(this.offeringElement, this);
+                tagManager.display();
+            }).bind(this));
+            var clear = $('<div></div>').addClass('space clear');
+            $('#tags').prepend(clear);
+            $('#tags').prepend(updateBtn);
+        }
+
         if (this.offeringElement.getState() != 'uploaded') {
             this.paintComments();
         } else {
-            $('h3:contains(Comments)').addClass('hide');
+            $('h2:contains(Comments)').addClass('hide');
         }
 
         this.buildTabs();
@@ -188,6 +213,9 @@
      */
     CatalogueDetailsView.prototype.calculatePositions = function calculatePositions() {
         var position = $('.tabbable').offset();
+        // Fixed position in: Details and Catalogue Tab
+        var offset;
+        var width;
 
         // Calculate tabs width
         $('.detailed-info').css('width', ($(window).width() - position.left) + 'px');
@@ -212,7 +240,10 @@
             }
             $('.detailed-info').css('top', '246px');
         }
-        setTimeout(setFooter, 600);
+        offset = $(window).height() - $('.tab-content').offset().top - 30;
+        width = $(window).width() - $('.tab-content').offset().left -10;
+        $('.tab-content').css('height', offset.toString() + 'px');
+        $('.tab-content').css('width', width.toString() + 'px');
     };
 
     /**
@@ -327,7 +358,11 @@
      * Downloads the service model of the offering
      */
     CatalogueDetailsView.prototype.getServiceModel = function getServiceModel () {
-        window.open(this.offeringElement.getOfferingDescriptionURL());
+        window.open(EndpointManager.getEndpoint('USDL_ENTRY', {
+            'organization': this.offeringElement.getOrganization(),
+            'name': this.offeringElement.getName(),
+            'version': this.offeringElement.getVersion()
+        }));
     };
 
     /**
@@ -483,13 +518,20 @@
             $('<h4></h4>').text(title).appendTo(dom);
 
             for (var i = 0; i < priceElem.length; i++) {
-                $.template('priceElementTemplate', $('#pricing_element_template'));
-                priceTempl = $.tmpl('priceElementTemplate', priceElem[i]);
+                // Check if a price function has been defined
+                if (!priceElem.text_function) {
+                    $.template('priceElementTemplate', $('#pricing_element_template'));
+                    priceTempl = $.tmpl('priceElementTemplate', priceElem[i]);
 
-                if(priceElem[i].renovation_date) {
-                    $('<p></p>').text(priceElem[i].renovation_date).appendTo(priceTempl);
+                    if(priceElem[i].renovation_date) {
+                        $('<p></p>').text(priceElem[i].renovation_date).appendTo(priceTempl);
+                    }
+
+                } else {
+                    $.template('priceElementTemplate', $('#pricing_function_template'));
+                    priceTempl = $.tmpl('priceElementTemplate', priceElem[i]);
                 }
-                priceTempl.appendTo(dom)	
+                priceTempl.appendTo(dom)
             }
         }
     };
@@ -517,6 +559,10 @@
 
                 if ('taxes' in price_plans[i]) {
                     this.paintPriceElement(price_plans[i].taxes, dom.find('.taxes'), 'taxes');
+                }
+                // Paint a line for separating plans if needed
+                if (i != (price_plans.length - 1)) {
+                    $('<div></div>').addClass('line clear').appendTo(dom);
                 }
             }
         }
@@ -721,4 +767,5 @@
         this.appLoaded = false;
         this.showView();
     };
+
 })();

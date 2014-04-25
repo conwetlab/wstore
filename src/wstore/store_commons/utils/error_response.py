@@ -48,3 +48,12 @@ def get_json_response(request, mimetype, status_code, message):
         response['result'] = 'correct'
 
     return simplejson.dumps(response)
+
+def get_unicode_response(request, mimetype, status_code, message):
+    response = ''
+    if status_code >= 400:
+        response += 'Error: ' + message
+    else:
+        response += 'Correct: ' + message
+
+        return unicode(response)

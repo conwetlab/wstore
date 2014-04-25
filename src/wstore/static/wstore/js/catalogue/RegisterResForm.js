@@ -25,14 +25,22 @@
     var handleResourceSelection = function handleResourceSelection (evnt) {
         var f = evnt.target.files[0];
         var reader = new FileReader();
+        resource = {};
 
         reader.onload = (function(file) {
             return function(e) {
                 // Needs a sha-1 checksum in order to detect transmission problems
                 var binaryContent = e.target.result;
-                resource = {};
-                resource.data = btoa(binaryContent);
-                resource.name = file.name;
+                // Check name format
+                var nameReg = new RegExp(/^[\w\s-]+\.[\w]+$/);
+
+                if (!nameReg.test(file.name)) {
+                    resource.error = true;
+                    resource.msg = 'Invalid file: Unsupported character in file name';
+                } else {
+                    resource.data = btoa(binaryContent);
+                    resource.name = file.name;
+                }
             }
         })(f);
         reader.readAsBinaryString(f);
@@ -45,7 +53,7 @@
             $(helpId).prop('displayed', true);
             $(helpId).addClass('question-sing-sel');
             // Add document even
-            event.stopPropagation();
+            evnt.stopPropagation();
             $(document).click(function() {
                 $(helpId).popover('hide');
                 $(helpId).prop('displayed', false);
@@ -57,31 +65,67 @@
 
     var makeRegisterResRequest = function makeRegisterResRequest (evnt) {
          var name, version, link, contentType, request = {};
+         var msg, error = false;
 
          evnt.preventDefault();
+         evnt.stopPropagation();
+
          name = $.trim($('[name="res-name"]').val());
          version = $.trim($('[name="res-version"]').val());
          link = $.trim($('[name="res-link"]').val());
          contentType = $.trim($('[name="res-content-type"]').val());
          description = $.trim($('[name="res-description"]').val());
 
-         if (name && version) {
-
-             request.content_type = contentType
-             csrfToken = $.cookie('csrftoken');
-             request.name = name;
-             request.version = version;
-             request.description = description;
-
-             if (resource) {
-                 request.content = resource;
-             } else if (link) {
-                 request.link = link;
-             } else {
-                 MessageManager.showMessage('Error', 'You have not added a resource');
-                 return;
+         if (!name || !version) {
+             error = true;
+             msg = 'Missing required field(s):';
+             if (!name) {
+                 msg += ' Name';
              }
+             if (!version) {
+                 msg += ' Version';
+             }
+         }
 
+         // Check name format
+         var nameReg = new RegExp(/^[\w\s-]+$/);
+         if (name && !nameReg.test(name)) {
+             error = true;
+             msg = 'Invalid name format: Unsupported character';
+         }
+
+         request.content_type = contentType
+         csrfToken = $.cookie('csrftoken');
+         request.name = name;
+         request.version = version;
+         request.description = description;
+
+         if (!$.isEmptyObject(resource)) {
+             // Check resource
+             if (resource.error) {
+                 error = true;
+                 msg = resource.msg;
+             } else {
+                 request.content = resource;
+             }
+         } else if (link) {
+             // Check link format
+             var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+             if (!urlReg.test(link)) {
+                 error = true;
+                 msg = 'Invalid URL format';
+             } else {
+                 request.link = link;
+             }
+         } else {
+             error = true;
+             msg = 'You have not added a resource';
+         }
+
+         if (!error) {
+             $('#loading').removeClass('hide'); // Loading view when waiting for requests
+             $('#loading').css('height', $(window).height() + 'px');
+             $('#message').modal('hide');
              $.ajax({
                  headers: {
                      'X-CSRFToken': csrfToken,
@@ -92,16 +136,18 @@
                  contentType: 'application/json',
                  data: JSON.stringify(request),
                  success: function (response) {
+                     $('#loading').addClass('hide');
                      MessageManager.showMessage('Created', 'The resource has been registered');
                  },
                  error: function (xhr) {
+                     $('#loading').addClass('hide');
                      var resp = xhr.responseText;
                      var msg = JSON.parse(resp).message;
                      MessageManager.showMessage('Error', msg);
                  }
              });
          } else {
-             MessageManager.showMessage('Error', 'missing a required field');
+             MessageManager.showAlertError('Error', msg, $('#error-container'));
          }
 
     
@@ -130,6 +176,8 @@
         });
 
         $('#res-type').on('change', function() {
+            resource = {};
+            $('[name="res-link"]').val('');
             if ($(this).val() == 'upload') {
                 $('#upload').removeClass('hide');
                 $('#upload-help').removeClass('hide');

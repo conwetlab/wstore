@@ -22,74 +22,33 @@ from django.http import Http404, HttpResponseNotAllowed, HttpResponseForbidden
 
 from wstore.store_commons.authentication import Http403
 
-
-class HttpMethodNotAllowed(Exception):
-    """
-    Signals that request.method was not part of
-    the list of permitted methods.
-    """
+METHOD_MAPPING = {
+    'GET': 'read',
+    'POST': 'create',
+    'PUT': 'update',
+    'DELETE': 'delete',
+}
 
 
 class Resource(object):
 
-    def __init__(self, authentication=None, permitted_methods=None, mimetype=None):
+    def __init__(self, authentication=None, permitted_methods=None):
 
-        if not permitted_methods:
-            permitted_methods = ["GET"]
+        self.permitted_methods = tuple([m.upper() for m in permitted_methods])
 
-        self.permitted_methods = [m.upper() for m in permitted_methods]
-
-        self.mimetype = mimetype
+        for method in self.permitted_methods:
+            if method not in METHOD_MAPPING or not callable(getattr(self, METHOD_MAPPING[method], None)):
+                raise Exception('Missing method: ' + method)
 
     def __call__(self, request, *args, **kwargs):
-        try:
-            response = self.dispatch(request, self, *args, **kwargs)
 
-            return response
+        request_method = request.method.upper()
+        if request_method not in self.permitted_methods:
+            return HttpResponseNotAllowed(self.permitted_methods)
+
+        try:
+            return getattr(self, METHOD_MAPPING[request_method])(request, *args, **kwargs)
         except Http404:
             raise
         except Http403:
             return HttpResponseForbidden()
-        except HttpMethodNotAllowed:
-            return HttpResponseNotAllowed(self.permitted_methods)
-        except:
-            raise
-
-    def adaptRequest(self, request):
-        if request.META.get('CONTENT_LENGTH', '') != '':
-            real_method = request.method
-            request.method = 'POST'
-            request._load_post_and_files()
-            request.method = real_method
-
-        return request
-
-    def dispatch(self, request, target, *args, **kwargs):
-        request_method = request.method.upper()
-        if request_method not in self.permitted_methods:
-            raise HttpMethodNotAllowed
-
-        if request_method == 'GET':
-            return target.read(request, *args, **kwargs)
-        elif request_method == 'POST':
-            #PUT and DELETE request are wrapped in a POST request
-            #Asking about request type it's needed here!
-            if '_method' in request.POST:
-                _method = request.POST['_method'].upper()
-                if _method == 'DELETE':
-                    request = self.adaptRequest(request)
-                    return target.delete(request, *args, **kwargs)
-                elif _method == 'PUT':
-                    request = self.adaptRequest(request)
-                    return target.update(request, *args, **kwargs)
-
-            #It's a real POST request!
-            return target.create(request, *args, **kwargs)
-        elif request_method == 'PUT':
-            request = self.adaptRequest(request)
-            return target.update(request, *args, **kwargs)
-        elif request_method == 'DELETE':
-            request = self.adaptRequest(request)
-            return target.delete(request, *args, **kwargs)
-        else:
-            raise Http404

@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import json
 import urllib2
 from urllib2 import HTTPError
@@ -30,11 +32,10 @@ from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
 authentication_required
 from wstore.models import Offering, Organization
-from wstore.models import UserProfile
 from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
 publish_offering, bind_resources, count_offerings, update_offering, comment_offering
-from wstore.offerings.resources_management import register_resource, get_provider_resources
+from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource
 from wstore.store_commons.utils.method_request import MethodRequest
 
 
@@ -49,24 +50,19 @@ class OfferingCollection(Resource):
 
         # Obtains the user profile of the user
         user = request.user
-        content_type = get_content_type(request)[0]
 
         # Get the provider roles in the current organization
         roles = user.userprofile.get_current_roles()
 
         # Checks the provider role
         if 'provider' in roles:
-
-            if content_type == 'application/json':
-                try:
-                    json_data = json.loads(request.raw_post_data)
-                    create_offering(user, json_data)
-                except HTTPError:
-                    return build_response(request, 502, 'Bad Gateway')
-                except Exception, e:
-                    return build_response(request, 400, e.message)
-            else:
-                pass  # TODO xml parsed
+            try:
+                json_data = json.loads(unicode(request.raw_post_data, 'utf-8'))
+                create_offering(user, json_data)
+            except HTTPError:
+                return build_response(request, 502, 'Bad Gateway')
+            except Exception, e:
+                return build_response(request, 400, unicode(e))
         else:
             return build_response(request, 403, 'Forbidden')
 
@@ -75,7 +71,6 @@ class OfferingCollection(Resource):
     @authentication_required
     def read(self, request):
 
-        # TODO support for xml requests
         # Read the query string in order to know the filter and the page
         filter_ = request.GET.get('filter', 'published')
         user = User.objects.get(username=request.user)
@@ -243,7 +238,29 @@ class ResourceCollection(Resource):
 
 
 class ResourceEntry(Resource):
-    pass
+
+    @authentication_required
+    def delete(self, request, provider, name, version):
+
+        response = build_response(request, 204, 'No Content')
+        error = False
+        try:
+            # Get the resource
+            resource = Resource.objects.get(provider=provider_org, name=name, version=version)
+        except:
+            # set error response
+            response = build_response(request, 404, 'Resource not found')
+            error = True
+
+        # Try to delete the resource
+        if not error:
+            try:
+                delete_resource(resource)
+            except Exception, e:
+                response = build_response(request, 400, e.message)
+
+        # Return the response
+        return response
 
 
 class PublishEntry(Resource):
@@ -278,7 +295,7 @@ class PublishEntry(Resource):
         site = get_current_site(request)
         context = Context.objects.get(site=site)
 
-        if len(context.newest) < 4:
+        if len(context.newest) < 8:
             context.newest.insert(0, offering.pk)
         else:
             context.newest.pop()
@@ -339,8 +356,8 @@ class CommentEntry(Resource):
         try:
             data = json.loads(request.raw_post_data)
             comment_offering(offering, data, request.user)
-        except:
-            return build_response(request, 400, 'Invalid content')
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         return build_response(request, 201, 'Created')
 

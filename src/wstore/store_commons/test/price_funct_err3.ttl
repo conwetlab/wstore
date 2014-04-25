@@ -1,0 +1,100 @@
+@prefix foaf: <http://xmlns.com/foaf/0.1/> . 
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . 
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . 
+@prefix msm: <http://cms-wg.sti2.org/ns/minimal-service-model#> . 
+@prefix owl: <http://www.w3.org/2002/07/owl#> . 
+@prefix dcterms: <http://purl.org/dc/terms/> . 
+@prefix usdl: <http://www.linked-usdl.org/ns/usdl-core#> . 
+@prefix legal: <http://www.linked-usdl.org/ns/usdl-legal#> . 
+@prefix price: <http://www.linked-usdl.org/ns/usdl-pricing#> . 
+@prefix sla: <http://www.linked-usdl.org/ns/usdl-sla#> . 
+@prefix sec: <http://www.linked-usdl.org/ns/usdl-sec#> . 
+@prefix blueprint: <http://bizweb.sap.com/TR/blueprint#> . 
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> . 
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+@prefix ctag: <http://commontag.org/ns#> . 
+@prefix org: <http://www.w3.org/ns/org#> . 
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> . 
+@prefix time: <http://www.w3.org/2006/time#> . 
+@prefix gr: <http://purl.org/goodrelations/v1#> . 
+@prefix doap: <http://usefulinc.com/ns/doap#> . 
+@prefix spin: <http://spinrdf.org/spin#> . 
+@prefix sp: <http://spinrdf.org/sp#> . 
+
+
+<http://localhost/pricefunct>
+    a spin:Function ;
+    rdfs:label "An example price function" ;
+    spin:body [
+        a sp:Construct ;
+        sp:resultVariables ([ sp:varName "price"]) ;
+        sp:where ([
+            sp:subject <http://localhost/variable_constant> ;
+            sp:predicate price:hasValue ;
+            sp:object [
+                sp:varName "caux1"
+            ]
+        ] [
+            sp:subject [
+                sp:varName "caux1"
+            ] ;
+            sp:predicate gr:hasValueFloat ;
+            sp:object [
+                sp:varName "constant"
+            ]
+        ] [
+            sp:subject [
+                sp:varName "caux2"
+            ] ;
+            sp:predicate gr:hasValueFloat ;
+            sp:object [
+                sp:varName "usage"
+            ]
+        ] [
+            sp:subject <http://localhost/variable_usage> ;
+            sp:predicate price:hasValue ;
+            sp:object [
+                sp:varName "caux2"
+            ]
+        ] [
+            a sp:Bind ;
+            sp:expression [
+                a sp:Sum ;
+                sp:arg1 [
+                    sp:varName "usage"
+                ] ;
+                sp:arg2 [
+                    a sp:Mul ;
+                    sp:arg1 [
+                        a sp:Mul ;
+                        sp:arg1 [
+                            sp:varName "constant"
+                        ] ;
+                        sp:arg2 [
+                            sp:varName "constant"
+                        ] ;
+                    ];
+                    sp:arg2 [
+                        sp:varName "usage"
+                    ]
+                ]
+            ] ;
+            sp:variable [
+                sp:varName "price"
+            ]
+        ]) 
+    ] ;
+    price:hasVariable
+        <http://localhost/variable_usage>, <http://localhost/variable_constant> .
+
+<http://localhost/variable_usage>
+    a price:Usage ;
+    rdfs:label "Usage variable" .
+
+<http://localhost/variable_constant>
+    a price:Constant ;
+    rdfs:label "Constant" ;
+    price:hasValue [
+        a gr:QuantitativeValue ;
+        gr:hasValueFloat "5.0"
+    ] .

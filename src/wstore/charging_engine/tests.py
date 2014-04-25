@@ -26,6 +26,7 @@ import rdflib
 from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
+from mock import MagicMock
 
 from django.test import TestCase
 from django.conf import settings
@@ -48,28 +49,22 @@ def fake_renovation_date(unit):
         return datetime(2013, 03, 20, 00, 00, 00)
 
 
-class FakePal():
+class FakeClient():
 
-    COUNTRY_CODES = (('SP', 'test country'),)
-
-    def __init__(self):
+    def __init__(self, purchase):
         pass
 
-    def ShortDate(self, year, month):
-        return 0
+    def start_redirection_payment(self, price, currency):
+        pass
 
-    class PayPal():
+    def end_redirection_payment(self, token, payer_id):
+        pass
 
-        def __init__(self, usr, passwd, singn, url):
-            pass
+    def direct_payment(self, currency, price, credit_card):
+        pass
 
-        def DoDirectPayment(self, **kwargs):
-            pass
-
-        def SetExpressCheckout(self, **kwargs):
-            return {
-                'TOKEN': ['11111111']
-            }
+    def get_checkout_url(self):
+        return 'https://www.sandbox.paypal.com/webscr?cmd=_express-checkout&token=11111111'
 
 
 class FakeThreading():
@@ -124,9 +119,9 @@ class SinglePaymentChargingTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.paypal = FakePal()
         charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         super(SinglePaymentChargingTestCase, cls).setUpClass()
 
     def test_basic_charging_single_payment(self):
@@ -176,6 +171,8 @@ class SinglePaymentChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
@@ -248,6 +245,8 @@ class SinglePaymentChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
@@ -294,7 +293,7 @@ class SubscriptionChargingTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.paypal = FakePal()
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         charging_engine.subprocess = FakeSubprocess()
         super(SubscriptionChargingTestCase, cls).setUpClass()
 
@@ -346,6 +345,8 @@ class SubscriptionChargingTestCase(TestCase):
         charging._calculate_renovation_date = fake_renovation_date
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
         contract = purchase.contract
@@ -415,6 +416,8 @@ class SubscriptionChargingTestCase(TestCase):
         charging._calculate_renovation_date = fake_renovation_date
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
         contract = purchase.contract
@@ -487,6 +490,8 @@ class SubscriptionChargingTestCase(TestCase):
         charging._calculate_renovation_date = fake_renovation_date
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging()
         purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
         contract = purchase.contract
@@ -554,7 +559,7 @@ class PayPerUseChargingTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.paypal = FakePal()
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         super(PayPerUseChargingTestCase, cls).setUpClass()
@@ -567,6 +572,7 @@ class PayPerUseChargingTestCase(TestCase):
                 'organization': 'test_organization',
                 'version': '1.0'
             },
+            'component_label': 'invocations',
             'customer': 'test_user',
             'correlation_number': '1',
             'time_stamp': str(datetime.now()),
@@ -593,15 +599,6 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertEqual(loaded_sdr['value'], '10')
         self.assertEqual(loaded_sdr['unit'], 'invocation')
 
-        part = loaded_sdr['applied_part']
-
-        self.assertEqual(part['title'], 'pay per use')
-        self.assertEqual(part['value'], '1')
-        self.assertEqual(part['unit'], 'invocation')
-        self.assertEqual(part['currency'], 'EUR')
-
-        self.assertEqual(loaded_sdr['price'], 10.0)
-
     test_basic_sdr_feeding.tags = ('fiware-ut-14',)
 
     def test_sdr_feeding_some_applied(self):
@@ -614,6 +611,7 @@ class PayPerUseChargingTestCase(TestCase):
                 'organization': 'test_organization',
                 'version': '1.0'
             },
+            'component_label': 'invocations',
             'customer': 'test_user',
             'correlation_number': '2',
             'time_stamp': str(datetime.now()),
@@ -647,15 +645,6 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertEqual(loaded_sdr['value'], '10')
         self.assertEqual(loaded_sdr['unit'], 'invocation')
 
-        part = loaded_sdr['applied_part']
-
-        self.assertEqual(part['title'], 'pay per use')
-        self.assertEqual(part['value'], '1')
-        self.assertEqual(part['unit'], 'invocation')
-        self.assertEqual(part['currency'], 'EUR')
-
-        self.assertEqual(loaded_sdr['price'], 10.0)
-
     test_sdr_feeding_some_applied.tags = ('fiware-ut-14',)
     
     def test_sdr_feeding_some_pending(self):
@@ -666,6 +655,7 @@ class PayPerUseChargingTestCase(TestCase):
                 'organization': 'test_organization',
                 'version': '1.0'
             },
+            'component_label': 'invocations',
             'customer': 'test_user',
             'correlation_number': '2',
             'time_stamp': str(datetime.now()),
@@ -697,15 +687,6 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertEqual(loaded_sdr['value'], '10')
         self.assertEqual(loaded_sdr['unit'], 'invocation')
 
-        part = loaded_sdr['applied_part']
-
-        self.assertEqual(part['title'], 'pay per use')
-        self.assertEqual(part['value'], '1')
-        self.assertEqual(part['unit'], 'invocation')
-        self.assertEqual(part['currency'], 'EUR')
-
-        self.assertEqual(loaded_sdr['price'], 10.0)
-
     test_sdr_feeding_some_pending.tags = ('fiware-ut-14',)
 
     def test_sdr_feeding_org_owned(self):
@@ -716,6 +697,7 @@ class PayPerUseChargingTestCase(TestCase):
                 'organization': 'test_organization',
                 'version': '1.0'
             },
+            'component_label': 'invocations',
             'customer': 'test_user2',
             'correlation_number': '1',
             'time_stamp': str(datetime.now()),
@@ -751,15 +733,6 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertEqual(loaded_sdr['record_type'], 'event')
         self.assertEqual(loaded_sdr['value'], '10')
         self.assertEqual(loaded_sdr['unit'], 'invocation')
-
-        part = loaded_sdr['applied_part']
-
-        self.assertEqual(part['title'], 'pay per use')
-        self.assertEqual(part['value'], '1')
-        self.assertEqual(part['unit'], 'invocation')
-        self.assertEqual(part['currency'], 'EUR')
-
-        self.assertEqual(loaded_sdr['price'], 10.0)
 
     test_sdr_feeding_org_owned.tags = ('fiware-ut-14',)
 
@@ -967,6 +940,8 @@ class PayPerUseChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
@@ -1021,6 +996,8 @@ class PayPerUseChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.resolve_charging(sdr=True)
 
         purchase = Purchase.objects.get(pk='61077ab75e07a7c415f372f2')
@@ -1069,21 +1046,10 @@ class AsynchronousPaymentTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        charging_engine.paypal = FakePal()
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         charging_engine.subprocess = FakeSubprocess()
         charging_engine.threading = FakeThreading()
         super(AsynchronousPaymentTestCase, cls).setUpClass()
-
-    def setUp(self):
-        self._to_delete = []
-
-    def tearDown(self):
-
-        for f in self._to_delete:
-            fil = os.path.join(settings.BASEDIR, f[1:])
-            os.remove(fil)
-
-        self._to_delete = []
 
     def test_basic_asynchronous_payment(self):
 
@@ -1144,6 +1110,8 @@ class AsynchronousPaymentTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase)
 
         charging._generate_cdr = fake_cdr_generation
+        charging._check_expenditure_limits = MagicMock()
+        charging._update_actor_balance = MagicMock()
         charging.end_charging(contract.pending_payment['price'], contract.pending_payment['concept'], contract.pending_payment['related_model'])
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
@@ -1622,7 +1590,8 @@ class CDRGeranationTestCase(TestCase):
     def test_cdr_generation_use(self):
 
         applied_parts = {
-            'pay_per_use': [{
+            'charges': [{
+                'accounting': [{
                 'offering': {
                     'name': 'test_offering',
                     'organization': 'test_organization',
@@ -1630,14 +1599,7 @@ class CDRGeranationTestCase(TestCase):
                 },
                 'customer': 'test_user',
                 'value': '15',
-                'unit': 'invocation',
-                'price': '15',
-                'applied_part': {
-                    'title': 'example part',
-                    'unit': 'invocation',
-                    'currency': 'EUR',
-                    'value': '1'
-                }
+                'unit': 'invocation'
             },
             {
                 'offering': {
@@ -1647,16 +1609,16 @@ class CDRGeranationTestCase(TestCase):
                 },
                 'customer': 'test_user',
                 'value': '10',
+                'unit': 'invocation'
+            }],
+            'model': {
+                'title': 'example part',
                 'unit': 'invocation',
-                'price': '20',
-                'applied_part': {
-                    'title': 'example part',
-                    'unit': 'invocation',
-                    'currency': 'EUR',
-                    'value': '2'
-                }
-            }]
-        }
+                'currency': 'EUR',
+                'value': '1'
+            },
+            'price': 25.0
+        }]}
 
         # Load usdl
         model = os.path.join(settings.BASEDIR, 'wstore')
@@ -1675,7 +1637,7 @@ class CDRGeranationTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase)
         charging._generate_cdr(applied_parts, str(datetime.now()))
 
-        self.assertEqual(len(self._cdrs), 2)
+        self.assertEqual(len(self._cdrs), 1)
 
         cdr = self._cdrs[0]
         self.assertEqual(cdr['provider'], 'test_organization')
@@ -1685,22 +1647,226 @@ class CDRGeranationTestCase(TestCase):
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
         self.assertEqual(cdr['offering'], 'test_offering 1.0')
         self.assertEqual(cdr['product_class'], 'SaaS')
-        self.assertEqual(cdr['description'], 'Fee per invocation, Consumption: 15')
+        self.assertEqual(cdr['description'], 'Fee per invocation, Consumption: 25')
         self.assertEqual(cdr['cost_currency'], '1')
-        self.assertEqual(cdr['cost_value'], '15')
+        self.assertEqual(cdr['cost_value'], '25.0')
         self.assertEqual(cdr['country'], '1')
         self.assertEqual(cdr['customer'], 'test_user')
 
-        cdr = self._cdrs[1]
-        self.assertEqual(cdr['provider'], 'test_organization')
-        self.assertEqual(cdr['service'], 'example service')
-        self.assertEqual(cdr['defined_model'], 'Pay per use event')
-        self.assertEqual(cdr['correlation'], '1')
-        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
-        self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'SaaS')
-        self.assertEqual(cdr['description'], 'Fee per invocation, Consumption: 10')
-        self.assertEqual(cdr['cost_currency'], '1')
-        self.assertEqual(cdr['cost_value'], '20')
-        self.assertEqual(cdr['country'], '1')
-        self.assertEqual(cdr['customer'], 'test_user')
+
+class PriceFunctionPaymentTestCase(TestCase):
+
+    fixtures = ['price_function.json']
+    tags = ('fiware-ut-27',)
+
+    @classmethod
+    def setUpClass(cls):
+        settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
+        charging_engine.subprocess = FakeSubprocess()
+        settings.OILAUTH = False
+        super(PriceFunctionPaymentTestCase, cls).setUpClass()
+
+    def test_basic_price_function_payment(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = user.userprofile
+
+        tax_address = {
+            "street": "test street",
+            "postal": "20000",
+            "city": "test city",
+            "country": "test country"
+        }
+
+        profile.tax_address = tax_address
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        credit_card = {
+            'type': 'Visa',
+            'number': '1234123412341234',
+            'expire_year': '2018',
+            'expire_month': '2',
+            'cvv2': '111',
+        }
+
+        charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
+
+        charging._generate_cdr = fake_cdr_generation
+        charging.resolve_charging(sdr=True)
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+
+        bills = purchase.bill
+        self.assertEqual(len(bills), 1)
+
+        self.assertEqual(purchase.state, 'paid')
+
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.charges), 1)
+        self.assertEqual(contract.charges[0]['cost'], 33.00)
+        self.assertEqual(contract.charges[0]['concept'], 'pay per use')
+
+        self.assertEqual(len(contract.pending_sdrs), 0)
+        self.assertEqual(len(contract.applied_sdrs), 3)
+
+    def test_price_function_payment_renovation(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = user.userprofile
+
+        tax_address = {
+            "street": "test street",
+            "postal": "20000",
+            "city": "test city",
+            "country": "test country"
+        }
+
+        profile.tax_address = tax_address
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f55555')
+        contract = purchase.contract
+
+        # Change renovation date type (JSON does not allow complex types as MongoDB does)
+        new_sub = contract.pricing_model['subscription'][0]
+
+        new_sub['renovation_date'] = datetime.strptime(new_sub['renovation_date'], '%Y-%m-%d %H:%M:%S')
+
+        contract.pricing_model['subscription'] = [new_sub]
+        contract.save()
+
+        credit_card = {
+            'type': 'Visa',
+            'number': '1234123412341234',
+            'expire_year': '2018',
+            'expire_month': '2',
+            'cvv2': '111',
+        }
+
+        charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
+
+        charging._generate_cdr = fake_cdr_generation
+        charging._calculate_renovation_date = fake_renovation_date
+        charging.resolve_charging()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f55555')
+
+        bills = purchase.bill
+        self.assertEqual(len(bills), 1)
+
+        self.assertEqual(purchase.state, 'paid')
+
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.charges), 1)
+        self.assertEqual(contract.charges[0]['cost'], 38.00)
+        self.assertEqual(contract.charges[0]['concept'], 'Renovation')
+
+        self.assertEqual(len(contract.pending_sdrs), 0)
+        self.assertEqual(len(contract.applied_sdrs), 3)
+
+
+    def test_price_function_payment_deduction(self):
+
+        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
+        profile = user.userprofile
+
+        tax_address = {
+            "street": "test street",
+            "postal": "20000",
+            "city": "test city",
+            "country": "test country"
+        }
+
+        profile.tax_address = tax_address
+        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
+        profile.organization = org
+        profile.save()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f77777')
+        contract = purchase.contract
+
+        # Change renovation date type (JSON does not allow complex types as MongoDB does)
+        new_sub = contract.pricing_model['subscription'][0]
+
+        new_sub['renovation_date'] = datetime.strptime(new_sub['renovation_date'], '%Y-%m-%d %H:%M:%S')
+
+        contract.pricing_model['subscription'] = [new_sub]
+        contract.save()
+
+        credit_card = {
+            'type': 'Visa',
+            'number': '1234123412341234',
+            'expire_year': '2018',
+            'expire_month': '2',
+            'cvv2': '111',
+        }
+
+        charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
+
+        charging._generate_cdr = fake_cdr_generation
+        charging._calculate_renovation_date = fake_renovation_date
+        charging.resolve_charging()
+
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f77777')
+
+        bills = purchase.bill
+        self.assertEqual(len(bills), 1)
+
+        self.assertEqual(purchase.state, 'paid')
+
+        contract = purchase.contract
+
+        self.assertEqual(len(contract.charges), 1)
+        self.assertEqual(contract.charges[0]['cost'], 33.30)
+        self.assertEqual(contract.charges[0]['concept'], 'Renovation')
+
+        self.assertEqual(len(contract.pending_sdrs), 0)
+        self.assertEqual(len(contract.applied_sdrs), 3)
+
+    def test_price_function_payment_exception(self):
+
+        from wstore.charging_engine.price_resolver import PriceResolver
+
+        resolver = PriceResolver()
+
+        # Load testing info
+        errors = {
+            'Invalid argument 1': {
+                'arg1': 8,
+                'arg2': 'arg',
+                'operation': '*'
+            },
+            'Invalid argument 2': {
+                'arg1': 'arg',
+                'arg2': 6,
+                'operation': '*'
+            },
+            'Unsupported operation': {
+                'arg1': 'arg',
+                'arg2': 'arg',
+                'operation': 'p'
+            }
+        }
+
+        var = {
+            'arg': '3'
+        }
+        # Check possible exceptions
+        for err, info in errors.iteritems():
+            error = False
+            msg = None
+            try:
+                resolver._price_function_calculation(info, var)
+            except Exception, e:
+                error = True
+                msg = e.message
+
+            self.assertTrue(error)
+            self.assertEquals(msg, err)

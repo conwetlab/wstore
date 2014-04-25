@@ -19,28 +19,32 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
+import rdflib
 from mock import MagicMock
 from urllib2 import HTTPError
 
 from django.test import TestCase
 from django.contrib.auth.models import User
+from django.test.client import RequestFactory
 
 from wstore.contracting import purchases_management
 from wstore.contracting.purchase_rollback import rollback
 from wstore.contracting import notify_provider
-from wstore.models import Offering
+from wstore.models import Offering, Context
 from wstore.models import Organization
 from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.charging_engine.models import Contract
 from social_auth.db.django_models import UserSocialAuth
+from wstore.contracting import views
+from django.contrib.sites.models import Site
 
 
 __test__ = False
 
 
 class FakeChargingEngine:
-    def __init__(self, purchase, payment_method=None, credit_card=None):
+    def __init__(self, purchase, payment_method=None, credit_card=None, plan=None):
         pass
 
     def resolve_charging(self, new_purchase):
@@ -601,6 +605,7 @@ class FakeUrlib2Notify():
 class ProviderNotificationTestCase(TestCase):
 
     fixtures = ['notify.json']
+    tags = ('prov-not',)
 
     _urllib = None
 
@@ -612,6 +617,8 @@ class ProviderNotificationTestCase(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+        self.user.userprofile.user = self.user
+        self.user.userprofile.save()
 
     def test_provider_notification(self):
 
@@ -751,3 +758,447 @@ class ProviderNotificationTestCase(TestCase):
     test_identity_manager_notification_org.tags = ('fiware-ut-23',)
 
     test_identity_manager_notification_token_refresh.tags = ('fiware-ut-23',)
+
+
+class UpdatingPurchasesTestCase(TestCase):
+
+    tags = ('fiware-ut-28',)
+    fixtures = ('multiple_plan.json',)
+
+    def setUp(self):
+        # Create request factory
+        self.factory = RequestFactory()
+        self._user = User.objects.get(username='test_user')
+
+    def test_basic_purchase_offering_update(self):
+        # Get context
+        cnt = Context.objects.all()[0]
+        cnt.allowed_currencies = {
+            "default": "EUR",
+            "allowed": [{
+                "currency": "EUR",
+                "in_use": True
+            }]
+        }
+        cnt.save()
+        self._user.userprofile.offerings_purchased.append('61000aba8e05ac2115f022f9')
+        # Create the request
+        data = {
+            'offering': {
+                'organization': 'test_organization',
+                'name': 'test_offering',
+                'version': '1.1'
+            },
+            'plan_label': 'update',
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment': {
+                'method': 'paypal'
+            }
+        }
+        request = self.factory.post(
+            '/api/contracting/',
+            json.dumps(data),
+            HTTP_ACCEPT='application/json; charset=utf-8',
+            content_type='application/json; charset=utf-8'
+        )
+        request.user = self._user
+        
+        # Test purchase view
+        views.create_purchase = MagicMock(name='create_purchase')
+        offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")
+
+        from datetime import datetime
+        purchase = Purchase.objects.create(
+            customer=self._user,
+            date=datetime.now(),
+            offering=offering,
+            organization_owned=False,
+            state='paid',
+            tax_address={
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            bill=['/media/bills/11111111111.pdf']
+        )
+        views.create_purchase.return_value = purchase
+
+        views.get_current_site = MagicMock(name='get_current_site')
+        views.get_current_site.return_value = Site.objects.get(name='antares')
+        views.Context.objects.get = MagicMock(name='get')
+        context = MagicMock()
+        context.user_refs = []
+        views.Context.objects.get.return_value = context
+
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
+
+        response = purchase_collection.create(request)
+
+        # Check response
+        body_response = json.loads(response.content)
+        self.assertEquals(len(body_response['bill']), 1)
+        self.assertEquals(body_response['bill'][0], '/media/bills/11111111111.pdf')
+        payment_info = {
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment_method': 'paypal',
+            'plan': 'update'
+        }
+        views.create_purchase.assert_called_once_with(self._user, offering, org_owned=False, payment_info=payment_info)
+
+        # Test Contract creation
+        # Load usdl info
+        f = open('wstore/test/test_usdl1.ttl', 'rb')
+        g = rdflib.Graph()
+        g.parse(data=f.read(), format='n3')
+        f.close()
+
+        offering.offering_description = json.loads(g.serialize(format='json-ld', auto_compact=True))
+        offering.save()
+
+        from wstore.charging_engine.charging_engine import ChargingEngine
+        charging = ChargingEngine(purchase, payment_method='paypal', plan='update')
+        charging._create_purchase_contract()
+
+        # Refresh purchase
+        purchase = Purchase.objects.get(pk=purchase.pk)
+        contract = purchase.contract
+
+        # Check contract pricing model
+        self.assertFalse('single_payment' in contract.pricing_model)
+        self.assertFalse('subscription' in contract.pricing_model)
+        self.assertFalse('pay_per_use' in contract.pricing_model)
+        
+
+    def test_purchase_offering_update_payment(self):
+
+        current_org = Organization.objects.get(pk="91000aba8e06ac2199999999")
+        current_org.offerings_purchased.append('61000aba8e05ac2115f022f9')
+        self._user.userprofile.current_organization = current_org
+
+        self._user.userprofile.get_current_roles = MagicMock()
+        self._user.userprofile.get_current_roles.return_value = ['customer']
+        self._user.userprofile.save()
+
+        # Create the request
+        data = {
+            'offering': {
+                'organization': 'test_organization',
+                'name': 'test_offering',
+                'version': '1.1'
+            },
+            'plan_label': 'update',
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment': {
+                'method': 'paypal'
+            }
+        }
+        request = self.factory.post(
+            '/api/contracting/',
+            json.dumps(data),
+            HTTP_ACCEPT='application/json; charset=utf-8',
+            content_type='application/json; charset=utf-8'
+        )
+        request.user = self._user
+        
+        # Test purchase view
+        views.create_purchase = MagicMock(name='create_purchase')
+        offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")
+
+        from datetime import datetime
+        purchase = Purchase.objects.create(
+            customer=self._user,
+            date=datetime.now(),
+            offering=offering,
+            organization_owned=True,
+            state='paid',
+            tax_address={
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            bill=['/media/bills/11111111111.pdf']
+        )
+        views.create_purchase.return_value = purchase
+
+        views.get_current_site = MagicMock(name='get_current_site')
+        views.get_current_site.return_value = Site.objects.get(name='antares')
+        views.Context.objects.get = MagicMock(name='get')
+        context = MagicMock()
+        context.user_refs = []
+        views.Context.objects.get.return_value = context
+
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
+
+        response = purchase_collection.create(request)
+
+        # Check response
+        body_response = json.loads(response.content)
+        self.assertEquals(len(body_response['bill']), 1)
+        self.assertEquals(body_response['bill'][0], '/media/bills/11111111111.pdf')
+        payment_info = {
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment_method': 'paypal',
+            'plan': 'update'
+        }
+        views.create_purchase.assert_called_once_with(self._user, offering, org_owned=True, payment_info=payment_info)
+
+        # Test Contract creation
+        # Load usdl info
+        f = open('wstore/test/test_usdl2.ttl', 'rb')
+        g = rdflib.Graph()
+        g.parse(data=f.read(), format='n3')
+        f.close()
+
+        offering.offering_description = json.loads(g.serialize(format='json-ld', auto_compact=True))
+        offering.save()
+
+        from wstore.charging_engine.charging_engine import ChargingEngine
+        charging = ChargingEngine(purchase, payment_method='paypal', plan='update')
+        charging._create_purchase_contract()
+
+        # Refresh purchase
+        purchase = Purchase.objects.get(pk=purchase.pk)
+        contract = purchase.contract
+
+        # Check contract pricing model
+        self.assertTrue('single_payment' in contract.pricing_model)
+        self.assertEquals(len(contract.pricing_model['single_payment']), 1)
+        payment = contract.pricing_model['single_payment'][0]
+        self.assertEquals(payment['title'], 'Price component update')
+        self.assertEquals(payment['value'], '1.0')
+
+        self.assertFalse('subscription' in contract.pricing_model)
+        self.assertFalse('pay_per_use' in contract.pricing_model)
+
+    def test_purchase_offering_update_exception(self):
+
+        # Test view exceptions
+        # Create the request, The user has not purchased a previous version
+        # of the offering, so she is not allowed to purchase the offering
+        data = {
+            'offering': {
+                'organization': 'test_organization',
+                'name': 'test_offering',
+                'version': '1.1'
+            },
+            'plan_label': 'update',
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment': {
+                'method': 'paypal'
+            }
+        }
+        request = self.factory.post(
+            '/api/contracting/',
+            json.dumps(data),
+            HTTP_ACCEPT='application/json; charset=utf-8',
+            content_type='application/json; charset=utf-8'
+        )
+        request.user = self._user
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
+
+        response = purchase_collection.create(request)
+
+        # Check response
+        body_response = json.loads(response.content)
+        self.assertEquals(body_response['result'], 'error')
+        self.assertEquals(body_response['message'], 'Forbidden')
+        self.assertEquals(response.status_code, 403)
+
+        # Test Create contract exceptions
+        # Load usdl info
+        f = open('wstore/test/test_usdl2.ttl', 'rb')
+        g = rdflib.Graph()
+        g.parse(data=f.read(), format='n3')
+        f.close()
+
+        offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")
+        offering.offering_description = json.loads(g.serialize(format='json-ld', auto_compact=True))
+        offering.save()
+
+        from datetime import datetime
+        purchase = Purchase.objects.create(
+            customer=self._user,
+            date=datetime.now(),
+            offering=offering,
+            organization_owned=False,
+            state='paid',
+            tax_address={
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            bill=['/media/bills/11111111111.pdf']
+        )
+        from wstore.charging_engine.charging_engine import ChargingEngine
+
+        # Check exceptions that can occur with multiple price plans when
+        # creating the related purchase contract
+        errors = {
+            'The price plan label is required to identify the plan': None,
+            'The specified plan does not exist': 'unexisting'
+        }
+        for err in errors:
+
+            error = False
+            msg = None
+            try:
+                charging = ChargingEngine(purchase, payment_method='paypal', plan=errors[err])
+                charging._create_purchase_contract()
+            except Exception, e:
+                error = True
+                msg = e.message
+
+                self.assertTrue(error)
+                self.assertEquals(msg, err)
+
+
+class DeveloperPurchaseTestCase(TestCase):
+
+    tags = ('fiware-ut-29',)
+    fixtures = ('multiple_plan.json',)
+
+    def setUp(self):
+        # Create request factory
+        self.factory = RequestFactory()
+        self._user = User.objects.get(username='test_user')
+
+    def test_developer_offering_purchase(self):
+        # Create the request
+        data = {
+            'offering': {
+                'organization': 'test_organization',
+                'name': 'test_offering',
+                'version': '1.1'
+            },
+            'plan_label': 'developer',
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment': {
+                'method': 'paypal'
+            }
+        }
+        request = self.factory.post(
+            '/api/contracting/',
+            json.dumps(data),
+            HTTP_ACCEPT='application/json; charset=utf-8',
+            content_type='application/json; charset=utf-8'
+        )
+        request.user = self._user
+        
+        # Test purchase view
+        views.create_purchase = MagicMock(name='create_purchase')
+        offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")
+
+        from datetime import datetime
+        purchase = Purchase.objects.create(
+            customer=self._user,
+            date=datetime.now(),
+            offering=offering,
+            organization_owned=False,
+            state='paid',
+            tax_address={
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            bill=['/media/bills/22222222.pdf']
+        )
+        views.create_purchase.return_value = purchase
+
+        views.get_current_site = MagicMock(name='get_current_site')
+        views.get_current_site.return_value = Site.objects.get(name='antares')
+        views.Context.objects.get = MagicMock(name='get')
+        context = MagicMock()
+        context.user_refs = []
+        views.Context.objects.get.return_value = context
+
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
+
+        response = purchase_collection.create(request)
+
+        # Check response
+        body_response = json.loads(response.content)
+        self.assertEquals(len(body_response['bill']), 1)
+        self.assertEquals(body_response['bill'][0], '/media/bills/22222222.pdf')
+        payment_info = {
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment_method': 'paypal',
+            'plan': 'developer'
+        }
+        views.create_purchase.assert_called_once_with(self._user, offering, org_owned=False, payment_info=payment_info)
+
+    def test_developer_offering_purchase_exception(self):
+        self._user.userprofile.get_current_roles = MagicMock()
+        self._user.userprofile.get_current_roles.return_value = ['customer']
+
+        # Create the request
+        data = {
+            'offering': {
+                'organization': 'test_organization',
+                'name': 'test_offering',
+                'version': '1.1'
+            },
+            'plan_label': 'developer',
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment': {
+                'method': 'paypal'
+            }
+        }
+        request = self.factory.post(
+            '/api/contracting/',
+            json.dumps(data),
+            HTTP_ACCEPT='application/json; charset=utf-8',
+            content_type='application/json; charset=utf-8'
+        )
+        request.user = self._user
+        purchase_collection = views.PurchaseCollection(permitted_methods=('POST',))
+
+        response = purchase_collection.create(request)
+        # Check response
+        body_response = json.loads(response.content)
+        self.assertEquals(body_response['result'], 'error')
+        self.assertEquals(body_response['message'], 'Forbidden')
+        self.assertEquals(response.status_code, 403)

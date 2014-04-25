@@ -18,6 +18,9 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.db import models
@@ -36,7 +39,19 @@ class Context(models.Model):
     top_rated = ListField()
     newest = ListField()
     user_refs = DictField()
+    allowed_currencies = DictField()
 
+    def is_valid_currency(self, currency):
+        """
+         Checks that a currency is valid for WStore
+       """
+        valid = False
+        if 'allowed' in self.allowed_currencies and len(self.allowed_currencies['allowed']) > 0:
+            for c in self.allowed_currencies['allowed']:
+                if c['currency'].lower() == currency.lower():
+                    valid = True
+                    break
+        return valid
 
 class Organization(models.Model):
 
@@ -48,6 +63,7 @@ class Organization(models.Model):
     tax_address = DictField()
     managers = ListField()
     actor_id = models.IntegerField(null=True, blank=True)
+    expenditure_limits = DictField()
 
 
 from wstore.offerings.models import Offering
@@ -126,20 +142,46 @@ def create_user_profile(sender, instance, created, **kwargs):
             user=instance,
             organizations=[{
                 'organization': default_organization[0].pk,
-                'roles': ['customer']
+                'roles': ['customer', 'developer']
             }],
             current_organization=default_organization[0]
         )
+        if instance.first_name and instance.last_name:
+            profile.complete_name = instance.first_name + ' ' + instance.last_name
+            profile.save()
 
 
 def create_context(sender, instance, created, **kwargs):
 
     if created:
-        Context.objects.get_or_create(site=instance)
+        context = Context.objects.get_or_create(site=instance)[0]
+        context.allowed_currencies = {
+            'allowed': [{
+                'currency': 'EUR',
+                'in_use': False
+            }],
+            'default': 'EUR'
+        }
+        context.save()
 
 
 #Creates a new user profile when an user is created
 post_save.connect(create_user_profile, sender=User)
 
+
 # Creates a context when the site is created
 post_save.connect(create_context, sender=Site)
+
+
+if settings.OILAUTH:
+    def set_tokens(sender, instance, created, **kwargs):
+        # Check if the user is staff
+        if instance.user.is_staff and instance.access_token:
+            # Check if it is needed to refresh RSS token credentials
+            for rss in RSS.objects.all():
+                rss.access_token = instance.access_token
+                rss.refresh_token = instance.refresh_token
+                rss.save() 
+
+    # Maintain consistency of admin credentials
+    post_save.connect(set_tokens, sender=UserProfile)

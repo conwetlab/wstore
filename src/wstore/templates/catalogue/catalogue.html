@@ -3,6 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>FI-WARE Store</title>
+        <meta charset="UTF-8">
         <link rel="icon" href="{{ STATIC_URL }}assets/ico/favicon.ico" type="image/x-icon"/>
         <link rel="shortcut icon" href="{{ STATIC_URL }}assets/ico/favicon.ico" type="image/x-icon"/>
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/aplication.css" />
@@ -28,6 +29,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MessageManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserProfile.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/OrganizationProfile.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
 
@@ -44,6 +46,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/RenovationsForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/DownloadResourcesForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/EditOfferingForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/TagManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CatalogueDetailsView.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/OfferingElement.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CatalogueSearchView.js"></script>
@@ -54,11 +57,15 @@
         <script type="text/x-jquery-tmpl" id="footer_template">{% include "footer_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_conf_template">{% include "user_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="org_info_conf_template">{% include "org_info_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="address_conf_template">{% include "address_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="payment_info_conf_template">{% include "payment_info_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="expenditure_conf_template">{% include "expenditure_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_info_form_template">{% include "user_info_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="org_info_form_template">{% include "org_info_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="address_conf_form_template">{% include "address_conf_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="payment_info_form_template">{% include "payment_info_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="expenditure_conf_form_template">{% include "expenditure_conf_form_template.html" %}</script>
 
         <script type="text/x-jquery-tmpl" id="provider_tabs_template">{% include "catalogue/provider_tabs_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="catalogue_search_template">{% include "catalogue/catalogue_search_template.html" %}</script>
@@ -84,10 +91,15 @@
         <script type="text/x-jquery-tmpl" id="mini_offering_template">{% include "catalogue/mini_offering_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="details_offering_template">{% include "catalogue/details_offering_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="main_info_offering_template">{% include "catalogue/main_info_offering_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="update_tags_template">{% include "catalogue/update_tags_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="included_tag_template">{% include "catalogue/included_tag_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="tag_suggestion_template">{% include "catalogue/tag_suggestion_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="suggestion_template">{% include "catalogue/suggestion_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="legal_template">{% include "catalogue/legal_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="legal_clauses_template">{% include "catalogue/legal_clauses_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="pricing_template">{% include "catalogue/pricing_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="pricing_element_template">{% include "catalogue/pricing_element_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="pricing_function_template">{% include "catalogue/pricing_function_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="sla_template">{% include "catalogue/sla_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="sla_expresion_template">{% include "catalogue/sla_expresion_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="sla_variable_template">{% include "catalogue/sla_variable_template.html" %}</script>
@@ -103,7 +115,7 @@
         <script type="text/x-jquery-tmpl" id="alert_warning_template">{% include "alert_warning_template.html" %}</script>
 
         {% if portal %}
-            <script src="https://account.lab.fi-ware.eu/assets/signOut.js" type="text/javascript"></script>
+            <script src="{{ account }}assets/signOut.js" type="text/javascript"></script>
             <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
         {% endif %}
         {% if oil %}
@@ -141,17 +153,17 @@
                         {% endif %}
                     </ul>
                    {% if not portal %}
-                   <div class="btn btn-success float-right dropdown">
-                       <div href="#" class="dropdown-toggle" data-toggle="dropdown">
+                   <div class="btn btn-blue float-right dropdown">
+                        <div href="#" class="dropdown-toggle" data-toggle="dropdown">
                            <i class="icon-user icon-white"></i>
-                           {{ user.username }}
+                           <span id="user-name">{{ user.username }}</span>
                            <b class="caret"></b>
-                       </div>
-                       <ul class="dropdown-menu">
-                           <li><a id="conf-link">Configuration</a></li>
-                           <li><a href="/logout">Logout</a></li>
-                       </ul>
-                   </div>
+                        </div>
+                        <ul id="settings-menu" class="dropdown-menu">
+                            <li><a id="conf-link">Configuration</a></li>
+                            <li><a href="/logout">Logout</a></li>
+                        </ul>
+                    </div>
                    {% endif %}
                 </div>
             </div>
@@ -167,6 +179,17 @@
             </div>
         </div>
         </div>
+        <div id="loading" class="hide"></div>
+        <footer>
+            <div>
+                2014 &#169;
+            <a href="http://fi-ware.eu/">FI-WARE</a>
+            Usage of FI-LAB services subject to acceptance of
+            <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Terms_and_Conditions">Terms and conditions</a>
+            and
+            <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Personal_Data_Protection_Policy">Personal Data Protection Policy</a>
+            </div>
+        </footer>
     </body>
 </html>
 

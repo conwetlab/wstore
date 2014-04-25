@@ -3,6 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>FI-WARE Store</title>
+        <meta charset="UTF-8">
         <link rel="icon" href="{{ STATIC_URL }}assets/ico/favicon.ico" type="image/x-icon"/>
         <link rel="shortcut icon" href="{{ STATIC_URL }}assets/ico/favicon.ico" type="image/x-icon"/>
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/aplication.css" />
@@ -12,6 +13,7 @@
         <link href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/js/google-code-prettify/prettify.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/store.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/fonts/fonts.css" />
 
         <link href="https://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
@@ -25,11 +27,13 @@
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script> 
         <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserProfile.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/OrganizationProfile.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/RenovationsForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/DownloadResourcesForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/PurchaseForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/TagManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CatalogueDetailsView.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/OfferingElement.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
@@ -44,21 +48,30 @@
 
         <script type="text/x-jquery-tmpl" id="footer_template">{% include "footer_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="org_info_conf_template">{% include "org_info_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="address_conf_template">{% include "address_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="payment_info_conf_template">{% include "payment_info_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="expenditure_conf_template">{% include "expenditure_conf_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="user_info_form_template">{% include "user_info_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="org_info_form_template">{% include "org_info_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="address_conf_form_template">{% include "address_conf_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="payment_info_form_template">{% include "payment_info_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="expenditure_conf_form_template">{% include "expenditure_conf_form_template.html" %}</script>
 
         <script type="text/x-jquery-tmpl" id="mini_offering_template">{% include "catalogue/mini_offering_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="home_page_template">{% include "store/home_page_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="store_search_template">{% include "store/store_search_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="details_offering_template">{% include "catalogue/details_offering_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="main_info_offering_template">{% include "catalogue/main_info_offering_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="update_tags_template">{% include "catalogue/update_tags_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="included_tag_template">{% include "catalogue/included_tag_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="tag_suggestion_template">{% include "catalogue/tag_suggestion_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="suggestion_template">{% include "catalogue/suggestion_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="legal_template">{% include "catalogue/legal_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="legal_clauses_template">{% include "catalogue/legal_clauses_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="pricing_template">{% include "catalogue/pricing_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="pricing_element_template">{% include "catalogue/pricing_element_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="pricing_function_template">{% include "catalogue/pricing_function_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="sla_template">{% include "catalogue/sla_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="sla_expresion_template">{% include "catalogue/sla_expresion_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="sla_variable_template">{% include "catalogue/sla_variable_template.html" %}</script>
@@ -68,10 +81,12 @@
         <script type="text/x-jquery-tmpl" id="comment_template">{% include "catalogue/comment_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="purchase_form_template">{% include "store/purchase_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="credit_card_template">{% include "store/credit_card_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="radio_plan_template">{% include "store/radio_plan_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="radio_plan_help_template">{% include "store/radio_plan_help_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_info_template">{% include "alert_info_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
         {% if portal %}
-            <script src="https://account.lab.fi-ware.eu/assets/signOut.js" type="text/javascript"></script>
+            <script src="{{ account }}assets/signOut.js" type="text/javascript"></script>
             <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
         {% endif %}
     </head>
@@ -105,13 +120,13 @@
                         {% endif %}
                     </ul>
                     {% if not portal %}
-                    <div class="btn btn-success float-right dropdown">
+                    <div class="btn btn-blue float-right dropdown">
                         <div href="#" class="dropdown-toggle" data-toggle="dropdown">
-                            <i class="icon-user icon-white"></i>
-                           {{ user.username }}
+                           <i class="icon-user icon-white"></i>
+                           <span id="user-name">{{ user.username }}</span>
                            <b class="caret"></b>
                         </div>
-                        <ul class="dropdown-menu">
+                        <ul id="settings-menu" class="dropdown-menu">
                             <li><a id="conf-link">Configuration</a></li>
                             <li><a href="/logout">Logout</a></li>
                         </ul>
@@ -119,6 +134,16 @@
                     {% endif %}
                 </div>
             </div>
+            {% if messages %}
+            <div class="row-fluid">
+                <div class="span4">
+                    <div class="alert alert-success">
+                        <button class="close" data-dismiss="alert">&times;</button>
+                        <strong>Success!</strong> You have just activated your user account.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             <div class="row-fluid title_wrapper">
                 <span>Store</span>
             </div>
@@ -130,5 +155,16 @@
             <div class="row-fluid" id="home-container">
             </div>
         </div>
+        <div id="loading" class="hide"></div>
+        <footer>
+            <div>
+                2014 &#169;
+            <a href="http://fi-ware.eu/">FI-WARE</a>
+            Usage of FI-LAB services subject to acceptance of
+            <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Terms_and_Conditions">Terms and conditions</a>
+            and
+            <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Personal_Data_Protection_Policy">Personal Data Protection Policy</a>
+            </div>
+        </footer>
     </body>
 </html>

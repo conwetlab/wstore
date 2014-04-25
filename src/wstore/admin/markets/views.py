@@ -19,13 +19,14 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-from lxml import etree
 
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types,\
+from wstore.store_commons.utils.url import is_valid_url
+from wstore.store_commons.utils.name import is_valid_id
+from wstore.store_commons.utils.http import build_response, supported_request_mime_types,\
  authentication_required
 from wstore.admin.markets.markets_management import get_marketplaces, register_on_market, unregister_from_market
 
@@ -37,37 +38,34 @@ class MarketplaceCollection(Resource):
     # add the marketplace info needed for access in
     # the database
     @authentication_required
-    @supported_request_mime_types(('application/json', 'application/xml'))
+    @supported_request_mime_types(('application/json',))
     def create(self, request):
         if not request.user.is_staff:  # Only an admin could register the store in a marketplace
             return build_response(request, 403, 'Forbidden')
 
-        content_type = get_content_type(request)[0]
-
         name = None
         host = None
-        # Content types json and xml are supported
-        if content_type == 'application/json':
 
-            try:
-                content = json.loads(request.raw_post_data)
-                name = content['name']
-                host = content['host']
-            except:
-                msg = "Request body is not valid JSON data"
-                return build_response(request, 400, msg)
-
-        else:
-
-            try:
-                content = etree.fromstring(request.raw_post_data)
-                name = content.xpath('/marketplace/name')[0].text
-                host = content.xpath('/marketplace/host')[0].text
-            except:
-                msg = "Request body is not a valid XML data"
-                return build_response(request, 400, msg)
-
+        # Get contents from the request
         try:
+            content = json.loads(request.raw_post_data)
+            name = content['name']
+            host = content['host']
+        except:
+            msg = "Request body is not valid JSON data"
+            return build_response(request, 400, msg)
+
+        # Check data formats
+        if not is_valid_id(name):
+            return build_response(request, 400, 'Invalid name format')
+
+        if not is_valid_url(host):
+            return build_response(request, 400, 'Invalid URL format')
+        
+        code = 201
+        msg = 'Created'
+        try:
+            # Register the store in the selected marketplace
             register_on_market(name, host, get_current_site(request).domain)
         except Exception, e:
             if e.message == 'Bad Gateway':
@@ -77,51 +75,20 @@ class MarketplaceCollection(Resource):
                 code = 400
                 msg = 'Bad request'
 
-            return build_response(request, code, msg)
-
-        return build_response(request, 201, 'Created')
+        return build_response(request, code, msg)
 
     @authentication_required
     def read(self, request):
 
-        # Read Accept header to know the response mime type, JSON by default
-        accept = request.META.get('ACCEPT', '')
-        response = None
-        mime_type = None
+        try:
+            response = json.dumps(get_marketplaces())
+        except:
+            return build_response(request, 400, 'Invalid request')
 
-        result = get_marketplaces()
-        if accept == '' or accept.find('application/JSON') > -1:
-            response = json.dumps(result)
-            mime_type = 'application/JSON; charset=UTF-8'
-
-        elif accept.find('application/xml') > -1:
-            root_elem = etree.Element('Marketplaces')
-
-            for market in result:
-                market_elem = etree.SubElement(root_elem, 'Marketplace')
-                name_elem = etree.SubElement(market_elem, 'Name')
-                name_elem.text = market['name']
-                host_elem = etree.SubElement(market_elem, 'Host')
-                host_elem.text = market['host']
-
-            response = etree.tounicode(root_elem)
-            mime_type = 'application/xml; charset=UTF-8'
-
-        else:
-            return build_response(request, 400, 'Invalid requested type')
-
-        return HttpResponse(response, status=200, mimetype=mime_type)
+        return HttpResponse(response, status=200, mimetype='application/JSON; charset=UTF-8')
 
 
 class MarketplaceEntry(Resource):
-
-    @authentication_required
-    def read(self, request, market):
-        pass
-
-    @authentication_required
-    def update(self, request, market):
-        pass
 
     @authentication_required
     def delete(self, request, market):

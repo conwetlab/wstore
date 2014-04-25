@@ -3,6 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <title>FI-WARE Store</title>
+        <meta charset="UTF-8">
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/aplication.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap-responsive.css" />
@@ -10,8 +11,39 @@
         <link href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/js/google-code-prettify/prettify.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/admin.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/fonts/fonts.css" />
 
+        <script type="text/x-jquery-tmpl" id="footer_template">{% include "footer_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="user_conf_template">{% include "user_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="org_info_conf_template">{% include "org_info_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="address_conf_template">{% include "address_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="payment_info_conf_template">{% include "payment_info_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="expenditure_conf_template">{% include "expenditure_conf_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="user_info_form_template">{% include "user_info_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="org_info_form_template">{% include "org_info_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="address_conf_form_template">{% include "address_conf_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="payment_info_form_template">{% include "payment_info_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="expenditure_conf_form_template">{% include "expenditure_conf_form_template.html" %}</script>
+
+        <script type="text/x-jquery-tmpl" id="admin_elem_template">{% include "admin/admin_elem_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="list_template">{% include "admin/list_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="element_template">{% include "admin/element_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="form_template">{% include "admin/form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="user_form_template">{% include "admin/user_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="organization_form_template">{% include "admin/organization_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="unit_form_template">{% include "admin/unit_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="currency_form_template">{% include "admin/currency_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="modal_template">{% include "modal_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="alert_info_template">{% include "alert_info_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="orgs_users_template">{% include "admin/orgs_users_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="rss_form_template">{% include "admin/rss_form_template.html" %}</script>
+        {% if portal %}
+            <script src="{{ account }}assets/signOut.js" type="text/javascript"></script>
+            <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
+        {% endif %}
 	    <script type="text/javascript">
             USERNAME = "{{ user.username }}";
             // USERROLES = {{ roles }};
@@ -23,7 +55,10 @@
         <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MessageManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/Client.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/AdminForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserProfile.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/OrganizationProfile.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/OrganizationUsersForm.js"></script>
@@ -31,31 +66,9 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/AdminView.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/UserForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/UnitsForm.js"></script>
-       
-        <script type="text/x-jquery-tmpl" id="footer_template">{% include "footer_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="user_conf_template">{% include "user_conf_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="address_conf_template">{% include "address_conf_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="payment_info_conf_template">{% include "payment_info_conf_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="user_info_form_template">{% include "user_info_form_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="address_conf_form_template">{% include "address_conf_form_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="payment_info_form_template">{% include "payment_info_form_template.html" %}</script>
-
-        <script type="text/x-jquery-tmpl" id="admin_elem_template">{% include "admin/admin_elem_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="list_template">{% include "admin/list_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="element_template">{% include "admin/element_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="form_template">{% include "admin/form_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="user_form_template">{% include "admin/user_form_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="organization_form_template">{% include "admin/organization_form_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="unit_form_template">{% include "admin/unit_form_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="modal_template">{% include "modal_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="alert_info_template">{% include "alert_info_template.html" %}</script>
-        <script type="text/x-jquery-tmpl" id="orgs_users_template">{% include "admin/orgs_users_template.html" %}</script>
-        {% if portal %}
-            <script src="https://account.lab.fi-ware.eu/assets/signOut.js" type="text/javascript"></script>
-            <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
-        {% endif %}
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/RssForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/CurrencyForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/EndpointForm.js"></script>
 
     </head>
     <body>
@@ -86,13 +99,13 @@
                         </li>
                     </ul>
                     {% if not portal %}
-                    <div class="btn btn-success float-right dropdown">
+                    <div class="btn btn-blue float-right dropdown">
                         <div href="#" class="dropdown-toggle" data-toggle="dropdown">
-                            <i class="icon-user icon-white"></i>
-                            {{ user.username }}
-                            <b class="caret"></b>
+                           <i class="icon-user icon-white"></i>
+                           <span id="user-name">{{ user.username }}</span>
+                           <b class="caret"></b>
                         </div>
-                        <ul class="dropdown-menu">
+                        <ul id="settings-menu" class="dropdown-menu">
                             <li><a id="conf-link">Configuration</a></li>
                             <li><a href="/logout">Logout</a></li>
                         </ul>
@@ -109,15 +122,17 @@
                 <div id="message-container"></div>
             </div>
             <div class="row">
-                <div class="span8 admin-element" id="admin-container">
+                <div class="admin-element">
+                    <div class="span8" id="admin-container">
+                    </div>
                 </div>
             </div>
             </div>
         </div>
-        {% if oil %}
+        <div id="loading" class="hide"></div>
         <footer>
             <div>
-                2013 &#169;
+                2014 &#169;
             <a href="http://fi-ware.eu/">FI-WARE</a>
             Usage of FI-LAB services subject to acceptance of
             <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Terms_and_Conditions">Terms and conditions</a>
@@ -125,6 +140,5 @@
             <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Personal_Data_Protection_Policy">Personal Data Protection Policy</a>
             </div>
         </footer>
-        {% endif %}
     </body>
 </html>

@@ -6,6 +6,9 @@
     var makeCreateCommentRequest = function makeCreateCommentRequest(offElement) {
         var csrfToken = $.cookie('csrftoken');
         var title, comment, request = {};
+        var error = false;
+        var msg;
+
         var offeringContext = {
             'organization': offElement.getOrganization(),
             'name': offElement.getName(),
@@ -15,12 +18,33 @@
         title = $.trim($('#comment-title').val());
         comment = $.trim($('#comment-text').val());
 
+        // Check that required fields contains a value
+        if (!title || ! comment) {
+            error = true;
+            msg = 'Missing required field(s):';
+            if (!title) {
+                msg += ' Title';
+            }
+            if (!comment) {
+                msg += ' Comment';
+            }
+        }
+
+        // Check the length of the comment
+        if (!error && comment.length > 200) {
+            error = true;
+            msg = 'The comment cannot contain more than 200 characters';
+        }
+
         // If the fields are correctly filled make the request
-        if (title != '' && comment != '') {
+        if (!error) {
             request.title = title;
             request.comment = comment;
             request.rating = rating;
 
+            $('#loading').removeClass('hide');  // Loading view when waiting for requests
+            $('#loading').css('height', $(window).height() + 'px');
+            $('#message').modal('hide');
             $.ajax({
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -31,10 +55,12 @@
                 contentType: 'application/json',
                 data: JSON.stringify(request),
                 success: function (response) {
+                    $('#loading').addClass('hide');
                     $('#message').modal('hide');
                     caller.refreshAndUpdateDetailsView();
                 },
                 error: function (xhr) {
+                    $('#loading').addClass('hide');
                     var resp = xhr.responseText;
                     var msg = JSON.parse(resp).message;
                     $('#message').modal('hide');
@@ -42,7 +68,6 @@
                 }
             });
         } else {
-            var msg = 'Missing required fields';
             MessageManager.showAlertError('Error', msg, $('#error-message'));
         }
     };
@@ -54,6 +79,7 @@
         MessageManager.showMessage('Comment', '');
 
         $('<div></div>').attr('id', 'error-message').appendTo('.modal-body');
+        $('<div></div>').addClass('clear').appendTo('.modal-body');
 
         $('<p></p>').text('Rating').appendTo('.modal-body');
 

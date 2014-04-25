@@ -10,6 +10,11 @@
             <li>
                 <a href="#taxaddr-tab" data-toggle="tab">Tax address</a>
             </li>
+            {% if oil %}
+            <li>
+                <a href="#expenditure-tab" data-toggle="tab">Expenditure limits</a>
+            </li>
+            {% endif %}
             <input type="button" class="btn tab-button" id="user-edit" value="Edit"/>
         </ul>
     </div>
@@ -18,5 +23,9 @@
         </div>
         <div class="tab-pane" id="taxaddr-tab">
         </div>
+        {% if oil %}
+        <div class="tab-pane" id="expenditure-tab">
+        </div>
+        {% endif %}
     </div>
 </div>

@@ -1,0 +1,116 @@
+@prefix foaf: <http://xmlns.com/foaf/0.1/> . 
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . 
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . 
+@prefix msm: <http://cms-wg.sti2.org/ns/minimal-service-model#> . 
+@prefix owl: <http://www.w3.org/2002/07/owl#> . 
+@prefix dcterms: <http://purl.org/dc/terms/> . 
+@prefix usdl: <http://www.linked-usdl.org/ns/usdl-core#> . 
+@prefix legal: <http://www.linked-usdl.org/ns/usdl-legal#> . 
+@prefix price: <http://www.linked-usdl.org/ns/usdl-pricing#> . 
+@prefix sla: <http://www.linked-usdl.org/ns/usdl-sla#> . 
+@prefix sec: <http://www.linked-usdl.org/ns/usdl-sec#> . 
+@prefix blueprint: <http://bizweb.sap.com/TR/blueprint#> . 
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> . 
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . 
+@prefix ctag: <http://commontag.org/ns#> . 
+@prefix org: <http://www.w3.org/ns/org#> . 
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> . 
+@prefix time: <http://www.w3.org/2006/time#> . 
+@prefix gr: <http://purl.org/goodrelations/v1#> . 
+@prefix doap: <http://usefulinc.com/ns/doap#> . 
+
+<http://localhost:8000/usdleditor> 
+  a usdl:ServiceDescription ; 
+  dcterms:title ""@en ; 
+  dcterms:description ""@en ; 
+  dcterms:modified ""^^xsd:datetime ; 
+  dcterms:created ""^^xsd:datetime ; 
+  dcterms:creator _:b286 . 
+
+_:b286 
+  a foaf:Person ; 
+  foaf:name "" . 
+
+<http://localhost:8000/usdleditor#3RDPhVqBqrUiClCDh> 
+  a usdl:Service ; 
+  dcterms:subject _:b287 , 
+    _:b288 , 
+    _:b289 , 
+    _:b28a ; 
+  dcterms:modified ""^^xsd:datetime ; 
+  dcterms:created ""^^xsd:datetime ; 
+  foaf:thumbnail <http://ddrsl001xb.drss.sap.corp:8888/bizwebportal/resources/assets/icons/05_Icon_UIDivision.png> ; 
+  foaf:depiction <http://ddrsl001xb.drss.sap.corp:8888/bizweb/icons/GBFlipper_AW.png> ; 
+  dcterms:title "example service"@en ; 
+  dcterms:abstract "Short description"@en ; 
+  usdl:versionInfo "1.0";
+  dcterms:description "Long description"@en . 
+
+_:b287 
+  a skos:Concept ; 
+  skos:inScheme blueprint:SolutionType ; 
+  rdfs:label "Business Solution" . 
+
+_:b288 
+  a skos:Concept ; 
+  skos:inScheme blueprint:PlatformType ; 
+  rdfs:label "Android" . 
+
+_:b289 
+  a skos:Concept ; 
+  skos:inScheme blueprint:BusinessArea ; 
+  rdfs:label "Services" . 
+
+_:b28a 
+  a skos:Concept ; 
+  skos:inScheme blueprint:Industry ; 
+  rdfs:label "Other services" . 
+
+<http://localhost:8000/usdleditor#1XhhFQvhxOhhb24RT> 
+  a usdl:ServiceOffering ; 
+  dcterms:description ""@en ; 
+  usdl:validFrom "2011-12-01"^^xsd:datetime ; 
+  usdl:validThrough "2011-12-31"^^xsd:datetime ; 
+  usdl:includes <http://localhost:8000/usdleditor#3RDPhVqBqrUiClCDh> ; 
+  dcterms:title "test offering"@en ; 
+  usdl:hasPricePlan <http://localhost:8000/usdleditor#1111111111> ;
+  usdl:hasPricePlan <http://localhost:8000/usdleditor#HQsRGctt8S1oH3jtB> . 
+
+<http://localhost:8000/usdleditor#1111111111> 
+  a price:PricePlan ; 
+  dcterms:title "Example price plan for update"@en ; 
+  rdfs:label "update" ;
+  dcterms:description "Price plan for update description"@en . 
+
+<http://localhost:8000/usdleditor#HQsRGctt8S1oH3jtB> 
+  a price:PricePlan ; 
+  dcterms:title "Example price plan"@en ; 
+  dcterms:description "Price plan description"@en ; 
+  rdfs:label "regular" ;
+  price:hasPriceComponent <http://localhost:8000/usdleditor#B4dyA6JWJpj3dNw3n> , 
+    <http://localhost:8000/usdleditor#xNUNpRqdWgokzZzpm> ; 
+  price:hasTax <http://localhost:8000/usdleditor#bKn9ilMvGt2ZaC1Ek> . 
+
+<http://localhost:8000/usdleditor#B4dyA6JWJpj3dNw3n> 
+  a price:PriceComponent ; 
+  dcterms:title "Price component 1"@en ; 
+  gr:hasCurrency "EUR" ; 
+  gr:hasCurrencyValue "1"^^xsd:float ; 
+  gr:hasUnitOfMeasurement "single payment" ; 
+  dcterms:description "price component 1 description"@en . 
+
+<http://localhost:8000/usdleditor#xNUNpRqdWgokzZzpm> 
+  a price:PriceComponent ; 
+  dcterms:title "Price component 2"@en ; 
+  gr:hasCurrency "EUR" ; 
+  gr:hasCurrencyValue "1"^^xsd:float ; 
+  gr:hasUnitOfMeasurement "single payment" ;
+  dcterms:description "price component 2 description"@en . 
+
+<http://localhost:8000/usdleditor#bKn9ilMvGt2ZaC1Ek> 
+  a price:tax ; 
+  gr:hasUnitOfMeasurement "percent" ; 
+  dcterms:title "Example tax"@en ; 
+  gr:hasCurrency "EUR" ; 
+  dcterms:description "example tax description"@en ; 
+  gr:hasValueFloat "1"^^xsd:float . 

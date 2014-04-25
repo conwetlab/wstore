@@ -1,17 +1,32 @@
 
 <a id="back">Return</a>
-<form class="form form-vertical">
+<form class="form form-horizontal admin-form">
     <h2>Unit</h2>
-    <label>Name</label>
-    <input type="text" id="unit-name" placeholder="Name" \>
-    <label>Defined Pricing Model</label>
-    <select id="defined-model">
-        <option value="single payment">Single payment</option>
-        <option value="subscription">Subscription</option>
-        <option value="pay per use">Pay-per-use</option>
-    </select>
-    <label class="hide">Renovation Period</label>
-    <input type="text" class="hide" id="ren-period" placeholder="Renovation period" \>
-	<div class="space clear"></div>
-	<input type="button" class="btn btn-blue" id="unit-submit" value="Register" \>
+    <div class="control-group">
+        <label class="control-label" for="unit-name">Name</label>
+        <div class="controls">
+            <input type="text" id="unit-name" placeholder="Name" \>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="defined-model">Defined Pricing Model</label>
+        <div class="controls">
+            <select id="defined-model">
+                <option value="single payment">Single payment</option>
+                <option value="subscription">Subscription</option>
+                <option value="pay per use">Pay-per-use</option>
+            </select>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="hide control-label" for ren-period>Renovation Period</label>
+        <div class="controls">
+            <input type="text" class="hide" id="ren-period" placeholder="Renovation period" \>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+	        <input type="button" class="btn btn-blue" id="elem-submit" value="Register" \>
+	    </div>
+	</div>
 </form>

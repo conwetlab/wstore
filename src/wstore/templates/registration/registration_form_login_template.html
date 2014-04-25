@@ -1,0 +1,20 @@
+{% load url from future %}
+<form class="form-horizontal" method="post" action="{% url 'signup' %}">
+  {% csrf_token %}
+  <div id="signup-form">
+    <div class="control-group input-prepend">
+      <span class="add-on">
+        <i class="icon-envelope"></i>
+      </span><input type="text" class="input-form" name="email" placeholder="Email" maxlength="254" />
+    </div><!-- /.control-group -->
+    <div class="control-group input-prepend">
+      <span class="add-on">
+        <i class="icon-key"></i>
+      </span><input type="password" class="input-form" name="password" placeholder="Password" />
+    </div><!-- /.control-group -->
+    <div class="item-center">
+      <input type="submit" class="btn btn-blue" value="Sign up for WStore" />
+    </div><!-- input-center -->
+    <input type="hidden" name="page" value="login" />
+  </div><!-- /.signup-form -->
+</form>

@@ -18,11 +18,18 @@ virtualenv-2.7 virtenv
 source virtenv/bin/activate
 
 $WORKSPACE/python-dep-install.sh
-$WORKSPACE/pylucene-install.sh
 
 # Create project directories
 cd $WORKSPACE/src
 mkdir -p media/{bills,resources}
-mkdir -p wstore/search/index
+mkdir -p wstore/search/indexes
+mkdir -p wstore/social/indexes
 
+# Test installation
 $WORKSPACE/coverage.sh
+
+# Configure installation
+if [[ "$1" != "--noinput" ]]
+  then
+    $WORKSPACE/configure.sh
+fi
