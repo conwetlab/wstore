@@ -87,7 +87,7 @@
                 validation.valid = true;
 
                 // Check name format
-                nameReg = = new RegExp(/^[\w\s-]+$/);
+                nameReg = new RegExp(/^[\w\s-]+$/);
                 if (!nameReg.test(name)) {
                     validation.valid = false;
                     msg += 'Invalid name format';
@@ -98,7 +98,7 @@
                 var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
                 if (!urlReg.test(host)) {
                     validation.valid = false;
-                    msg += 'Invalid name format';
+                    msg += 'Invalid URL format';
                     errFields.push($('#elem-host').parent().parent());
                 }
 
