@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import os
 import json
 import rdflib
@@ -46,7 +48,7 @@ class SearchEngine():
 
         for s, p, o in graph:
             if isinstance(o, rdflib.Literal):
-                text += ' ' + str(o)
+                text += ' ' + unicode(o)
 
         return text
 

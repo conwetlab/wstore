@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import urllib2
 from urllib2 import HTTPError
 from urlparse import urljoin
@@ -53,9 +55,10 @@ class RepositoryAdaptor():
             url = urljoin(self._repository_url, self._collection)
             url = urljoin(url, name)
 
-        headers = {'content-type': content_type}
-        request = MethodRequest('PUT', url, data, headers)
+        headers = {'content-type': content_type + '; charset=utf-8'}
+        request = MethodRequest('PUT', url, data.encode('utf-8'), headers)
 
+        request.data = ''.join([i if ord(i) < 128 else ' ' for i in request.data])
         response = opener.open(request)
 
         if not (response.code > 199 and response.code < 300):
