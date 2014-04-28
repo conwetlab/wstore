@@ -20,71 +20,80 @@
 
 (function() {
 
-    var numberOfPages = 1;
-    var currentPage = 1;
-    var searchParams = {
-        'searching': false,
-        'keyword': ''
+    /**
+     * View where offering search results are shown
+     */
+    StoreSearchView = function StoreSearchView() {
+        this.numberOfPages = 1;
+        this.currentPage = 1;
+    }
+
+    /**
+     * Set the needed params to support pagination
+     * @param numberOfOfferings, Number of offerings expected to be returned
+     */
+    StoreSearchView.prototype.setPaginationParams = function setPaginationParams(numberOfOfferings) {
+        // Calculate the number of pages
+        this.numberOfPages = Math.ceil(numberOfOfferings.number / $('#number-offerings').val());
+        this.refreshPagination(1);
+        this.getNextOfferings(1);
     };
 
-    var setPaginationParams = function setPaginationParams(numberOfOfferings) {
-        numberOfPages = Math.ceil(numberOfOfferings.number / $('#number-offerings').val());
-        refreshPagination(1);
-        getNextOfferings(1);
-    };
-
-    var getNextOfferings = function getNextOfferings(nextPage) {
-        if (numberOfPages == 0) {
+    /**
+     * Get the next offerings according to the next page
+     * @param nextPage, Next page to be shown
+     */
+    StoreSearchView.prototype.getNextOfferings = function getNextOfferings(nextPage) {
+        // Show a message if there are no results
+        if (this.numberOfPages == 0) {
             var msg = 'Your search has not produced any results';
-            refreshPagination(nextPage);
+            this.refreshPagination(nextPage);
 
             MessageManager.showAlertInfo('No offerings', msg, $('.search-container'))
 
         } else {
-            var offeringsPage = $('#number-offerings').val();
+            // Build endpoint
+            var endpoint = this.buildEndpoint(nextPage);
 
-            // Set pagination params
-            var filter = '?start=' + ((offeringsPage * (nextPage - 1)) + 1);
-            filter = filter + '&limit=' + offeringsPage;
-
-            // Set sorting params
-            if ($('#sorting').val() != '') {
-                filter += '&sort=' + $('#sorting').val();
-            }
-
-            if (searchParams.searching) {
-                endpoint = EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': searchParams.keyword});
-            } else {
-                endpoint = EndpointManager.getEndpoint('OFFERING_COLLECTION');
-            }
-
-            endpoint = endpoint + filter;
-
-            refreshPagination(nextPage);
-            getOfferings(endpoint, '', function(offerings) {
-                paintOfferings(offerings, $('.search-container'), function() {
-                    initSearchView('OFFERING_COLLECTION');
-                });
-            });
+            this.refreshPagination(nextPage);
+            this.countOfferings(endpoint);
         }
     };
 
-    var refreshPagination = function refreshPagination (nextPage) {
+    /**
+     * Abstract method to be implemented, call the count offerings endpoint
+     */
+    StoreSearchView.prototype.countOfferings = function countOfferings(endpoint) {
+    };
+
+    /**
+     * Abstract method to be implemented, builds the endpoint 
+     */
+    StoreSearchView.prototype.buildEndpoint = function buildEndpoint() {
+    };
+
+    /**
+     * Refresh the pagination component according to the next page to
+     * be displayed
+     * @param self, Object reference
+     * @param nextPage, Next page to be displayed 
+     */
+    StoreSearchView.prototype.refreshPagination = function refreshPagination (nextPage) {
         var numberElem = 3;
         var activatedPosition = 1;
         var pagElems, button, a, currElem;
 
         // calculate the number of displayed elements
-        if (numberOfPages < 3) {
-            numberElem = numberOfPages;
+        if (this.numberOfPages < 3) {
+            numberElem = this.numberOfPages;
         }
 
         // Calculate activated position
-        if (numberOfPages >= 3) {
-            if (nextPage == numberOfPages) {
+        if (this.numberOfPages >= 3) {
+            if (nextPage == this.numberOfPages) {
                 activatedPosition = 3;
                 finalSecuence = true;
-            } else if (nextPage == (numberOfPages - 1)) {
+            } else if (nextPage == (this.numberOfPages - 1)) {
                 activatedPosition = 2;
             }
         } else {
@@ -101,11 +110,11 @@
 
         // Set prev button listener
         if(nextPage != 1) {
-            button.click((function (page) {
+            button.click((function (self, page) {
                 return function () {
-                    getNextOfferings(page - 1);
+                    self.getNextOfferings(page - 1);
                 };
-            })(nextPage));
+            })(this, nextPage));
         }
 
         button.appendTo(pagElems);
@@ -127,11 +136,11 @@
             a.appendTo(button);
 
             // Set the numbered button listener
-            button.click((function (page) {
+            button.click((function (self, page) {
                 return function () {
-                    getNextOfferings(page);
+                    self.getNextOfferings(page);
                 };
-            })(currElem));
+            })(this, currElem));
 
             button.appendTo(pagElems);
             currElem ++;
@@ -142,12 +151,12 @@
         a.appendTo(button);
 
         // Set prev button listener
-        if(nextPage != numberOfPages) {
-            button.click((function (page) {
+        if(nextPage != this.numberOfPages) {
+            button.click((function (self, page) {
                 return function () {
-                    getNextOfferings(page + 1);
+                    self.getNextOfferings(page + 1);
                 }
-            })(nextPage));
+            })(this, nextPage));
         }
 
         button.appendTo(pagElems);
@@ -155,7 +164,7 @@
         pagElems.appendTo('.pagination');
     };
 
-    var paintSearchView = function paintSearchView() {
+    StoreSearchView.prototype.paintSearchView = function paintSearchView() {
         var ret;
 
         // Check if the main page template has been destroyed and 
@@ -163,23 +172,31 @@
         if ($('#store-search').length == 0) {
             $.template('homePageTemplate', $('#home_page_template'));
             $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
+
             // Set search listeners
-            $('#search').click(function() {
-                if ($.trim($('#text-search').val()) != '') {
-                    initSearchView('SEARCH_ENTRY');
+            $('#search').click((function(self) {
+                return function() {
+                    if ($.trim($('#text-search').val()) != '') {
+                        self.initSearchView('SEARCH_ENTRY');
+                    }
                 }
-            });
+            })(this));
             // Set listener for enter key
-            $('#text-search').keypress(function(e) {
-                if (e.which == 13 && $.trim($(this).val()) != '') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    initSearchView('SEARCH_ENTRY');
+            $('#text-search').keypress((function(self) {
+                return function(e) {
+                    if (e.which == 13 && $.trim($(this).val()) != '') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        self.initSearchView('SEARCH_ENTRY');
+                    }
                 }
-            });
-            $('#all').click(function() {
-                initSearchView('OFFERING_COLLECTION');
-            })
+            })(this));
+
+            $('#all').click((function(self) {
+                return function() {
+                    self.initSearchView('OFFERING_COLLECTION');
+                }
+            })(this))
         }
 
         $('#store-container').empty()
@@ -192,37 +209,9 @@
         calculatePositions();
     };
 
-    initSearchView = function initSearchView(endpoint) {
-        var endP
-
-        // Paint the search view
-        paintSearchView();
-
-        if (endpoint == 'SEARCH_ENTRY') {
-            searchParams.searching = true;
-            searchParams.keyword = $.trim($('#text-search').val());
-            endP = EndpointManager.getEndpoint(endpoint, {'text': $.trim($('#text-search').val())}) + '?action=count';
-        } else {
-            searchParams.searching = false;
-            searchParams.keyword = '';
-            endP = EndpointManager.getEndpoint(endpoint) + '?action=count';
-        }
-
-        // Set listener for number of offerings select
-        $('#number-offerings').change((function(endPoint) {
-            return function() {
-                getOfferings(endP, '', setPaginationParams);
-            };
-        })(endP));
-
-        // Set listener for sorting select
-        $('#sorting').change((function(endPoint) {
-            return function() {
-                getOfferings(endP, '', setPaginationParams);
-            };
-        })(endP));
-
-        // Calculate the number of offerings
-        getOfferings(endP, '', setPaginationParams);
+    /**
+     * Abstract method that initialize the search view
+     */
+    StoreSearchView.prototype.initSearchView = function initSearchView(endpoint) {
     };
 })();

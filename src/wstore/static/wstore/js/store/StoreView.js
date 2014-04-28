@@ -179,13 +179,16 @@
     }
 
     paintHomePage = function paintHomePage () {
+        // Create search view object
+        var searchView = new KeywordSearchView();
+
         $('#home-container').empty();
         $.template('homePageTemplate', $('#home_page_template'));
         $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
 
         $('#search').click(function() {
             if ($.trim($('#text-search').val()) != '') {
-                initSearchView('SEARCH_ENTRY');
+                searchView.initSearchView('SEARCH_ENTRY');
             }
         });
 
@@ -194,12 +197,12 @@
             if (e.which == 13 && $.trim($(this).val()) != '') {
                 e.preventDefault();
                 e.stopPropagation();
-                initSearchView('SEARCH_ENTRY');
+                searchView.initSearchView('SEARCH_ENTRY');
             }
         });
 
         $('#all').click(function() {
-            initSearchView('OFFERING_COLLECTION');
+            searchView.initSearchView('OFFERING_COLLECTION');
         })
 
         if (USERPROFILE.getUserRoles().indexOf('admin') == -1) {
@@ -321,5 +324,6 @@
             userBtn.text(shortName);
         }
     }
+
     $(window).resize(calculatePositions);
 })();
