@@ -118,27 +118,43 @@
         }
 
         // Check tags
-        if (!this.offeringElement.getTags() && 
+        if (!this.offeringElement.getTags().length && 
                 USERPROFILE.getCurrentOrganization() != this.offeringElement.getOrganization()) {
-            $('h2:contains(Tags)').addClass('hide');
-            $('#main-tab .icon-tag').addClass('hide');
+            $('h2:contains(Tags)').addClass('hidden');
+            $('#main-tab .icon-tags').addClass('hidden');
         } else if (this.offeringElement.getTags()) {
             // Write tags
             var tags = this.offeringElement.getTags();
+            var tagElem = $('#tags');
             for (var i = 0; i < tags.length; i++) {
-                $('<a></a>').addClass('tag').text(tags[i]).appendTo('#tags');
+                var icn = $('<i></i>').addClass('icon-tag');
+                var cont = $('<code></code>').append(icn);
+
+                // Add search by tag listener if needed
+                if ('StoreSearchView' in window) {
+                    var tagLink = $('<a></a>').addClass('tag').text(tags[i]).appendTo(cont);
+                    tagLink.click(function() {
+                        var searchView = new StoreSearchView('SEARCH_TAG_ENTRY');
+                        $('#home-container').empty();
+                        searchView.initSearchView('SEARCH_TAG_ENTRY', $(this).text());
+                    });
+                } else {
+                    var tagLink = $('<span></span>').addClass('tag').text(tags[i]).appendTo(cont);
+                }
+                tagElem.prepend(cont);
             }
+            var clear = $('<div></div>').addClass('space clear');
+            $('#tags').prepend(clear);
         }
         // Include the update Tags button if needed
         if (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) {
 
-            var updateBtn = $('<input></input>').attr('type', 'button').addClass('btn btn-clasic').attr('value', 'Update tags').click((function() {
+            var updateBtn = $('<code></code>').attr('id', 'update-tags').click((function() {
                 var tagManager = new TagManager(this.offeringElement, this);
                 tagManager.display();
             }).bind(this));
-            var clear = $('<div></div>').addClass('space clear');
-            $('#tags').prepend(clear);
-            $('#tags').prepend(updateBtn);
+            updateBtn.append('<i class="icon-plus"></i>');
+            $('#tags').append(updateBtn);
         }
 
         if (this.offeringElement.getState() != 'uploaded') {

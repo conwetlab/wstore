@@ -531,8 +531,27 @@ h2 {
 color: rgb(96, 193, 207);
 }
 
-#main-tab .icon-tag {
+code {
+  font-size: 13px;
+  font-family: Arial, sans-serif;
+  margin-right: 10px;
+}
+
+code i.icon-tag {
+  font-size: 15px;
+}
+
+code {
+  color: rgb(0, 43, 103);
+}
+
+#update-tags:hover {
+  cursor: pointer;
+}
+
+#main-tab .icon-tags {
   font-size: 20px;
+  color: rgb(96, 193, 207);
 }
 
 #main-tab h2:nth-last-of-type(2) {

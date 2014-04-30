@@ -55,7 +55,8 @@
         'BIND_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/bind',
         'RATING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/rating',
         'USDL_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/usdl',
-        'SEARCH_ENTRY': '/api/search/${text}',
+        'SEARCH_ENTRY': '/api/search/keyword/${text}',
+        'SEARCH_TAG_ENTRY': '/api/search/tag/${text}',
         'CURRENCY_ENTRY': '/api/administration/currency/${currency}',
         'PURCHASE_ENTRY':   '/api/contracting/${ref}'
     }

@@ -180,7 +180,7 @@
 
     paintHomePage = function paintHomePage () {
         // Create search view object
-        var searchView = new KeywordSearchView();
+        var searchView = new StoreSearchView('SEARCH_ENTRY');
 
         $('#home-container').empty();
         $.template('homePageTemplate', $('#home_page_template'));

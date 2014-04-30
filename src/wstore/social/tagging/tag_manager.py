@@ -82,13 +82,18 @@ class TagManager():
 
             index_writer.commit()
 
-    def search_by_tag(self, tag):
-        # Get documents
-        docs = self.get_index_doc_by_tag(tag)
-        # Get offerings
-        return [Offering.objects.get(doc['id']) for doc in docs]
+    def count_offerings(self, tag):
+        # Count offerings
+        return len(self.get_index_doc_by_tag(tag))
 
-    def get_index_doc_by_tag(self, tag):
+    def search_by_tag(self, tag, start=None, limit=None):
+        # Get documents
+        docs = self.get_index_doc_by_tag(tag, start=start, p_limit=limit)
+
+        # Get offerings
+        return [Offering.objects.get(pk=doc['id']) for doc in docs]
+
+    def get_index_doc_by_tag(self, tag, start=None, p_limit=None):
         # Open the index
         try:
             index = open_dir(self._index_path)
@@ -100,7 +105,12 @@ class TagManager():
         query = QueryParser('tags', index.schema).parse(unicode(stem(tag)))
         # Get documents
         with index.searcher() as searcher:
-            documents = searcher.search(query)
+            # Check if a concrete page has been requested
+            if start and p_limit:
+                documents = searcher.search_page(query, start, pagelen=p_limit)
+            else:
+                documents = searcher.search(query, limit=None)
+
             doc_list = [{'id': doc['id'], 'tags': doc['tags'], 'named_tags': doc['named_tags']} for doc in documents]
 
         return doc_list

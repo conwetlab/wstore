@@ -23,10 +23,23 @@
     /**
      * View where offering search results are shown
      */
-    StoreSearchView = function StoreSearchView() {
+    StoreSearchView = function StoreSearchView(searchEndp) {
         this.numberOfPages = 1;
         this.currentPage = 1;
+        this.searchParams = {
+            'searching': false,
+            'keyword': ''
+        };
+        this.searchEndp = searchEndp;
     }
+
+    /**
+     * Set the endpoint to be used in searches
+     * @param endpoint, Search endpoint to be used
+     */
+    StoreSearchView.prototype.setSearchEndpoint = function setSearchEndpoint(endpoint) {
+        this.searchEndp = endpoint;
+    };
 
     /**
      * Set the needed params to support pagination
@@ -56,20 +69,38 @@
             var endpoint = this.buildEndpoint(nextPage);
 
             this.refreshPagination(nextPage);
-            this.countOfferings(endpoint);
+            getOfferings(endpoint, '', (function(self) {
+                return function(offerings) {
+                    paintOfferings(offerings, $('.search-container'), function() {
+                        this.initSearchView('OFFERING_COLLECTION');
+                    }.bind(this));
+                }.bind(self)
+            })(this));
         }
-    };
-
-    /**
-     * Abstract method to be implemented, call the count offerings endpoint
-     */
-    StoreSearchView.prototype.countOfferings = function countOfferings(endpoint) {
     };
 
     /**
      * Abstract method to be implemented, builds the endpoint 
      */
-    StoreSearchView.prototype.buildEndpoint = function buildEndpoint() {
+    StoreSearchView.prototype.buildEndpoint = function buildEndpoint(nextPage) {
+     // Set pagination params
+        var offeringsPage = $('#number-offerings').val();
+        var filter = '?start=' + ((offeringsPage * (nextPage - 1)) + 1);
+        filter = filter + '&limit=' + offeringsPage;
+
+        // Set sorting params
+        if ($('#sorting').val() != '') {
+            filter += '&sort=' + $('#sorting').val();
+        }
+
+        if (this.searchParams.searching) {
+            endpoint = EndpointManager.getEndpoint(this.searchEndp, {'text': this.searchParams.keyword});
+        } else {
+            endpoint = EndpointManager.getEndpoint('OFFERING_COLLECTION');
+        }
+
+        endpoint = endpoint + filter;
+        return endpoint;
     };
 
     /**
@@ -177,7 +208,7 @@
             $('#search').click((function(self) {
                 return function() {
                     if ($.trim($('#text-search').val()) != '') {
-                        self.initSearchView('SEARCH_ENTRY');
+                        self.initSearchView(this.searchEndp);
                     }
                 }
             })(this));
@@ -187,7 +218,7 @@
                     if (e.which == 13 && $.trim($(this).val()) != '') {
                         e.preventDefault();
                         e.stopPropagation();
-                        self.initSearchView('SEARCH_ENTRY');
+                        self.initSearchView(this.searchEndp);
                     }
                 }
             })(this));
@@ -212,6 +243,51 @@
     /**
      * Abstract method that initialize the search view
      */
-    StoreSearchView.prototype.initSearchView = function initSearchView(endpoint) {
+    StoreSearchView.prototype.initSearchView = function initSearchView(endpoint, searchWord) {
+        var endP;
+
+        // Paint the search view
+        this.paintSearchView();
+
+        // Check if an specific search endpoint has been provided
+        if (endpoint == this.searchEndp) {
+            this.searchParams.searching = true;
+            // Check if a search word has been provided or if it is needed
+            // to retrieve it from the form field
+            if (!searchWord) {
+                this.searchParams.keyword = $.trim($('#text-search').val());
+            } else {
+                this.searchParams.keyword = searchWord;
+            }
+            endP = EndpointManager.getEndpoint(endpoint, {'text': this.searchParams.keyword}) + '?action=count';
+        } else {
+            // Get all offerings
+            this.searchParams.searching = false;
+            this.searchParams.keyword = '';
+            endP = EndpointManager.getEndpoint(endpoint) + '?action=count';
+        }
+
+        // Set listener for number of offerings select
+        $('#number-offerings').change((function(self, endPoint) {
+            return function() {
+                getOfferings(endP, '', function(offerings) {
+                    self.setPaginationParams(offerings);
+                });
+            };
+        })(this, endP));
+
+        // Set listener for sorting select
+        $('#sorting').change((function(self, endPoint) {
+            return function() {
+                getOfferings(endP, '', function(offerings) {
+                    self.setPaginationParams(offerings);
+                });
+            };
+        })(this, endP));
+
+        // Calculate the number of offerings
+        getOfferings(endP, '', function(offerings) {
+            this.setPaginationParams(offerings);
+        }.bind(this));
     };
 })();
