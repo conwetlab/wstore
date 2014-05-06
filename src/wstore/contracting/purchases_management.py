@@ -38,7 +38,7 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
 
     # Check if the offering is already purchased
     if (org_owned and offering.pk in profile.current_organization.offerings_purchased) \
-    or offering.pk in profile.offerings_purchased:
+    or (not org_owned and offering.pk in profile.offerings_purchased):
             raise Exception('The offering has been already purchased')
 
     if org_owned:
