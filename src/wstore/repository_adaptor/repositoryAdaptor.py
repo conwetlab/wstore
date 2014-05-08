@@ -21,6 +21,7 @@
 from __future__ import unicode_literals
 
 import urllib2
+import unicodedata
 from urllib2 import HTTPError
 from urlparse import urljoin
 
@@ -55,10 +56,12 @@ class RepositoryAdaptor():
             url = urljoin(self._repository_url, self._collection)
             url = urljoin(url, name)
 
-        headers = {'content-type': content_type + '; charset=utf-8'}
-        request = MethodRequest('PUT', url, data.encode('utf-8'), headers)
+        # Only ASCII characters are allowed
+        data = unicodedata.normalize('NFKD', data).encode('ascii', 'ignore')
 
-        request.data = ''.join([i if ord(i) < 128 else ' ' for i in request.data])
+        headers = {'content-type': content_type + '; charset=utf-8'}
+        request = MethodRequest('PUT', url, data, headers)
+
         response = opener.open(request)
 
         if not (response.code > 199 and response.code < 300):
