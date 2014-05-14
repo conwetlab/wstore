@@ -1,0 +1,54 @@
+<h3>Payment Form <span class="subtitle">(optional)</span></h3>
+<div class="row-fluid">
+  <div class="span6">
+    <div class="control-group">
+      <label class="control-label" >Card type</label>
+      <div class="controls">
+        <select name="card_type" class="span12">
+          <option value="">Choose the card type</option>
+          <option value="Visa">Visa</option>
+          <option value="MasterCard">MasterCard</option>
+        </select>
+      </div>
+    </div><!-- /.control-group -->
+    <div class="control-group">
+      <label class="control-label">Card number</label>
+      <div class="controls">
+        <input type="text" name="card_number" class="span12" placeholder="Card number" />
+      </div>
+    </div><!-- /.control-group -->
+  </div><!-- /.span -->
+  <div class="span6">
+    <div class="control-group">
+      <label class="control-label">Card code</label>
+      <div class="controls">
+        <input type="text" name="card_code" class="span12" placeholder="CVV2 / CVC2" />
+      </div>
+    </div><!-- /.control-group -->
+    <div class="control-group">
+      <label class="control-label">Expiry date</label>
+      <div class="controls span6" style="margin-left: 0px;">
+        <select name="card_expiry_month" class="span12">
+          <option value="">Month</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
+      <div class="controls span6">
+        <select name="card_expiry_year" class="span12">
+          <option value="">Year</option>
+        </select>
+      </div>
+    </div><!-- /.control-group -->
+  </div><!-- /.span -->
+</div><!-- /.row-fluid -->

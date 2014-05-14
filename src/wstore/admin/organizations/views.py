@@ -62,6 +62,7 @@ def get_organization_info(org):
                 'cvv2': org.payment_info['cvv2'],
             }
         org_element['limits'] = org.expenditure_limits
+        org_element['managers'] = org.managers
     else:
         raise Exception('Private organization')
 
@@ -73,19 +74,29 @@ class OrganizationCollection(Resource):
     @authentication_required
     @supported_request_mime_types(('application/json',))
     def create(self, request):
-
-        if not request.user.is_staff:
+        
+        if not request.user.is_active:
             return build_response(request, 403, 'Forbidden')
 
         try:
             data = json.loads(request.raw_post_data)
-
+            #import ipdb; ipdb.set_trace()
+            if not 'name' in data:
+                raise Exception('Invalid JSON content')
+            
+            try:
+                organization_registered = Organization.objects.get(name=data['name'])
+                if organization_registered:
+                    raise Exception('The '+data['name']+' organization is already registered.')
+            except Organization.DoesNotExist:
+                pass
+            
             if not len(data['name']) > 4 or not is_valid_id(data['name']):
-                raise Exception('Invalid name format')
+                raise Exception('Enter a valid name.')
 
             if 'notification_url' in data:
                 if data['notification_url'] and not is_valid_url(data['notification_url']):
-                    raise Exception('Invalid notification URL format')
+                    raise Exception('Enter a valid URL.')
             else:
                 data['notification_url'] = ''
 
@@ -110,6 +121,7 @@ class OrganizationCollection(Resource):
                     'expire_year': data['payment_info']['expire_year'],
                     'cvv2': data['payment_info']['cvv2']
                 }
+            
             Organization.objects.create(
                 name=data['name'],
                 notification_url=data['notification_url'],
@@ -117,10 +129,23 @@ class OrganizationCollection(Resource):
                 payment_info=payment_info,
                 private=False
             )
+            
+            # Include the new user
+            if not request.user.is_staff:
+                user = User.objects.get(username=request.user.username)
+                organization = Organization.objects.get(name=data['name'])
+                user.userprofile.organizations.append({
+                    'organization': organization.pk,
+                    'roles': []
+                })
+                user.userprofile.save()
+
+                organization.managers.append(user.pk)
+                organization.save()
         except Exception as e:
-            msg = e.message
-            if not msg.startswith('Invalid'):
-                msg = 'Invalid content'
+            msg = 'Invalid JSON content'
+            if e.message:
+                msg = e.message
             return build_response(request, 400, msg)
 
         return build_response(request, 201, 'Created')
@@ -129,22 +154,35 @@ class OrganizationCollection(Resource):
     def read(self, request):
 
         response = []
-
+        
+        organizations = Organization.objects.all()
+        
+        if 'username' in request.GET:
+            username = request.GET.get('username', '')
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return build_response(request, 404, 'The user is not registered for WStore.')
+            organizations = Organization.objects.filter(managers=(user.pk,))
+        
         # Get organization info
-        for org in Organization.objects.all():
+        for org in organizations:
             try:
                 org_element = get_organization_info(org)
             except:
                 continue
-
+            
             # Check if payment information is displayed
-            if (not request.user.is_staff and not request.user.pk in org.managers)\
-            and 'payment_info' in org_element:
-                del(org_element['payment_info'])
-
+            if not request.user.is_staff and not request.user.pk in org.managers:
+                if 'payment_info' in org_element:
+                    del(org_element['payment_info'])
+            
+            # Include organizations
             response.append(org_element)
-
-        return HttpResponse(json.dumps(response), status=200, mimetype='appliacation/json')
+        
+        # if request.user.is_staff or request.user.pk in org.managers:
+        
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
 
 class OrganizationEntry(Resource):
@@ -163,7 +201,7 @@ class OrganizationEntry(Resource):
         and 'payment_info' in org_info:
             del(org_info['payment_info'])
 
-        return HttpResponse(json.dumps(org_info), status=200, mimetype='appliacation/json')
+        return HttpResponse(json.dumps(org_info), status=200, mimetype='application/json')
 
     @authentication_required
     @supported_request_mime_types(('application/json',))
@@ -173,17 +211,21 @@ class OrganizationEntry(Resource):
         try:
             organization = Organization.objects.get(name=org)
         except:
-            return build_response(request, 404, 'Not found')
-
+            return build_response(request, 404, 'Organization not found')
+        
+        if not request.user.is_active:
+            return build_response(request, 403, 'Forbidden')
+        
         if not request.user.is_staff and not request.user.pk in organization.managers:
             return build_response(request, 403, 'Forbidden')
-
+        
         try:
             # Load request data
             data = json.loads(request.raw_post_data)
+            
             if 'notification_url' in data:
                 if data['notification_url'] and not is_valid_url(data['notification_url']):
-                    raise Exception('Invalid notification URL')
+                    raise Exception('Enter a valid URL')
 
                 organization.notification_url = data['notification_url']
 
@@ -244,7 +286,7 @@ class OrganizationEntry(Resource):
             organization.payment_info = new_payment
             organization.save()
         except Exception as e:
-            msg = 'Invalid content'
+            msg = 'Invalid JSON content'
             if e.message:
                 msg = e.message
             return build_response(request, 400, msg)
@@ -285,7 +327,7 @@ class OrganizationUserCollection(Resource):
     @authentication_required
     @supported_request_mime_types(('application/json',))
     def create(self, request, org):
-
+        
         if settings.OILAUTH:
             return build_response(request, 403, 'It is not possible to modify organizations (use Account enabler instead)')
 
@@ -300,17 +342,22 @@ class OrganizationUserCollection(Resource):
 
         # Check if the user can include users in the organization
         if not request.user.is_staff and not request.user.pk in organization.managers:
-            return build_response(request, 403, 'Forbidden')
-
-        # Get the user
+            return build_response(request, 403, 'You do not have permission to add users to this organization.')
+        
+        # Check the request data
         try:
             data = json.loads(request.raw_post_data)
-            user = User.objects.get(username=data['user'])
-
-            if not 'roles' in data:
+            
+            if not 'user' in data or not 'roles' in data:
                 raise Exception('')
         except:
             return build_response(request, 400, 'Invalid JSON content')
+        
+        # Get the user
+        try:
+            user = User.objects.get(username=data['user'])
+        except:
+            return build_response(request, 404, 'The user is not registered for WStore.')
 
         org_roles = []
         if 'provider' in data['roles']:
@@ -326,7 +373,7 @@ class OrganizationUserCollection(Resource):
                 belongs = True
 
         if belongs == True:
-            return build_response(request, 400, 'The user already belongs to the organization')
+            return build_response(request, 400, 'The user already belongs to this organization')
 
         # Include the new user
         user.userprofile.organizations.append({

@@ -1,0 +1,21 @@
+{% extends 'organizations/base.html' %}
+{% block extra_textCSS %}
+  <link rel="stylesheet" href="{{ STATIC_URL }}assets/css/store/wstore.bootstrap-theme.css" />
+{% endblock %}
+{% block extra_textJS %}
+  <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/wstore.core.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/organizations/views.js"></script>
+  <script type="text/x-jquery-tmpl" id="organization_form_template">{% include "organizations/organization_form_template.html" %}</script>
+  <script type="text/x-jquery-tmpl" id="id_tmpl_org_inf">{% include "organizations/organization_info_template.html" %}</script>
+  <script type="text/x-jquery-tmpl" id="id_tmpl_orgusr_form">{% include "organizations/organization_form_adduser.html" %}</script>
+  <script type="text/x-jquery-tmpl" id="id_tmpl_ta_fields">{% include "organizations/tax_address_fields_template.html" %}</script>
+  <script type="text/x-jquery-tmpl" id="id_tmpl_pf_fields">{% include "organizations/payment_form_fields_template.html" %}</script>
+{% endblock %}
+{% block container %}
+  <div class="container-fluid" style="margin-top: 20px;">
+    <div class="row-fluid"><div id="message-container"></div></div>
+    <div id="modal-message" class="row-fluid"></div>
+    <div id="alert-message" class="row-fluid hide"><div class="span3"></div></div>
+    <div class="row-fluid organizations"></div>
+  </div><!-- /.container-fluid -->
+{% endblock %}

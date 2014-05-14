@@ -121,6 +121,8 @@
                         </li>
                         {% if user.is_staff %}
                             <li><a href="/administration">Administration</a></li>
+                        {% else%}
+                            <li><a href="/organization">Organization</a></li>
                         {% endif %}
                     </ul>
                     {% if not portal %}

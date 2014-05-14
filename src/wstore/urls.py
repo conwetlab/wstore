@@ -41,6 +41,7 @@ urlpatterns = patterns('',
     url(r'^/?$', 'wstore.views.home', name='home'),
     url(r'^administration/?$', 'wstore.views.admin', name='admin'),
     url(r'^catalogue/?$', 'wstore.views.catalogue', name='catalogue'),
+    url(r'^organization/$', 'wstore.views.organization', name='organization'),
 
     # API
     url(r'^api/administration/marketplaces/?$', market_views.MarketplaceCollection(permitted_methods=('GET', 'POST'))),
