@@ -21,9 +21,14 @@
 
 (function() {
 
-    ServerClient = function ServerClient(entryURL, collectionURL) {
+    ServerClient = function ServerClient(entryURL, collectionURL, absolute) {
         this.entryURL = entryURL;
         this.collectionURL = collectionURL;
+        this.absolute = false;
+
+        if (absolute) {
+            this.absolute = true;
+        }
     };
 
     /**
@@ -34,15 +39,24 @@
      * @param data, JSON data for PUT and POST request
      * @param elemDict, Object used for URL rendering if needed
      */
-    var request = function request(self, method, callback, data, elemDict) {
+    var request = function request(self, method, callback, data, elemDict, queryString) {
         var url;
         var csrfToken = $.cookie('csrftoken');
 
-        // Select endpoint
-        if ($.isEmptyObject(elemDict)) {
-            url = EndpointManager.getEndpoint(self.collectionURL);
+        if (!self.absolute) {
+         // Select endpoint
+            if ($.isEmptyObject(elemDict)) {
+                url = EndpointManager.getEndpoint(self.collectionURL);
+            } else {
+                url = EndpointManager.getEndpoint(self.entryURL, elemDict);
+            }
         } else {
-            url = EndpointManager.getEndpoint(self.entryURL, elemDict);
+            url = self.collectionURL;
+        }
+
+        // Include the query string if provided
+        if (queryString) {
+            url += queryString;
         }
 
         $('#loading').removeClass('hide');  // Loading view when waiting for requests
@@ -80,8 +94,8 @@
      * @param callback, Function to be called on success
      * @param elemDict, Object used for URL rendering if needed
      */
-    ServerClient.prototype.get = function get(callback, elemDict) {
-        request(this, 'GET', callback, '', elemDict);
+    ServerClient.prototype.get = function get(callback, elemDict, queryString) {
+        request(this, 'GET', callback, '', elemDict, queryString);
     };
 
     /**
