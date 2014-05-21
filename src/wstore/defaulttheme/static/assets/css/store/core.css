@@ -391,6 +391,132 @@
     margin-left: -50px;
 }
 
+.tabulation-info {
+  text-indent: 10px;
+}
+
+.tabulation-legal {
+  text-indent: 10px;
+}
+
+.other-tabulation-legal {
+  text-indent: 20px;
+}
+
+.color-legal {
+  color: rgb(0, 43, 103);
+}
+
+#style-legal {
+  font-style: italic;
+  color: rgb(96, 193, 207);
+}
+
+.clauses > h3 {
+  color: rgb(0, 43, 103);
+}
+
+.tabulation-pricing {
+  text-indent: 10px;
+}
+
+.other-tabulation-pricing {
+  text-indent: 20px;
+}
+
+.color-pricing {
+  color: rgb(0, 43, 103);
+}
+
+.other-tabulation-pricing > b {
+  color: rgb(96, 193, 207);
+}
+
+.price-components > h3 {
+  color: rgb(0, 43, 103);
+  font-weight: bold;
+}
+
+.taxes > h3 {
+  color: rgb(0, 43, 103);
+  font-weight: bold;
+}
+
+.tabulation-interactions {
+  text-indent: 10px;
+}
+
+.other-tabulation-inter {
+  text-indent: 20px;
+}
+
+.other-tab-inter {
+  text-indent: 30px;
+}
+
+.color-interactions {
+  color: rgb(0, 43, 103);
+}
+
+.other-color-inter {
+  color: rgb(96, 193, 207);
+}
+
+.interactions > h3 {
+  color: rgb(0, 43, 103);
+  font-weight: bold;
+  text-indent: 10px;
+}
+
+.inputs {
+  color: rgb(0, 43, 103);
+  text-indent: 20px;
+}
+
+.outputs {
+  color: rgb(0, 43, 103);
+  text-indent: 20px;
+}
+
+.color-resource {
+  color: rgb(0, 43, 103);
+}
+
+#res-tab > b {
+  color: rgb(0, 43, 103);
+}
+
+.tabulation-sla {
+  text-indent: 10px;
+}
+
+.other-tab-sla {
+  text-indent: 20px;
+}
+
+.other-tabulation-sla {
+  text-indent: 30px;
+}
+
+.color-sla {
+  color: rgb(0, 43, 103);
+}
+
+.other-tabulation-sla > b {
+  color: rgb(96, 193, 207);
+}
+
+.variables > h5 {
+  color: rgb(0, 43, 103);
+  font-weight: bold;
+  text-indent: 20px;
+}
+
+.expresions > h3 {
+  color: rgb(0, 43, 103);
+  font-weight: bold;
+}
+
 .detailed-info {
     position: absolute;
     top: 246px;
@@ -480,8 +606,11 @@
 }
 
 .comment-rating {
-    display: inline;
-    margin-left: 10px;
+    display: block;
+}
+
+#timestamp {
+  color: rgb(153,149,149);
 }
 
 .table i:hover {
@@ -499,6 +628,10 @@ a:hover {
 
 h2 {
   color: rgb(0, 43, 103);
+}
+
+#comment-btn {
+  display: block;
 }
 
 .btn-blue {
@@ -527,8 +660,16 @@ h2 {
   width: 221px;
 }
 
+.icon-book {
+  color: rgb(96, 193, 207);
+}
+
+.icon-home {
+  color: rgb(96, 193, 207);
+}
+
 .icon-tag {
-color: rgb(96, 193, 207);
+  color: rgb(96, 193, 207);
 }
 
 code {
@@ -554,7 +695,20 @@ code {
   color: rgb(96, 193, 207);
 }
 
+.icon-comments {
+  color: rgb(96, 193, 207);
+}
+
+#main-tab .icon-comments {
+  font-size: 20px;
+}
+
 #main-tab h2:nth-last-of-type(2) {
+  display: inline;
+}
+
+/* Icon comments */
+#main-tab h2:nth-last-of-type(1) {
   display: inline;
 }
 
@@ -607,6 +761,10 @@ a.tag {
 .suggested-tag .icon-remove-sign {
   color: rgb(218, 79, 73);
   float: right;
+}
+
+.tabulation {
+  margin-bottom: 25px;
 }
 
 /* Loading view when waiting for requests */

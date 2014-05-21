@@ -531,7 +531,7 @@
             } else if (type == 'components') {
                 title = 'Price components';
             }
-            $('<h4></h4>').text(title).appendTo(dom);
+            $('<h3></h3>').text(title).appendTo(dom);
 
             for (var i = 0; i < priceElem.length; i++) {
                 // Check if a price function has been defined
@@ -712,17 +712,23 @@
             for (var i = 0; i < resources.length; i++) {
                 var cont = $('<div></div>');
                 var p;
+                var b;
                 p = $('<p></p>').appendTo(cont);
-                p.append('<b>Name: </b>');
+                b = $('<b>Name: </b>').addClass('color-interactions');
+                p.append(b);
                 p.append(resources[i].name);
 
                 p = $('<p></p>').appendTo(cont);
-                p.append('<b>Version: </b>');
+                b = $('<b>Version: </b>').addClass('color-interactions');
+                p.append(b);
                 p.append(resources[i].version);
 
                 p = $('<p></p>').appendTo(cont);
-                p.append('<b>Description: </b>');
+                b = $('<b>Description: </b>').addClass('color-interactions');
+                p.append(b);
                 p.append(resources[i].description);
+
+                cont.append('<div class="space clear"></div>');
 
                 cont.appendTo('#res-tab');
             }
@@ -738,17 +744,23 @@
             for (var i = 0; i < applications.length; i++) {
                 var cont = $('<div></div>');
                 var p;
+                var b;
                 p = $('<p></p>').appendTo(cont);
-                p.append('<b>Name: </b>');
+                b = $('<b>Name: </b>').addClass('color-interactions');
+                p.append(b);
                 p.append(applications[i].name);
 
                 p = $('<p></p>').appendTo(cont);
-                p.append('<b>URL: </b>');
+                b = $('<b>URL: </b>').addClass('color-interactions');
+                p.append(b);
                 p.append(applications[i].url);
 
                 p = $('<p></p>').appendTo(cont);
-                p.append('<b>Description: </b>');
+                b = $('<b>Description: </b>').addClass('color-interactions');
+                p.append(b);
                 p.append(applications[i].description);
+
+                cont.append('<div class="space clear"></div>');
 
                 cont.appendTo('#app-tab');
             }
