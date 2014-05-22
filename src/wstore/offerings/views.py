@@ -27,6 +27,7 @@ from urllib2 import HTTPError
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.contrib.sites.models import get_current_site
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
@@ -34,10 +35,29 @@ authentication_required
 from wstore.models import Offering, Organization
 from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
-publish_offering, bind_resources, count_offerings, update_offering, comment_offering
+publish_offering, bind_resources, count_offerings, update_offering
 from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource
 from wstore.store_commons.utils.method_request import MethodRequest
+from wstore.social.reviews.review_manager import ReviewManager
 
+
+####################################################################################################
+#########################################    Offerings   ###########################################
+####################################################################################################
+
+def _get_offering(organization, name, version):
+    """
+    Get the offering object
+    Raise: ObjectDoesNotExist in the offering is not found
+    """
+    # Get the offering
+    try:
+        org = Organization.objects.get(name=organization)
+        offering = Offering.objects.get(name=name, owner_organization=org, version=version)
+    except:
+        raise ObjectDoesNotExist('Offering not found')
+
+    return offering, org
 
 
 class OfferingCollection(Resource):
@@ -127,15 +147,16 @@ class OfferingEntry(Resource):
     def read(self, request, organization, name, version):
         user = request.user
         try:
-            org = Organization.objects.get(name=organization)
-            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
-        except:
-            return build_response(request, 404, 'Not found')
+            offering, org = _get_offering(organization, name, version)
+        except ObjectDoesNotExist as e:
+            return build_response(request, 404, unicode(e))
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         try:
             result = get_offering_info(offering, user)
         except Exception, e:
-            return build_response(request, 400, e.message)
+            return build_response(request, 400, unicode(e))
 
         return HttpResponse(json.dumps(result), status=200, mimetype='application/json; charset=UTF-8')
 
@@ -146,10 +167,11 @@ class OfferingEntry(Resource):
         user = request.user
         # Get the offering
         try:
-            org = Organization.objects.get(name=organization)
-            offering = Offering.objects.get(owner_organization=org, name=name, version=version)
-        except:
-            return build_response(request, 404, 'Not found')
+            offering, org = _get_offering(organization, name, version)
+        except ObjectDoesNotExist as e:
+            return build_response(request, 404, unicode(e))
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         # Update the offering
         try:
@@ -174,10 +196,11 @@ class OfferingEntry(Resource):
 
         # Get the offering
         try:
-            org = Organization.objects.get(name=organization)
-            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
-        except:
-            return build_response(request, 404, 'Not found')
+            offering, org = _get_offering(organization, name, version)
+        except ObjectDoesNotExist as e:
+            return build_response(request, 404, unicode(e))
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         # Check if the user can delete the offering
         if not offering.is_owner(request.user) and request.user.pk not in org.managers:
@@ -190,6 +213,87 @@ class OfferingEntry(Resource):
             return build_response(request, 400, e.message)
 
         return build_response(request, 204, 'No content')
+
+
+class PublishEntry(Resource):
+
+    # Publish the offering is some marketplaces
+    @authentication_required
+    @supported_request_mime_types(('application/json', 'application/xml'))
+    def create(self, request, organization, name, version):
+        # Obtains the offering
+        offering = None
+        content_type = get_content_type(request)[0]
+        try:
+            offering, org = _get_offering(organization, name, version)
+        except ObjectDoesNotExist as e:
+            return build_response(request, 404, unicode(e))
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
+
+        # Check that the user can publish the offering
+        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
+            return build_response(request, 403, 'Forbidden')
+
+        if content_type == 'application/json':
+            try:
+                data = json.loads(request.raw_post_data)
+                publish_offering(offering, data)
+            except HTTPError:
+                return build_response(request, 502, 'Bad gateway')
+            except Exception, e:
+                return build_response(request, 400, e.message)
+
+        # Append the new offering to the newest list
+        site = get_current_site(request)
+        context = Context.objects.get(site=site)
+
+        if len(context.newest) < 8:
+            context.newest.insert(0, offering.pk)
+        else:
+            context.newest.pop()
+            context.newest.insert(0, offering.pk)
+
+        context.save()
+
+        return build_response(request, 200, 'OK')
+
+
+class NewestCollection(Resource):
+
+    @authentication_required
+    def read(self, request):
+
+        site = get_current_site(request)
+        context = Context.objects.get(site=site)
+
+        response = []
+        for off in context.newest:
+            offering = Offering.objects.get(pk=off)
+            response.append(get_offering_info(offering, request.user))
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
+
+
+class TopRatedCollection(Resource):
+
+    @authentication_required
+    def read(self, request):
+
+        site = get_current_site(request)
+        context = Context.objects.get(site=site)
+
+        response = []
+        for off in context.top_rated:
+            offering = Offering.objects.get(pk=off)
+            response.append(get_offering_info(offering, request.user))
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json;charset=UTF-8')
+
+
+####################################################################################################
+#########################################    Resources   ###########################################
+####################################################################################################
 
 
 class ResourceCollection(Resource):
@@ -263,9 +367,9 @@ class ResourceEntry(Resource):
         return response
 
 
-class PublishEntry(Resource):
+class BindEntry(Resource):
 
-    # Publish the offering is some marketplaces
+    # Binds resources with offerings
     @authentication_required
     @supported_request_mime_types(('application/json', 'application/xml'))
     def create(self, request, organization, name, version):
