@@ -56,7 +56,7 @@
         this.pricing = offeringData.offering_description.pricing;
         this.bill = [];
 
-        if (this.state == 'purchased') {
+        if (this.state == 'purchased' || this.state == 'rated') {
             this.bill = offeringData.bill;
         }
         if (offeringData.applications) {

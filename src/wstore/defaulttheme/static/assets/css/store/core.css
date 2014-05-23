@@ -552,14 +552,17 @@ code {
 #main-tab .icon-tags {
   font-size: 20px;
   color: rgb(96, 193, 207);
+  position: relative;
+  top: -32px;
+  left: 55px;
 }
 
 #main-tab h2:nth-last-of-type(2) {
   display: inline;
 }
 
-#tags .btn {
-  margin-top: 10px;
+#tags {
+  margin-top: -25px;
 }
 
 a.tag {
@@ -607,6 +610,78 @@ a.tag {
 .suggested-tag .icon-remove-sign {
   color: rgb(218, 79, 73);
   float: right;
+}
+
+.btn-resize .icon-resize-horizontal {
+  float: left;
+  font-size: 30px;
+  margin-right: 20px;
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  margin-left: -14px;
+}
+
+.btn-resize {
+  float: right;
+  width: 0;
+}
+
+.btn-resize:hover {
+  text-decoration:none;
+}
+
+#review-container .icon-resize-horizontal:hover {
+  cursor: pointer;
+}
+
+#review-stats {
+  width: 115px;
+  height: 90px;
+  background-color: rgb(246, 246, 244);
+  border: 1px solid rgb(205, 206, 209);
+  border-radius: 6px;
+  margin-top: 15px;
+  float: left;
+}
+
+#review-stats p {
+  font-size: 50px;
+  vertical-align: middle;
+  text-align: center;
+  margin-top: 20px;
+}
+
+#n-reviews {
+  margin-top: 23px;
+  text-align: center;
+}
+
+#n-reviews i {
+  color: rgb(102, 102, 102);
+  margin-right: 5px;
+}
+
+.comment-entry {
+  width: 360px;
+  height: 125px;
+  display: inline;
+  float: left;
+  margin: 15px;
+  overflow: hidden;
+}
+
+.comment-entry .icon-reply {
+  font-size: 20px;
+  position: relative;
+  top: 0px;
+  left: 330px;
+}
+
+#comments {
+  height: 310px;
+  overflow: hidden;
+  -webkit-transition: height linear 4s;  /* For Safari 3.1 to 6.0 */
+  transition: height linear 4s;
 }
 
 /* Loading view when waiting for requests */

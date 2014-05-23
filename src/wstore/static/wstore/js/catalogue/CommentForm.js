@@ -50,7 +50,7 @@
                     'X-CSRFToken': csrfToken,
                 },
                 type: "POST",
-                url: EndpointManager.getEndpoint('RATING_ENTRY', offeringContext),
+                url: EndpointManager.getEndpoint('REVIEW_COLLECTION', offeringContext),
                 dataType: 'json',
                 contentType: 'application/json',
                 data: JSON.stringify(request),

@@ -157,12 +157,6 @@
             $('#tags').append(updateBtn);
         }
 
-        if (this.offeringElement.getState() != 'uploaded') {
-            this.paintComments();
-        } else {
-            $('h2:contains(Comments)').addClass('hide');
-        }
-
         this.buildTabs();
 
         $('#back').click((function (e) {
@@ -213,10 +207,9 @@
         }
 
         // Form for comment and rate the offering
-        if (this.offeringElement.getState() == 'purchased') {
-            $('#comment-btn').removeClass('hide').click((function() {
-                paintCommentForm(this.offeringElement, this);
-            }).bind(this));
+        if (this.offeringElement.getComments().length) {
+            var reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'));
+            reviewPainter.paint();
         }
         // Calculate positions on resize
         this.calculatePositions();
@@ -261,28 +254,6 @@
         $('.tab-content').css('height', offset.toString() + 'px');
         $('.tab-content').css('width', width.toString() + 'px');
     };
-
-    /**
-     * Paint the comments of the offering
-     */
-    CatalogueDetailsView.prototype.paintComments = function paintComments() {
-        var comments = this.offeringElement.getComments();
-
-        for (var i = 0; i < comments.length; i++) {
-            var templ;
-
-            $.template('commentTemplate', $('#comment_template'));
-            templ = $.tmpl('commentTemplate', {
-                'user': comments[i].user,
-                'timestamp': comments[i].timestamp.split(' ')[0],
-                'title': comments[i].title,
-                'comment': comments[i].comment
-            });
-
-            fillStarsRating(comments[i].rating, templ.find('.comment-rating'));
-            templ.appendTo('#comments');
-        }
-    }
 
     /**
      * Check if the user needs to renovate a subscription in this offering
