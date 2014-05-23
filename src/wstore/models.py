@@ -58,6 +58,7 @@ class Organization(models.Model):
     name = models.CharField(max_length=50, unique=True)
     notification_url = models.CharField(max_length=300, null=True, blank=True)
     offerings_purchased = ListField()
+    rated_offerings = ListField()
     private = models.BooleanField(default=True)
     payment_info = DictField()
     tax_address = DictField()
@@ -65,9 +66,21 @@ class Organization(models.Model):
     actor_id = models.IntegerField(null=True, blank=True)
     expenditure_limits = DictField()
 
+    def has_rated_offering(self, user, offering):
+        """
+        Check if the user has rated an offering on behalf the
+        organization
+        """
+        found = False
+        for rate in self.rated_offerings:
+            if rate['user'] == user.pk and rate['offering'] == offering.pk:
+                found = True
+                break
 
-from wstore.offerings.models import Offering
-from wstore.offerings.models import Resource
+        return found
+
+
+from wstore.offerings.models import Offering, Resource
 from wstore.contracting.models import Purchase
 
 

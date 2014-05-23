@@ -51,6 +51,9 @@ class Offering(models.Model):
     applications = ListField()
 
     def is_owner(self, user):
+        """
+        Check if the user is the owner of the offering
+        """
         return self.owner_admin_user == user
 
     class Meta:

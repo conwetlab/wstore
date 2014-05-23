@@ -377,53 +377,11 @@ class BindEntry(Resource):
         offering = None
         content_type = get_content_type(request)[0]
         try:
-            org = Organization.objects.get(name=organization)
-            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
-        except:
-            return build_response(request, 404, 'Not found')
-
-        # Check that the user can publish the offering
-        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
-            return build_response(request, 403, 'Forbidden')
-
-        if content_type == 'application/json':
-            try:
-                data = json.loads(request.raw_post_data)
-                publish_offering(offering, data)
-            except HTTPError:
-                return build_response(request, 502, 'Bad gateway')
-            except Exception, e:
-                return build_response(request, 400, e.message)
-
-        # Append the new offering to the newest list
-        site = get_current_site(request)
-        context = Context.objects.get(site=site)
-
-        if len(context.newest) < 8:
-            context.newest.insert(0, offering.pk)
-        else:
-            context.newest.pop()
-            context.newest.insert(0, offering.pk)
-
-        context.save()
-
-        return build_response(request, 200, 'OK')
-
-
-class BindEntry(Resource):
-
-    # Binds resources with offerings
-    @authentication_required
-    @supported_request_mime_types(('application/json', 'application/xml'))
-    def create(self, request, organization, name, version):
-        # Obtains the offering
-        offering = None
-        content_type = get_content_type(request)[0]
-        try:
-            org = Organization.objects.get(name=organization)
-            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
-        except:
-            return build_response(request, 404, 'Not found')
+            offering, org = _get_offering(organization, name, version)
+        except ObjectDoesNotExist as e:
+            return build_response(request, 404, unicode(e))
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         # Check that the user can bind resources to the offering
         if not offering.is_owner(request.user) and request.user.pk not in org.managers:
@@ -439,63 +397,121 @@ class BindEntry(Resource):
         return build_response(request, 200, 'OK')
 
 
-class CommentEntry(Resource):
+####################################################################################################
+##########################################    Reviews    ###########################################
+####################################################################################################
+
+def _make_review_action(action, request, organization, name, version, review=None):
+    """
+    Performs the specified review action
+    """
+
+    # Get the offering
+    try:
+        offering, org = _get_offering(organization, name, version)
+    except ObjectDoesNotExist as e:
+        return build_response(request, 404, unicode(e))
+    except Exception as e:
+        return build_response(request, 400, unicode(e))
+
+    # Check offering state
+    if offering.state != 'published':
+        return build_response(request, 403, 'Forbidden')
+
+    # Call the action method
+    try:
+        data = None
+        if request.raw_post_data:
+            data = json.loads(request.raw_post_data)
+
+        # Check if the param to be used in the call
+        # is the offering or the review
+        param = offering
+        if review:
+            param = review
+
+        # Only include data in the call if included in
+        # the request
+        if data:
+            action(request.user, param, data)
+        else:
+            action(request.user, param)
+
+    except PermissionDenied as e:
+        return build_response(request, 403, unicode(e))
+    except Exception as e:
+        return build_response(request, 400, unicode(e))
+
+    return build_response(request, 201, 'Created')
+
+
+class ReviewCollection(Resource):
+
+    @authentication_required
+    def read(self, request, organization, name, version):
+        # Get pagination params
+        start = request.GET.get('start', None)
+        limit = request.GET.get('limit', None)
+
+        # Get offering
+        try:
+            offering, org = _get_offering(organization, name, version)
+        except ObjectDoesNotExist as e:
+            return build_response(request, 404, unicode(e))
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
+
+        # Get reviews
+        rm = ReviewManager()
+        try:
+            response = rm.get_reviews(offering, start=start, limit=limit)
+        except PermissionDenied as e:
+            return build_response(request, 403, unicode(e))
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json; charset=utf-8')
 
     @authentication_required
     @supported_request_mime_types(('application/json', ))
     def create(self, request, organization, name, version):
 
-        # Get the offering
-        try:
-            org = Organization.objects.get(name=organization)
-            offering = Offering.objects.get(name=name, owner_organization=org, version=version)
-        except:
-            return build_response(request, 404, 'Not found')
-
-        # Check offering state
-        if offering.state != 'published':
-            return build_response(request, 403, 'Forbidden')
-
-        # Comment the offering
-        try:
-            data = json.loads(request.raw_post_data)
-            comment_offering(offering, data, request.user)
-        except Exception as e:
-            return build_response(request, 400, unicode(e))
-
-        return build_response(request, 201, 'Created')
+        rm = ReviewManager()
+        return _make_review_action(rm.create_review, request, organization, name, version)
 
 
-class NewestCollection(Resource):
+class ReviewEntry(Resource):
 
     @authentication_required
-    def read(self, request):
+    @supported_request_mime_types(('application/json', ))
+    def update(self, request, organization, name, version, review):
 
-        site = get_current_site(request)
-        context = Context.objects.get(site=site)
-
-        response = []
-        for off in context.newest:
-            offering = Offering.objects.get(pk=off)
-            response.append(get_offering_info(offering, request.user))
-
-        return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
-
-
-class TopRatedCollection(Resource):
+        rm = ReviewManager()
+        return _make_review_action(rm.update_review, request, organization, name, version, review=review)
 
     @authentication_required
-    def read(self, request):
+    def delete(self, request, organization, name, version, review):
+        rm = ReviewManager()
+        return _make_review_action(rm.remove_review, request, organization, name, version, review=review)
 
-        site = get_current_site(request)
-        context = Context.objects.get(site=site)
 
-        response = []
-        for off in context.top_rated:
-            offering = Offering.objects.get(pk=off)
-            response.append(get_offering_info(offering, request.user))
+class ResponseEntry(Resource):
 
-        return HttpResponse(json.dumps(response), status=200, mimetype='application/json;charset=UTF-8')
+    @authentication_required
+    @supported_request_mime_types(('application/json', ))
+    def update(self, request, organization, name, version, review):
+        rm = ReviewManager()
+        return _make_review_action(rm.create_response, request, organization, name, version, review=review)
+
+    @authentication_required
+    def delete(self, request, organization, name, version, review):
+        rm = ReviewManager()
+        return _make_review_action(rm.remove_response, request, organization, name, version, review=review)
+
+
+####################################################################################################
+#######################################    Applications    #########################################
+####################################################################################################
 
 
 class ApplicationCollection(Resource):

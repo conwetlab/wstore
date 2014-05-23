@@ -38,15 +38,14 @@ from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.market_adaptor.marketadaptor import MarketAdaptor
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
-from wstore.models import Resource, Organization
-from wstore.models import Repository
-from wstore.models import Offering
+from wstore.models import Offering, Repository, Resource
 from wstore.models import Marketplace
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.utils.name import is_valid_id
+from wstore.social.reviews.models import Review
 
 
 def get_offering_info(offering, user):
@@ -63,13 +62,15 @@ def get_offering_info(offering, user):
             state = 'purchased'
             purchase = Purchase.objects.get(offering=offering, customer=user, organization_owned=False)
 
+        if offering.pk in user_profile.rated_offerings:
+            state = 'rated'
+
     else:
         if offering.pk in user_profile.current_organization.offerings_purchased:
             state = 'purchased'
             purchase = Purchase.objects.get(offering=offering, owner_organization=user_profile.current_organization)
 
-    if state == 'purchased':
-        if offering.pk in user_profile.rated_offerings:
+        if user_profile.current_organization.has_rated_offering(user, offering):
             state = 'rated'
 
     # Load offering data
@@ -80,7 +81,7 @@ def get_offering_info(offering, user):
         'version': offering.version,
         'state': state,
         'description_url': offering.description_url,
-        'rating': offering.rating,
+        'rating': "{:.2f}".format(offering.rating),
         'comments': offering.comments,
         'tags': offering.tags,
         'image_url': offering.image_url,
@@ -332,16 +333,16 @@ def create_offering(provider, json_data):
     profile = provider.userprofile
     data = {}
     if not 'name' in json_data or not 'version' in json_data:
-        raise Exception('Missing required fields')
+        raise ValueError('Missing required fields')
 
     data['name'] = json_data['name']
     data['version'] = json_data['version']
 
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
-        raise Exception('Invalid version format')
+        raise ValueError('Invalid version format')
 
     if not is_valid_id(data['name']):
-        raise Exception('Invalid name format')
+        raise ValueError('Invalid name format')
 
     # Get organization
     organization = profile.current_organization
@@ -361,7 +362,7 @@ def create_offering(provider, json_data):
     offerings = Offering.objects.filter(owner_organization=organization, name=data['name'])
     for off in offerings:
         if is_lower_version(data['version'], off.version):
-            raise Exception('A bigger version of the current offering exists')
+            raise ValueError('A bigger version of the current offering exists')
 
     # If using the idm, get the applications from the request
     if settings.OILAUTH:
@@ -386,7 +387,7 @@ def create_offering(provider, json_data):
         if json_data['notification_url'] == 'default':
             notification_url = organization.notification_url
             if notification_url == '':
-                raise Exception('No default URL defined for the organization')
+                raise ValueError('No default URL defined for the organization')
         else:
             notification_url = json_data['notification_url']
 
@@ -438,7 +439,7 @@ def create_offering(provider, json_data):
         off = Offering.objects.filter(description_url=usdl_url)
 
         if len(off) != 0:
-            raise Exception('The provided USDL description is already registered')
+            raise ValueError('The provided USDL description is already registered')
 
         # Download the USDL from the repository
         repository_adaptor = RepositoryAdaptor(usdl_url)
@@ -826,99 +827,3 @@ def bind_resources(offering, data, provider):
         offering.resources.remove(del_res)
 
     offering.save()
-
-
-def comment_offering(offering, comment, user):
-
-    # Check if the user can comment the offering.
-    if offering.pk in user.userprofile.rated_offerings:
-        raise Exception('The user cannot comment this offering')
-
-    elif (not offering.pk in user.userprofile.offerings_purchased):
-
-        # Check if the offering is purchased by an organization
-        org_purchased = False
-        for org in user.userprofile.organizations:
-            o = Organization.objects.get(pk=org['organization'])
-            if offering.pk in o.offerings_purchased:
-                org_purchased = True
-                break
-
-        if not org_purchased:
-            raise Exception('The user cannot comment this offering')
-
-    # Check comment structure
-    if not 'title' in comment or not 'rating' in comment or not 'comment' in comment:
-        raise Exception('Invalid comment')
-
-    # Check comment length
-    if len(comment['comment']) > 200:
-        raise Exception('The comment cannot contain more that 200 characters')
-
-    # Check rating
-    if comment['rating'] < 0 or comment['rating'] > 5:
-        raise Exception('Invalid rating')
-
-    # Add the comment
-    offering.comments.insert(0, {
-        'user': user.username,
-        'timestamp': str(datetime.now()),
-        'title': comment['title'],
-        'comment': comment['comment'],
-        'rating': comment['rating']
-    })
-
-    # Calculate new offering rate
-    old_rate = offering.rating
-
-    if old_rate == 0:
-        offering.rating = comment['rating']
-    else:
-        offering.rating = ((old_rate * (len(offering.comments) - 1)) + comment['rating']) / len(offering.comments)
-
-    offering.save()
-
-    user.userprofile.rated_offerings.append(offering.pk)
-    user.userprofile.save()
-
-    # Check the top rated structure
-    context = Context.objects.all()[0]
-
-    top_rated = context.top_rated
-
-    # If there is a place append the offering
-    if len(top_rated) < 8:
-
-        # If the offering is not included append it
-        if not offering.pk in top_rated:
-            top_rated.append(offering.pk)
-
-        # Sort top rated offerings
-        context.top_rated = sorted(top_rated, key=lambda off: Offering.objects.get(pk=off).rating, reverse=True)
-        context.save()
-    else:
-
-        # If the offering is already a top rated offering just sort them
-        if offering.pk in top_rated:
-            context.top_rated = sorted(top_rated, key=lambda off: Offering.objects.get(pk=off).rating, reverse=True)
-            context.save()
-
-        else:
-            pos = None
-            i = 0
-            found = False
-
-            # Check if the new rating is bigger than any top rated
-            while i < len(top_rated) and not found:
-                if Offering.objects.get(pk=top_rated[i]).rating < offering.rating:
-                    pos = i
-                    found = True
-                else:
-                    i += 1
-
-            # If the new rating is a top rating append the offering
-            if pos != None:
-                top_rated.insert(pos, offering.pk)
-                top_rated.remove(top_rated[-1])
-                context.top_rated = top_rated
-                context.save()
