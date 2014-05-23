@@ -433,7 +433,7 @@ class OfferingEntryTestCase(TestCase):
         body_response = json.loads(response.content)
 
         self.assertEqual(type(body_response), dict)
-        self.assertEqual(body_response['message'], 'Not found')
+        self.assertEqual(body_response['message'], 'Offering not found')
         self.assertEqual(body_response['result'], 'error')
 
     def test_get_offering_exception(self):
@@ -561,7 +561,7 @@ class OfferingEntryTestCase(TestCase):
         body_response = json.loads(response.content)
 
         self.assertEqual(type(body_response), dict)
-        self.assertEqual(body_response['message'], 'Not found')
+        self.assertEqual(body_response['message'], 'Offering not found')
         self.assertEqual(body_response['result'], 'error')
 
     def test_offering_update_not_provider(self):
@@ -1024,7 +1024,7 @@ class PublishEntryTestCase(TestCase):
         body_response = json.loads(response.content)
 
         self.assertEqual(type(body_response), dict)
-        self.assertEqual(body_response['message'], 'Not found')
+        self.assertEqual(body_response['message'], 'Offering not found')
         self.assertEqual(body_response['result'], 'error')
 
     def test_publish_entry_not_owner(self):
