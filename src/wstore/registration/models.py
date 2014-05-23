@@ -12,6 +12,8 @@ from django.db import models
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 
+from wstore.models import Context
+
 
 KEY_LENGTH = 30
 
@@ -100,7 +102,7 @@ class Profile(models.Model):
     def send_activation_email(self):
         """
         """
-        site = Site.objects.get_current().domain
+        site = Context.objects.all()[0].site.domain
         if site.endswith('/'):
             site = site[:-1]
 
