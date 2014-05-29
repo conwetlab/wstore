@@ -38,14 +38,14 @@ class ReviewManager():
 
         # Check review data type
         if not isinstance(review_data, dict):
-            exception =  TypeError('Invalid review data')
+            exception = TypeError('Invalid review data')
 
         # Check review data contents
         if not exception and (not 'title' in review_data or not 'comment' in review_data or not 'rating' in review_data):
-            exception =  ValueError('Missing required field')
+            exception = ValueError('Missing required field')
 
         if not exception and (not isinstance(review_data['title'], str) and not isinstance(review_data['title'], unicode)):
-            exception =  TypeError('Invalid title format')
+            exception = TypeError('Invalid title format')
 
         if not exception and (not isinstance(review_data['comment'], str) and not isinstance(review_data['comment'], unicode)):
             exception = TypeError('Invalid comment format')
@@ -74,7 +74,7 @@ class ReviewManager():
         context.top_rated = [off.pk for off in Offering.objects.all().order_by('-rating')[:8]]
         context.save()
 
-    def _get_and_validate_review(self, user, review_id):
+    def _get_and_validate_review(self, user, review_id, owner=False):
         """
         Returns and validates review object
         """
@@ -88,9 +88,15 @@ class ReviewManager():
         except:
             raise ValueError('Invalid review id')
 
-        # Check if the user can update the review
-        if not user == rev.user or not user.userprofile.current_organization == rev.organization:
-            raise PermissionDenied('The user cannot update the current review')
+        if not owner:
+            # Check if the user can update the review
+            if not user == rev.user or not user.userprofile.current_organization == rev.organization:
+                raise PermissionDenied('The user cannot update the current review')
+        else:
+            #Check if the user is the owner of the reviewed offering
+            if not (user.userprofile.current_organization == rev.offering.owner_organization) or \
+            not user.pk in user.userprofile.current_organization.managers:
+                raise PermissionDenied('The user cannot respond the current review')
 
         return rev
 
@@ -110,13 +116,13 @@ class ReviewManager():
 
         # Create the review
         rev = Review.objects.create(
-            user = user,
-            organization = user.userprofile.current_organization,
-            offering = offering,
-            timestamp = datetime.now(),
-            title = review['title'],
-            comment = review['comment'],
-            rating = review['rating']
+            user=user,
+            organization=user.userprofile.current_organization,
+            offering=offering,
+            timestamp=datetime.now(),
+            title=review['title'],
+            comment=review['comment'],
+            rating=review['rating']
         )
 
         offering.comments.insert(0, rev.pk)
@@ -164,12 +170,12 @@ class ReviewManager():
                 raise ValueError('Limit parameter should be higher than 0')
 
             # Get Review objects
-            reviews = Review.objects.filter(offering=offering).order_by('-timestamp')[start-1:(start+limit)-1]
+            reviews = Review.objects.filter(offering=offering).order_by('-timestamp')[start - 1:(start + limit) - 1]
         else:
             reviews = Review.objects.filter(offering=offering).order_by('-timestamp')
 
         # Create JSON structure
-        result =[]
+        result = []
         for review in reviews:
             review_data = {
                 'id': review.pk,
@@ -213,7 +219,7 @@ class ReviewManager():
         rev.save()
 
         # Update offering rating
-        rev.offering.rating = ((rev.offering.rating*len(rev.offering.comments)) + rev.rating)/len(rev.offering.comments)
+        rev.offering.rating = ((rev.offering.rating * len(rev.offering.comments)) + rev.rating) / len(rev.offering.comments)
         rev.offering.save()
 
         # Update top rated offerings
@@ -230,7 +236,7 @@ class ReviewManager():
         rev.offering.comments.remove(review)
 
         # Update offering rating
-        rev.offering.rating = ((rev.offering.rating*(len(rev.offering.comments) + 1)) - rev.rating) / len(rev.offering.comments)
+        rev.offering.rating = ((rev.offering.rating * (len(rev.offering.comments) + 1)) - rev.rating) / len(rev.offering.comments)
         rev.offering.save()
 
         # Update top rated offerings
@@ -238,40 +244,32 @@ class ReviewManager():
 
         rev.delete()
 
-
     def _validate_response(self, response):
 
-        valid = True
         exception = None
         # Validate response type
         if not isinstance(response, dict):
-            valid = False
             exception = TypeError('Invalid response type')
 
         # Validate response contents
-        if valid and (not 'title' in response or not 'response' in response):
-            valid = False
+        if not exception and (not 'title' in response or not 'response' in response):
             exception = ValueError('Missing a required field in response')
 
         # Validate contents type
-        if valid and (not isinstance(response['title'], str) and not isinstance(response['title'], unicode)):
-            valid = False
+        if not exception and (not isinstance(response['title'], str) and not isinstance(response['title'], unicode)):
             exception = TypeError('Invalid title format')
 
-        if valid and (not isinstance(response['response'], str) and not isinstance(response['response'], unicode)):
-            valid = False
+        if not exception and (not isinstance(response['response'], str) and not isinstance(response['response'], unicode)):
             exception = TypeError('Invalid response text format')
 
         # Validate contents length
-        if valid and len(response['title']) > 60:
-            valid = False
+        if not exception and len(response['title']) > 60:
             exception = ValueError('Response title cannot contain more than 60 characters')
 
-        if valid and len(response['response']) > 200:
-            valid = False
+        if not exception and len(response['response']) > 200:
             exception = ValueError('Response text cannot contain more than 200 characters')
 
-        return (valid, exception)
+        return exception
 
     def create_response(self, user, review, response):
         """
@@ -283,8 +281,7 @@ class ReviewManager():
         if validation:
             raise validation
 
-        # TODO: check that the user is owner of the offering
-        rev = self._get_and_validate_review(user, review)
+        rev = self._get_and_validate_review(user, review, owner=True)
 
         # Create the response
         rev.response = Response(
@@ -301,11 +298,5 @@ class ReviewManager():
         Removes a response from a given review
         """
 
-        # Validate review type
-        if not isinstance(review, str) and not isinstance(review, unicode):
-            raise TypeError('the review id must be an string')
-
-        # TODO: Check that the user is owner of the offering
-        rev = self._get_and_validate_review(user, review) 
-
+        rev = self._get_and_validate_review(user, review, owner=True)
         rev.response.delete()
