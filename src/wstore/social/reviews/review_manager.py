@@ -210,16 +210,19 @@ class ReviewManager():
 
         rev = self._get_and_validate_review(user, review)
 
+        # Calculate new rating
+        rate = ((rev.offering.rating * len(rev.offering.comments)) - rev.rating + review_data['rating']) / len(rev.offering.comments)
+
         # update review
         rev.title = review_data['title']
         rev.comment = review_data['comment']
         rev.rating = review_data['rating']
-        rev.datetime = datetime.now()
+        rev.timestamp = datetime.now()
 
         rev.save()
 
         # Update offering rating
-        rev.offering.rating = ((rev.offering.rating * len(rev.offering.comments)) + rev.rating) / len(rev.offering.comments)
+        rev.offering.rating = rate
         rev.offering.save()
 
         # Update top rated offerings
