@@ -225,6 +225,19 @@ class ReviewTestCase(TestCase):
         })
         self.org.has_rated_offering.return_value = True
 
+    def _invalid_rev(self):
+        review_manager.Review = MagicMock()
+        review_manager.Review.objects.get.side_effect = Exception('Invalid review')
+
+    def _invalid_usr_resp(self):
+        self.user.userprofile.current_organization = MagicMock()
+
+    def _not_manager(self):
+        self.user.pk = '909090'
+
+    def _update_not_allowed(self, rev):
+        rev.user = MagicMock()
+
     @parameterized.expand([
         (EXAMPLE_REVIEW, 4.5),
         (EXAMPLE_REVIEW, 3, _no_rated),
@@ -375,21 +388,82 @@ class ReviewTestCase(TestCase):
             self.assertTrue(isinstance(excp, err_type))
             self.assertEquals(unicode(excp), err_msg)
 
-    def test_update_reviews(self):
-        pass
+    @parameterized.expand([
+        (EXAMPLE_REVIEW, '999999', 3.5),
+        (EXAMPLE_REVIEW, 999999, 0, None, TypeError, 'The review id must be an string'),
+        (EXAMPLE_REVIEW, '999999', 0, _update_not_allowed, PermissionDenied, 'The user cannot update the current review')
+    ])
+    def test_update_reviews(self, review_data, review_id, exp_rate, side_effect=None, err_type=None, err_msg=None):
+
+        #import ipdb; ipdb.set_trace()
+        # Create mocks
+        rev_object = MagicMock()
+        rev_object.user = self.user
+        rev_object.organization = self.org
+        self.offering.rating = 3.75
+        self.offering.comments = ['333333', '444444', '555555', '666666']
+        rev_object.offering = self.offering
+        rev_object.rating = 4
+        review_manager.Review = MagicMock()
+        review_manager.Review.objects.get.return_value = rev_object
+
+        if side_effect:
+            side_effect(self, rev_object)
+
+        # Call the method
+        error = None
+        try:
+            rm = review_manager.ReviewManager()
+            rm.update_review(self.user, review_id, review_data)
+        except Exception as e:
+            error = e
+
+        if not error:
+            self.assertEquals(error, None)
+            # Check new review info
+            self.assertEquals(rev_object.title, review_data['title'])
+            self.assertEquals(rev_object.comment, review_data['comment'])
+            self.assertEquals(rev_object.rating, review_data['rating'])
+            self.assertEquals(rev_object.timestamp, self.datetime)
+
+            # Check info saved
+            rev_object.save.assert_called_once_with()
+
+            # Check new offering rating
+            self.assertEquals(self.offering.rating, exp_rate)
+
+            self.offering.save.assert_called_once_with()
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(error), err_msg)
 
     def test_remove_review(self):
-        pass
-
-    def _invalid_rev(self):
+        # Create Mocks
+        rev_object = MagicMock()
+        rev_object.pk = '333333'
+        rev_object.user = self.user
+        rev_object.organization = self.org
+        self.offering.rating = 3.75
+        self.offering.comments = ['333333', '444444', '555555', '666666']
+        rev_object.offering = self.offering
+        rev_object.rating = 3
         review_manager.Review = MagicMock()
-        review_manager.Review.objects.get.side_effect = Exception('Invalid review')
+        review_manager.Review.objects.get.return_value = rev_object
 
-    def _invalid_usr_resp(self):
-        self.user.userprofile.current_organization = MagicMock()
+        error = False
+        try:
+            rm = review_manager.ReviewManager()
+            rm.remove_review(self.user, '333333')
+        except:
+            error = True
 
-    def _not_manager(self):
-        self.user.pk = '909090'
+        # Check result
+        self.assertFalse(error)
+        self.assertFalse('333333' in self.offering)
+        self.assertEquals(self.offering.rating, 4.0)
+
+        self.offering.save.assert_called_once_with()
+        rev_object.delete.assert_called_once_with()
 
     @parameterized.expand([
         (RESPONSE, '999999'),
