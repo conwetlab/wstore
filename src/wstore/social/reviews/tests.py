@@ -129,8 +129,40 @@ REVIEW3 = {
     'rating': 3
 }
 
-RESULT_REVIEWS = [REVIEW1, REVIEW2 , REVIEW3]
+RESULT_REVIEWS = [REVIEW1, REVIEW2, REVIEW3]
 
+RESPONSE = {
+    'title': 'a valid response',
+    'response': 'text of a valid response'
+}
+
+RESPONSE_MISSING_TITLE = {
+    'response': 'a missing title response'
+}
+
+RESPONSE_MISSING_RESPONSE = {
+    'title': 'missing response text'
+}
+
+RESPONSE_INV_TITLE = {
+    'title': 3,
+    'response': 'invalid title type response'
+}
+
+RESPONSE_INV_RESP = {
+    'title': 'a valid title',
+    'response': 12
+}
+
+RESPONSE_INV_LEN_TITLE = {
+    'title': 'An example response title with more than 60 characters used for testing',
+    'response': 'a valid response'
+}
+
+RESPONSE_INV_LEN_RESP = {
+    'title': 'a valid title',
+    'response': 'This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. '
+}
 
 ##########################################################################
 ############################## Test case #################################
@@ -311,7 +343,6 @@ class ReviewTestCase(TestCase):
         # Create review mock
         rev = MagicMock()
 
-        #import ipdb; ipdb.set_trace()
         # Create review mock objects
         review1 = self._create_review_mock(REVIEW1)
         review2 = self._create_review_mock(REVIEW2)
@@ -350,10 +381,103 @@ class ReviewTestCase(TestCase):
     def test_remove_review(self):
         pass
 
-    def test_create_response(self):
-        pass
+    def _invalid_rev(self):
+        review_manager.Review = MagicMock()
+        review_manager.Review.objects.get.side_effect = Exception('Invalid review')
 
-    def test_remove_response(self):
-        pass
+    def _invalid_usr_resp(self):
+        self.user.userprofile.current_organization = MagicMock()
 
+    def _not_manager(self):
+        self.user.pk = '909090'
 
+    @parameterized.expand([
+        (RESPONSE, '999999'),
+        (('title',), '999999', None, TypeError, 'Invalid response type'),
+        (RESPONSE_MISSING_TITLE, '999999', None, ValueError, 'Missing a required field in response'),
+        (RESPONSE_MISSING_RESPONSE, '999999', None, ValueError, 'Missing a required field in response'),
+        (RESPONSE_INV_TITLE, '999999', None, TypeError, 'Invalid title format'),
+        (RESPONSE_INV_RESP, '999999', None, TypeError, 'Invalid response text format'),
+        (RESPONSE_INV_LEN_TITLE, '999999', None, ValueError, 'Response title cannot contain more than 60 characters'),
+        (RESPONSE_INV_LEN_RESP, '999999', None, ValueError, 'Response text cannot contain more than 200 characters'),
+        (RESPONSE, 100, None, TypeError, 'The review id must be an string'),
+        (RESPONSE, '111111', _invalid_rev, ValueError, 'Invalid review id'),
+        (RESPONSE, '111111', _invalid_usr_resp, PermissionDenied, 'The user cannot respond the current review'),
+        (RESPONSE, '111111', _not_manager, PermissionDenied, 'The user cannot respond the current review')
+    ])
+    def test_create_response(self, response, review_id, side_effect=None, err_type=None, err_msg=None):
+
+        # Create offering and user mocks
+        review_manager.Review = MagicMock()
+        rev_object = MagicMock()
+        self.offering.owner_organization = self.org
+        self.org.managers = [self.user.pk]
+        rev_object.offering = self.offering
+        review_manager.Review.objects.get.return_value = rev_object
+
+        resp_object = MagicMock()
+        review_manager.Response = MagicMock()
+        review_manager.Response.return_value = resp_object
+
+        # Create review mock
+        if side_effect:
+            side_effect(self)
+
+        # Call the method
+        error = None
+        try:
+            rm = review_manager.ReviewManager()
+            rm.create_response(self.user, review_id, response)
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            self.assertEquals(error, None)
+            # Check calls
+            self.assertEquals(rev_object.response, resp_object)
+
+            rev_object.save.assert_called_once_with()
+            review_manager.Response.assert_called_once_with(
+                user=self.user,
+                organization=self.org,
+                timestamp=self.datetime,
+                title=response['title'],
+                response=response['response']
+            )
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
+
+    @parameterized.expand([
+        ({}, '999999', ),
+        ({}, 9999999, None, TypeError, 'The review id must be an string'),
+        ({}, '999999', _invalid_usr_resp, PermissionDenied, 'The user cannot respond the current review'),
+        ({}, '999999', _not_manager, PermissionDenied, 'The user cannot respond the current review')
+    ])
+    def test_remove_response(self, c, review_id, side_effect=None, err_type=None, err_msg=None):
+        # Create mocks
+        review_manager.Review = MagicMock()
+        rev_object = MagicMock()
+        self.offering.owner_organization = self.org
+        self.org.managers = [self.user.pk]
+        rev_object.offering = self.offering
+        review_manager.Review.objects.get.return_value = rev_object
+
+        # Call the side effect if needed
+        if side_effect:
+            side_effect(self)
+
+        error = None
+        try:
+            rm = review_manager.ReviewManager()
+            rm.remove_response(self.user, review_id)
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            self.assertEquals(error, None)
+            # Check calls
+            rev_object.response.delete.assert_called_with()
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(error), err_msg)
