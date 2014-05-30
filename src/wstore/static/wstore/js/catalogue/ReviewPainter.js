@@ -88,7 +88,7 @@
      */
     ReviewPainter.prototype.scrollHandler = function scrollHandler(evnt) {
         if (this.extended) {
-            if (($('.btn-resize').offset().top <= $('h2:contains(Reviews)').offset().top + 54)){
+            if (($('.btn-resize').offset().top <= $('h2:contains(Reviews)').offset().top)){
                 $('.btn-resize').removeAttr('style');
             } else if (($('.btn-resize').offset().top <= $('.tab-content').offset().top + 30)) {
                 $('.btn-resize').css('left', $('.btn-resize').offset().left);
