@@ -93,7 +93,7 @@ class OfferingCollection(Resource):
 
         # Read the query string in order to know the filter and the page
         filter_ = request.GET.get('filter', 'published')
-        user = User.objects.get(username=request.user)
+        user = request.user
         action = request.GET.get('action', None)
         sort = request.GET.get('sort', None)
 
