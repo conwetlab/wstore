@@ -391,7 +391,8 @@ class ReviewTestCase(TestCase):
     @parameterized.expand([
         (EXAMPLE_REVIEW, '999999', 3.5),
         (EXAMPLE_REVIEW, 999999, 0, None, TypeError, 'The review id must be an string'),
-        (EXAMPLE_REVIEW, '999999', 0, _update_not_allowed, PermissionDenied, 'The user cannot update the current review')
+        (EXAMPLE_REVIEW, '999999', 0, _update_not_allowed, PermissionDenied, 'The user cannot update the current review'),
+        (REVIEW_MISSING_TITLE, '999999', 0, None, ValueError, 'Missing required field')
     ])
     def test_update_reviews(self, review_data, review_id, exp_rate, side_effect=None, err_type=None, err_msg=None):
 
