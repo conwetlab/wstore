@@ -811,7 +811,7 @@ a.tag {
 
 .comment-entry {
   width: 360px;
-  height: 125px;
+  height: 140px;
   display: inline;
   float: left;
   margin: 15px;
@@ -826,7 +826,7 @@ a.tag {
 }
 
 #comments {
-  height: 310px;
+  height: 340px;
   overflow: hidden;
   -webkit-transition: height linear 4s;  /* For Safari 3.1 to 6.0 */
   transition: height linear 4s;

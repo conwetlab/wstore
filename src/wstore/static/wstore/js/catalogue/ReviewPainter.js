@@ -125,10 +125,11 @@
     ReviewPainter.prototype.paintComments = function paintComments(comments) {
         for (var i = 0; i < comments.length; i++) {
             var templ;
+            var username = comments[i].user;
 
             $.template('commentTemplate', $('#comment_template'));
             templ = $.tmpl('commentTemplate', {
-                'user': comments[i].user,
+                'user': username,
                 'timestamp': comments[i].timestamp.split(' ')[0],
                 'title': comments[i].title,
                 'comment': comments[i].comment
