@@ -91,7 +91,7 @@ class SearchEngine():
             # perform the query
             query = QueryParser('content', index.schema).parse(unicode(text))
 
-            search_result = searcher.search(query)
+            search_result = searcher.search(query, limit=None)
 
             result = []
             # The get_offering_info method is imported inside this method in order to avoid a cross-reference import error
