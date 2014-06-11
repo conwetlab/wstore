@@ -1,4 +1,3 @@
-
 [
     {
         "pk": "51000aba8e05ac2115f022f9",
@@ -20,15 +19,15 @@
         "pk": "515ab0738e05ac20b622888b",
         "model": "sites.site",
         "fields": {
-            "domain": "http://antares.ls.fi.upm.es:8000",
-            "name": "antares"
+            "domain": "http://localhost:8000",
+            "name": "local"
         }
     },
     {
         "pk": "51070aba8e05cc2115f022f9",
         "model": "auth.user",
         "fields": {
-            "username": "test_user2",
+            "username": "test_user1",
             "first_name": "",
             "last_name": "",
             "email": "admin@c.com",
@@ -41,10 +40,85 @@
         }
     },
     {
-        "pk": "61000aba8e05ac2115f022f9",
+        "pk": "91000aba8e06ac2115f022f0",
+        "model": "wstore.Organization",
+        "fields": {
+            "name": "test_organization",
+            "offerings_purchased": [],
+            "managers": []
+        }
+    },
+    {
+        "pk": "61000aba8e05ac2115111111",
         "model": "wstore.Offering",
         "fields": {
             "name": "test_offering1",
+            "owner_admin_user": "51070aba8e05cc2115f022f9",
+            "version": "1.0",
+            "state": "published",
+            "marketplaces": [],
+            "rating": "3",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-01 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
+        }
+    },
+    {
+        "pk": "61000aba8e05ac2115122222",
+        "model": "wstore.Offering",
+        "fields": {
+            "name": "test_offering2",
+            "owner_admin_user": "51070aba8e05cc2115f022f9",
+            "version": "1.0",
+            "state": "published",
+            "marketplaces": [],
+            "rating": "5",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-02 17:06:46",
+            "publication_date": "2013-02-06 17:06:46"
+        }
+    },
+    {
+        "pk": "61000aba8e05ac2115133333",
+        "model": "wstore.Offering",
+        "fields": {
+            "name": "test_offering3",
+            "owner_admin_user": "51070aba8e05cc2115f022f9",
+            "version": "1.0",
+            "state": "published",
+            "marketplaces": [],
+            "rating": "0",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-03 17:06:46",
+            "publication_date": "2013-02-07 17:06:46"
+        }
+    },
+    {
+        "pk": "61000aba8e05ac2115144444",
+        "model": "wstore.Offering",
+        "fields": {
+            "name": "test_offering4",
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
@@ -55,165 +129,97 @@
             "image_url": "/media/test_organization__test_offering1__1.0/image.png",
             "related_images": [],
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
-            "resources": ["61000bba8e05ac2116f022f9"],
+            "resources": [],
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
-            "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "creation_date": "2013-02-04 17:06:46",
+            "publication_date": "2013-02-08 17:06:46"
         }
     },
     {
-        "pk": "61000aba8e05ac2115f022ff",
+        "pk": "61000aba8e05ac2115155555",
         "model": "wstore.Offering",
         "fields": {
-            "name": "test_offering2",
+            "name": "test_offering5",
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
-            "state": "published",
+            "state": "uploaded",
             "marketplaces": [],
             "rating": "0",
             "comments": [],
             "tags": [],
-            "image_url": "/media/test_organization__test_offering2__1.1/image.png",
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
             "related_images": [],
-            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1",
-            "resources": ["61000bba8e05ac2116f022f9"],
-            "owner_organization": "91000aba8e06ac2115f022f0",
-            "offering_description": {},
-            "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
-        }
-    },
-    {
-        "pk": "61000aba8e05ac2115f022f0",
-        "model": "wstore.Offering",
-        "fields": {
-            "name": "uploaded_offering",
-            "owner_admin_user": "51000aba8e05ac2115f022f9",
-            "version": "1.0",
-            "state": "uploaded",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
-            "rating": "0",
-            "comments": [],
-            "tags": [],
-            "image_url": "/media/test_organization__test_offering3__1.0/image.png",
-            "related_images": [],
-            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
-            "resources": ["61000bba8e05ac2116f022f9"],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46"
         }
     },
     {
-        "pk": "61000a0a8905ac2115f022f0",
+        "pk": "61000aba8e05ac2115166666",
         "model": "wstore.Offering",
         "fields": {
-            "name": "purchased_offering",
+            "name": "test_offering6",
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
-            "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "state": "uploaded",
+            "marketplaces": [],
             "rating": "0",
             "comments": [],
             "tags": [],
-            "image_url": "/media/test_organization__test_offering3__1.0/image.png",
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
             "related_images": [],
-            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
-            "resources": ["61000bba8e05ac2116f022f9"],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
-            "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "creation_date": "2013-02-06 17:06:46"
         }
     },
     {
-        "pk": "61005aba8e05ac2116f022f4",
-        "model": "wstore.Purchase",
-        "fields": {
-            "ref": "61105aba8e05ac2115f022f0",
-            "customer": "51000aba8e05ac2115f022f9",
-            "organization_owned": false,
-            "owner_organization": "",
-            "date": "2013-02-05 17:06:46",
-            "offering": "61000a0a8905ac2115f022f0",
-            "state": "paid",
-            "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
-            "tax_address": {
-                "street": "test street",
-                "postal": "20000",
-                "city": "test city",
-                "country": "test country"
-            }
-        }
-    },
-	{
-        "pk": "a1000b3488052c2116102af9",
-        "model": "charging_engine.contract",
-        "fields": {
-            "pricing_model": {
-                "subscription": [{
-                    "title": "price component 1",
-                    "unit": "per month",
-                    "currency": "euros",
-                    "value": "5",
-                    "renovation_date": "1990-02-05 17:06:46"
-                },
-                {
-                    "title": "price component 2",
-                    "unit": "per week",
-                    "currency": "euros",
-                    "value": "5",
-                    "renovation_date": "1990-02-05 17:06:46"
-                }]
-            },
-            "applied_sdrs": [],
-            "charges": [{
-                "cost": 10,
-                "currency": "euros",
-                "concept": "initial"
-            }],
-            "purchase": "61005aba8e05ac2116f022f4"
-        }
-    },
-    {
-        "pk": "91000aba8e06ac2115f022f0",
-        "model": "wstore.Organization",
-        "fields": {
-            "name": "test_organization",
-            "offerings_purchased": [],
-            "managers": []
-        }
-    },
-    {
-        "pk": "91000aba8e11111115f022f0",
-        "model": "wstore.Organization",
-        "fields": {
-            "name": "test_organization1",
-            "offerings_purchased": [],
-            "managers": []
-        }
-    },
-    {
-        "pk": "6108888a8905ac2115f022f0",
+        "pk": "61000aba8e05ac2115177777",
         "model": "wstore.Offering",
         "fields": {
-            "name": "purchased_offering3",
+            "name": "test_offering7",
             "owner_admin_user": "51000aba8e05ac2115f022f9",
-            "version": "1.1",
-            "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "version": "1.0",
+            "state": "deleted",
+            "marketplaces": [],
             "rating": "0",
             "comments": [],
             "tags": [],
-            "image_url": "/media/test_organization__test_offering3__1.0/image.png",
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
             "related_images": [],
-            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
-            "resources": ["61000bba8e05ac2116f022f9"],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
-            "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "creation_date": "2013-02-07 17:06:46",
+            "publication_date": "2013-02-10 17:06:46"
+        }
+    },
+    {
+        "pk": "61000aba8e05ac2115188888",
+        "model": "wstore.Offering",
+        "fields": {
+            "name": "test_offering8",
+            "owner_admin_user": "51000aba8e05ac2115f022f9",
+            "version": "1.0",
+            "state": "deleted",
+            "marketplaces": [],
+            "rating": "0",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/test_organization__test_offering1__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-08 17:06:46",
+            "publication_date": "2013-02-11 17:06:46"
         }
     },
     {
@@ -222,10 +228,10 @@
         "fields": {
             "ref": "61105aba8e05ac2115f022f0",
             "customer": "51000aba8e05ac2115f022f9",
-            "organization_owned": true,
+            "organization_owned": false,
             "owner_organization": "91000aba8e11111115f022f0",
             "date": "2013-02-05 17:06:46",
-            "offering": "6108888a8905ac2115f022f0",
+            "offering": "61000aba8e05ac2115111111",
             "state": "paid",
             "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
             "tax_address": {
@@ -236,7 +242,7 @@
             }
         }
     },
-	{
+    {
         "pk": "a155555488052c2116102af9",
         "model": "charging_engine.contract",
         "fields": {
@@ -266,17 +272,52 @@
         }
     },
     {
-        "pk": "61000bba8e05ac2116f022f9",
-        "model": "wstore.Resource",
+        "pk": "61005ab666666777777022f4",
+        "model": "wstore.Purchase",
         "fields": {
-            "name": "test_resource",
-            "version": "1.0",
-            "provider": "51000aba8e05ac2115f022f9",
-            "description": "Example resource",
-            "state": "uploaded",
-            "download_link": "",
-            "resource_path": "/media/resources/test_user__test_resource__1.0",
-            "offerings": ["61000aba8e05ac2115f022f0"]
+            "ref": "61105aba8e05ac2115f022f0",
+            "customer": "51000aba8e05ac2115f022f9",
+            "organization_owned": false,
+            "owner_organization": "91000aba8e11111115f022f0",
+            "date": "2013-02-05 17:06:46",
+            "offering": "61000aba8e05ac2115122222",
+            "state": "paid",
+            "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
+        }
+    },
+    {
+        "pk": "a15555548333333116102af9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {
+                "subscription": [{
+                    "title": "price component 1",
+                    "unit": "per month",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                },
+                {
+                    "title": "price component 2",
+                    "unit": "per week",
+                    "currency": "euros",
+                    "value": "5",
+                    "renovation_date": "1990-02-05 17:06:46"
+                }]
+            },
+            "applied_sdrs": [],
+            "charges": [{
+                "cost": 10,
+                "currency": "euros",
+                "concept": "initial"
+            }],
+            "purchase": "61005ab666666777777022f4"
         }
     }
 ]
