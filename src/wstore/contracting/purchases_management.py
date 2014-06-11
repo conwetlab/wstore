@@ -41,8 +41,7 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
     or (not org_owned and offering.pk in profile.offerings_purchased):
             raise Exception('The offering has been already purchased')
 
-    if org_owned:
-        organization = profile.current_organization
+    organization = profile.current_organization
 
     plan = None
     # Check the selected plan
@@ -98,12 +97,9 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
         offering=offering,
         organization_owned=org_owned,
         state='pending',
-        tax_address=tax
+        tax_address=tax,
+        owner_organization = organization
     )
-
-    # Include the owner organization if needed
-    if org_owned:
-        purchase.owner_organization = organization
 
     # Load ref
     purchase.ref = purchase.pk
