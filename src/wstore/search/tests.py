@@ -22,10 +22,13 @@ from __future__ import unicode_literals
 
 import os
 from decimal import Decimal
+from datetime import datetime
+from mock import MagicMock
 from whoosh.fields import Schema, TEXT, KEYWORD, NUMERIC, DATETIME
 from whoosh.index import create_in, open_dir
 from whoosh.qparser import QueryParser
 from nose_parameterized import parameterized
+from whoosh import query
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -62,6 +65,13 @@ RESULT_PUBLISHED = ['test_offering1', 'test_offering2', 'test_offering3', 'test_
 RESULT_COUNT = {
     'count': 4
 }
+
+QUERY_PUB = (query.Term('id', '61000aba8e05ac2115155555') & query.Term('state', 'published'))
+QUERY_DEL = (query.Term('id', '61000aba8e05ac2115144444') & query.Term('state', 'deleted'))
+QUERY_RATED = (query.Term('id', '61000aba8e05ac2115122222') & query.Term('popularity', Decimal(3)))
+QUERY_CONTENT = (query.Term('id', '61000aba8e05ac2115166666') & query.Term('content', 'updated'))
+QUERY_PURCH = (query.Term('id', '61000aba8e05ac2115122222'))
+
 
 class IndexCreationTestCase(TestCase):
 
@@ -147,7 +157,7 @@ def _create_index(user):
 
     index_writer.commit()
 
-def _remove_index(ins):
+def _remove_index(ins, off=None, sa=None):
     path = settings.BASEDIR + '/wstore/test/test_index'
     files = os.listdir(path)
     for f in files:
@@ -246,3 +256,116 @@ class FullTextSearchTestCase(TestCase):
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
+
+
+class UpdateIndexTestCase(TestCase):
+
+    tags = ('fiware-ut-6',)
+    fixtures = ['update_index.json']
+
+    @classmethod
+    def setUpClass(cls):
+        from wstore.offerings import offerings_management
+        offerings_management.USDLParser = FakeUSDLParser
+        cls.date=datetime.now()
+
+        super(UpdateIndexTestCase, cls).setUpClass()
+
+    def tearDown(self):
+        try:
+            _remove_index(self)
+        except:
+            pass
+
+    def setUp(self):
+        # Fill user info
+        user = User.objects.get(username='test_user')
+        for p in Purchase.objects.all():
+            user.userprofile.offerings_purchased.append(p.offering.pk)
+
+        user.userprofile.save()
+
+        # Include user private organization in the offerings
+        for o in Offering.objects.filter(owner_admin_user=user):
+            o.owner_organization = user.userprofile.current_organization
+            o.save()
+
+        if os.path.exists(settings.BASEDIR + '/wstore/test/test_index'):
+            _remove_index(self)
+
+        _create_index(user)
+
+    def _update_published(self, offering, sa=None):
+        offering.state = "published"
+        offering.publication_date = self.date
+        offering.save()
+
+    def _update_deleted(self, offering, sa=None):
+        offering.state = "deleted"
+        offering.save()
+
+    def _update_rated(self, offering, sa=None):
+        offering.rating = 3.0
+        offering.save()
+
+    def _update_content(self, offering, sa=None):
+        sa._aggregate_text = MagicMock()
+        sa._aggregate_text.return_value = "updated"
+
+    def _update_purchased(self, offering, sa=None):
+        user = User.objects.get(pk="51000aba8e05ac2115f022f9")
+
+        Purchase.objects.create(
+            customer=user,
+            date=self.date,
+            offering=offering,
+            organization_owned=False,
+            state='pending',
+            tax_address={},
+            owner_organization = user.userprofile.current_organization
+        )
+
+    @parameterized.expand([
+        (_update_published, '61000aba8e05ac2115155555', QUERY_PUB),
+        (_update_deleted, '61000aba8e05ac2115144444', QUERY_DEL),
+        (_update_rated, '61000aba8e05ac2115111111', QUERY_RATED),
+        (_update_content, '61000aba8e05ac2115166666', QUERY_CONTENT),
+        (_update_purchased, '61000aba8e05ac2115122222', QUERY_PURCH, True),
+        (_remove_index, '', None, False, Exception, 'The index does not exists')
+    ])
+    def test_update_index(self, update_method, offering, query_, owned=False, err_type=None, err_msg=None):
+
+        # Get the offering
+        off = None
+        if not err_type:
+            off = Offering.objects.get(pk=offering)
+
+        # Create the search engine
+        se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
+
+        # Call the update method
+        update_method(self, off, sa=se)
+
+        # Call full text search
+        error = None
+        try:
+            se.update_index(off)
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            self.assertEquals(error, None)
+            index = open_dir(settings.BASEDIR + '/wstore/test/test_index')
+
+            with index.searcher() as searcher:
+                if owned:
+                    user = User.objects.get(pk="51000aba8e05ac2115f022f9")
+                    pk = user.userprofile.current_organization.pk
+                    query_ = query_ & query.Term('purchaser', pk)
+
+                search_result = searcher.search(query_)
+
+                self.assertEquals(len(search_result), 1)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(error), err_msg)
