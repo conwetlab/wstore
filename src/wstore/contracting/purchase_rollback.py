@@ -18,13 +18,20 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+import os
+
+from django.conf import settings
+
 from wstore.models import Purchase
 from wstore.models import UserProfile
+from wstore.search.search_engine import SearchEngine
 
 
 def rollback(purchase):
     # If the purchase state is paid means that the purchase has been made
     # so the models must not be deleted
+    offering = purchase.offering
+
     if purchase.state != 'paid':
 
         # Check that the payment has been made
@@ -76,6 +83,14 @@ def rollback(purchase):
             if not purchase.offering.pk in profile.offerings_purchased:
                 profile.offerings_purchased.append(purchase.offering.pk)
                 profile.save()
+
+    # Update offering indexes: Offering index must be updated in any case
+    index_path = os.path.join(settings.BASEDIR, 'wstore')
+    index_path = os.path.join(index_path, 'search')
+    index_path = os.path.join(index_path, 'indexes')
+
+    se = SearchEngine(index_path)
+    se.update_index(offering)
 
 
 # This class is used as a decorator to avoid inconsistent states in
