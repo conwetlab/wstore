@@ -682,6 +682,14 @@ def update_offering(offering, data):
 
     offering.save()
 
+    # Update offering indexes
+    index_path = os.path.join(settings.BASEDIR, 'wstore')
+    index_path = os.path.join(index_path, 'search')
+    index_path = os.path.join(index_path, 'indexes')
+
+    se = SearchEngine(index_path)
+    se.update_index(offering)
+
 
 def publish_offering(offering, data):
 
