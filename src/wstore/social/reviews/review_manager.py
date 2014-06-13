@@ -20,12 +20,15 @@
 
 from __future__ import unicode_literals
 
+import os
 from datetime import datetime
 
 from django.core.exceptions import PermissionDenied
+from django.conf import settings
 
 from wstore.models import Offering, Context
 from wstore.social.reviews.models import Review, Response
+from wstore.search.search_engine import SearchEngine
 
 
 class ReviewManager():
@@ -137,6 +140,14 @@ class ReviewManager():
 
         offering.save()
 
+        # Update offering indexes
+        index_path = os.path.join(settings.BASEDIR, 'wstore')
+        index_path = os.path.join(index_path, 'search')
+        index_path = os.path.join(index_path, 'indexes')
+
+        se = SearchEngine(index_path)
+        se.update_index(offering)
+
         # Save the offering as rated
         if user.userprofile.is_user_org():
             user.userprofile.rated_offerings.append(offering.pk)
@@ -225,6 +236,14 @@ class ReviewManager():
         rev.offering.rating = rate
         rev.offering.save()
 
+        # Update offering indexes
+        index_path = os.path.join(settings.BASEDIR, 'wstore')
+        index_path = os.path.join(index_path, 'search')
+        index_path = os.path.join(index_path, 'indexes')
+
+        se = SearchEngine(index_path)
+        se.update_index(rev.offering)
+
         # Update top rated offerings
         self._update_top_rated()
 
@@ -241,6 +260,14 @@ class ReviewManager():
         # Update offering rating
         rev.offering.rating = ((rev.offering.rating * (len(rev.offering.comments) + 1)) - rev.rating) / len(rev.offering.comments)
         rev.offering.save()
+
+        # Update offering indexes
+        index_path = os.path.join(settings.BASEDIR, 'wstore')
+        index_path = os.path.join(index_path, 'search')
+        index_path = os.path.join(index_path, 'indexes')
+
+        se = SearchEngine(index_path)
+        se.update_index(rev.offering)
 
         # Update top rated offerings
         self._update_top_rated()
