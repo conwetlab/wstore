@@ -753,6 +753,14 @@ def delete_offering(offering):
         offering.state = 'deleted'
         offering.save()
 
+        # Update offering indexes
+        index_path = os.path.join(settings.BASEDIR, 'wstore')
+        index_path = os.path.join(index_path, 'search')
+        index_path = os.path.join(index_path, 'indexes')
+
+        se = SearchEngine(index_path)
+        se.update_index(offering)
+
         context = Context.objects.all()[0]
         # Check if the offering is in the newest list
         if offering.pk in context.newest:
