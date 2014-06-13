@@ -20,24 +20,27 @@
 
 import json
 import rdflib
+import types
 from mock import MagicMock
 from urllib2 import HTTPError
 
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.test.client import RequestFactory
+from django.contrib.sites.models import Site
+from social_auth.db.django_models import UserSocialAuth
 
 from wstore.contracting import purchases_management
-from wstore.contracting.purchase_rollback import rollback
+from wstore.contracting import purchase_rollback
+import wstore.contracting.purchase_rollback
+
 from wstore.contracting import notify_provider
 from wstore.models import Offering, Context
 from wstore.models import Organization
 from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.charging_engine.models import Contract
-from social_auth.db.django_models import UserSocialAuth
 from wstore.contracting import views
-from django.contrib.sites.models import Site
 
 
 __test__ = False
@@ -65,11 +68,34 @@ class PurchasesCreationTestCase(TestCase):
         purchases_management.generate_bill = fake_generate_bill
         purchases_management.ChargingEngine = FakeChargingEngine
         purchases_management.ChargingEngine.resolve_charging = MagicMock(name='resolve_charging')
+
+        # Save the reference of the decorators
+        cls._old_roll = types.FunctionType(
+            purchase_rollback.rollback.func_code,
+            purchase_rollback.rollback.func_globals,
+            name=purchase_rollback.rollback.func_name,
+            argdefs=purchase_rollback.rollback.func_defaults,
+            closure=purchase_rollback.rollback.func_closure
+        )
+
+        # Mock class decorators
+        wstore.contracting.purchase_rollback.rollback = MagicMock()
+
+        reload(purchases_management)
+        # Mock purchases rollback
         super(PurchasesCreationTestCase, cls).setUpClass()
 
+    @classmethod
+    def tearDownClass(cls):
+        wstore.contracting.purchase_rollback.rollback = cls._old_roll
+        super(PurchasesCreationTestCase, cls).tearDownClass()
+
     def setUp(self):
-        purchases_management.ChargingEngine.resolve_charging.reset_mock()
+        purchases_management.ChargingEngine.resolve_charging = MagicMock()
         purchases_management.ChargingEngine.resolve_charging.return_value = None
+        purchases_management.SearchEngine = MagicMock()
+        se_obj = MagicMock()
+        purchases_management.SearchEngine.return_value = se_obj
 
     def test_basic_purchase_creation(self):
 
@@ -469,6 +495,11 @@ class PurchaseRollbackTestCase(TestCase):
 
     fixtures = ['purch_rollback.json']
 
+    def setUp(self):
+        se_object = MagicMock()
+        purchase_rollback.SearchEngine = MagicMock()
+        purchase_rollback.SearchEngine.return_value = se_object
+
     def test_rollback_not_paid_exeption(self):
 
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
@@ -478,7 +509,7 @@ class PurchaseRollbackTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
-        rollback(purchase)
+        purchase_rollback.rollback(purchase)
 
         # Check the final state of the database
         error = False
@@ -501,7 +532,7 @@ class PurchaseRollbackTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02111')
-        rollback(purchase)
+        purchase_rollback.rollback(purchase)
 
         # Check the final state of the database
         error_purch = False
@@ -534,7 +565,7 @@ class PurchaseRollbackTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02222')
-        rollback(purchase)
+        purchase_rollback.rollback(purchase)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02222')
 
@@ -553,7 +584,7 @@ class PurchaseRollbackTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02333')
-        rollback(purchase)
+        purchase_rollback.rollback(purchase)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f02333')
 

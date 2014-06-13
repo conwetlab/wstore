@@ -45,7 +45,6 @@ from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.utils.name import is_valid_id
-from wstore.social.reviews.models import Review
 
 
 def get_offering_info(offering, user):

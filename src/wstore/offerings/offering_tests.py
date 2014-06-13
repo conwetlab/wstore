@@ -471,6 +471,11 @@ class OfferingUpdateTestCase(TestCase):
         cls._usdl = f.read()
         super(OfferingUpdateTestCase, cls).setUpClass()
 
+    def setUp(self):
+        offerings_management.SearchEngine = MagicMock()
+        self.se_object = MagicMock()
+        offerings_management.SearchEngine.return_value = self.se_object
+
     def test_basic_offering_update(self):
         data = {
             'offering_description': {
@@ -501,6 +506,8 @@ class OfferingUpdateTestCase(TestCase):
         plan = usdl_content['pricing']['price_plans'][0]
         self.assertEqual(plan['title'], 'Free use')
 
+        self.se_object.update_index.assert_called_with(offering)
+
     def test_offering_update_from_url(self):
 
         data = {
@@ -528,6 +535,7 @@ class OfferingUpdateTestCase(TestCase):
 
         plan = usdl_content['pricing']['price_plans'][0]
         self.assertEqual(plan['title'], 'Free use')
+        self.se_object.update_index.assert_called_with(offering)
 
     def test_offering_update_published(self):
 
@@ -942,7 +950,13 @@ class OfferingPublicationTestCase(TestCase):
         connection = pymongo.MongoClient()
         cls._db = connection.test_database
         offerings_management.MarketAdaptor = FakeMarketAdaptor
+
         super(OfferingPublicationTestCase, cls).setUpClass()
+
+    def setUp(self):
+        offerings_management.SearchEngine = MagicMock()
+        self.se_object = MagicMock()
+        offerings_management.SearchEngine.return_value = self.se_object
 
     def test_basic_publication(self):
         data = {
@@ -953,6 +967,7 @@ class OfferingPublicationTestCase(TestCase):
 
         offering = Offering.objects.get(name='test_offering1')
         self.assertEqual(offering.state, 'published')
+        self.se_object.update_index.assert_called_with(offering)
 
     def test_publication_marketplace(self):
         data = {
@@ -966,6 +981,7 @@ class OfferingPublicationTestCase(TestCase):
         self.assertEqual(len(offering.marketplaces), 1)
         market = Marketplace.objects.get(pk=offering.marketplaces[0])
         self.assertEqual(market.name, 'test_market')
+        self.se_object.update_index.assert_called_with(offering)
 
     def test_publication_not_existing_marketplace(self):
         data = {
@@ -1109,6 +1125,11 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
         super(OfferingDeletionTestCase, cls).setUpClass()
 
+    def setUp(self):
+        offerings_management.SearchEngine = MagicMock()
+        self.se_object = MagicMock()
+        offerings_management.SearchEngine.return_value = self.se_object
+
     def test_delete_uploaded_offering(self):
         offering = Offering.objects.get(name='test_offering')
         # Mock os
@@ -1127,9 +1148,11 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.delete_offering(offering)
         offering = Offering.objects.get(name='test_offering2')
         self.assertEqual(offering.state, 'deleted')
+        self.se_object.update_index.assert_called_with(offering)
 
     def test_delete_published_offering_marketplace(self):
         offering = Offering.objects.get(name='test_offering3')
         offerings_management.delete_offering(offering)
         offering = Offering.objects.get(name='test_offering3')
         self.assertEqual(offering.state, 'deleted')
+        self.se_object.update_index.assert_called_with(offering)

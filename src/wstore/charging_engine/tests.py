@@ -119,6 +119,7 @@ class SinglePaymentChargingTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        reload(charging_engine)
         charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'

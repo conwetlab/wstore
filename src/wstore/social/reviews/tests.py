@@ -175,6 +175,10 @@ class ReviewTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        se_obj = MagicMock()
+        review_manager.SearchEngine = MagicMock();
+        review_manager.SearchEngine.return_value = se_obj
+
         super(ReviewTestCase, cls).setUpClass()
 
     def setUp(self):
