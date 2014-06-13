@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 import os
 import json
 import rdflib
+from decimal import Decimal
 from whoosh.fields import Schema, TEXT, NUMERIC, DATETIME, KEYWORD
 from whoosh.index import create_in, open_dir
 from whoosh.qparser import QueryParser
@@ -103,7 +104,6 @@ class SearchEngine():
 
         purchasers_text = self._aggregate_purchasers(offering)
 
-        from decimal import Decimal
         # Add the new document
         index_writer.add_document(
             id=unicode(offering.pk),
@@ -121,7 +121,35 @@ class SearchEngine():
         """
         Update the document of a concrete offering in the search index
         """
-        pass
+
+        if not os.path.exists(self._index_path) or os.listdir(self._index_path) == []:
+            raise Exception('The index does not exists')
+
+        index = open_dir(self._index_path)
+
+        index_writer = index.writer()
+        text = self._aggregate_text(offering)
+        purchasers_text = self._aggregate_purchasers(offering)
+
+        in_date = None
+        if offering.state == 'uploaded':
+            in_date = offering.creation_date
+        else:
+            in_date = offering.publication_date
+
+        # Get the document
+        index_writer.update_document(
+            id=unicode(offering.pk),
+            owner=unicode(offering.owner_organization.pk),
+            content=unicode(text),
+            name=unicode(offering.name),
+            popularity=Decimal(offering.rating),
+            date=in_date,
+            state=unicode(offering.state),
+            purchaser=purchasers_text
+        )
+
+        index_writer.commit()
 
     def full_text_search(self, user, text, state=None, count=False, pagination=None, sort=None):
         """
