@@ -233,6 +233,6 @@ class SearchEngine():
                     offering = Offering.objects.get(pk=hit['id'])
                     result.append(get_offering_info(offering, user))
             else:
-                result = {'count': len(search_result)}
+                result = {'number': len(search_result)}
 
         return result
