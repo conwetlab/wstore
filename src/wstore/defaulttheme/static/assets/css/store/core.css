@@ -825,6 +825,11 @@ a.tag {
   left: 330px;
 }
 
+.comment-entry span {
+  float: left;
+  margin-right: 15px;
+}
+
 #comments {
   height: 340px;
   overflow: hidden;
