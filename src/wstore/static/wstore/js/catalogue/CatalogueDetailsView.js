@@ -215,7 +215,7 @@
 
         // Form for comment and rate the offering
         if (this.offeringElement.getComments().length) {
-            var reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'));
+            var reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'), this);
             reviewPainter.paint();
         }
         // Calculate positions on resize

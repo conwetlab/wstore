@@ -20,7 +20,7 @@
 
 (function() {
 
-    ReviewPainter = function ReviewPainter(offeringElement, container) {
+    ReviewPainter = function ReviewPainter(offeringElement, container, callerObj) {
         // Build reviews endpoint
         var endp = EndpointManager.getEndpoint('REVIEW_COLLECTION', {
             'organization': offeringElement.getOrganization(),
@@ -36,6 +36,7 @@
         this.client = new ServerClient('', endp, true);
         this.extended = false;
         this.prevScrollPos = 0;
+        this.callerObj = callerObj;
     };
 
     var resizeHandlerDecrease = function resizeHandlerDecrease(self) {
@@ -109,7 +110,7 @@
         // Show review button if needed
         if (this.offeringElement.getState() == 'purchased') {
             $('#comment-btn').removeClass('hide').click((function() {
-                paintCommentForm(this.offeringElement, this);
+                paintCommentForm(this.offeringElement, this.callerObj);
             }).bind(this));
         }
         // Set expand listener
