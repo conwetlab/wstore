@@ -105,6 +105,7 @@ class SearchTagEntry(Resource):
         start = request.GET.get('start', None)
         limit = request.GET.get('limit', None)
         sort = request.GET.get('sort', None)
+        state = request.GET.get('filter', None)
 
         # Check action format
         if action and not (isinstance(action,str) or isinstance(action,unicode)):
@@ -131,12 +132,16 @@ class SearchTagEntry(Resource):
             return build_response(request, 400, 'Pagination params must be equal or greater that 1')
 
         # Validate sorting
-        allowed_sorting = ['name', 'date', 'rating']
+        allowed_sorting = ['name', 'date', 'popularity']
         if sort and (not isinstance(sort, str) and not isinstance(sort, unicode)):
             return build_response(request, 400, 'Invalid sorting format')
 
         if sort and not sort in allowed_sorting:
             return build_response(request, 400, 'Invalid sorting value')
+
+        # Validate state
+        if state and state != 'published' and state != 'purchased':
+            return build_response(request, 400, 'Invalid filter')
 
         try:
             # Build tag manager
@@ -148,15 +153,18 @@ class SearchTagEntry(Resource):
                     'number': tm.count_offerings(tag)
                 }
             else:
-                if (start and limit) and not sort:
-                    offerings = tm.search_by_tag(tag, start=start, limit=limit)
-                else:
-                    offerings = tm.search_by_tag(tag)
+                offerings = tm.search_by_tag(tag)
 
                 response = []
                 # Get offering info
                 for off in offerings:
-                    response.append(get_offering_info(off, request.user))
+                    offering_info = get_offering_info(off, request.user)
+
+                    if not state and offering_info['state'] != 'published'\
+                    and offering_info['state'] != 'purchased' and offering_info['state'] != 'rated':
+                        continue
+
+                    response.append(offering_info)
 
                 # Sort offerings if needed
                 if sort:
@@ -165,15 +173,17 @@ class SearchTagEntry(Resource):
                         rev = False
                     elif sort == 'date':
                         sort = 'publication_date'
+                    elif sort == 'popularity':
+                        sort = 'rating'
 
                     response = sorted(response, key=lambda off: off[sort], reverse=rev)
-                    # If sort was needed paginitation must be done after sorting
-                    if start and limit:
-                        response = response[start - 1: (limit + (start - 1))]
+
+                # If sort was needed pagination must be done after sorting
+                if start and limit:
+                    response = response[start - 1: (limit + (start - 1))]
 
         except Exception as e:
             return build_response(request, 400, unicode(e))
 
         # Create response
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json; charset=utf-8')
-
