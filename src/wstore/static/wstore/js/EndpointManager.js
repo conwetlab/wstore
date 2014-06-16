@@ -48,7 +48,7 @@
         'RSS_ENTRY': '/api/administration/rss/${name}',
         'USERPROFILE_ENTRY': '/api/administration/profiles/${username}',
         'ORGANIZATION_ENTRY': '/api/administration/organizations/${org}',
-        'ORGANIZATION_USER_ENTRY': '/api/administration/organizations/${org}/user',
+        'ORGANIZATION_USER_ENTRY': '/api/administration/organizations/${org}/users',
         'OFFERING_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}',
         'PUBLISH_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/publish',
         'TAG_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/tag',
