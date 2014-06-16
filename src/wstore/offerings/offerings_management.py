@@ -198,6 +198,8 @@ def get_offerings(user, filter_='published', owned=False, pagination=None, sort=
             sorting = 'publication_date'
         else:
             sorting = 'creation_date'
+    elif sort == 'popularity':
+        sorting = 'rating'
     else:
         sorting = sort
         if sorting == 'name':

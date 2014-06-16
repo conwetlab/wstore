@@ -81,14 +81,14 @@ class SearchEngine():
 
             # Create schema
             schema = Schema(
-                id=TEXT(stored=True),
+                id=KEYWORD(stored=True, unique=True),
                 owner=KEYWORD,
                 content=TEXT,
                 name=KEYWORD(sortable=True),
                 popularity=NUMERIC(int, decimal_places=2, sortable=True, signed=False),
                 date=DATETIME(sortable=True),
                 state=KEYWORD,
-                purchaser=KEYWORD
+                purchaser=KEYWORD(stored=True, commas=True)
             )
             # Create index
             index = create_in(self._index_path, schema)
