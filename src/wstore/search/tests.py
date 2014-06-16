@@ -63,7 +63,7 @@ RESULT_UPLOADED = ['test_offering6']
 RESULT_DELETED = ['test_offering7']
 RESULT_PUBLISHED = ['test_offering1', 'test_offering2', 'test_offering3', 'test_offering4']
 RESULT_COUNT = {
-    'count': 4
+    'number': 4
 }
 
 QUERY_PUB = (query.Term('id', '61000aba8e05ac2115155555') & query.Term('state', 'published'))
