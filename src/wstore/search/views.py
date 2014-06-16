@@ -72,7 +72,7 @@ class SearchEntry(Resource):
 
             # Check sorting values
             if sort != None:
-                if sort != 'date' and sort != 'rating' and sort != 'name':
+                if sort != 'date' and sort != 'popularity' and sort != 'name':
                     return build_response(request, 400, 'Invalid sorting')
 
         if not filter_:
