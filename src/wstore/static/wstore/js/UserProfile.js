@@ -95,6 +95,15 @@
         return this.expenditureLimits;
     };
 
+    UserProfile.prototype.orgOwnerMember = function orgOwnerMember(offering) {
+        return this.currentOrganization == offering.getOrganization();
+    };
+
+    UserProfile.prototype.isOwner = function isOwner(offering) {
+        return (this.orgOwnerMember(offering)) &&
+        ((this.username == offering.getProvider()) || ORGANIZATIONPROFILE.isManager());
+    };
+
     UserProfile.prototype.getCurrentRoles = function getCurrentRoles() {
         var orgRoles;
 

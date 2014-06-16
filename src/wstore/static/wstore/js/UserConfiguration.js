@@ -524,13 +524,8 @@ includeFilabOrgMenu = function includeFilabOrgMenu() {
 };
 
 var checkOrg = function checkOrg() {
-    // Check if organization info is needed
-    if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
-        includeFilabOrgMenu();
-    } else {
-        ORGANIZATIONPROFILE = new OrganizationProfile();
-        ORGANIZATIONPROFILE.fillUserInfo(includeFilabOrgMenu);
-    }
+    ORGANIZATIONPROFILE = new OrganizationProfile();
+    ORGANIZATIONPROFILE.fillUserInfo(includeFilabOrgMenu);
 }
 
 readyHandler = function readyHandler() {

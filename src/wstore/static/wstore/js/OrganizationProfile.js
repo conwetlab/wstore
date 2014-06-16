@@ -41,6 +41,8 @@
         }
 
         this.limits = orgInfo.limits;
+
+        this.manager = orgInfo.is_manager;
         // Notify the views that the organization profile is created
         refreshView();
     };
@@ -63,6 +65,10 @@
 
     OrganizationProfile.prototype.getExpenditureInfo = function getExpenditureInfo() {
         return this.limits;
+    };
+
+    OrganizationProfile.prototype.isManager = function isManager() {
+        return this.manager;
     };
 
     OrganizationProfile.prototype.updateProfile = function updateProfile(orgInfo, callback, errorCallback) {

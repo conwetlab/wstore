@@ -43,30 +43,35 @@
      * Displays the Catalogue Details view
      */
     CatalogueDetailsView.prototype.showView = function showView () {
-        var screen, action;
+        var screen, action, actions;
 
         // Clean the container
         $(this.container).empty();
 
-        // Load the main template
-        if (this.offeringElement.getState() == 'uploaded') {
-            action = 'Publish';
-        } else if (this.offeringElement.getState() == 'published') {
-            if (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) {
-                if (USERPROFILE.getUsername() == this.offeringElement.getProvider()) {
-                    action = 'Delete';
-                } else {
-                    action = null;
-                }
-            } else {
-                action = 'Purchase';
-            }
-        } else if (this.offeringElement.getState() == 'purchased' || this.offeringElement.getState() == 'rated') {
-            action = 'Download';
+        if (USERPROFILE.isOwner(this.offeringElement)) {
+            actions = {
+                'uploaded': 'Publish',
+                'published': 'Delete',
+                'purchased': null,
+                'rated': null,
+                'deleted': null
+            };
         } else {
-            action = null;
+           actions = {
+                'uploaded': null,
+                'published': 'Purchase',
+                'purchased': 'Download',
+                'rated': 'Download',
+                'deleted': null
+            };
         }
 
+        action = actions[this.offeringElement.getState()];
+
+        if (action == 'Purchase' && USERPROFILE.orgOwnerMember(this.offeringElement)) {
+            action = null;
+        }
+        
         $.template('detailsTemplate', $('#details_offering_template'));
         $.tmpl('detailsTemplate', {
             'name': this.offeringElement.getName(),
@@ -118,10 +123,10 @@
         }
 
         // Check tags
-        if (!this.offeringElement.getTags().length && 
-                USERPROFILE.getCurrentOrganization() != this.offeringElement.getOrganization()) {
+        if (!this.offeringElement.getTags().length && !USERPROFILE.isOwner(this.offeringElement)) {
             $('h2:contains(Tags)').addClass('hidden');
             $('#main-tab .icon-tags').addClass('hidden');
+
         } else if (this.offeringElement.getTags()) {
             // Write tags
             var tags = this.offeringElement.getTags();
@@ -146,8 +151,9 @@
             var clear = $('<div></div>').addClass('space clear');
             $('#tags').prepend(clear);
         }
+
         // Include the update Tags button if needed
-        if (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) {
+        if (USERPROFILE.isOwner(this.offeringElement)) {
 
             var updateBtn = $('<code></code>').attr('id', 'update-tags').click((function() {
                 var tagManager = new TagManager(this.offeringElement, this);
@@ -155,50 +161,51 @@
             }).bind(this));
             updateBtn.append('<i class="icon-plus"></i>');
             $('#tags').append(updateBtn);
+
+            // Set advanced operations
+            // Delete offering
+            if(this.offeringElement.getState() != 'deleted') {
+
+                $('<input></input>').attr('type', 'button').
+                                    attr('value', 'Delete offering').
+                                    addClass('btn btn-danger btn-advanced').
+                                    appendTo('#advanced-op').click((function() {
+                    var msg = "Are you sure that you want to delete the offering";
+                    MessageManager.showYesNoWindow(msg, (function() {
+                        this.deleteOffering();
+                    }).bind(this), 'Delete');
+                }).bind(this));
+            }
+
+            // Bind resources and edit the offering
+            if (this.offeringElement.getState() == 'uploaded') {
+                $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+                    var resForm = new BindResourcesForm(this.offeringElement, false, this);
+                    resForm.display();
+                }).bind(this));
+                $('<input></input>').attr('type', 'button').attr('value', 'Edit').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+                    editOfferingForm(this.offeringElement, this);
+                }).bind(this));
+            }
         }
+        // Download service model
+        $('<input></input>').attr('type', 'button').
+                            attr('value', 'Download service model').
+                            addClass('btn btn-advanced').
+                            appendTo('#advanced-op').click((function() {
+            this.getServiceModel();
+        }).bind(this));
+
+        // Set the main operation
+        $('#main-action').click((function() {
+            this.mainAction(action);
+        }).bind(this));
 
         this.buildTabs();
 
         $('#back').click((function (e) {
             $(this.container).empty();
             this.backAction();
-        }).bind(this));
-
-        // Set advanced operations
-        // Delete offering
-        if((USERPROFILE.getUsername() == this.offeringElement.getProvider()) && 
-          (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) &&
-          (this.offeringElement.getState() != 'deleted')) {
-
-            $('<input></input>').attr('type', 'button').attr('value', 'Delete offering').addClass('btn btn-danger btn-advanced').appendTo('#advanced-op').click((function() {
-                var msg = "Are you sure that you want to delete the offering";
-                MessageManager.showYesNoWindow(msg, (function() {
-                    this.deleteOffering();
-                }).bind(this), 'Delete');
-            }).bind(this));
-        }
-
-        // Download service model
-        $('<input></input>').attr('type', 'button').attr('value', 'Download service model').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
-            this.getServiceModel();
-        }).bind(this));
-
-        // Bind resources and edit the offering
-        if((USERPROFILE.getUsername() == this.offeringElement.getProvider()) && 
-          (USERPROFILE.getCurrentOrganization() == this.offeringElement.getOrganization()) && 
-          (this.offeringElement.getState() == 'uploaded')) {
-            $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
-                var resForm = new BindResourcesForm(this.offeringElement, false, this);
-                resForm.display();
-            }).bind(this));
-            $('<input></input>').attr('type', 'button').attr('value', 'Edit').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
-                editOfferingForm(this.offeringElement, this);
-            }).bind(this));
-        }
-
-        // Set the main operation
-        $('#main-action').click((function() {
-            this.mainAction(action);
         }).bind(this));
 
         //Check renovations

@@ -214,9 +214,8 @@ def get_offerings(user, filter_='published', owned=False, pagination=None, sort=
     if owned and filter_ != 'purchased':
         current_organization = user.userprofile.current_organization
         query = {
-            'owner_admin_user_id': ObjectId(user.id),
             'owner_organization_id': ObjectId(current_organization.id)
-        }   
+        }
 
         if  filter_ == 'uploaded':
             query['state'] = 'uploaded'

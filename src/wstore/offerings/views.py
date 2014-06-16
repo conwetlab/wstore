@@ -177,8 +177,9 @@ class OfferingEntry(Resource):
         try:
             # Check if the user is the owner of the offering or if is a manager of the
             # owner organization
-            if not offering.is_owner(user) and user.pk not in org.managers:
-                return build_response(request, 403, 'Forbidden')
+            if user.userprofile.current_organization != org\
+            or (not offering.is_owner(user) and not user.pk in org.managers):
+                return build_response(request, 403, 'You are not allowed to edit the current offering')
 
             data = json.loads(request.raw_post_data)
 
@@ -203,7 +204,8 @@ class OfferingEntry(Resource):
             return build_response(request, 400, unicode(e))
 
         # Check if the user can delete the offering
-        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
+        if request.user.userprofile.current_organization != org\
+        or (not offering.is_owner(request.user) and not request.user.pk in org.managers):
             return build_response(request, 403, 'Forbidden')
 
         # Delete the offering
@@ -232,7 +234,8 @@ class PublishEntry(Resource):
             return build_response(request, 400, unicode(e))
 
         # Check that the user can publish the offering
-        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
+        if request.user.userprofile.current_organization != org\
+        or (not offering.is_owner(request.user) and not request.user.pk in org.managers):
             return build_response(request, 403, 'Forbidden')
 
         if content_type == 'application/json':
@@ -384,7 +387,8 @@ class BindEntry(Resource):
             return build_response(request, 400, unicode(e))
 
         # Check that the user can bind resources to the offering
-        if not offering.is_owner(request.user) and request.user.pk not in org.managers:
+        if request.user.userprofile.current_organization != org\
+        or (not offering.is_owner(request.user) and not request.user.pk in org.managers):
             return build_response(request, 403, 'Forbidden')
 
         if content_type == 'application/json':

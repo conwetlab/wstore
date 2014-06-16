@@ -39,11 +39,11 @@ from wstore.admin.rss.views import _check_limits
 from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
 
 
-def get_organization_info(org):
+def get_organization_info(org, private_allowed=False):
     """
     Get the information of a concrete organization
     """
-    if not org.private:
+    if private_allowed or not org.private:
         org_element = {
             'name': org.name,
             'notification_url': org.notification_url,
@@ -62,7 +62,7 @@ def get_organization_info(org):
                 'cvv2': org.payment_info['cvv2'],
             }
         org_element['limits'] = org.expenditure_limits
-        org_element['managers'] = org.managers
+        org_element['is_manager'] = False
     else:
         raise Exception('Private organization')
 
@@ -162,7 +162,7 @@ class OrganizationCollection(Resource):
             try:
                 user = User.objects.get(username=username)
             except User.DoesNotExist:
-                return build_response(request, 404, 'The user is not registered for WStore.')
+                return build_response(request, 404, 'The user is not registered in WStore.')
             organizations = Organization.objects.filter(managers=(user.pk,))
 
         # Get organization info
@@ -173,9 +173,12 @@ class OrganizationCollection(Resource):
                 continue
 
             # Check if payment information is displayed
-            if not request.user.is_staff and not request.user.pk in org.managers:
-                if 'payment_info' in org_element:
-                    del(org_element['payment_info'])
+            if not request.user.is_staff and not request.user.pk in org.managers\
+            and 'payment_info' in org_element:
+                del(org_element['payment_info'])
+
+            elif request.user.pk in org.managers:
+                org_element['is_manager'] = True
 
             # Include organizations
             response.append(org_element)
@@ -190,7 +193,7 @@ class OrganizationEntry(Resource):
 
         try:
             org = Organization.objects.get(name=org)
-            org_info = get_organization_info(org)
+            org_info = get_organization_info(org, private_allowed=True)
         except:
             return build_response(request, 404, 'Not found')
 
@@ -198,6 +201,8 @@ class OrganizationEntry(Resource):
         if (not request.user.is_staff and not request.user.pk in org.managers)\
         and 'payment_info' in org_info:
             del(org_info['payment_info'])
+        elif request.user.pk in org.managers:
+            org_info['is_manager'] = True
 
         return HttpResponse(json.dumps(org_info), status=200, mimetype='application/json')
 
