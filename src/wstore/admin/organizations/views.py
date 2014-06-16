@@ -84,19 +84,16 @@ class OrganizationCollection(Resource):
             if not 'name' in data:
                 raise Exception('Invalid JSON content')
 
-            try:
-                organization_registered = Organization.objects.get(name=data['name'])
-                if organization_registered:
-                    raise Exception('The '+data['name']+' organization is already registered.')
-            except Organization.DoesNotExist:
-                pass
+            organization_registered = Organization.objects.filter(name=data['name'])
+            if len(organization_registered) > 0:
+                raise Exception('The ' + data['name'] + ' organization is already registered.')
 
             if not len(data['name']) > 4 or not is_valid_id(data['name']):
                 raise Exception('Enter a valid name.')
 
             if 'notification_url' in data:
                 if data['notification_url'] and not is_valid_url(data['notification_url']):
-                    raise Exception('Enter a valid URL.')
+                    raise Exception('Enter a valid URL')
             else:
                 data['notification_url'] = ''
 

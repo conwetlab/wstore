@@ -223,23 +223,23 @@ class OrganizationEntryTestCase(TestCase):
         }
     }, (200, 'OK', 'correct'), False, _mock_expenditure_401),
     ({}, (200, 'OK', 'correct'), False),
-    ({}, (404, 'Not found', 'error'), True, _not_found),
+    ({}, (404, 'Organization not found', 'error'), True, _not_found),
     ({}, (403, 'Forbidden', 'error'), True, _forbidden),
     ({
         'notification_url': 'invalidurl'
-    }, (400, 'Invalid notification URL', 'error'), True),
+    }, (400, 'Enter a valid URL', 'error'), True),
     ({
         'limits': {
             'perTransaction': '100',
             'weekly': '150'
         }
-    }, (400, 'Invalid content', 'error'), True, _unauthorized),
+    }, (400, 'Invalid JSON content', 'error'), True, _unauthorized),
     ({
         'limits': {
             'perTransaction': '100',
             'weekly': '150'
         }
-    }, (400, 'Invalid content', 'error'), True, _rss_failure),
+    }, (400, 'Invalid JSON content', 'error'), True, _rss_failure),
     ({
         'payment_info': {
             'number': '1234',
@@ -438,12 +438,14 @@ class OrganizationCollectionTestCase(TestCase):
             'expire_month': '5',
             'cvv2': '111'
         },
-        'limits': {}
+        'limits': {},
+        'is_manager': False
     }, 'org1'),
     ({
         'name': 'test_org2',
         'notification_url': 'http://notification2.com',
-        'limits': {}
+        'limits': {},
+        'is_manager': False
     }, 'org2'),
     ('Private organization', 'org3', True)
     ])
@@ -466,6 +468,13 @@ class OrganizationCollectionTestCase(TestCase):
             self.assertTrue(error)
             self.assertEquals(msg, exp_data)
 
+    def _not_found(self):
+        views.Organization.objects.filter.return_value = []
+
+    def _found(self):
+        org = MagicMock()
+        views.Organization.objects.filter.return_value = [org]
+
     @parameterized.expand([
     ({
         'name': 'test_org1',
@@ -483,7 +492,7 @@ class OrganizationCollectionTestCase(TestCase):
             'expire_month': '5',
             'cvv2': '111'
         }
-    }, (201, 'Created', 'correct')),
+    }, (201, 'Created', 'correct'), True, _not_found),
     ({
         'name': 'test_org1',
         'notification_url': 'http://notificationurl.com'
@@ -491,16 +500,23 @@ class OrganizationCollectionTestCase(TestCase):
     ({
         'invalid_name': 'test_org1',
         'notification_url': 'http://notificationurl.com'
-    }, (400, 'Invalid content', 'error'), False),
+    }, (400, 'Invalid JSON content', 'error'), False),
+    ({
+        'name': 'test_org1',
+        'notification_url': 'http://notificationurl.com'
+    }, (400, 'The test_org1 organization is already registered.', 'error'), False, _found),
     ({
         'name': 'test_org1',
         'notification_url': 'http:notificationurl.com'
-    }, (400, 'Invalid notification URL format', 'error'), False)
+    }, (400, 'Enter a valid URL', 'error'), False , _not_found)
     ])
-    def test_organization_creation(self, data, exp_resp, created=True):
+    def test_organization_creation(self, data, exp_resp, created=True, side_effect=None):
 
         # Load request data
         self.request.raw_post_data = json.dumps(data)
+
+        if side_effect:
+            side_effect(self)
 
         # Create the view
         org_collection = views.OrganizationCollection(permitted_methods=('POST', 'GET'))

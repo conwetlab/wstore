@@ -619,7 +619,7 @@ class OfferingEntryTestCase(TestCase):
         body_response = json.loads(response.content)
 
         self.assertEqual(type(body_response), dict)
-        self.assertEqual(body_response['message'], 'Forbidden')
+        self.assertEqual(body_response['message'], 'You are not allowed to edit the current offering')
         self.assertEqual(body_response['result'], 'error')
 
     def test_offering_update_exception(self):
