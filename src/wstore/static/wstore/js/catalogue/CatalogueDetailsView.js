@@ -215,8 +215,8 @@
 
         // Form for comment and rate the offering
         if (this.offeringElement.getComments().length) {
-            var reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'), this);
-            reviewPainter.paint();
+            this.reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'), this);
+            this.reviewPainter.paint();
         }
         // Calculate positions on resize
         this.calculatePositions();
@@ -260,6 +260,10 @@
         width = $(window).width() - $('.tab-content').offset().left -10;
         $('.tab-content').css('height', offset.toString() + 'px');
         $('.tab-content').css('width', width.toString() + 'px');
+
+        if ('reviewPainter' in this) {
+            this.reviewPainter.checkExpand();
+        }
     };
 
     /**

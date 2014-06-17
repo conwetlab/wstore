@@ -58,11 +58,9 @@
     };
 
     /**
-     * Calculate the number of elements to be included per page
-     * based on the width of the container and the width of the
-     * elements
+     * Return the number of elements per row
      */
-    ScrollPagination.prototype.calculateElementsPage = function calculateElementsPage() {
+    ScrollPagination.prototype.getElementsRow = function getElementsRow() {
         var elementsRow = Math.floor((this.elementContainer.width() - 50) / this.elementWidth);
 
         // If the width is fewer that an element
@@ -70,6 +68,16 @@
         if (!elementsRow) {
             elementsRow = 1;
         }
+        return elementsRow;
+    };
+
+    /**
+     * Calculate the number of elements to be included per page
+     * based on the width of the container and the width of the
+     * elements
+     */
+    ScrollPagination.prototype.calculateElementsPage = function calculateElementsPage() {
+        var elementsRow = this.getElementsRow();
 
         return elementsRow*this.numberOfRows;
     };
@@ -79,7 +87,22 @@
      */
     ScrollPagination.prototype.getReqHandler = function getReqHandler(elements) {
         this.nextPage += 1;
+        this.nLastPage = elements.length;
         this.painter(elements);
+    };
+
+    /**
+     * Returns the length of the last page retrieved
+     */
+    ScrollPagination.prototype.getLastPageLen = function getLastPageLen() {
+        return this.nLastPage;
+    };
+
+    /**
+     * Returns the number of elements contained in the last page requested
+     */
+    ScrollPagination.prototype.getNextPageNumber = function getNextPageNumber() {
+        return this.nextPage;
     };
 
     /**

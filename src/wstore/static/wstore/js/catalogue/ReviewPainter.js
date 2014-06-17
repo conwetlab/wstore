@@ -20,6 +20,9 @@
 
 (function() {
 
+    /**
+     * Painter class in charge of painting the reviews associates with an offering
+     */
     ReviewPainter = function ReviewPainter(offeringElement, container, callerObj) {
         // Build reviews endpoint
         var endp = EndpointManager.getEndpoint('REVIEW_COLLECTION', {
@@ -39,6 +42,9 @@
         this.callerObj = callerObj;
     };
 
+    /**
+     * Handler of th exapnd button to unexpand
+     */
     var resizeHandlerDecrease = function resizeHandlerDecrease(self) {
         $('.tab-content').stop();
 
@@ -52,8 +58,10 @@
             this.scrollPag.getNextPage();
         }.bind(self));
 
-        $('.icon-resize-horizontal').off('click');
-        $('.icon-resize-horizontal').click(function(evnt) {
+        $('.btn-resize').empty();
+        $('.btn-resize').append('<i class="icon-plus"></i>  View More');
+        $('.btn-resize').off('click');
+        $('.btn-resize').click(function(evnt) {
             evnt.preventDefault();
             evnt.stopPropagation();
             resizeHandlerIncrease(this);
@@ -75,8 +83,10 @@
             scrollTop: $('.tab-content').scrollTop() + 100
         }, 1500);
 
-        $('.icon-resize-horizontal').off('click');
-        $('.icon-resize-horizontal').click(function(evnt) {
+        $('.btn-resize').empty();
+        $('.btn-resize').append('<i class="icon-minus"></i>  View Less');
+        $('.btn-resize').off('click');
+        $('.btn-resize').click(function(evnt) {
             evnt.preventDefault();
             evnt.stopPropagation();
             resizeHandlerDecrease(this);
@@ -91,8 +101,11 @@
         if (this.extended) {
             if (($('.btn-resize').offset().top <= $('h2:contains(Reviews)').offset().top)){
                 $('.btn-resize').removeAttr('style');
-            } else if (($('.btn-resize').offset().top <= $('.tab-content').offset().top + 30)) {
-                $('.btn-resize').css('left', $('.btn-resize').offset().left);
+            } else if (($('.btn-resize').offset().top <= $('.tab-content').offset().top + 30)
+                    && !$('.btn-resize').attr('style')) {
+
+                var rightPos = ($(window).width() - ($('.btn-resize').offset().left + $('.btn-resize').outerWidth()));
+                $('.btn-resize').css('right', rightPos);
                 $('.btn-resize').css('top', $('.tab-content').offset().top + 30);
                 $('.btn-resize').css('position', 'fixed');
             }
@@ -104,7 +117,7 @@
      */
     ReviewPainter.prototype.setListeners = function setListeners() {
         // Create scroll pagination
-        this.scrollPag = new ScrollPagination($('.tab-content'), $('#main-tab'), this.paintComments, this.client, this.scrollHandler.bind(this), $('#comments'));
+        this.scrollPag = new ScrollPagination($('.tab-content'), $('#main-tab'), this.paintComments.bind(this), this.client, this.scrollHandler.bind(this), $('#comments'));
         this.scrollPag.configurePaginationParams(360, 3);
 
         // Show review button if needed
@@ -119,11 +132,29 @@
         }.bind(this));
     };
 
+    ReviewPainter.prototype.checkExpand = function checkExpand() {
+     // Check if it is the first page
+        if (this.scrollPag.getNextPageNumber() == 2) {
+            // Check if the expand button if needed (More than 2 rows)
+            var elemsRow = this.scrollPag.getElementsRow();
+            var lastPageLen = this.scrollPag.getLastPageLen();
+
+            if (lastPageLen > (elemsRow*2)) {
+                $('.btn-resize').removeClass('hide');
+            } else {
+                $('.btn-resize').addClass('hide');
+            }
+        }
+
+    }
     /**
      * Paint comments
      * @param comments, list with the comments to be painted
      */
     ReviewPainter.prototype.paintComments = function paintComments(comments) {
+        this.checkExpand();
+
+        // Paint comments
         for (var i = 0; i < comments.length; i++) {
             var templ;
             var username = comments[i].user;

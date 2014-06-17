@@ -771,7 +771,7 @@ a.tag {
 
 .btn-resize {
   float: right;
-  width: 0;
+  /*width: 0;*/
 }
 
 .btn-resize:hover {
