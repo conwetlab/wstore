@@ -88,7 +88,7 @@ def catalogue(request):
     context = {
         'roles': profile.get_current_roles(),
         'usdl_editor': settings.USDL_EDITOR_URL,
-	'organization': profile.current_organization.name,
+	    'organization': profile.current_organization.name,
         'oil': settings.OILAUTH,
         'portal': settings.PORTALINSTANCE
     }
@@ -104,22 +104,25 @@ def catalogue(request):
 @login_required
 def organization(request):
 
-    profile = UserProfile.objects.get(user=request.user)
-    context = {
-        'roles': profile.get_current_roles(),
-        'usdl_editor': settings.USDL_EDITOR_URL,
-	'organization': profile.current_organization.name,
-        'oil': settings.OILAUTH,
-        'portal': settings.PORTALINSTANCE
-    }
-    # Include Portals URLs if needed
-    if settings.PORTALINSTANCE:
-        context['main'] = MAIN_PORTAL_URL
-        context['cloud'] = CLOUD_PORTAL_URL
-        context['mashup'] = MASHUP_PORTAL_URL
-        context['account'] = ACCOUNT_PORTAL_URL
+    if not settings.OILAUTH:
+        profile = UserProfile.objects.get(user=request.user)
+        context = {
+            'roles': profile.get_current_roles(),
+            'usdl_editor': settings.USDL_EDITOR_URL,
+	        'organization': profile.current_organization.name,
+            'oil': settings.OILAUTH,
+            'portal': settings.PORTALINSTANCE
+        }
+        # Include Portals URLs if needed
+        if settings.PORTALINSTANCE:
+            context['main'] = MAIN_PORTAL_URL
+            context['cloud'] = CLOUD_PORTAL_URL
+            context['mashup'] = MASHUP_PORTAL_URL
+            context['account'] = ACCOUNT_PORTAL_URL
 
-    return render(request, 'organizations/organization_template.html', context)
+        return render(request, 'organizations/organization_template.html', context)
+    else:
+        return build_response(request, 403, 'This view is not enabled with iDM auth')
 
 class ProviderRequest(API_Resource):
 
