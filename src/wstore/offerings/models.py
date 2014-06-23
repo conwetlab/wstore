@@ -18,12 +18,13 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from urlparse import urljoin
 from django.contrib.auth.models import User
 from django.db import models
 from djangotoolbox.fields import ListField, DictField
 
 from wstore.models import Marketplace
-from wstore.models import Organization
+from wstore.models import Organization, Context
 
 
 # An application is an offering composed by some
@@ -75,6 +76,18 @@ class Resource(models.Model):
     download_link = models.CharField(max_length=200)
     resource_path = models.CharField(max_length=100)
     offerings = ListField(models.ForeignKey(Offering))
+
+    def get_url(self):
+        url = None
+
+        if self.download_link:
+            url = self.download_link
+        else:
+            # Build the URL for downloading the resource from WStore
+            cnt = Context.objects.all()[0]
+            url = urljoin(cnt.site.domain, self.resource_path)
+
+        return url
 
     class Meta:
         app_label = 'wstore'
