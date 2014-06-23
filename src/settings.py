@@ -176,7 +176,9 @@ ROOT_URLCONF = 'urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'wsgi.application'
 
-PAYMENT_CLIENT = 'wstore.charging_engine.payment_client.paypal_client.PayPalClient'
+# Payment method determines the payment gateway to be used
+# Allowed values: paypal, fipay, None (default)
+PAYMENT_METHOD = None
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -228,4 +230,10 @@ from django.contrib.sites import models as site_app
 
 signals.post_syncdb.disconnect(create_default_site, site_app)
 
+CLIENTS = {
+    'paypal': 'wstore.charging_engine.payment_client.paypal_client.PayPalClient',
+    'fipay': 'wstore.charging_engine.payment_client.fipay_client.FiPayClient',
+    None: 'wstore.charging_engine.payment_client.payment_client.PaymentClient'
+}
 
+PAYMENT_CLIENT = CLIENTS[PAYMENT_METHOD]

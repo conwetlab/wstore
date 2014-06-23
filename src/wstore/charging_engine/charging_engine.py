@@ -151,11 +151,17 @@ class ChargingEngine:
 
         elif self._payment_method == 'paypal':
             client.start_redirection_payment(price, currency)
-            # Set timeout for PayPal transaction to 5 minutes
-            t = threading.Timer(300, self._timeout_handler)
-            t.start()
 
-            return client.get_checkout_url()
+            checkout_url = client.get_checkout_url()
+
+            if checkout_url:
+                # Set timeout for PayPal transaction to 5 minutes
+                t = threading.Timer(300, self._timeout_handler)
+                t.start()
+
+                return checkout_url
+            else:
+                self._purchase.state = 'paid'
         else:
             raise Exception('Invalid payment method')
 
