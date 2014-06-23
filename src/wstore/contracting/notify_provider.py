@@ -24,6 +24,7 @@ import urllib2
 from django.conf import settings
 
 from wstore.store_commons.utils.method_request import MethodRequest
+from wstore.models import Resource
 
 
 def notify_provider(purchase):
@@ -33,6 +34,10 @@ def notify_provider(purchase):
     """
     notification_url = purchase.offering.notification_url
 
+    if not notification_url and not len(purchase.offering.applications):
+        return
+
+    # Build common notification data
     data = {
         'offering': {
             'organization': purchase.offering.owner_organization.name,
@@ -42,14 +47,27 @@ def notify_provider(purchase):
         'reference': purchase.ref,
     }
 
+    # Include customer info
+    if settings.OILAUTH:
+        data['customer'] = purchase.owner_organization.actor_id
+        data['customer_name'] = purchase.owner_organization.name
+    else:
+        data['customer'] = purchase.owner_organization.name
+
     # Notify the service provider
     if notification_url != '':
 
-        # Check the customer
-        if purchase.organization_owned:
-            data['customer'] = purchase.owner_organization.name
-        else:
-            data['customer'] = purchase.customer.username
+        data['resources'] = []
+        # Include the resources
+        for res in purchase.offering.resources:
+            resource = Resource.objects.get(pk=res)
+
+            data['resources'].append({
+                'name': resource.name,
+                'version': resource.version,
+                'content_type': resource.content_type,
+                'url': resource.get_url()
+            })
 
         body = json.dumps(data)
         headers = {'Content-type': 'application/json'}
@@ -66,12 +84,6 @@ def notify_provider(purchase):
     # if the oil authentication is enabled, notify the idM the new purchase
     if settings.OILAUTH and len(purchase.offering.applications) > 0:
         data['applications'] = purchase.offering.applications
-
-        # Get the customer id for the idm
-        if purchase.organization_owned:
-            data['customer'] = purchase.owner_organization.actor_id
-        else:
-            data['customer'] = purchase.customer.userprofile.actor_id
 
         token = purchase.customer.userprofile.access_token
         body = json.dumps(data)
