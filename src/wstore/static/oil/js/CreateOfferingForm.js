@@ -416,16 +416,18 @@
             // Fill applications structure
             for (var i = 0; i < applications.length; i++) {
                 var url = applications[i].url;
+                var dispUrl = applications[i].url;
                 apps[applications[i]['id']] = applications[i];
 
                 // Check URL size
                 if (applications[i].url.length > 50) {
-                    url = url.substr(0, 50) + '...';
+                    dispUrl = url.substr(0, 50) + '...';
                 }
 
                 $.tmpl('appCheckTemplate', {
                     'name': applications[i].name,
                     'url': url,
+                    'disp_url': dispUrl,
                     'id': applications[i].id
                 }).appendTo('#applications');
             }
