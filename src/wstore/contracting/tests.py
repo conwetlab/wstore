@@ -28,11 +28,12 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.test.client import RequestFactory
 from django.contrib.sites.models import Site
+from django.conf import settings
 from social_auth.db.django_models import UserSocialAuth
 
+import wstore.contracting.purchase_rollback
 from wstore.contracting import purchases_management
 from wstore.contracting import purchase_rollback
-import wstore.contracting.purchase_rollback
 
 from wstore.contracting import notify_provider
 from wstore.models import Offering, Context
@@ -644,15 +645,18 @@ class ProviderNotificationTestCase(TestCase):
     def setUpClass(cls):
         cls._urllib = FakeUrlib2Notify()
         notify_provider.urllib2 = cls._urllib
+        cls.prev_value = settings.OILAUTH
         super(ProviderNotificationTestCase, cls).setUpClass()
 
     def setUp(self):
         self.user = User.objects.create_user(username='test_user', email='', password='passwd')
         self.user.userprofile.user = self.user
         self.user.userprofile.save()
+        settings.OILAUTH = self.prev_value
 
     def test_provider_notification(self):
 
+        settings.OILAUTH = False
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
         notify_provider.notify_provider(purchase)
 
@@ -669,7 +673,6 @@ class ProviderNotificationTestCase(TestCase):
 
     def test_identity_manager_notification(self):
 
-        from django.conf import settings
         settings.OILAUTH = True
         
         # Mock purchase info
@@ -680,6 +683,8 @@ class ProviderNotificationTestCase(TestCase):
             'name': 'test_app1'
         }]
         purchase.organization_owned = False
+        purchase.owner_organization.actor_id = 1
+        purchase.owner_organization.name = 'test_user'
         purchase.offering.owner_organization.name = 'test_user'
         purchase.offering.version = '1.0'
         purchase.offering.name = 'test_offering'
@@ -701,11 +706,10 @@ class ProviderNotificationTestCase(TestCase):
         self.assertEquals(content['customer'], 1)
         
 
-    test_identity_manager_notification.tags = ('fiware-ut-23',)
+    test_identity_manager_notification.tags = ('fiware-ut-23', 'prov-not')
 
     def test_identity_manager_notification_org(self):
 
-        from django.conf import settings
         settings.OILAUTH = True
         
         # Mock purchase info
@@ -718,6 +722,7 @@ class ProviderNotificationTestCase(TestCase):
         purchase.organization_owned = True
         purchase.offering.owner_organization.name = 'test_user'
         purchase.owner_organization.actor_id = 2
+        purchase.owner_organization.name = 'test_organization'
         purchase.offering.version = '1.0'
         purchase.offering.name = 'test_offering'
         purchase.ref = '11111'
@@ -736,11 +741,10 @@ class ProviderNotificationTestCase(TestCase):
         self.assertEquals(content['applications'][0]['name'], 'test_app1')
         self.assertEquals(content['customer'], 2)
 
-    test_identity_manager_notification_org.tags = ('fiware-ut-23',)
+    test_identity_manager_notification_org.tags = ('fiware-ut-23', 'prov-not')
 
     def test_identity_manager_notification_token_refresh(self):
 
-        from django.conf import settings
         settings.OILAUTH = True
         
         # Mock purchase info
@@ -753,6 +757,7 @@ class ProviderNotificationTestCase(TestCase):
         purchase.organization_owned = True
         purchase.offering.owner_organization.name = 'test_user'
         purchase.owner_organization.actor_id = 2
+        purchase.owner_organization.name = 'test_organization'
         purchase.offering.version = '1.0'
         purchase.offering.name = 'test_offering'
         purchase.ref = '11111'
@@ -786,9 +791,9 @@ class ProviderNotificationTestCase(TestCase):
         self.assertEquals(content['applications'][0]['name'], 'test_app1')
         self.assertEquals(content['customer'], 2)
 
-    test_identity_manager_notification_org.tags = ('fiware-ut-23',)
+    test_identity_manager_notification_org.tags = ('fiware-ut-23', 'prov-not')
 
-    test_identity_manager_notification_token_refresh.tags = ('fiware-ut-23',)
+    test_identity_manager_notification_token_refresh.tags = ('fiware-ut-23', 'prov-not')
 
 
 class UpdatingPurchasesTestCase(TestCase):
