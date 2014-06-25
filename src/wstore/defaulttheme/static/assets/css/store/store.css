@@ -1,5 +1,24 @@
+/* Fixed position in Store View */
+#container-rated-newest {
+  overflow: auto;
+  position: absolute;
+  margin-top: -33px;
+}
+
 #container-rated-newest .menu-offering {
   float:left;
+}
+
+#store-return {
+  position: absolute;
+  top: 56px;
+  left: 11px;
+}
+
+#search-options {
+  position: absolute;
+  top: 121px;
+  left: 103px;
 }
 
 .home-pg-title {
@@ -32,7 +51,7 @@
 }
 
 
-@media all and (max-width: 1302px) {
+@media all and (max-width: 1380px) {
   .home-pg-title {
     margin-left: -485px;
   }
@@ -67,7 +86,7 @@
   }
 }
 
-@media all and (max-width: 985px) {
+@media all and (max-width: 1084px) {
   .home-pg-title {
     margin-left: -323px;
   }
@@ -101,5 +120,115 @@
   #newest-container .menu-offering:nth-child(5) {
     clear: none;
   }
+}
+
+.menu-icon {
+  width: 40px;
+  height: 40px;
+  margin-left: -25px;
+}
+
+#serv-icon {
+  background-color: rgb(96, 193, 207);
+}
+
+#data-icon {
+  background-color: rgb(255, 230, 22);
+}
+
+#widget-icon {
+  background-color: rgb(0, 45, 103);
+}
+
+.store-menu span {
+  float: left;
+  position: relative;
+  left: 15px;
+  top: -40px;
+  width: 165px;
+  height: 40px;
+  color: rgb(0, 45, 103);
+  vertical-align: middle;
+  line-height: 40px;
+  font-size: 16px;
+  text-indent: 10px;
+}
+
+#serv-text:hover {
+  cursor:pointer;
+  background-color: rgb(96, 193, 207);
+  color: rgb(255,255,255);
+}
+
+#data-text:hover {
+  cursor:pointer;
+  background-color: rgb(255, 230, 22);
+}
+
+#widget-text:hover {
+  cursor:pointer;
+  background-color: rgb(0, 45, 103);
+  color: rgb(255,255,255);
+}
+
+.store-menu {
+  position: absolute;
+  top: 22px;
+}
+
+.store-sub-menu {
+  position: absolute;
+  top: 160px;
+}
+
+.store-menu .icon-gears {
+  font-size: 20px;
+  position: relative;
+  top: 9px;
+  left: 7px;
+  color: rgb(255,255,255);
+}
+
+.store-menu .icon-hdd {
+  font-size: 22px;
+  position: relative;
+  top: -29px;
+  left: 10px;
+  color: rgb(0, 45, 103);
+}
+
+.store-menu .icon-puzzle-piece {
+  font-size: 20px;
+  position: relative;
+  top: -29px;
+  left: 10px;
+  color: rgb(255,255,255);
+}
+
+.store-sub-menu li {
+  position: relative;
+  top: 0;
+  left: -25px;
+  float: left;
+  white-space: nowrap;
+  width: 205px;
+  height: 40px;
+  vertical-align: middle;
+  line-height: 40px;
+  text-indent: 10px;
+}
+
+.store-sub-menu li:hover {
+  background-color: rgba(50, 51, 51, 0.15);
+}
+
+.store-sub-menu a {
+  font-size: 15px;
+  margin-left: 10px;
+}
+
+.store-sub-menu .icon-folder-open-alt {
+  font-size: 18px;
+  margin-left: -8px;
 }
 

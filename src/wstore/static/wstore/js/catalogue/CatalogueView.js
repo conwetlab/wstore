@@ -295,8 +295,7 @@
         if ($(window).width() < 981) {
             // Change headers position to avoid problems with bootstrap responsive
             if (filabInt) {
-                $('.title_wrapper').css('top', '-30px');
-                $('.navigation').css('top', '-109px');
+                $('.title_wrapper').css('top', '-55px');
             }
 
             //Up the catalogue tabs
@@ -329,7 +328,7 @@
             var offset;
             var width;
             if (filabInt) {
-                $('.title_wrapper').css('top', '140px');
+                $('.title_wrapper').css('top', '115px');
                 $('.navigation').css('top', '60px');
             }
             $('.offerings-container').css('top', '176px');

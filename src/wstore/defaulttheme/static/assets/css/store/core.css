@@ -21,6 +21,10 @@
     color: rgb(185, 74, 72);
 }
 
+.no-bullet {
+  list-style: none;
+}
+
 .error-input:focus {
   border-color: rgb(149,59,57);
   box-shadow: 0 0 6px rgb(213, 147, 146);
@@ -99,13 +103,16 @@
     padding: 23px;
     margin-top: -36px;
     position: absolute;
-    top: 140px;
+    top: 86px;
     right: 0;
+    height: 0;
+    border-radius: 12px 0 0 12px;
+    border: 1px solid rgb(237, 237, 237);
 }
 
 .title_wrapper span {
     position: relative;
-    top: -6px;
+    top: -10px;
 }
 
 .navigation .icon-caret-right {
@@ -136,10 +143,14 @@
 }
 
 .navigation {
-    width: 400px;
+    width: 260px;
     position: absolute;
     top: 10px;
     right: 20px;
+}
+
+#settings-menu .icon-wrench {
+  margin-right: 7px;
 }
 
 .float-right {
@@ -214,18 +225,12 @@
     width: 200px;
 }
 
-/* Fixed position in Store View */
-#container-rated-newest {
-    overflow: auto;
-    position: absolute;
-}
-
 /* Fixed position in View All options in the store view */
 .search-container {
     overflow: auto;
     position: absolute;
-    top: 300px;
-    left: 250px;
+    top: 169px;
+    left: 330px;
     height: 118%;
     width: 82%;
 }
@@ -584,7 +589,7 @@
 
 #store-search {
     float: right;
-    margin-top: 30px;
+    margin-top: -44px;
 }
 
 #user-title {
@@ -646,10 +651,6 @@ h2 {
 
 .add-on {
   background-color: rgb(0, 43, 103) !important;
-}
-
-#store-return {
-  position: absolute;
 }
 
 .catalogue-form .form {
@@ -861,3 +862,45 @@ footer {
   position: fixed;
   bottom: 0;
 }
+
+.left-bar {
+  position: fixed;
+  background-color: rgb(244, 244, 244);
+  width: 50px;
+  height: 300px;
+  top: 110px;
+  left: 0px;
+  box-shadow: 5px 4px 8px rgba(50, 51, 51, 0.15);
+  z-index: 6;
+}
+
+.left-bar .icon-th-list {
+  font-size: 30px;
+  color: rgb(0, 43, 103);
+  position: relative;
+  top: 8px;
+  left: 10px;
+}
+
+.left-bar .icon-th-list:hover {
+  color: rgb(96, 193, 207);
+  cursor: pointer;
+}
+
+.left-bar .icon-remove {
+  float: right;
+  font-size: 19px;
+  margin-top: 2px;
+  margin-right: 3px;
+  color: rgb(0, 45, 103);
+}
+
+.left-bar .icon-remove:hover {
+  cursor: pointer;
+  color: rgb(96, 193, 207);
+}
+
+.left-bar a {
+  text-decoration: none;
+}
+

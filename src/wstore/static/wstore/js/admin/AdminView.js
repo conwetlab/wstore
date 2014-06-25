@@ -103,14 +103,12 @@
         // Check window width
         if (filabInt) {
             if ($(window).width() < 981) {
-                $('.title_wrapper').css('top', '-30px');
-                $('.navigation').css('top', '-109px');
+                $('.title_wrapper').css('top', '-55px');
                 $('.admin-element').css('top', '-60px');
             } else {
                 var offset;
                 var width;  
-                $('.title_wrapper').css('top', '140px');
-                $('.navigation').css('top', '60px');
+                $('.title_wrapper').css('top', '115px');
             }
         }
         // Fixed position in admin view

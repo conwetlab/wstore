@@ -181,6 +181,7 @@
     paintHomePage = function paintHomePage () {
         // Create search view object
         var searchView = new StoreSearchView('SEARCH_ENTRY');
+        var mpainter;
 
         $('#home-container').empty();
         $.template('homePageTemplate', $('#home_page_template'));
@@ -209,6 +210,8 @@
             // The navigation menu width depends on the presence of the FI-LAB bar
             $('.navigation').css('width', '188px');
         }
+        // Bind menu handlers
+        mpainter = new MenuPainter();
         // Get initial offerings
         calculatePositions();
         getOfferings(EndpointManager.getEndpoint('NEWEST_COLLECTION'), $('#newest-container'));
@@ -221,12 +224,6 @@
 
         // Check window width
         if ($(window).width() < 981) {
-
-            // Change headers position to avoid problems with bootstrap responsive
-            if (filabInt) {
-                $('.title_wrapper').css('top', '-30px');
-                $('.navigation').css('top', '-109px');
-            }
 
             // Check if search view is active
             if ($('.search-container').length > 0) {
@@ -278,11 +275,6 @@
                 $('#container-rated-newest').css('width', storeWidth.toString() + 'px');
             }
         } else {
-            if (filabInt) {
-                $('.title_wrapper').css('top', '140px');
-                $('.navigation').css('top', '60px');
-            }
-
             if ($('.search-container').length > 0) {
                 // Fixed position in: Search options in the store view
                 var offset;

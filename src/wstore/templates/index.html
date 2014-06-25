@@ -29,6 +29,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/Client.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserProfile.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ScrollPagination.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MenuPainter.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/OrganizationProfile.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
@@ -60,6 +61,7 @@
         <script type="text/x-jquery-tmpl" id="address_conf_form_template">{% include "address_conf_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="payment_info_form_template">{% include "payment_info_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="expenditure_conf_form_template">{% include "expenditure_conf_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="menu-template">{% include "store/store_menu_template.html" %}</script>
 
         <script type="text/x-jquery-tmpl" id="mini_offering_template">{% include "catalogue/mini_offering_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="home_page_template">{% include "store/home_page_template.html" %}</script>
@@ -101,6 +103,7 @@
         </div>
     {% endif %}
         <div class="container-fluid bread-container">
+            <div class="left-bar"><a><i class="icon-th-list"></i></a></div>
             <div class="row-fluid">
                 {% if not portal %}
                 <div>
@@ -111,23 +114,8 @@
                     <h2>WStore</h2>
                 </div>
                 {% endif %}
+                {% if not portal %}
                 <div class="navigation">
-                    <ul class="nav nav-pills main-menu">
-                        <li class="active">
-                            <a href="#">Store</a>
-                        </li>
-                        <li>
-                            <a href="/catalogue">Catalogue</a>
-                        </li>
-                        {% if user.is_staff %}
-                            <li><a href="/administration">Administration</a></li>
-                        {% else%}
-                            {% if not oil %}
-                            <li><a href="/organization">Organization</a></li>
-                            {% endif %}
-                        {% endif %}
-                    </ul>
-                    {% if not portal %}
                     <div class="btn btn-blue float-right dropdown">
                         <div href="#" class="dropdown-toggle" data-toggle="dropdown">
                            <i class="icon-user icon-white"></i>
@@ -136,11 +124,18 @@
                         </div>
                         <ul id="settings-menu" class="dropdown-menu">
                             <li><a id="conf-link">Configuration</a></li>
+                            {% if user.is_staff %}
+                                <li><a href="/administration"><i class="icon-wrench"></i>Administration</a></li>
+                                {% else%}
+                                {% if not oil %}
+                                    <li><a href="/organization">Organization</a></li>
+                                {% endif %}
+                            {% endif %}
                             <li><a href="/logout">Logout</a></li>
                         </ul>
                     </div>
-                    {% endif %}
                 </div>
+                {% endif %}
             </div>
             {% if messages %}
             <div class="row-fluid">
@@ -152,9 +147,11 @@
                 </div>
             </div>
             {% endif %}
+            {% if not portal %}
             <div class="row-fluid title_wrapper">
                 <span>Store</span>
             </div>
+            {% endif %}
         </div>
         <div class="container-fluid">
             <div class="row-fluid" id="message-container">

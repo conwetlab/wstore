@@ -8,3 +8,23 @@
   width: 280px;
 
 }
+
+.search-container {
+  top: 130px;
+  left: 330px;
+}
+
+#search-options {
+  top: 83px;
+  left: 103px;
+}
+
+#store-search {
+  position: fixed;
+  top: 100px;
+  right: 19px;
+}
+
+#container-rated-newest {
+  margin-top: -88px;
+}

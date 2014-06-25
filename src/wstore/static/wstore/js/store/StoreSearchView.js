@@ -232,11 +232,11 @@
 
         $('#store-container').empty()
 
-        ret = $('<a></a>').text('Return').attr('id', 'store-return').appendTo('#store-container');
-        ret.click(paintHomePage);
-
         $.template('storeSearchTemplate', $('#store_search_template'));
         $.tmpl('storeSearchTemplate').appendTo('#store-container');
+        ret = $('#store-return');
+        ret.click(paintHomePage);
+
         calculatePositions();
     };
 
