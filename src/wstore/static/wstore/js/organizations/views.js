@@ -80,7 +80,11 @@
     form = new this.methods.forms.OrganizationForm('registration_form', data);
     
     $actived.addClass('active');
-        
+    
+    $('.organizations-container').find('.panel-heading span.extend_title').remove();
+    $('.organizations-container').find('.panel-heading span.panel-close')
+      .before('<span class="extend_title"> / Edit information</span>');
+    
     $container
       .empty()
       .append(form.displayForm($('#organization_form_template'), $('#id_tmpl_pf_fields'), $('#id_tmpl_ta_fields')))
@@ -119,6 +123,10 @@
     
     $actived.addClass('active');
     
+    $('.organizations-container').find('.panel-heading span.extend_title').remove();
+    $('.organizations-container').find('.panel-heading span.panel-close')
+      .before('<span class="extend_title"> / Members</span>');
+    
     $container
       .empty()
       .append(form.displayForm($('#id_tmpl_orgusr_form')))
@@ -127,6 +135,60 @@
         WStore.components.buildFormOption('pnl_orgusr-close', 'Cancel', 3, false),
         WStore.components.buildFormOption('pnl_orgusr-submit', 'Add user', 3, true)
       );
+    
+    $container
+      .append(
+        $('<table>').addClass('table table-bordered table-members').append($('<thead>').append(
+          $('<tr>').append('<th class="username">Username</th>',
+                           '<th class="role_customer">Customer</th>',
+                           '<th class="role_manager">Manager</th>',
+                           '<th class="role_provider">Provider</th>')
+          ), $('<tbody>').addClass('organization_users_list')
+        )
+      );
+    
+    response = this.methods.urls.getURL('user_collection', {name: data.name}).read();
+    $users_table = $container.find('.organization_users_list');
+    
+    if (response.noErrors) {
+      
+      for (var i in response.data.members) {
+        user = response.data.members[i];
+        customer = false;
+        manager = false;
+        provider = false;
+        
+        $user_tr = $('<tr>');
+        $user_tr.append('<td class="username">'+user.username+'</td>');
+        for (var j in user.roles) {
+          if (user.roles[j] == 'customer') {
+            customer = true;
+          }
+          if (user.roles[j] == 'manager') {
+            manager = true;
+          }
+          if (user.roles[j] == 'provider') {
+            provider = true;
+          }
+        }
+        if (customer == true) {
+          $user_tr.append('<td><icon class="icon-ok-sign"></icon></td>');
+        } else {
+          $user_tr.append('<td></td>');
+        }
+        if (manager == true) {
+          $user_tr.append('<td><icon class="icon-ok-sign"></icon></td>');
+        } else {
+          $user_tr.append('<td></td>');
+        }
+        if (provider == true) {
+          $user_tr.append('<td><icon class="icon-ok-sign"></icon></td>');
+        } else {
+          $user_tr.append('<td></td>');
+        }
+        $users_table.append($user_tr);
+      }
+    }
     
     $container
       .find('#pnl_orgusr-close')
@@ -156,6 +218,8 @@
     $container
       .empty()
       .append($.tmpl('info_form'));
+    
+    $('.organizations-container').find('.panel-heading span.extend_title').remove();
     
     $container.find('#id_org_inf_name').append(data.name);
     $container.find('#id_org_inf_notification_url').append(data.notification_url);

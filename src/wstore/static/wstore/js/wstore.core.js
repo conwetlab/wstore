@@ -456,7 +456,7 @@
     organizations: {
       collection: '/api/administration/organizations/',
       entry: '/api/administration/organizations/${name}',
-      user_entry: '/api/administration/organizations/${name}/users',
+      user_collection: '/api/administration/organizations/${name}/users/',
     },
     repositories: {
       collection: '/api/administration/repositories/',
@@ -894,7 +894,7 @@
     
     for (var i in this.data.roles) {
       if (this.data.roles[i] == true) {
-        context.roles.push($(this.files[i]).val());
+        context.roles.push($(this.fields[i]).val());
       }
     }
     
@@ -1060,7 +1060,7 @@
       
       if (form.isValid()) {
         response = WStore.urls
-          .getURL('organizations:user_entry', {'name': name})
+          .getURL('organizations:user_collection', {'name': name})
           .create(form.buildContext());
         if (response.noErrors) {
           successfully = true;
