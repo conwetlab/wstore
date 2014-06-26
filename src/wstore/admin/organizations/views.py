@@ -325,6 +325,46 @@ def change_current_organization(request):
 class OrganizationUserCollection(Resource):
 
     @authentication_required
+    def read(self, request, org):
+
+        # Search for the organization given
+        try:
+            organization = Organization.objects.get(name=org)
+        except:
+            return build_response(request, 404, 'Organization not found')
+
+        response = {}
+
+        # Create the list for organization members
+        response['members'] = []
+
+        # Collect the organization managers
+        managers = [User.objects.get(pk=pk).username for pk in organization.managers]
+
+        # Collect the rest of organization members
+        all_users = [(u.username, [o for o in u.userprofile.organizations]) for u in User.objects.all()]
+
+        for username, organizations in all_users:
+            roles = None
+            for o in organizations:
+                if o['organization'] == organization.pk:
+                    roles = o['roles']
+
+            # if the user belongs to this organization
+            if roles:
+                if username in managers:
+                    roles = roles + ['manager']
+                    del managers[username]
+
+                # Append the username together the roles
+                response['members'].append({'username': username, 'roles': roles})
+
+        for username in managers:
+            response['members'].append({'username': username, 'roles': ['manager']})
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
+
+    @authentication_required
     @supported_request_mime_types(('application/json',))
     def create(self, request, org):
 
