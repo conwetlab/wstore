@@ -140,6 +140,12 @@
     margin-top: 5px;
 }
 
+.return-button {
+  position: absolute;
+  top: 51px;
+  left: 238px;
+}
+
 #title-shadow {
   width: 226px;
   height: 23px;
@@ -364,17 +370,37 @@
 
 .details-title {
     font-size: 30px;
-    margin-left: 30px;
+    position: absolute;
+    left: 260px;
+    top: 10px;
+}
+
+.details-information {
+    position: absolute;
+    left: 260px;
+    top: 65px;
+}
+
+.details-action {
+    position: absolute;
+    left: 71px;
+    width: 170px;
+    top: 100px;
 }
 
 .main-info-container {
-    width: 260px;
+    width: 100%;
+    position: absolute;
+    top: 90px;
+    left: 0px;
 }
 
 .main-info {
-    width: 75%;
+    width: 100%;
     background-color: rgb(246, 246, 244);
     border-color: rgb(205, 206, 209);
+    margin-left: 0 !important;
+    height: 190px;
 }
 
 .main-info img {
@@ -383,6 +409,10 @@
     margin: 10px;
     border: 1px solid rgb(205, 206, 209);
     border-radius: 4px;
+    position: absolute;
+    top: 10px;
+    left: 60px;
+    background-color: rgb(255, 255, 255);
 }
 
 .main-info i {
@@ -524,8 +554,8 @@
 
 .detailed-info {
     position: absolute;
-    top: 246px;
-    left: 210px;
+    top: 285px;
+    left: 65px;
 }
 
 #screenshots-car {
@@ -541,11 +571,6 @@
     position: relative;
     left: 29%;
     margin-top: 10px;
-}
-
-.tab-button {
-    position: absolute;
-    z-index: 3;
 }
 
 #user-edit {
@@ -864,7 +889,7 @@ footer {
   background-color: rgb(244, 244, 244);
   width: 50px;
   height: 300px;
-  top: 110px;
+  top: 90px;
   left: 0px;
   box-shadow: 5px 4px 8px rgba(50, 51, 51, 0.15);
   z-index: 6;

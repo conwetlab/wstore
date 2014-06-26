@@ -93,6 +93,8 @@
         <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
         {% if oil and portal %}
             <script src="{{ account }}assets/signOut.js" type="text/javascript"></script>
+        {% endif %}
+        {% if portal %}
             <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
         {% endif %}
         {% include "oil/header_imports.html" %}

@@ -235,27 +235,7 @@
 
         // Calculate tabs width
         $('.detailed-info').css('width', ($(window).width() - position.left) + 'px');
-        // If there is a back button calculate its position
-        if($('#back').length > 0) {
-            $('#back').css('left', ($('.tabbable').width() - 92) + 'px');
-        }
 
-        if ($(window).width() < 966) {
-            if ($('#oil-bar').length > 0) {
-                $('.title_wrapper').css('top', '-30px');
-                $('.navigation').css('top', '-109px');
-                $('.detailed-info').css('top', '66px');
-            } else {
-                $('.detailed-info').css('top', '215px');
-            }
-            $('.detailed-info').css('left', '220px');
-        } else {
-            if ($('#oil-bar').length > 0) {
-                $('.title_wrapper').removeAttr('style');
-                $('.navigation').css('top', '60px');
-            }
-            $('.detailed-info').css('top', '246px');
-        }
         offset = $(window).height() - $('.tab-content').offset().top - 30;
         width = $(window).width() - $('.tab-content').offset().left -10;
         $('.tab-content').css('height', offset.toString() + 'px');
@@ -363,6 +343,17 @@
         }));
     };
 
+    var setTab = function setTab(self, tabId, text, painter) {
+     // Include the tab
+        var li = $('<li></li>');
+        $('<a></a>').text(text).attr('href', '#' + tabId).attr('data-toggle', 'tab').appendTo(li);
+        $('<div></div>').addClass('tab-pane').attr('id', tabId).appendTo('.tab-content');
+        $('.nav-tabs').append(li);
+        // Set the listener
+        $('a[href="#'+ tabId +'"]').on('shown', (function (e) {
+            painter();
+        }).bind(self));
+    }
     /**
      * Builds the tabs whose in has been provided in the offering
      */
@@ -370,104 +361,32 @@
         // Check which tabs to include
         // Interactions
         if (this.offeringElement.getInteractions().length > 0) {
-            // Include the tab
-            var li = $('<li></li>');
-            $('<a></a>').text('Interactions').attr('href', '#int-tab').attr('data-toggle', 'tab').appendTo(li);
-            $('<div></div>').addClass('tab-pane').attr('id', 'int-tab').appendTo('.tab-content');
-            if ($('#back').length > 0) {
-                $('#back').before(li);
-            } else {
-                $('.nav-tabs').append(li);
-            }
-            // Set the listener
-            $('a[href="#int-tab"]').on('shown', (function (e) {
-                this.paintInteractionProtocols();
-            }).bind(this));
+            setTab(this, 'int-tab', 'Interactions', this.paintInteractionProtocols.bind(this));
         }
 
         // Legal conditions
         if (this.offeringElement.getLegal().length > 0) {
-            // Include the tab
-            var li = $('<li></li>');
-            $('<a></a>').text('Legal').attr('href', '#legal-tab').attr('data-toggle', 'tab').appendTo(li);
-            $('<div></div>').addClass('tab-pane').attr('id', 'legal-tab').appendTo('.tab-content');
-            if ($('#back').length > 0) {
-                $('#back').before(li);
-            } else {
-                $('.nav-tabs').append(li);
-            }
-            // Set the listener
-            $('a[href="#legal-tab"]').on('shown', (function (e) {
-                this.paintLegal();
-            }).bind(this));
+            setTab(this, 'legal-tab', 'Legal', this.paintLegal.bind(this));
         }
 
         // Pricing
         if (this.offeringElement.getPricing().price_plans.length > 0) {
-            // Include the tab
-            var li = $('<li></li>');
-            $('<a></a>').text('Pricing').attr('href', '#pricing-tab').attr('data-toggle', 'tab').appendTo(li);
-            $('<div></div>').addClass('tab-pane').attr('id', 'pricing-tab').appendTo('.tab-content');
-            if ($('#back').length > 0) {
-                $('#back').before(li);
-            } else {
-                $('.nav-tabs').append(li);
-            }
-            // Set the listener
-            $('a[href="#pricing-tab"]').on('shown', (function (e) {
-                this.paintPricing();
-            }).bind(this));
+            setTab(this, 'pricing-tab', 'Pricing', this.paintPricing.bind(this));
         }
 
         // Service level agreement
         if (this.offeringElement.getSla().length > 0) {
-            // Include the tab
-            var li = $('<li></li>');
-            $('<a></a>').text('Service Level Agreement').attr('href', '#sla-tab').attr('data-toggle', 'tab').appendTo(li);
-            $('<div></div>').addClass('tab-pane').attr('id', 'sla-tab').appendTo('.tab-content');
-            if ($('#back').length > 0) {
-                $('#back').before(li);
-            } else {
-                $('.nav-tabs').append(li);
-            }
-            // Set the listener
-            $('a[href="#sla-tab"]').on('shown', (function (e) {
-                this.paintSla();
-            }).bind(this));
+            setTab(this, 'sla-tab', 'Service Level Agreement', this.paintSla.bind(this));
         }
 
         // Resources
         if (this.offeringElement.getResources().length > 0) {
-            // Include the tab
-            var li = $('<li></li>');
-            $('<a></a>').text('Offering Resources').attr('href', '#res-tab').attr('data-toggle', 'tab').appendTo(li);
-            $('<div></div>').addClass('tab-pane').attr('id', 'res-tab').appendTo('.tab-content');
-            if ($('#back').length > 0) {
-                $('#back').before(li);
-            } else {
-                $('.nav-tabs').append(li);
-            }
-            // Set the listener
-            $('a[href="#res-tab"]').on('shown', (function (e) {
-                this.paintResources();
-            }).bind(this));
+            setTab(this, 'res-tab', 'Resources', this.paintResources.bind(this));
         }
 
         // Applications
         if (this.offeringElement.getApplications().length > 0) {
-            // Include the tab
-            var li = $('<li></li>');
-            $('<a></a>').text('Applications').attr('href', '#app-tab').attr('data-toggle', 'tab').appendTo(li);
-            $('<div></div>').addClass('tab-pane').attr('id', 'app-tab').appendTo('.tab-content');
-            if ($('#back').length > 0) {
-                $('#back').before(li);
-            } else {
-                $('.nav-tabs').append(li);
-            }
-            // Set the listener
-            $('a[href="#app-tab"]').on('shown', (function (e) {
-                this.paintApplications();
-            }).bind(this));
+            setTab(this, 'app-tab', 'Applications', this.paintApplications.bind(this));
         }
     };
 
