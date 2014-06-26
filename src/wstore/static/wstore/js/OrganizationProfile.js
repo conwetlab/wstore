@@ -43,6 +43,7 @@
         this.limits = orgInfo.limits;
 
         this.manager = orgInfo.is_manager;
+
         // Notify the views that the organization profile is created
         refreshView();
     };

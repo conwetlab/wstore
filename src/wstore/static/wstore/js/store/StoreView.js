@@ -240,10 +240,6 @@
         getOfferings(EndpointManager.getEndpoint('TOPRATED_COLLECTION'), $('#top-rated-container'));
     };
 
-    notifyEventProcessed = function notifyEventProcessed() {
-        evntAllowed = true;
-    };
-
     calculatePositions = function calculatePositions(evnt) {
         var position;
         var filabInt = $('#oil-nav').length > 0;

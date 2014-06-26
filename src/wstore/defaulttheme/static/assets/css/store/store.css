@@ -24,7 +24,7 @@
 .home-pg-title {
   position: relative;
   left: 50%;
-  width: 150px;
+  width: 170px;
   margin-left: -635px;
   font-size: 30px;
 }
@@ -250,7 +250,7 @@
 }
 
 /* Search components position depends on the window size */
-@media all and (max-width: 1380px) {
+@media all and (max-width: 1420px) {
   .search-container {
      width: 960px;
      margin-left: -480px;

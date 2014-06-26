@@ -32,6 +32,7 @@
     ScrollPagination = function ScrollPagination(scrollCont, content, painter, client, scrollHandler, elemCont) {
         // Dom elements
         this.scrollContainer = scrollCont;
+        this.requestPending = false;
         this.content = content;
         this.painter = painter;
         this.client = client;
@@ -93,9 +94,19 @@
      * Handler for get elements response
      */
     ScrollPagination.prototype.getReqHandler = function getReqHandler(elements) {
-        this.nextPage += 1;
         this.nLastPage = elements.length;
-        this.painter(elements);
+        this.requestPending = false;
+
+        if (elements.length > 0) {
+            this.nextPage += 1;
+            this.painter(elements);
+        } else {
+            if (this.nextPage == 1) {
+                this.painter(elements);
+            }
+            // Last page returned: disconnect listener to avoid requests
+            this.scrollContainer.off('scroll');
+        }
     };
 
     /**
@@ -120,11 +131,16 @@
      * Retrieves next elements page
      */
     ScrollPagination.prototype.getNextPage = function getNextPage() {
-        var queryString = '?start=' + (((this.nextPage- 1) * this.elementsPage) + 1);
-        queryString += '&limit=' + this.elementsPage;
-        queryString += this.extraQuery;
+        var queryString;
+        if (!this.requestPending) { // It is not allowed to request a page with a pending request
+            this.requestPending = true;
 
-        this.client.get(this.getReqHandler.bind(this), '', queryString);
+            queryString = '?start=' + (((this.nextPage - 1) * this.elementsPage) + 1);
+            queryString += '&limit=' + this.elementsPage;
+            queryString += this.extraQuery;
+
+            this.client.get(this.getReqHandler.bind(this), '', queryString);
+        }
     };
 
     /**

@@ -43,7 +43,19 @@
     };
 
     StoreSearchView.prototype.painterHandler = function painterHandler(offerings) {
-        paintOfferings(offerings, $('.search-container'), false, function() {
+        var toEmpty = false;
+
+        if (this.pagination.getNextPageNumber() <= 2) { // Is the first page
+            if (offerings.length > 0) {
+                toEmpty = true;  // Delete the container
+            } else {
+                var msg = 'Your search has not produced any results';
+                MessageManager.showAlertInfo('No offerings', msg, $('.search-container'));
+                $('.search-container .alert-info').removeClass('span8');
+                return;
+            }
+        }
+        paintOfferings(offerings, $('.search-container'), toEmpty, function() {
             this.initSearchView('OFFERING_COLLECTION');
         }.bind(this));
     };
