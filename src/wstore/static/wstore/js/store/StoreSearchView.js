@@ -23,14 +23,11 @@
     /**
      * View where offering search results are shown
      */
-    StoreSearchView = function StoreSearchView(searchEndp) {
-        this.numberOfPages = 1;
-        this.currentPage = 1;
+    StoreSearchView = function StoreSearchView() {
         this.searchParams = {
             'searching': false,
             'keyword': ''
         };
-        this.searchEndp = searchEndp;
     }
 
     /**
@@ -41,162 +38,18 @@
         this.searchEndp = endpoint;
     };
 
-    /**
-     * Set the needed params to support pagination
-     * @param numberOfOfferings, Number of offerings expected to be returned
-     */
-    StoreSearchView.prototype.setPaginationParams = function setPaginationParams(numberOfOfferings) {
-        // Calculate the number of pages
-        this.numberOfPages = Math.ceil(numberOfOfferings.number / $('#number-offerings').val());
-        this.refreshPagination(1);
-        this.getNextOfferings(1);
+    StoreSearchView.prototype.scrollHandler = function scrollHandler(evnt) {
+        
     };
 
-    /**
-     * Get the next offerings according to the next page
-     * @param nextPage, Next page to be shown
-     */
-    StoreSearchView.prototype.getNextOfferings = function getNextOfferings(nextPage) {
-        // Show a message if there are no results
-        if (this.numberOfPages == 0) {
-            var msg = 'Your search has not produced any results';
-            this.refreshPagination(nextPage);
-
-            MessageManager.showAlertInfo('No offerings', msg, $('.search-container'))
-
-        } else {
-            // Build endpoint
-            var endpoint = this.buildEndpoint(nextPage);
-
-            this.refreshPagination(nextPage);
-            getOfferings(endpoint, '', (function(self) {
-                return function(offerings) {
-                    paintOfferings(offerings, $('.search-container'), function() {
-                        this.initSearchView('OFFERING_COLLECTION');
-                    }.bind(this));
-                }.bind(self)
-            })(this));
-        }
-    };
-
-    /**
-     * Abstract method to be implemented, builds the endpoint 
-     */
-    StoreSearchView.prototype.buildEndpoint = function buildEndpoint(nextPage) {
-     // Set pagination params
-        var offeringsPage = $('#number-offerings').val();
-        var filter = '?start=' + ((offeringsPage * (nextPage - 1)) + 1);
-        filter = filter + '&limit=' + offeringsPage;
-
-        // Set sorting params
-        if ($('#sorting').val() != '') {
-            filter += '&sort=' + $('#sorting').val();
-        }
-
-        if (this.searchParams.searching) {
-            endpoint = EndpointManager.getEndpoint(this.searchEndp, {'text': this.searchParams.keyword});
-        } else {
-            endpoint = EndpointManager.getEndpoint('OFFERING_COLLECTION');
-        }
-
-        endpoint = endpoint + filter;
-        return endpoint;
-    };
-
-    /**
-     * Refresh the pagination component according to the next page to
-     * be displayed
-     * @param self, Object reference
-     * @param nextPage, Next page to be displayed 
-     */
-    StoreSearchView.prototype.refreshPagination = function refreshPagination (nextPage) {
-        var numberElem = 3;
-        var activatedPosition = 1;
-        var pagElems, button, a, currElem;
-
-        // calculate the number of displayed elements
-        if (this.numberOfPages < 3) {
-            numberElem = this.numberOfPages;
-        }
-
-        // Calculate activated position
-        if (this.numberOfPages >= 3) {
-            if (nextPage == this.numberOfPages) {
-                activatedPosition = 3;
-                finalSecuence = true;
-            } else if (nextPage == (this.numberOfPages - 1)) {
-                activatedPosition = 2;
-            }
-        } else {
-            activatedPosition = nextPage;
-        }
-
-        // paint the new pagination element
-        $('.pagination').empty();
-        pagElems = $('<ul></ul>');
-
-        button = $('<li></li>').attr('id', 'prev');
-        a = $('<a></a>').append('<i></i>').attr('class', 'icon-chevron-left');
-        a.appendTo(button);
-
-        // Set prev button listener
-        if(nextPage != 1) {
-            button.click((function (self, page) {
-                return function () {
-                    self.getNextOfferings(page - 1);
-                };
-            })(this, nextPage));
-        }
-
-        button.appendTo(pagElems);
-
-        if (activatedPosition == 1) {
-            currElem = nextPage;
-        } else if (activatedPosition == 2) {
-            currElem = nextPage - 1;
-        } else if (activatedPosition == 3) {
-            currElem = nextPage - 2;
-        }
-
-        for(var i = 0; i < numberElem; i++) {
-            button = $('<li></li>');
-            a = $('<a></a>').text(currElem);
-            if (currElem == nextPage) {
-                button.attr('class', 'active');
-            }
-            a.appendTo(button);
-
-            // Set the numbered button listener
-            button.click((function (self, page) {
-                return function () {
-                    self.getNextOfferings(page);
-                };
-            })(this, currElem));
-
-            button.appendTo(pagElems);
-            currElem ++;
-        }
-
-        button = $('<li></li>').attr('id', 'next');
-        a = $('<a></a>').append('<i></i>').attr('class', 'icon-chevron-right');
-        a.appendTo(button);
-
-        // Set prev button listener
-        if(nextPage != this.numberOfPages) {
-            button.click((function (self, page) {
-                return function () {
-                    self.getNextOfferings(page + 1);
-                }
-            })(this, nextPage));
-        }
-
-        button.appendTo(pagElems);
-
-        pagElems.appendTo('.pagination');
+    StoreSearchView.prototype.painterHandler = function painterHandler(offerings) {
+        paintOfferings(offerings, $('.search-container'), false, function() {
+            this.initSearchView('OFFERING_COLLECTION');
+        }.bind(this));
     };
 
     StoreSearchView.prototype.paintSearchView = function paintSearchView() {
-        var ret;
+        var ret, title='Offerings';
 
         // Check if the main page template has been destroyed and 
         // create it again if needed
@@ -232,8 +85,11 @@
 
         $('#store-container').empty()
 
+        if (this.searchEndp == 'SEARCH_TAG_ENTRY') {
+            title = this.searchParams.keyword;
+        }
         $.template('storeSearchTemplate', $('#store_search_template'));
-        $.tmpl('storeSearchTemplate').appendTo('#store-container');
+        $.tmpl('storeSearchTemplate', {'title': title}).appendTo('#store-container');
         ret = $('#store-return');
         ret.click(paintHomePage);
 
@@ -241,16 +97,50 @@
     };
 
     /**
-     * Abstract method that initialize the search view
+     * Initialize listeners and pagination
+     */
+    StoreSearchView.prototype.initializeComponents = function initializeComponents() {
+        var offset, nrows;
+
+        $('.search-container').empty();
+        // Calculate the number of rows
+        offset = $('.search-scroll-cont').offset().top;
+        nrows = Math.floor((($(window).height() - offset)/167) + 1);
+
+        // Set listener for sorting select
+        $('#sorting').change((function(self, endPoint) {
+            return function() {
+                var query = '';
+                if ($('#sorting').val() != '') {
+                    query = '&sort=' + $('#sorting').val();
+                }
+                $('.search-container').empty();
+                self.pagination.removeListeners();
+                self.pagination.createListeners();
+                self.pagination.configurePaginationParams(320, nrows, query);
+                self.pagination.getNextPage();
+            };
+        })(this, this.calculatedEndp));
+
+        this.pagination.setElemSpace(0);
+        this.pagination.configurePaginationParams(320, nrows);
+
+        // Remove possible listeners existing in the scroll
+        this.pagination.removeListeners();
+
+        this.pagination.createListeners();
+        this.pagination.getNextPage();
+    };
+
+    /**
+     * Initialize the search view
      */
     StoreSearchView.prototype.initSearchView = function initSearchView(endpoint, searchWord) {
-        var endP;
 
-        // Paint the search view
-        this.paintSearchView();
+        this.searchEndp = endpoint;
 
         // Check if an specific search endpoint has been provided
-        if (endpoint == this.searchEndp) {
+        if (endpoint != 'OFFERING_COLLECTION') {
             this.searchParams.searching = true;
             // Check if a search word has been provided or if it is needed
             // to retrieve it from the form field
@@ -259,35 +149,27 @@
             } else {
                 this.searchParams.keyword = searchWord;
             }
-            endP = EndpointManager.getEndpoint(endpoint, {'text': this.searchParams.keyword}) + '?action=count';
+            this.calculatedEndp = EndpointManager.getEndpoint(endpoint, {'text': this.searchParams.keyword});
         } else {
             // Get all offerings
             this.searchParams.searching = false;
             this.searchParams.keyword = '';
-            endP = EndpointManager.getEndpoint(endpoint) + '?action=count';
+            this.calculatedEndp = EndpointManager.getEndpoint(endpoint);
         }
+        // Paint the search view
+        this.paintSearchView();
 
-        // Set listener for number of offerings select
-        $('#number-offerings').change((function(self, endPoint) {
-            return function() {
-                getOfferings(endP, '', function(offerings) {
-                    self.setPaginationParams(offerings);
-                });
-            };
-        })(this, endP));
+        // Create the client
+        this.client = new ServerClient('', this.calculatedEndp, true);
+        // Create pagination component
+        this.pagination = new ScrollPagination(
+            $('.search-scroll-cont'),
+            $(".search-container"),
+            this.painterHandler.bind(this),
+            this.client,
+            this.scrollHandler.bind(this)
+        );
 
-        // Set listener for sorting select
-        $('#sorting').change((function(self, endPoint) {
-            return function() {
-                getOfferings(endP, '', function(offerings) {
-                    self.setPaginationParams(offerings);
-                });
-            };
-        })(this, endP));
-
-        // Calculate the number of offerings
-        getOfferings(endP, '', function(offerings) {
-            this.setPaginationParams(offerings);
-        }.bind(this));
+        this.initializeComponents();
     };
 })();

@@ -9,4 +9,7 @@
 </ul>
 <ul class="no-bullet store-sub-menu">
     <li><i class="icon-folder-open-alt"></i><a href="/catalogue">My Offerings</a></li>
+    {% if not oil %}
+    <li><i class="icon-group"></i><a href="/organization">Organizations</a></li>
+    {% endif %}
 </ul>

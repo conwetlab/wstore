@@ -46,14 +46,21 @@
         this.elementsPage = 10;
         this.nextPage = 1;
         this.numberOfRows = 3;
+        this.elemSpace = 50;
+        this.extraQuery = '';
     };
 
     /**
      * Set pagination params
      */
-    ScrollPagination.prototype.configurePaginationParams = function configurePaginationParams(elementWidth, numberRows) {
+    ScrollPagination.prototype.configurePaginationParams = function configurePaginationParams(elementWidth, numberRows, extraQuery) {
         this.elementWidth = elementWidth;
         this.numberOfRows = numberRows;
+
+        if (extraQuery) {
+            this.extraQuery = extraQuery;
+        }
+
         this.elementsPage = this.calculateElementsPage();
     };
 
@@ -61,7 +68,7 @@
      * Return the number of elements per row
      */
     ScrollPagination.prototype.getElementsRow = function getElementsRow() {
-        var elementsRow = Math.floor((this.elementContainer.width() - 50) / this.elementWidth);
+        var elementsRow = Math.floor((this.elementContainer.width() - this.elemSpace) / this.elementWidth);
 
         // If the width is fewer that an element
         // one element per row
@@ -105,12 +112,17 @@
         return this.nextPage;
     };
 
+    ScrollPagination.prototype.setElemSpace = function setElemSpace(elemSpace) {
+        this.elemSpace = elemSpace;
+    };
+
     /**
      * Retrieves next elements page
      */
     ScrollPagination.prototype.getNextPage = function getNextPage() {
         var queryString = '?start=' + (((this.nextPage- 1) * this.elementsPage) + 1);
         queryString += '&limit=' + this.elementsPage;
+        queryString += this.extraQuery;
 
         this.client.get(this.getReqHandler.bind(this), '', queryString);
     };

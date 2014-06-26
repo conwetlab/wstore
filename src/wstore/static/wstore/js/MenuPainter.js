@@ -20,16 +20,17 @@
 
 (function() {
 
-    MenuPainter = function MenuPainter() {
-        setListeners();
+    MenuPainter = function MenuPainter(buttonsListener) {
+        this.buttonsListener = buttonsListener;
+        setListeners(this);
     };
 
     var clickHandlerDecrease = function clickHandlerDecrease() {
         $('.left-bar').animate({'width': '50px'}, 1000, function() {
             $('.left-bar').empty();
             $('.left-bar').append('<a><i class="icon-th-list"></i></a>');
-            $('.left-bar a').click(clickHandlerIncrease);
-        });
+            $('.left-bar a').click(clickHandlerIncrease.bind(this));
+        }.bind(this));
     };
 
     var clickHandlerIncrease = function clickHandlerIncrease() {
@@ -37,12 +38,14 @@
         $.template('menuTemplate', $('#menu-template'));
         $.tmpl('menuTemplate').appendTo('.left-bar');
 
-        $('.left-bar .icon-remove').click(clickHandlerDecrease)
-        $('.left-bar').animate({'width': '205px'}, 1000);
+        $('.left-bar .icon-remove').click(clickHandlerDecrease.bind(this))
+        $('.left-bar').animate({'width': '205px'}, 1000, function() {
+            this.buttonsListener()
+        }.bind(this));
     };
 
-    var setListeners = function setListerners() {
-        $('.left-bar a').click(clickHandlerIncrease);
+    var setListeners = function setListerners(self) {
+        $('.left-bar a').click(clickHandlerIncrease.bind(self));
     };
 
 })();

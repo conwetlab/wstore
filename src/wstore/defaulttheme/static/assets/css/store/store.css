@@ -2,7 +2,7 @@
 #container-rated-newest {
   overflow: auto;
   position: absolute;
-  margin-top: -33px;
+  margin-top: -88px;
 }
 
 #container-rated-newest .menu-offering {
@@ -11,21 +11,22 @@
 
 #store-return {
   position: absolute;
-  top: 56px;
-  left: 11px;
+  top: 51px;
+  left: 238px;
 }
 
 #search-options {
   position: absolute;
-  top: 121px;
+  top: 83px;
   left: 103px;
 }
 
 .home-pg-title {
   position: relative;
   left: 50%;
-  width: 120px;
+  width: 150px;
   margin-left: -635px;
+  font-size: 30px;
 }
 
 #top-rated-container {
@@ -227,8 +228,56 @@
   margin-left: 10px;
 }
 
-.store-sub-menu .icon-folder-open-alt {
+.store-sub-menu i {
   font-size: 18px;
   margin-left: -8px;
 }
 
+/* Fixed position in View All options in the store view */
+.search-scroll-cont {
+    overflow: auto;
+    position: absolute;
+    top: 180px;
+    left: 0px;
+    width: 100%;
+}
+
+.search-container {
+  width: 1293px;
+  position: absolute;
+  left: 50%;
+  margin-left: -647px;
+}
+
+/* Search components position depends on the window size */
+@media all and (max-width: 1380px) {
+  .search-container {
+     width: 960px;
+     margin-left: -480px;
+  }
+}
+
+@media all and (max-width: 1093px) {
+  .search-container {
+     width: 640px;
+     margin-left: -320px;
+  }
+}
+
+#store-search {
+  position: fixed;
+  top: 51px;
+  right: 19px;
+}
+
+#sorting {
+  position: fixed;
+  top: 49px;
+  right: 432px;
+}
+
+#search-title {
+  position: absolute;
+  top: 132px;
+  font-size: 30px;
+}

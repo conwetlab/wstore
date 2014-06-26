@@ -55,6 +55,7 @@
         // Notify the views that the userprofile is created
         refreshView();
     }
+
     UserProfile.prototype.getUsername = function getUsername() {
         return this.username;
     };

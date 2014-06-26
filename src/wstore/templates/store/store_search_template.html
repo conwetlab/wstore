@@ -1,35 +1,15 @@
 <input type="button" class="btn btn-basic" id="store-return" value="Return"/>
-<div class="catalogue-form span2" id="search-options">
-    <form class="form form-vertical catalogue-elem ">
-        <div class="pagination pagination-centered">
-            <ul>
-                <li id="prev">
-                    <a class="icon-chevron-left"></a>
-                </li>
-                <li class="active">
-                    <a>1</a>
-                </li>
-                <li id="next">
-                    <a class="icon-chevron-right"></a>
-                </li>
-            </ul>
-        </div>
-        <h2>
-            Sort by
-        </h2>
-        <select id="sorting">
-            <option value="">-----</option>
-            <option value="popularity">Popularity</option>
-            <option value="name">Name</option>
-            <option value="date">Date</option>
-        </select>
-        <select id="number-offerings">
-            <option>10</option>
-            <option>20</option>
-            <option>30</option>
-        </select>
-    </form>
-</div>
-<div class="span9 search-container">
+    <select id="sorting">
+        <option value="">Sort by</option>
+        <div class="clear line"></div>
+        <option value="popularity">Popularity</option>
+        <option value="name">Name</option>
+        <option value="date">Date</option>
+    </select>
+
+<h1 id="search-title">${title}</h1>
+<div class="search-scroll-cont">
+    <div class="search-container">
+    </div>
 </div>
 

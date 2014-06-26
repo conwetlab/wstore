@@ -123,12 +123,9 @@
 }
 
 .store_title {
-    position: relative;
-    left: 89px;
-    top: -50px;
     color: rgb(96, 193, 207);
     font-family: NeoTech;
-    font-size: 30px;
+    font-size: 25px;
     font-weight: 200;
     width: 117px;
 }
@@ -140,13 +137,26 @@
 .store_title h2 {
     float: right;
     font-family: NeoTech;
+    margin-top: 5px;
+}
+
+#title-shadow {
+  width: 226px;
+  height: 23px;
+  position: absolute;
+  top: 37px;
+  left: 0;
+  background-color: rgb(244, 244, 244);
+  z-index: -1;
+  border-radius: 0 0 10px 0;
+  box-shadow: 4px 5px 8px rgba(50, 51, 51, 0.15);
 }
 
 .navigation {
-    width: 260px;
+    width: 280px;
     position: absolute;
-    top: 10px;
-    right: 20px;
+    top: 60px;
+    right: 0px;
 }
 
 #settings-menu .icon-wrench {
@@ -223,16 +233,6 @@
 
 .catalogue-form {
     width: 200px;
-}
-
-/* Fixed position in View All options in the store view */
-.search-container {
-    overflow: auto;
-    position: absolute;
-    top: 169px;
-    left: 330px;
-    height: 118%;
-    width: 82%;
 }
 
 .menu-offering {
@@ -587,10 +587,6 @@
     margin-top: 0px;
 }
 
-#store-search {
-    float: right;
-    margin-top: -44px;
-}
 
 #user-title {
     margin-left: 25px;
@@ -904,3 +900,16 @@ footer {
   text-decoration: none;
 }
 
+.bread-container {
+  margin-top: 170px;
+}
+
+#options-bar {
+  position: fixed;
+  width: 100%;
+  height: 50px;
+  top: 38px;
+  left: 0;
+  background-color: rgb(255, 255, 255);
+  box-shadow: 0px 0px 1px rgba(50, 51, 51, 0.15);
+}
