@@ -194,12 +194,21 @@
         $('#widget-text').off('click');
 
         $('#serv-text').click(function() {
+            if ($('.detailed-info').length) {
+                $('#home-container').empty()
+            }
             searchView.initSearchView('SEARCH_TAG_ENTRY', 'service');
         });
         $('#data-text').click(function() {
+            if ($('.detailed-info').length) {
+                $('#home-container').empty()
+            }
             searchView.initSearchView('SEARCH_TAG_ENTRY', 'dataset');
         });
         $('#widget-text').click(function() {
+            if ($('.detailed-info').length) {
+                $('#home-container').empty()
+            }
             searchView.initSearchView('SEARCH_TAG_ENTRY', 'widget');
         });
     };
