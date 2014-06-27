@@ -1,0 +1,67 @@
+
+.store-menu .icon-credit-card {
+  font-size: 20px;
+  position: relative;
+  top: 9px;
+  left: 7px;
+  color: rgb(255,255,255);
+}
+
+.store-menu .icon-cloud-upload {
+  font-size: 22px;
+  position: relative;
+  top: -31px;
+  left: 8px;
+  color: rgb(0, 45, 103);
+}
+
+.catalogue-form {
+  position: fixed;
+  top: 51px;
+  right: 0;
+  height: 40px;
+  width: 635px;
+}
+
+#provider-options {
+  position: absolute;
+  top: 51px;
+  left: 240px;
+}
+
+.offerings-scroll-container {
+  overflow: auto;
+  position: absolute;
+  top: 180px;
+  left: 0px;
+  width: 100%;
+}
+
+.offerings-container {
+  width: 1293px;
+  position: absolute;
+  left: 50%;
+  margin-left: -647px;
+  top: 0;
+}
+
+/* Search components position depends on the window size */
+@media all and (max-width: 1420px) {
+  .offerings-container {
+     width: 960px;
+     margin-left: -480px;
+  }
+}
+
+@media all and (max-width: 1093px) {
+  .offerings-container {
+     width: 640px;
+     margin-left: -320px;
+  }
+}
+
+#catalogue-title {
+  position: absolute;
+  top: 132px;
+  font-size: 30px;
+}

@@ -20,119 +20,62 @@
 
 (function () {
 
-    var currentTab;
-    var currentPage = 1;
-    var numberOfPages = 1;
+    var mpainter;
+    var searchView;
+    var evntAllowed = true;
 
-    var searchParams = {
-        'keyword': '',
-        'searching': false
+    fillStarsRating = function fillStarsRating(rating, container) {
+        // Fill rating stars
+
+        for (var k = 0; k < 5; k ++) {
+            var icon = $('<i></i>');
+
+            if (rating == 0) {
+                icon.addClass('icon-star-empty');
+            } else if (rating > 0 && rating < 1) {
+                icon.addClass('icon-star-half-empty blue-star');
+                rating = 0;
+            } else if (rating >= 1) {
+                icon.addClass('icon-star blue-star');
+                rating = rating - 1;
+            }
+            icon.appendTo(container);
+        }
     };
 
-    var getNextUserOfferings = function getNextUserOfferings (nextPage) {
-        var endpoint;
+    getPriceStr = function getPriceStr(pricing) {
+        var pricePlans;
+        var priceStr = 'Free';
 
-        // Set the pagination values in catalogue search view
-        setNextPage(nextPage);
-        // refresh pagination element
-        refreshPagination(nextPage);
-        currentPage = nextPage;
-
-        // make get offerings request
-        // Calculate the endpoint of the request
-        if (searchParams.searching) {
-            endpoint = EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': searchParams.keyword});
-        } else {
-            endpoint = EndpointManager.getEndpoint('OFFERING_COLLECTION')
-        }
-
-        getUserOfferings(currentTab, paintProvidedOfferings, endpoint);
-    };
-
-    var refreshPagination = function refreshPagination (nextPage) {
-        var numberElem = 3;
-        var activatedPosition = 1;
-        var pagElems, button, a, currElem;
-
-        // calculate the number of displayed elements
-        if (numberOfPages < 3) {
-            numberElem = numberOfPages;
-        }
-
-        // Calculate activated position
-        if (numberOfPages >= 3) {
-            if (nextPage == numberOfPages) {
-                activatedPosition = 3;
-                finalSecuence = true;
-            } else if (nextPage == (numberOfPages - 1)) {
-                activatedPosition = 2;
-            }
-        } else {
-            activatedPosition = nextPage;
-        }
-
-        // paint the new pagination element
-        $('.pagination').empty();
-        pagElems = $('<ul></ul>');
-
-        button = $('<li></li>').attr('id', 'prev');
-        a = $('<a></a>').append('<i></i>').attr('class', 'icon-chevron-left');
-        a.appendTo(button);
-
-        // Set prev button listener
-        if(nextPage != 1) {
-            button.click((function (page) {
-                return function () {
-                    getNextUserOfferings(page - 1);
-                };
-            })(nextPage));
-        }
-
-        button.appendTo(pagElems);
-
-        if (activatedPosition == 1) {
-            currElem = nextPage;
-        } else if (activatedPosition == 2) {
-            currElem = nextPage - 1;
-        } else if (activatedPosition == 3) {
-            currElem = nextPage - 2;
-        }
-
-        for(var i = 0; i < numberElem; i++) {
-            button = $('<li></li>');
-            a = $('<a></a>').text(currElem);
-            if (currElem == nextPage) {
-                button.attr('class', 'active');
-            }
-            a.appendTo(button);
-
-            // Set the numbered button listener
-            button.click((function (page) {
-                return function () {
-                    getNextUserOfferings(page);
-                };
-            })(currElem));
-
-            button.appendTo(pagElems);
-            currElem ++;
-        }
-
-        button = $('<li></li>').attr('id', 'next');
-        a = $('<a></a>').append('<i></i>').attr('class', 'icon-chevron-right');
-        a.appendTo(button);
-
-        // Set prev button listener
-        if(nextPage != numberOfPages) {
-            button.click((function (page) {
-                return function () {
-                    getNextUserOfferings(page + 1);
+        if (pricing.price_plans && pricing.price_plans.length > 0) {
+            if (pricing.price_plans.length == 1) {
+                var pricePlan = pricing.price_plans[0];
+                
+                if (pricePlan.price_components && pricePlan.price_components.length > 0) {
+                 // Check if it is a single payment
+                    if (pricePlan.price_components.length == 1) {
+                        var component = pricePlan.price_components[0];
+                        if (component.unit.toLowerCase() == 'single payment') {
+                            priceStr = component.value;
+                            if (component.currency == 'EUR') {
+                                priceStr = priceStr + ' €';
+                            } else {
+                                priceStr = priceStr + ' £';
+                            }
+                        } else {
+                            priceStr = 'View pricing';
+                        }
+                    // Check if is a complex pricing
+                    } else {
+                        priceStr = 'View pricing';
+                    }
                 }
-            })(nextPage));
+            } else {
+                priceStr = 'View pricing';
+            }
         }
 
-        button.appendTo(pagElems);
-
-        pagElems.appendTo('.pagination');
+        return priceStr;
     };
 
     var getRepositories = function getRepositories(callback) {
@@ -151,71 +94,68 @@
         });
     };
 
-    var setPaginationParams = function setPaginationParams (target, count) {
-        var numberOfOfferings;
+    var menuHandler = function menuHandler() {
+        $('#menu-first-text').off('click');
+        $('#menu-second-text').off('click');
 
-        numberOfOfferings = count.number;
+        $('#menu-first-text').click(function() {
+            // Check if details view
+            if ($('.detailed-info').length) {
+                $('#catalogue-container').empty();
+                createCatalogueContents();
+            }
+            searchView.initSearchView('OFFERING_COLLECTION', 'purchased');
+        });
+        $('#menu-second-text').click(function() {
+            // Check if details view
+            if ($('.detailed-info').length) {
+                $('#catalogue-container').empty();
+                createCatalogueContents();
+            }
 
-        if (numberOfOfferings != 0) {
-            numberOfPages = Math.ceil(numberOfOfferings / $('#number-offerings').val());
-        } else {
-            numberOfPages = 1;
-        }
+            if (USERPROFILE.getCurrentRoles().indexOf('provider') != -1) {
+                searchView.initSearchView('OFFERING_COLLECTION', 'provided');
+            } else {
+                // Build the non-provider view
+                var msg;
+                if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
+                    msg = "You don't have the provider role. To request the role please click ";
+                    if (USERPROFILE.providerRequested()) {
+                        msg = "You don't have the provider role yet. Your request is pending for approval";
+                    }
+                } else {
+                    msg = "You don't have the provider role for the current organization. Ask an organization manager to request the role";
+                }
+                $('#catalogue-title').text('Provided');
+                MessageManager.showAlertInfo('Unauthorized', msg, $('.offerings-container'));
+                $('.offerings-container .alert-info').removeClass('span8');
 
-        getNextUserOfferings(1);
+                if ((USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) && !USERPROFILE.providerRequested()) {
+                    var reqBtn = $('<a>here</a>');
+                    var requestForm = new ProviderRequestForm(USERPROFILE);
+                    
+                    reqBtn.click(function() {
+                        requestForm.display();
+                    }).appendTo('.alert-info');
+                }
+            }
+        });
     };
 
-    var changeTab = function changeTab (tab, changeMode) {
-        var endpoint;
-
-        currentTab = tab;
-
-        if (changeMode) {
-            searchParams.keyword = '';
-            searchParams.searching = false;
-        }
-
-        if (searchParams.searching) {
-            endpoint = EndpointManager.getEndpoint('SEARCH_ENTRY', {'text': searchParams.keyword})
-        } else {
-            endpoint = EndpointManager.getEndpoint('OFFERING_COLLECTION')
-        }
-        getUserOfferings(tab, setPaginationParams, endpoint, true);
+    closeMenuPainter = function closeMenuPainter() {
+        mpainter.decrease();
     };
 
-    paintCatalogue = function paintCatalogue() {
-        // Get the catalogue template
+    createCatalogueContents = function createCatalogueContents() {
+     // Get the catalogue template
         $.template('catalogueTemplate', $('#catalogue_search_template'));
         $.tmpl('catalogueTemplate', {}).appendTo('#catalogue-container');
 
         // If the user is a provider, append provider buttons
         if (USERPROFILE.getCurrentRoles().indexOf('provider') != -1) {
-            var div;
-            $.template('providerTabsTemplate', $('#provider_tabs_template'));
-            $.tmpl('providerTabsTemplate', {}).appendTo('.nav-tabs');
+            $.template('providerOptionsTemplate', $('#provider_options_template'));
+            $.tmpl('providerOptionsTemplate', {}).appendTo('#provider-options');
 
-            div = $('<div></div>').addClass('tab-pane').attr('id', 'provided-tab');
-            $('<div></div>').attr('id', 'provided-content').appendTo(div);
-            div.appendTo('.tab-content');
-        } else {
-            // Include the 'become a provider' button if needed
-            if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
-                var provBtn = $('<input></input>').addClass('btn btn-blue').attr('type', 'button').attr('id', 'become-prov');
-                if (!USERPROFILE.providerRequested()) {
-                    var requestForm = new ProviderRequestForm(USERPROFILE);
-
-                    provBtn.val('Become a provider');
-                    provBtn.click(function() {
-                        requestForm.display();
-                    })
-                } else {
-                    provBtn.val('Request pending');
-                }
-                provBtn.appendTo('.nav-tabs');
-            }
-        }
-
-        if ($('#create-app').length > 0) {
             $('#create-app').click(function () {
                 getRepositories(showCreateAppForm);
             });
@@ -228,27 +168,12 @@
                 resForm = new BindResourcesForm(offElem, true);
                 resForm.display();
             });
+
         }
-
-        // Load data into the tabs on show
-        $('a[data-toggle="tab"]').on('shown', function (e) {
-            changeTab(e.target.hash, true);
-        });
-
-        $('#number-offerings').change(function() {
-            changeTab(currentTab);
-        });
-
-        $('#sorting').change(function() {
-            changeTab(currentTab);
-        });
-
         $('#cat-search').click(function() {
             var keyword = $.trim($('#cat-search-input').val());
             if (keyword != ''){
-                searchParams.keyword = keyword;
-                searchParams.searching = true;
-                changeTab(currentTab);
+                searchView.initSearchView('SEARCH_ENTRY');
             }
         });
 
@@ -259,99 +184,48 @@
             if (e.which == 13 && keyword != '') {
                 e.preventDefault();
                 e.stopPropagation();
-                searchParams.keyword = keyword;
-                searchParams.searching = true;
-                changeTab(currentTab);
+                searchView.initSearchView('SEARCH_ENTRY');
             }
         });
         $('#cat-all').click(function() {
-            changeTab(currentTab, true);
+            searchView.initSearchView('OFFERING_COLLECTION');
         });
-
-        if (USERPROFILE.getUserRoles().indexOf('admin') == -1 && $('#oil-nav').length > 0) {
-            // The navigation menu width depends on the presence of the FI-LAB bar
-            $('.navigation').css('width', '188px');
-        }
         calculatePositions();
-        changeTab('#purchased-tab');
     };
 
-    getCurrentTab = function getCurrentTab () {
-        return currentTab;
+    paintCatalogue = function paintCatalogue() {
+        
+        createCatalogueContents();
+        searchView = new CatalogueSearchView();
+
+        // Create menu
+        mpainter = new MenuPainter(menuHandler);
+
+        searchView.initSearchView('OFFERING_COLLECTION', 'purchased');
     };
+
 
     refreshView = function refreshView() {
         $('#catalogue-container').empty();
         paintCatalogue();
     };
 
-    calculatePositions = function calculatePositions() {
-        var position;
-        var filabInt = $('#oil-nav').length > 0;
+    notifyEvent = function notifyEvent() {
+        evntAllowed = true;
+    };
+    calculatePositions = function calculatePositions(evnt) {
 
-        $('.catalogue-form .form').removeAttr('style');
-
-        // Check window width
-        if ($(window).width() < 981) {
-            // Change headers position to avoid problems with bootstrap responsive
-            if (filabInt) {
-                $('.title_wrapper').css('top', '-55px');
-            }
-
-            //Up the catalogue tabs
-            if ($(window).width() < 769) { // Responsive activation
-                if (filabInt) {
-                    $('.offerings-container').css('top', '225px');
-                } else {
-                    $('.offerings-container').css('top', '365px');
-                }
-
-                $('.offerings-container').css('left', '10px');
-                $('.catalogue-form .form').css('width', '100%');
-            } else {
-                var offset;
-                var width;
-                if (filabInt) {
-                    $('.offerings-container').css('top', '0');
-                } else {
-                    $('.offerings-container').css('top', '148px');
-                }
-
-                $('.offerings-container').css('left', '228px');
-                // Fixed position in: Tab content in catalogue view
-                offset = $(window).height() - $('.tab-content').offset().top - 30;
-                width = $(window).width() - $('.tab-content').offset().left -10;
-                $('.tab-content').css('height', offset.toString() + 'px');
-                $('.tab-content').css('width', width.toString() + 'px');
-            }
-        } else {
-            var offset;
-            var width;
-            if (filabInt) {
-                $('.title_wrapper').css('top', '115px');
-                $('.navigation').css('top', '60px');
-            }
-            $('.offerings-container').css('top', '176px');
-            $('.offerings-container').css('left', '228px');
-
-            // Fixed position in: Tab content in catalogue view
-            offset = $(window).height() - $('.tab-content').offset().top - 30;
-            width = $(window).width() - $('.tab-content').offset().left -10;
-            $('.tab-content').css('height', offset.toString() + 'px');
-            $('.tab-content').css('width', width.toString() + 'px');
+        if (evnt && evntAllowed) {
+            evntAllowed = false;
+            searchView.initializeComponents();
         }
-        // Calculate tabs width, at the end to avoid problems with position changes
-        position = $('.tabbable').offset();
-        $('.offerings-container').css('width', ($(window).width() - position.left) + 'px');
+        var scrollContPos, offset = $(window).height() - $('.offerings-scroll-container').offset().top - 30;
 
-        // Check username length to avoid display problems
-        if ($.trim($('div.btn.btn-blue > div.dropdown-toggle span').text()).length > 12) {
-            var shortName = ' '+ USERPROFILE.getCompleteName().substring(0, 9) + '...';
-            // Replace user button contents
-            var userBtn = $('div.btn.btn-blue > div.dropdown-toggle span');
-            userBtn.empty();
-            userBtn.text(shortName);
-        }
+        $('.offerings-scroll-container').css('height', offset.toString() + 'px');
+
+        scrollContPos = $('.offerings-container').offset().left -5;
+        // Set title left
+        $('#catalogue-title').css('left', scrollContPos.toString() + 'px');
     }
     $(window).resize(calculatePositions);
 

@@ -22,10 +22,12 @@
 
     MenuPainter = function MenuPainter(buttonsListener) {
         this.buttonsListener = buttonsListener;
+        this.expanded = false;
         setListeners(this);
     };
 
     var clickHandlerDecrease = function clickHandlerDecrease() {
+        this.expanded = false;
         $('.left-bar').animate({'width': '50px'}, 1000, function() {
             $('.left-bar').empty();
             $('.left-bar').append('<a><i class="icon-th-list"></i></a>');
@@ -34,6 +36,7 @@
     };
 
     var clickHandlerIncrease = function clickHandlerIncrease() {
+        this.expanded = true;
         $('.left-bar').empty()
         $.template('menuTemplate', $('#menu-template'));
         $.tmpl('menuTemplate').appendTo('.left-bar');
@@ -48,4 +51,10 @@
         $('.left-bar a').click(clickHandlerIncrease.bind(self));
     };
 
+    MenuPainter.prototype.decrease = function decrease() {
+        if (this.expanded) {
+            var clicker = clickHandlerDecrease.bind(this);
+            clicker();
+        }
+    }
 })();

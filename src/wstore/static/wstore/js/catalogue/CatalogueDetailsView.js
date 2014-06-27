@@ -216,6 +216,7 @@
             this.reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'), this);
             this.reviewPainter.paint();
         }
+        closeMenuPainter();
     };
 
     /**

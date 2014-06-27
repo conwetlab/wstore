@@ -22,102 +22,42 @@
 
     var nextPage;
 
-    fillStarsRating = function fillStarsRating(rating, container) {
-        // Fill rating stars
-
-        for (var k = 0; k < 5; k ++) {
-            var icon = $('<i></i>');
-
-            if (rating == 0) {
-                icon.addClass('icon-star-empty');
-            } else if (rating > 0 && rating < 1) {
-                icon.addClass('icon-star-half-empty blue-star');
-                rating = 0;
-            } else if (rating >= 1) {
-                icon.addClass('icon-star blue-star');
-                rating = rating - 1;
-            }
-            icon.appendTo(container);
-        }
+    CatalogueSearchView = function CatalogueSearchView() {
+        this.searchParams = {
+            'keyword': '',
+            'searching': false
+        };
+        this.query = '';
     };
 
-    getUserOfferings = function getUserOfferings (target, callback, endpoint, count) {
+    CatalogueSearchView.prototype.scrollHandler = function scrollHandler() {
+        
+    };
 
-        var filter, offeringsPage;
+    CatalogueSearchView.prototype.painterHandler = function painterHandler(offerings) {
+        var toEmpty = false;
 
-        offeringsPage = $('#number-offerings').val();
-
-        if (target == '#provided-tab') {
-            filter = '?filter=provided&state=all';
-        } else if (target == '#purchased-tab'){
-            filter = '?filter=purchased';
-        }
-        if (count) {
-            filter += '&action=count'
-        } else {
-            // Set number of offerings per page
-            filter += '&limit=' + offeringsPage;
-            // Set the first element
-            filter += '&start=' + ((offeringsPage * (nextPage - 1)) + 1);
-
-            if ($('#sorting').val() != '') {
-                filter += '&sort=' + $('#sorting').val();
-            }
-        }
-        $.ajax({
-            type: "GET",
-            url: endpoint + filter,
-            dataType: 'json',
-            success: function(response) {
-                callback(target, response);
-            },
-            error: function(xhr) {
-                var resp = xhr.responseText;
-                var msg = JSON.parse(resp).message;
-                MessageManager.showMessage('Error', msg);
-            }
-
-        })
-    }
-
-    getPriceStr = function getPriceStr(pricing) {
-        var pricePlans;
-        var priceStr = 'Free';
-
-        if (pricing.price_plans && pricing.price_plans.length > 0) {
-            if (pricing.price_plans.length == 1) {
-                var pricePlan = pricing.price_plans[0];
-                
-                if (pricePlan.price_components && pricePlan.price_components.length > 0) {
-                 // Check if it is a single payment
-                    if (pricePlan.price_components.length == 1) {
-                        var component = pricePlan.price_components[0];
-                        if (component.unit.toLowerCase() == 'single payment') {
-                            priceStr = component.value;
-                            if (component.currency == 'EUR') {
-                                priceStr = priceStr + ' €';
-                            } else {
-                                priceStr = priceStr + ' £';
-                            }
-                        } else {
-                            priceStr = 'View pricing';
-                        }
-                    // Check if is a complex pricing
-                    } else {
-                        priceStr = 'View pricing';
-                    }
-                }
+        if (this.pagination.getNextPageNumber() <= 2) { // Is the first page
+            if (offerings.length > 0) {
+                toEmpty = true;  // Delete the container
             } else {
-                priceStr = 'View pricing';
+                var msg = 'Your search has not produced any results'; 
+                if (!this.searchParams.searching) {
+                    msg = "Your don't have any offering in this category";
+                }
+                MessageManager.showAlertInfo('No offerings', msg, $('.offerings-container'));
+                $('.offerings-container .alert-info').removeClass('span8');
+                return;
             }
         }
-
-        return priceStr;
+        paintProvidedOfferings(offerings, toEmpty);
     };
 
-    paintProvidedOfferings = function paintProvidedOfferings (target, data) {
+    var paintProvidedOfferings = function paintProvidedOfferings (data, toEmpty) {
 
-        $(target).empty();
+        if (toEmpty) {
+            $('.offerings-container').empty();
+        }
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
             var offDetailsView = new CatalogueDetailsView(offering_elem, paintCatalogue, '#catalogue-container');
@@ -183,12 +123,83 @@
                 templ.find('.off-org-name').css('width', '126px')
                 templ.find('.off-org-name').css('left', '78px');
             }
-            templ.appendTo(target)
+            templ.appendTo('.offerings-container');
         }
+        notifyEvent();
     };
 
-    setNextPage = function setNextPage (nextPag) {
-        nextPage = nextPag;
+    CatalogueSearchView.prototype.initializeComponents = function initializeComponents(type) {
+        var offset, nrows;
+
+        if (type) {
+            if (type == 'provided') {
+                this.query = '&filter=provided&state=all';
+                $('#catalogue-title').text('Provided');
+            } else {
+                this.query = '&filter=purchased';
+                $('#catalogue-title').text('Purchased');
+            }
+        }
+
+        $('.offerings-container').empty();
+        // Calculate the number of rows
+        offset = $('.offerings-scroll-container').offset().top;
+        nrows = Math.floor((($(window).height() - offset)/167) + 1);
+
+        // Set listener for sorting select
+        $('#sorting').change((function(self, endPoint) {
+            return function() {
+                var query = self.query;
+                if ($('#sorting').val() != '') {
+                    query += '&sort=' + $('#sorting').val();
+                }
+                $('.offerings-container').empty();
+                self.pagination.removeListeners();
+                self.pagination.createListeners();
+                self.pagination.configurePaginationParams(320, nrows, query);
+                self.pagination.getNextPage();
+            };
+        })(this, this.calculatedEndp));
+
+        this.pagination.setElemSpace(0);
+        this.pagination.configurePaginationParams(320, nrows, this.query);
+
+        // Remove possible listeners existing in the scroll
+        this.pagination.removeListeners();
+
+        this.pagination.createListeners();
+        this.pagination.getNextPage();
+    };
+
+    CatalogueSearchView.prototype.initSearchView = function initSearchView(endpoint, type) {
+        this.searchEndp = endpoint;
+
+        // Check if an specific search endpoint has been provided
+        if (endpoint != 'OFFERING_COLLECTION') {
+            this.searchParams.searching = true;
+            // Check if a search word has been provided or if it is needed
+            // to retrieve it from the form field
+            this.searchParams.keyword = $.trim($('#cat-search-input').val());
+            this.calculatedEndp = EndpointManager.getEndpoint(endpoint, {'text': this.searchParams.keyword});
+        } else {
+            // Get all offerings
+            this.searchParams.searching = false;
+            this.searchParams.keyword = '';
+            this.calculatedEndp = EndpointManager.getEndpoint(endpoint);
+        }
+
+        // Create the client
+        this.client = new ServerClient('', this.calculatedEndp, true);
+        // Create pagination component
+        this.pagination = new ScrollPagination(
+            $('.offerings-scroll-container'),
+            $(".offerings-container"),
+            this.painterHandler.bind(this),
+            this.client,
+            this.scrollHandler.bind(this)
+        );
+
+        this.initializeComponents(type);
     };
 
 })();

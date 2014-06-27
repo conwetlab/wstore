@@ -22,6 +22,7 @@
 
     var searchView;
     var evntAllowed = true;
+    var mpainter;
 
     refreshView = function refreshView() {
         $('home-container').empty();
@@ -189,23 +190,23 @@
 
     setMenuHandlers = function setMenuHandlers() {
 
-        $('#serv-text').off('click');
-        $('#data-text').off('click');
-        $('#widget-text').off('click');
+        $('#menu-first-text').off('click');
+        $('#menu-second-text').off('click');
+        $('#menu-third-text').off('click');
 
-        $('#serv-text').click(function() {
+        $('#menu-first-text').click(function() {
             if ($('.detailed-info').length) {
                 $('#home-container').empty()
             }
             searchView.initSearchView('SEARCH_TAG_ENTRY', 'service');
         });
-        $('#data-text').click(function() {
+        $('#menu-second-text').click(function() {
             if ($('.detailed-info').length) {
                 $('#home-container').empty()
             }
             searchView.initSearchView('SEARCH_TAG_ENTRY', 'dataset');
         });
-        $('#widget-text').click(function() {
+        $('#menu-third-text').click(function() {
             if ($('.detailed-info').length) {
                 $('#home-container').empty()
             }
@@ -215,7 +216,6 @@
     
     paintHomePage = function paintHomePage () {
         // Create search view object
-        var mpainter;
         searchView = new StoreSearchView();
 
         $('#home-container').empty();
@@ -247,6 +247,10 @@
         calculatePositions();
         getOfferings(EndpointManager.getEndpoint('NEWEST_COLLECTION'), $('#newest-container'));
         getOfferings(EndpointManager.getEndpoint('TOPRATED_COLLECTION'), $('#top-rated-container'));
+    };
+
+    closeMenuPainter = function closeMenuPainter() {
+        mpainter.decrease();
     };
 
     calculatePositions = function calculatePositions(evnt) {

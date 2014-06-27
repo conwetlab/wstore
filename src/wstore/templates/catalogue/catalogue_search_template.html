@@ -1,41 +1,20 @@
-<div class="span2 catalogue-form">
-    <form class="form form-vertical catalogue-elem">
-        <div class="pagination pagination-centered">
-        </div>
-        <h2>
-            Sort by
-        </h2>
+<div id="provider-options" />
+<div class="catalogue-form">
+    <form class="form form-horizontal catalogue-elem">
         <select id="sorting">
-            <option value="">-----</option>
+            <option value="">Sort by</option>
             <option value="popularity">Popularity</option>
             <option value="name">Name</option>
             <option value="date">Date</option>
         </select>
-        <select id="number-offerings">
-            <option>10</option>
-            <option>20</option>
-            <option>30</option>
-        </select>
-        <h2>
-            Filter by
-        </h2>
-        <input type="text" id="cat-search-input"/>
-        <input type="button" value="Search" id="cat-search"></input>
-        <input type="button" value="View all" id="cat-all"></input>
+        <input type="text" id="cat-search-input" placeholder="Search"/>
+        <input type="button" class="btn btn-blue" value="Search" id="cat-search"></input>
+        <input type="button" class="btn btn-basic" value="View all" id="cat-all"></input>
     </form>
 </div>
-<div class="span9 offerings-container">
-    <div class="tabbable catalogue-elem"> 
-        <ul class="nav nav-tabs">
-            <li class="active"><a href="#purchased-tab" data-toggle="tab">Purchased</a></li>
-       </ul>
-       <div class="tab-content">
-           <div class="tab-pane active" id="purchased-tab">
-              <div id="purchased-content">
-              </div>
-           </div>
-       </div>
-   </div>
+<h1 id="catalogue-title">Purchased</h1>
+<div class="offerings-scroll-container">
+    <div class="offerings-container"></div>
 </div>
 <div class="clear space" />
 <div style="clear:both" />

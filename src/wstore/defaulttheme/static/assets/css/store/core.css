@@ -226,19 +226,11 @@
     overflow-y: auto;
 }
 
-.catalogue-elem {
-    margin-top: 50px;
-}
-
 /* Fixed position in Details and Catalogue Tab */
 .tab-content {
     padding: 5px;
     overflow: auto;
     width: 97%;
-}
-
-.catalogue-form {
-    width: 200px;
 }
 
 .menu-offering {
@@ -674,18 +666,6 @@ h2 {
   background-color: rgb(0, 43, 103) !important;
 }
 
-.catalogue-form .form {
-  width: 221px;
-}
-
-.icon-book {
-  color: rgb(96, 193, 207);
-}
-
-.icon-home {
-  color: rgb(96, 193, 207);
-}
-
 .icon-tag {
   color: rgb(96, 193, 207);
 }
@@ -945,3 +925,93 @@ footer {
   right: 20px;
 }
 
+/* Menu style */
+.store-menu {
+  position: absolute;
+  top: 22px;
+}
+
+.store-sub-menu {
+  position: absolute;
+  top: 160px;
+}
+
+.menu-icon {
+  width: 40px;
+  height: 40px;
+  margin-left: -25px;
+}
+
+#menu-first-icon {
+  background-color: rgb(96, 193, 207);
+}
+
+#menu-second-icon {
+  background-color: rgb(255, 230, 22);
+}
+
+#menu-third-icon {
+  background-color: rgb(0, 45, 103);
+}
+
+.store-sub-menu li {
+  position: relative;
+  top: 0;
+  left: -25px;
+  float: left;
+  white-space: nowrap;
+  width: 205px;
+  height: 40px;
+  vertical-align: middle;
+  line-height: 40px;
+  text-indent: 10px;
+}
+
+.store-sub-menu li:hover {
+  background-color: rgba(50, 51, 51, 0.15);
+}
+
+.store-sub-menu a {
+  font-size: 15px;
+  margin-left: 10px;
+}
+
+.store-sub-menu i {
+  font-size: 18px;
+  margin-left: -8px;
+}
+
+.store-sub-menu .icon-home {
+  font-size: 22px;
+}
+
+.store-menu span {
+  float: left;
+  position: relative;
+  left: 15px;
+  top: -40px;
+  width: 165px;
+  height: 40px;
+  color: rgb(0, 45, 103);
+  vertical-align: middle;
+  line-height: 40px;
+  font-size: 16px;
+  text-indent: 10px;
+}
+
+#menu-first-text:hover {
+  cursor:pointer;
+  background-color: rgb(96, 193, 207);
+  color: rgb(255,255,255);
+}
+
+#menu-second-text:hover {
+  cursor:pointer;
+  background-color: rgb(255, 230, 22);
+}
+
+#menu-third-text:hover {
+  cursor:pointer;
+  background-color: rgb(0, 45, 103);
+  color: rgb(255,255,255);
+}
