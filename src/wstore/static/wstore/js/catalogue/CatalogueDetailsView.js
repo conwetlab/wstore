@@ -166,10 +166,7 @@
             // Delete offering
             if(this.offeringElement.getState() != 'deleted') {
 
-                $('<input></input>').attr('type', 'button').
-                                    attr('value', 'Delete offering').
-                                    addClass('btn btn-danger btn-advanced').
-                                    appendTo('#advanced-op').click((function() {
+                $('<li><a>Delete offering</a></li>').appendTo('#advanced-op').click((function() {
                     var msg = "Are you sure that you want to delete the offering";
                     MessageManager.showYesNoWindow(msg, (function() {
                         this.deleteOffering();
@@ -179,20 +176,17 @@
 
             // Bind resources and edit the offering
             if (this.offeringElement.getState() == 'uploaded') {
-                $('<input></input>').attr('type', 'button').attr('value', 'Bind resources').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+                $('<li><a>Bind resources</a></li>').appendTo('#advanced-op').click((function() {
                     var resForm = new BindResourcesForm(this.offeringElement, false, this);
                     resForm.display();
                 }).bind(this));
-                $('<input></input>').attr('type', 'button').attr('value', 'Edit').addClass('btn btn-advanced').appendTo('#advanced-op').click((function() {
+                $('<li><a>Edit</a></li>').appendTo('#advanced-op').click((function() {
                     editOfferingForm(this.offeringElement, this);
                 }).bind(this));
             }
         }
         // Download service model
-        $('<input></input>').attr('type', 'button').
-                            attr('value', 'Download service model').
-                            addClass('btn btn-advanced').
-                            appendTo('#advanced-op').click((function() {
+        $('<li><a>Download service model</a></li>').appendTo('#advanced-op').click((function() {
             this.getServiceModel();
         }).bind(this));
 
@@ -213,14 +207,15 @@
             this.checkRenovations();
         }
 
+        // Calculate positions on resize
+        this.calculatePositions();
+        $(window).resize(this.calculatePositions.bind(this));
+
         // Form for comment and rate the offering
         if (this.offeringElement.getComments().length) {
             this.reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'), this);
             this.reviewPainter.paint();
         }
-        // Calculate positions on resize
-        this.calculatePositions();
-        $(window).resize(this.calculatePositions.bind(this));
     };
 
     /**

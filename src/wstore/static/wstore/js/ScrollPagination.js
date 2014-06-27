@@ -106,6 +106,7 @@
             }
             // Last page returned: disconnect listener to avoid requests
             this.scrollContainer.off('scroll');
+            this.scrollContainer.scroll(this.scrollHandler); // Client handler is still needed
         }
     };
 
@@ -147,7 +148,7 @@
      * Creates scroll listeners
      */
     ScrollPagination.prototype.createListeners = function createListeners() {
-
+        this.scrollContainer.off('scroll');
         // Create scroll listener
         this.scrollContainer.scroll(function(evnt) {
            if ((this.scrollContainer.height() + this.scrollContainer.scrollTop()) >= this.content.height()) {
