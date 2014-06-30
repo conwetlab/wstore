@@ -22,6 +22,7 @@ import json
 
 from django.http import HttpResponse
 
+from wstore.admin.searchers import ResourceBrowser
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required
 from wstore.store_commons.resource import Resource
@@ -52,6 +53,29 @@ def is_valid_credit_card(number):
             valid = False
 
     return valid
+
+
+class ResourceSearch(Resource):
+
+    @authentication_required
+    def read(self, request):
+
+        # Get data contained in query string
+        querytext = request.GET.get('q', '')
+        indexname = request.GET.get('namespace', '')
+
+        # if indexname is empty, builds error response
+        if indexname is '':
+            return build_response(request, 400, 'The "namespace" field is required.')
+
+        # if indexname does not exist, builds error response
+        if not ResourceBrowser.is_stored(indexname):
+            return build_response(request, 400, 'The "namespace" field does not exist.')
+
+        # Search for stored resources
+        response = ResourceBrowser.search(indexname, querytext)
+
+        return HttpResponse(json.dumps(response), content_type='application/json')
 
 
 class UnitCollection(Resource):

@@ -49,6 +49,7 @@ urlpatterns = patterns('',
     url(r'^organization/$', 'wstore.views.organization', name='organization'),
 
     # API
+    url(r'^api/administration/search$', admin_views.ResourceSearch(permitted_methods=('GET',)), name='resource_search'),
     url(r'^api/administration/marketplaces/?$', market_views.MarketplaceCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/repositories/?$', rep_views.RepositoryCollection(permitted_methods=('GET', 'POST'))),
     url(r'^api/administration/rss/?$', rss_views.RSSCollection(permitted_methods=('GET', 'POST'))),

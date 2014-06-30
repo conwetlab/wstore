@@ -31,6 +31,7 @@ from djangotoolbox.fields import DictField
 from wstore.admin.markets.models import *
 from wstore.admin.repositories.models import *
 from wstore.admin.rss.models import *
+from wstore.admin.searchers import ResourceBrowser
 
 
 class Context(models.Model):
@@ -162,6 +163,8 @@ def create_user_profile(sender, instance, created, **kwargs):
         if instance.first_name and instance.last_name:
             profile.complete_name = instance.first_name + ' ' + instance.last_name
             profile.save()
+
+    ResourceBrowser.add_resource('user', resource=instance)
 
 
 def create_context(sender, instance, created, **kwargs):

@@ -25,6 +25,8 @@ from urllib2 import HTTPError
 from nose_parameterized import parameterized
 
 from django.test import TestCase
+from django.test.client import Client
+from django.contrib.auth.models import User
 from django.conf import settings
 
 from wstore.admin.users import views
@@ -551,3 +553,73 @@ class UserEntryTestCase(TestCase):
                                 self.assertTrue(role in o['roles'])
                             else:
                                 self.assertTrue(self.request.user.is_staff)
+
+
+class UserSearchTestCase(TestCase):
+
+    tags = ('user-search',)
+
+    @classmethod
+    def setUpClass(cls):
+
+        from django.conf import settings
+        from django.core.urlresolvers import reverse
+        from tempfile import mkdtemp
+
+        # Get the absolute url of resource search
+        cls.base_url = reverse('resource_search')
+
+        # Save the resource index directory
+        cls.old_index_dir = settings.RESOURCE_INDEX_DIR
+
+        # Create a directory temporal
+        settings.RESOURCE_INDEX_DIR = mkdtemp()
+
+        super(UserSearchTestCase, cls).setUpClass()
+
+    def setUp(self):
+
+        super(UserSearchTestCase, self).setUp()
+
+        usr = User.objects.create(
+            first_name=u'Maria',
+            last_name=u'Fernandez',
+            username=u'mfochoa',
+            email=u'maria_fernandez_ochoa@tbox.es'
+        )
+        usr.set_password(u'admin')
+        usr.save()
+
+        self.client = Client()
+
+    def test_to_check_request_errors(self):
+
+        self.client.login(username='mfochoa', password='admin')
+
+        response = self.client.get(self.base_url + '?namespace=shop&q=mar')
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.get(self.base_url + '?q=mar')
+        self.assertEqual(response.status_code, 400)
+
+    def test_searching_for_users(self):
+
+        self.client.login(username='mfochoa', password='admin')
+
+        response = self.client.get(self.base_url + '?namespace=user&q=mar')
+        result_json = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(len(result_json['results']), 1)
+
+    @classmethod
+    def tearDownClass(cls):
+
+        from django.conf import settings
+        from shutil import rmtree
+
+        # Clear the directory temporal
+        rmtree(settings.RESOURCE_INDEX_DIR)
+
+        # Restore the resource index directory
+        settings.RESOURCE_INDEX_DIR = cls.old_index_dir
+
+        super(UserSearchTestCase, cls).tearDownClass()
