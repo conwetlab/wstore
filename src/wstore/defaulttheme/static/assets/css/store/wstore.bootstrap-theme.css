@@ -13,6 +13,8 @@ select:focus {border-color: rgba(82, 168, 236, 0.8); outline: 0; outline: thin d
 
 .gif-loading {background-image: url(/static/assets/img/loading.gif); width: 32px; height: 32px; position: absolute; top: 8px; margin-left: 10px;}
 
+label.checkbox {cursor: pointer;}
+
 /* Form */
 
 .form-default .form-fields h3 {color: #002b67; margin-top: 8px; margin-bottom: 8px;}

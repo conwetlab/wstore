@@ -137,7 +137,7 @@
       );
     
     $container
-      .append(
+      .prepend(
         $('<table>').addClass('table table-bordered table-members').append($('<thead>').append(
           $('<tr>').append('<th class="username">Username</th>',
                            '<th class="role_customer">Customer</th>',
@@ -146,6 +146,24 @@
           ), $('<tbody>').addClass('organization_users_list')
         )
       );
+    
+    response = WStore.urls.getURL('resources:search').read('namespace=user&q=username:*');
+    users = response.data.results;
+
+    options = '[';
+    
+    for (var u in users) {
+      options += '"'+users[u].username+'",';
+    }
+    
+    options = options.substring(0, options.length-1) + ']';
+
+    $container
+      .find('#user_registration input[name="username"]')
+      .attr('autocomplete', 'off')
+      .attr('data-provide', 'typeahead')
+      .attr('data-items', '4') 
+      .attr('data-source', options);
     
     response = this.methods.urls.getURL('user_collection', {name: data.name}).read();
     $users_table = $container.find('.organization_users_list');

@@ -462,6 +462,9 @@
       collection: '/api/administration/repositories/',
       entry: '/api/administration/repositories/${name}',
     },
+    resources: {
+      search: '/api/administration/search',
+    },
     rss: {
       collection: '/api/administration/rss/',
       entry: '/api/administration/rss/${name}',
