@@ -198,18 +198,21 @@
             if ($('.detailed-info').length) {
                 $('#home-container').empty()
             }
+            searchView.setTitle('Services');
             searchView.initSearchView('SEARCH_TAG_ENTRY', 'service');
         });
         $('#menu-second-text').click(function() {
             if ($('.detailed-info').length) {
                 $('#home-container').empty()
             }
+            searchView.setTitle('Datasets');
             searchView.initSearchView('SEARCH_TAG_ENTRY', 'dataset');
         });
         $('#menu-third-text').click(function() {
             if ($('.detailed-info').length) {
                 $('#home-container').empty()
             }
+            searchView.setTitle('Widgets / Mashups');
             searchView.initSearchView('SEARCH_TAG_ENTRY', 'widget');
         });
     };
@@ -224,6 +227,7 @@
 
         $('#search').click(function() {
             if ($.trim($('#text-search').val()) != '') {
+                searchView.setTitle('Offerings');
                 searchView.initSearchView('SEARCH_ENTRY');
             }
         });
@@ -233,11 +237,13 @@
             if (e.which == 13 && $.trim($(this).val()) != '') {
                 e.preventDefault();
                 e.stopPropagation();
+                searchView.setTitle('Offerings');
                 searchView.initSearchView('SEARCH_ENTRY');
             }
         });
 
         $('#all').click(function() {
+            searchView.setTitle('Offerings');
             searchView.initSearchView('OFFERING_COLLECTION');
         })
 
