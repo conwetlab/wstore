@@ -55,12 +55,17 @@
 
     var paintProvidedOfferings = function paintProvidedOfferings (data, toEmpty) {
 
+        action = function() {
+            paintCatalogue();
+            getMenuPainter().increase();
+        };
+
         if (toEmpty) {
             $('.offerings-container').empty();
         }
         for (var i = 0; i < data.length; i++) {
             var offering_elem = new OfferingElement(data[i]);
-            var offDetailsView = new CatalogueDetailsView(offering_elem, paintCatalogue, '#catalogue-container');
+            var offDetailsView = new CatalogueDetailsView(offering_elem, action, '#catalogue-container');
             var labelClass = "label";
             var labelValue = offering_elem.getState();
             var stars, templ, priceStr;
@@ -80,7 +85,7 @@
 
             fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
 
-            priceStr = getPriceStr(offering_elem.getPricing())
+            priceStr = getPriceStr(offering_elem.getPricing());
             // Append button
             if ((USERPROFILE.getCurrentOrganization() != offering_elem.getOrganization()) 
                     && (labelValue == 'published')) {

@@ -867,7 +867,7 @@ footer {
 .left-bar {
   position: fixed;
   background-color: rgb(244, 244, 244);
-  width: 50px;
+  width: 205px;
   height: 300px;
   top: 90px;
   left: 0px;
@@ -928,7 +928,7 @@ footer {
 /* Menu style */
 .store-menu {
   position: absolute;
-  top: 22px;
+  top: 0;
 }
 
 .store-sub-menu {

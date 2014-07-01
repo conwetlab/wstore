@@ -22,7 +22,7 @@
 
     MenuPainter = function MenuPainter(buttonsListener) {
         this.buttonsListener = buttonsListener;
-        this.expanded = false;
+        this.expanded = true;
         setListeners(this);
     };
 
@@ -43,12 +43,12 @@
 
         $('.left-bar .icon-remove').click(clickHandlerDecrease.bind(this))
         $('.left-bar').animate({'width': '205px'}, 1000, function() {
-            this.buttonsListener()
+            this.buttonsListener();
         }.bind(this));
     };
 
     var setListeners = function setListerners(self) {
-        $('.left-bar a').click(clickHandlerIncrease.bind(self));
+        self.buttonsListener();
     };
 
     MenuPainter.prototype.decrease = function decrease() {
@@ -57,4 +57,11 @@
             clicker();
         }
     }
+
+    MenuPainter.prototype.increase = function increase() {
+        if (!this.expanded) {
+            var clicker = clickHandlerIncrease.bind(this);
+            clicker();
+        }
+    };
 })();

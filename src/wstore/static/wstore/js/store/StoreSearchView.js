@@ -67,7 +67,7 @@
     };
 
     StoreSearchView.prototype.paintSearchView = function paintSearchView() {
-        var ret, title='Offerings';
+        var ret;
 
         // Check if the main page template has been destroyed and 
         // create it again if needed
@@ -79,6 +79,7 @@
             $('#search').click((function(self) {
                 return function() {
                     if ($.trim($('#text-search').val()) != '') {
+                        self.setTitle('Offerings');
                         self.initSearchView(this.searchEndp);
                     }
                 }
@@ -89,6 +90,7 @@
                     if (e.which == 13 && $.trim($(this).val()) != '') {
                         e.preventDefault();
                         e.stopPropagation();
+                        self.setTitle('Offerings');
                         self.initSearchView(this.searchEndp);
                     }
                 }
@@ -96,6 +98,7 @@
 
             $('#all').click((function(self) {
                 return function() {
+                    self.setTitle('Offerings');
                     self.initSearchView('OFFERING_COLLECTION');
                 }
             })(this))

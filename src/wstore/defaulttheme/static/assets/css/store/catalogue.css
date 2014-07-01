@@ -41,22 +41,22 @@
   width: 1293px;
   position: absolute;
   left: 50%;
-  margin-left: -647px;
+  margin-left: -525px;
   top: 0;
 }
 
 /* Search components position depends on the window size */
-@media all and (max-width: 1420px) {
+@media all and (max-width: 1600px) {
   .offerings-container {
      width: 960px;
-     margin-left: -480px;
+     margin-left: -375px;
   }
 }
 
-@media all and (max-width: 1093px) {
+@media all and (max-width: 1211px) {
   .offerings-container {
      width: 640px;
-     margin-left: -320px;
+     margin-left: -213px;
   }
 }
 

@@ -105,14 +105,20 @@
     };
 
     paintOfferings = function paintOfferings(data, container, toEmpty, backAct) {
-        var action = paintHomePage;
+        var action = function() {
+            paintHomePage();
+            mpainter.increase();
+        }
 
         if (toEmpty) {
             container.empty();
         }
 
         if (backAct) {
-            action=backAct;
+            action = function() {
+                backAct();
+                mpainter.increase();
+            }
         }
 
         for (var i = 0; i < data.length; i++) {
@@ -248,7 +254,9 @@
         })
 
         // Bind menu handlers
-        mpainter = new MenuPainter(setMenuHandlers);
+        if (!mpainter)  {
+            mpainter = new MenuPainter(setMenuHandlers);
+        }
         // Get initial offerings
         calculatePositions();
         getOfferings(EndpointManager.getEndpoint('NEWEST_COLLECTION'), $('#newest-container'));

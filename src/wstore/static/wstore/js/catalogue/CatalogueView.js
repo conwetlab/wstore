@@ -199,11 +199,17 @@
         searchView = new CatalogueSearchView();
 
         // Create menu
-        mpainter = new MenuPainter(menuHandler);
+        if (!mpainter) {
+            mpainter = new MenuPainter(menuHandler);
+        }
 
         searchView.initSearchView('OFFERING_COLLECTION', 'purchased');
     };
 
+
+    getMenuPainter = function getMenuPainter() {
+        return mpainter;
+    };
 
     refreshView = function refreshView() {
         $('#catalogue-container').empty();

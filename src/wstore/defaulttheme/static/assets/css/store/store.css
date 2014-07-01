@@ -19,7 +19,7 @@
   position: relative;
   left: 50%;
   width: 170px;
-  margin-left: -635px;
+  margin-left: -525px;
   font-size: 30px;
 }
 
@@ -27,7 +27,7 @@
   position: relative;
   left: 50%;
   width: 1270px;
-  margin-left: -635px;
+  margin-left: -525px;
 }
 
 #top-rated-container .menu-offering:nth-child(5) {
@@ -38,7 +38,7 @@
   position: relative;
   left: 50%;
   width: 1270px;
-  margin-left: -635px;
+  margin-left: -525px;
 }
 
 #newest-container .menu-offering:nth-child(5) {
@@ -46,14 +46,14 @@
 }
 
 
-@media all and (max-width: 1380px) {
+@media all and (max-width: 1600px) {
   .home-pg-title {
-    margin-left: -485px;
+    margin-left: -375px;
   }
 
   #top-rated-container {
     width: 970px;
-    margin-left: -485px;
+    margin-left: -375px;
   }
 
   #top-rated-container .menu-offering:nth-child(7) {
@@ -68,7 +68,7 @@
 
   #newest-container {
     width: 970px;
-    margin-left: -485px;
+    margin-left: -375px;
   }
   #newest-container .menu-offering:nth-child(7) {
     display:none;
@@ -81,14 +81,14 @@
   }
 }
 
-@media all and (max-width: 1084px) {
+@media all and (max-width: 1211px) {
   .home-pg-title {
-    margin-left: -323px;
+    margin-left: -213px;
   }
 
   #top-rated-container {
     width: 645px;
-    margin-left: -323px;
+    margin-left: -213px;
   }
 
   #top-rated-container .menu-offering:nth-child(5) {
@@ -103,7 +103,7 @@
 
   #newest-container {
     width: 645px;
-    margin-left: -323px;
+    margin-left: -213px;
   }
 
   #newest-container .menu-offering:nth-child(5) {
@@ -154,21 +154,21 @@
   width: 1293px;
   position: absolute;
   left: 50%;
-  margin-left: -647px;
+  margin-left: -525px;
 }
 
 /* Search components position depends on the window size */
-@media all and (max-width: 1420px) {
+@media all and (max-width: 1600px) {
   .search-container {
      width: 960px;
-     margin-left: -480px;
+     margin-left: -375px;
   }
 }
 
-@media all and (max-width: 1093px) {
+@media all and (max-width: 1211px) {
   .search-container {
      width: 640px;
-     margin-left: -320px;
+     margin-left: -213px;
   }
 }
 
