@@ -49,11 +49,14 @@
     };
 
     getOfferings = function getOfferings(endpoint, container, callback) {
+        $('#loading').removeClass('hide');  // Loading view when waiting for requests
+        $('#loading').css('height', $(window).height() + 'px');
          $.ajax({
             type: "GET",
             url: endpoint,
             dataType: 'json',
             success: function(response) {
+                $('#loading').addClass('hide');
                 if (callback) {
                     callback(response);
                 } else {
@@ -61,6 +64,7 @@
                 }
             },
             error: function(xhr) {
+                $('#loading').addClass('hide');
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
                 MessageManager.showMessage('Error', msg);
