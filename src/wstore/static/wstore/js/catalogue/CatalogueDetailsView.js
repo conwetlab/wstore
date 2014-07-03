@@ -213,10 +213,10 @@
         $(window).resize(this.calculatePositions.bind(this));
 
         // Form for comment and rate the offering
-        if (this.offeringElement.getComments().length) {
+        //if (this.offeringElement.getComments().length) {
             this.reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'), this);
             this.reviewPainter.paint();
-        }
+        //}
         closeMenuPainter();
     };
 
