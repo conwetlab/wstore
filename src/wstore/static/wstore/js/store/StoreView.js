@@ -271,6 +271,10 @@
         mpainter.decrease();
     };
 
+    openMenuPainter = function openMenuPainter() {
+        mpainter.increase();
+    };
+
     calculatePositions = function calculatePositions(evnt) {
         var position;
         var filabInt = $('#oil-nav').length > 0;

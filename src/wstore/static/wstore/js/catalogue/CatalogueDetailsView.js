@@ -141,6 +141,7 @@
                     tagLink.click(function() {
                         var searchView = new StoreSearchView('SEARCH_TAG_ENTRY');
                         $('#home-container').empty();
+                        openMenuPainter();
                         searchView.setTitle($(this).text());
                         searchView.initSearchView('SEARCH_TAG_ENTRY', $(this).text());
                     });
