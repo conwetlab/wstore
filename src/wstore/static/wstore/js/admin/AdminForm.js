@@ -143,14 +143,17 @@
             var msg = 'No elements registered, you may want to register one';
             var cont = $('<div></div>').addClass('admin-message');
 
-            $('<a></a>').attr('id', 'back').text('Return').click((function() {
-                backHandler(this);
-            }).bind(this)).appendTo('#admin-container');
-
             cont.appendTo($('#admin-container'))
             MessageManager.showAlertInfo('Elements', msg, cont);
         }
-        $('#back').click(paintElementTable);
+        // Listener for back link
+        $('#back').removeAttr('href');
+        $('#back').off('click');
+        $('#back').click(function(evnt) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            paintElementTable();
+        });
     };
 
     /**
@@ -179,7 +182,11 @@
         rendTmpl.appendTo('#admin-container');
 
         // Listener for back link
-        $('#back').click((function() {
+        $('#back').removeAttr('href');
+        $('#back').off('click');
+        $('#back').click((function(evnt) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
             backHandler(this);
         }).bind(this));
 

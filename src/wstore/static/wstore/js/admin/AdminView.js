@@ -20,6 +20,8 @@
 
 (function () {
 
+    var referrer;
+
     // Repaint initial table
     paintElementTable = function paintElementTable () {
         $('#admin-container').empty();
@@ -88,6 +90,21 @@
         $('.add-currency').click(function() {
             paintCurrencyForm();
         });
+        // Set back button
+        if (!referrer) {
+            var splref;
+
+            referrer = document.referrer;
+            splref = referrer.split('/');
+            // Check if the page has been reloaded or called from an external source
+            if (splref[splref.length - 1] == 'administration' ||
+                    (splref[splref.length - 1] == '' && splref[splref.length - 2] == 'administration') ||
+                    splref[2] != document.baseURI.split('/')[2]) {
+                referrer = '/';
+            }
+        }
+        $('#back').off('click');
+        $('#back').attr('href', referrer);
     };
 
     refreshView = function refreshView() {
@@ -97,34 +114,10 @@
 
     calculatePositions = function calculatePositions() {
         var position;
-        var filabInt = $('#oil-nav').length > 0;
-
-        $('.admin-element').removeAttr('style');
-        // Check window width
-        if (filabInt) {
-            if ($(window).width() < 981) {
-                $('.title_wrapper').css('top', '-55px');
-                $('.admin-element').css('top', '-60px');
-            } else {
-                var offset;
-                var width;  
-                $('.title_wrapper').css('top', '115px');
-            }
-        }
         // Fixed position in admin view
         offset = $(window).height() - $('.admin-element').offset().top - 30;
-        width = $(window).width() - $('.admin-element').offset().left -10;
         $('.admin-element').css('height', offset.toString() + 'px');
-        $('.admin-element').css('width', width.toString() + 'px');
 
-        // Check username length to avoid display problems
-        if ($.trim($('div.btn.btn-blue > div.dropdown-toggle span').text()).length > 12) {
-            var shortName = ' '+ USERPROFILE.getCompleteName().substring(0, 9) + '...';
-            // Replace user button contents
-            var userBtn = $('div.btn.btn-blue > div.dropdown-toggle span');
-            userBtn.empty();
-            userBtn.text(shortName);
-      }
     }
     $(window).resize(calculatePositions);
 })()
