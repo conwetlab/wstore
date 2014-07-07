@@ -106,6 +106,25 @@
         this.getUserResources(this.paintResources.bind(this));
     };
 
+    var clickHandler = function clickHandler(e) {
+     // Hide every opened popover
+        $('.resource').popover('hide');
+        $('.resource').removeClass('res-hover');
+        var resElem = $(this);
+        if (!resElem.prop('displayed')) {
+            resElem.popover('show');
+            resElem.prop('displayed', true);
+            resElem.addClass('res-hover');
+            // Add document event handler
+            e.stopPropagation();
+            $(document).click(function() {
+                resElem.popover('hide');
+                resElem.prop('displayed', false);
+                resElem.removeClass('res-hover');
+                $(document).unbind('click');
+            });
+        }
+    }
     /**
      * Paints the resources
      * @param resources Resources to be painted
@@ -121,9 +140,10 @@
 
             res.number = i;
             $.template('resourceTemplate', $('#resource_template'));
-            $.tmpl('resourceTemplate', res).appendTo('#resources').on('hover', function(e) {
-                $(e.target).popover('show');
-            });
+            $.tmpl('resourceTemplate', res).
+                appendTo('#resources').
+                click(clickHandler).
+                popover({'trigger': 'manual'});
 
             if (!this.viewOnly) {
                 // Checks if the resource is already bound to the offering
@@ -137,6 +157,10 @@
                 }
             }
         }
+        $('.modal-body').on('scroll', function() {
+            $('.resource').popover('hide');
+            $('.resource').removeClass('res-hover');
+        })
 
         if(!this.viewOnly) {
             // Set listener
