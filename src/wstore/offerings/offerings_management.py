@@ -87,6 +87,7 @@ def get_offering_info(offering, user):
         'related_images': offering.related_images,
         'creation_date': str(offering.creation_date),
         'publication_date': str(offering.publication_date),
+        'open': offering.open,
         'resources': []
     }
 
@@ -97,10 +98,11 @@ def get_offering_info(offering, user):
             'name': resource.name,
             'version': resource.version,
             'description': resource.description,
-            'content_type': resource.content_type
+            'content_type': resource.content_type,
+            'open': resource.open
         }
 
-        if (state == 'purchased' or state == 'rated'):
+        if (state == 'purchased' or state == 'rated' or offering.open):
             if resource.resource_path != '':
                 res_info['link'] = resource.resource_path
             elif resource.download_link != '':
@@ -364,6 +366,8 @@ def create_offering(provider, json_data):
         if is_lower_version(data['version'], off.version):
             raise ValueError('A bigger version of the current offering exists')
 
+    is_open = json_data.get('open', False)
+
     # If using the idm, get the applications from the request
     if settings.OILAUTH:
 
@@ -478,6 +482,7 @@ def create_offering(provider, json_data):
         raise Exception('No USDL description provided')
 
     # Validate the USDL
+    data['open'] = is_open
     data['organization'] = organization
     valid = validate_usdl(usdl, usdl_info['content_type'], data)
 
@@ -529,7 +534,8 @@ def create_offering(provider, json_data):
         related_images=data['related_images'],
         offering_description=json.loads(data['offering_description']),
         notification_url=notification_url,
-        creation_date=datetime.now()
+        creation_date=datetime.now(),
+        open=is_open
     )
 
     if settings.OILAUTH:
@@ -828,7 +834,11 @@ def bind_resources(offering, data, provider):
 
         # Check resource state
         if resource.state == 'deleted':
-            raise Exception('Inavalid resource, the resource is deleted')
+            raise Exception('Invalid resource, the resource is deleted')
+
+        # Check open
+        if not resource.open and offering.open:
+            raise ValueError('It is not allowed to include not open resources in an open offering')
 
         if not ObjectId(resource.pk) in offering_resources:
             added_resources.append(resource.pk)
