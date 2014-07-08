@@ -96,7 +96,7 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
                 raise Exception('The customer does not have payment info')
 
     elif payment_info['payment_method'] != 'paypal':
-        raise Exception('Invalid payment method')
+        raise ValueError('Invalid payment method')
 
     # Create the purchase
     purchase = Purchase.objects.create(
