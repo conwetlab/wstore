@@ -336,7 +336,7 @@ class ResourceCollection(Resource):
         profile = request.user.userprofile
         filter_ = request.GET.get('open', None)
 
-        if filter_ and filter != 'true' and filter_ != 'false':
+        if filter_ and filter_ != 'true' and filter_ != 'false':
             return build_response(request, 400, 'Invalid open param')
 
         if 'provider' in profile.get_current_roles():

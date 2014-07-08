@@ -99,6 +99,7 @@
          request.name = name;
          request.version = version;
          request.description = description;
+         request.open = $('#res-open').prop('checked');
 
          if (!$.isEmptyObject(resource)) {
              // Check resource
@@ -165,10 +166,12 @@
         // Configure help messages
         $('#upload-help').popover({'trigger': 'manual'});
         $('#link-help').popover({'trigger': 'manual'});
+        $('#open-help').popover({'trigger': 'manual'});
 
         //Set listeners
         $('#upload-help').click(helpHandler);
         $('#link-help').click(helpHandler);
+        $('#open-help').click(helpHandler);
 
         $('#message').on('hide', function() {
             $(document).unbind('click');

@@ -55,6 +55,7 @@
         this.interactions = this.servicesOffered[0].interactions;
         this.pricing = offeringData.offering_description.pricing;
         this.bill = [];
+        this.open = offeringData.open;
 
         if (this.state == 'purchased' || this.state == 'rated') {
             this.bill = offeringData.bill;
@@ -182,5 +183,9 @@
 
     OfferingElement.prototype.setState = function setState (state) {
         this.state = state;
+    };
+
+    OfferingElement.prototype.isOpen = function isOpen() {
+        return this.open;
     }
 })();
