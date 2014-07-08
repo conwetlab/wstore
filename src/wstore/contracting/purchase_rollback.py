@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import os
 
 from django.conf import settings
@@ -105,11 +107,11 @@ class PurchaseRollback():
         try:
             # Call the decorated function
             result = self._funct(user, offering, org_owned, payment_info)
-        except Exception, e:
-            if e.message != "This offering can't be purchased" and e.message != 'The offering has been already purchased'\
-             and e.message != 'Invalid payment method' and e.message != 'Invalid credit card info'\
-             and e.message != 'The customer does not have a tax address' and e.message != 'The customer does not have payment info'\
-             and e.message != 'The tax address is not valid':
+        except Exception as e:
+            if unicode(e) != "This offering can't be purchased" and unicode(e) != 'The offering has been already purchased'\
+             and unicode(e) != 'Invalid payment method' and unicode(e) != 'Invalid credit card info'\
+             and unicode(e) != 'The customer does not have a tax address' and unicode(e) != 'The customer does not have payment info'\
+             and unicode(e) != 'The tax address is not valid' and unicode(e) != 'Open offerings cannot be purchased':
 
                 # Get the purchase
                 if org_owned:
