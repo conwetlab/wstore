@@ -657,6 +657,72 @@ class OfferingCreationTestCase(TestCase):
             self.assertTrue(isinstance(error, err_type))
 
 
+class OfferingCountTestCase(TestCase):
+
+    tags = ('count',)
+
+    @classmethod
+    def setUpClass(cls):
+        cls.user = MagicMock()
+        cls.org = MagicMock()
+        cls.user.userprofile.current_organization = cls.org
+        super(OfferingCountTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        reload(offerings_management)
+        super(OfferingCountTestCase, cls).tearDownClass()
+
+    def setUp(self):
+        offerings_management.Offering = MagicMock()
+        count_mock = MagicMock()
+        count_mock.count.return_value = 2
+        offerings_management.Offering.objects.filter.return_value = count_mock
+
+    def _user_purchased(self):
+        self._purchased()
+        self.user.userprofile.is_user_org.return_value = True
+        self.user.userprofile.offerings_purchased = ['444']
+
+    def _purchased(self):
+        self.user.userprofile.is_user_org.return_value = False
+        self.user.userprofile.current_organization.offerings_purchased = ['111', '222', '333']
+
+    @parameterized.expand([
+        (None, 2, True, 'uploaded'),
+        (None, 2, True, 'all'),
+        (None, 2, True, 'published'),
+        (_purchased, 3, True, 'purchased'),
+        (_user_purchased, 4, True, 'purchased'),
+        (None, 2, False, 'published'),
+        (None, 0, False, 'uploaded', ValueError, 'Filter not allowed')
+    ])
+    def test_count_offerings(self, side_effect, expected_count, owned, filter_, err_type=None, err_msg=None):
+
+        if side_effect:
+            side_effect(self)
+
+        error = None
+        try:
+            return_value = offerings_management.count_offerings(self.user, filter_, owned)
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            self.assertFalse(error)
+            self.assertEquals(return_value['number'], expected_count)
+
+            if owned:
+                if filter_ == 'uploaded' or filter_ == 'published':
+                    offerings_management.Offering.objects.filter.assert_called_once_with(owner_admin_user=self.user, state=filter_, owner_organization=self.org)
+                elif filter_ == 'all':
+                    offerings_management.Offering.objects.filter.assert_called_once_with(owner_admin_user=self.user, owner_organization=self.org)
+            else:
+                offerings_management.Offering.objects.filter.assert_called_once_with(state=filter_)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(error), err_msg)
+
 class OfferingUpdateTestCase(TestCase):
 
     fixtures = ['update.json']
