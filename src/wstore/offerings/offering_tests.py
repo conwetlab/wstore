@@ -694,6 +694,7 @@ class OfferingCountTestCase(TestCase):
         (None, 2, True, 'published'),
         (_purchased, 3, True, 'purchased'),
         (_user_purchased, 4, True, 'purchased'),
+        (None, 0, True, 'invalid', ValueError, 'Filter not allowed'),
         (None, 2, False, 'published'),
         (None, 0, False, 'uploaded', ValueError, 'Filter not allowed')
     ])
