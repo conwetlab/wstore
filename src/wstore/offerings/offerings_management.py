@@ -272,6 +272,8 @@ def count_offerings(user, filter_='published', owned=False):
             count = len(current_org.offerings_purchased)
             if user.userprofile.is_user_org():
                 count += len(user.userprofile.offerings_purchased)
+        else:
+            raise ValueError('Filter not allowed')
 
     else:
         if  filter_ == 'published':
