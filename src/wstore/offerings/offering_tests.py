@@ -23,6 +23,7 @@ import os
 import base64
 import json
 from mock import MagicMock
+from nose_parameterized import parameterized
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -118,6 +119,122 @@ class FakeOfferingRollback():
         self._func(provider, profile, json_data)
 
 
+BASIC_OFFERING = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+BASIC_EXPECTED = {
+    'image': '/media/test_organization__test_offering__1.0/test_image.png',
+    'description_url': 'http://testrepository/storeOfferingCollection/test_organization__test_offering__1.0'
+}
+
+OFFERING_WITH_IMAGES = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [{
+        'name': 'test_screen1.png',
+        'data': ''
+    },
+    {
+        'name': 'test_screen2.png',
+        'data': ''
+    }],
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+EXPECTED_WITH_IMAGES = {
+    'image':  '/media/test_organization__test_offering__1.0/test_image.png',
+    'description_url': 'http://testrepository/storeOfferingCollection/test_organization__test_offering__1.0',
+    'screenshots': [
+        '/media/test_organization__test_offering__1.0/test_screen1.png',
+        '/media/test_organization__test_offering__1.0/test_screen2.png'
+    ]
+}
+
+OFFERING_URL = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'description_url': 'http://examplerep/v1/test_usdl'
+}
+
+EXPECTED_URL = {
+    'image': '/media/test_organization__test_offering__1.0/test_image.png',
+    'description_url': 'http://examplerep/v1/test_usdl'
+}
+
+OFFERING_INVALID_VERSION = {
+    'name': 'test_offering',
+    'version': '1.0.',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+OFFERING_INVALID_JSON = {
+    'na': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+OFFERING_EXISTING = {
+    'name': 'test_offering_fail',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+##############################################################################
+############################# Test Cases #####################################
+##############################################################################
+
 class OfferingCreationTestCase(TestCase):
 
     tags = ('fiware-ut-1',)
@@ -181,279 +298,95 @@ class OfferingCreationTestCase(TestCase):
         # Remove offering collection
         self._db.wstore_offering.drop()
 
-    def test_create_basic_offering(self):
-        """
-        Test the basic creation of an offering
-        """
-        data = {
-            'name': 'test_offering',
-            'version': '1.0',
-            'repository': 'test_repository',
-            'image': {
-                'name': 'test_image.png',
-                'data': self._image,
-            },
-            'related_images': [],
-            'offering_description': {
-                'content_type': 'application/rdf+xml',
-                'data': self._usdl
-            }
-        }
-        user = User.objects.get(username='test_user')
-        profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        profile.current_organization = org
-        profile.organizations.append({
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        })
-        profile.save()
+    def _fill_image(self, offering_data):
+        offering_data['image']['data'] = self._image
+        return offering_data
 
-        offerings_management.create_offering(user, data)
-        content = self._db.wstore_offering.find_one({"name": "test_offering"})
+    def _fill_image_err(self, offering_data):
+        offering_data['image']['data'] = self._image
+        offering_data['offering_description']['data'] = 'invalid usdl'
+        return offering_data
 
-        self.assertEqual(content['name'], 'test_offering')
-        self.assertEqual(content['version'], '1.0')
-        self.assertEqual(content['state'], 'uploaded')
-        self.assertEqual(content['image_url'], '/media/test_organization__test_offering__1.0/test_image.png')
-        self.assertEqual(content['description_url'], 'http://testrepository/storeOfferingCollection/test_organization__test_offering__1.0')
+    def _fill_basic_images(self, offering_data):
+        offering_data['image']['data'] = self._image
+        offering_data['offering_description']['data'] = self._usdl
+        return offering_data
 
-    def test_create_offering_images(self):
-        """
-        Test the basic creation of an offering
-        """
-        # load screenshots
+    def _fill_screenshots(self, offering_data):
+        offering_data['image']['data'] = self._image
 
+        # Load screenshots
         path = os.path.join(settings.BASEDIR, 'wstore/test/')
         f = open(os.path.join(path, 'test_screen1.png'), 'rb')
         image1 = base64.b64encode(f.read())
 
         f = open(os.path.join(path, 'test_screen2.png'), 'rb')
         image2 = base64.b64encode(f.read())
+        f.close()
 
-        data = {
-            'name': 'test_offering',
-            'version': '1.0',
-            'repository': 'test_repository',
-            'image': {
-                'name': 'test_image.png',
-                'data': self._image,
-            },
-            'related_images': [{
-                'name': 'test_screen1.png',
-                'data': image1
-            },
-            {
-                'name': 'test_screen2.png',
-                'data': image2
-            }],
-            'offering_description': {
-                'content_type': 'application/rdf+xml',
-                'data': self._usdl
-            }
-        }
+        screen_shots = []
+        for scr in offering_data['related_images']:
+            if scr['name'] == 'test_screen1.png':
+                scr['data'] = image1
+            else:
+                scr['data'] = image2
+
+            screen_shots.append(scr)
+
+        offering_data['related_images'] = screen_shots
+        offering_data['offering_description']['data'] = self._usdl
+
+        return offering_data
+
+    @parameterized.expand([
+        (BASIC_OFFERING, BASIC_EXPECTED, _fill_basic_images),
+        (OFFERING_WITH_IMAGES, EXPECTED_WITH_IMAGES, _fill_screenshots),
+        (OFFERING_URL, EXPECTED_URL, _fill_image),
+        (OFFERING_INVALID_VERSION, None, None, ValueError, 'Invalid version format'),
+        (OFFERING_INVALID_JSON, None, _fill_basic_images, ValueError, 'Missing required fields'),
+        (BASIC_OFFERING, None, _fill_image_err, Exception, 'Malformed USDL'),
+        (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering already exists')
+    ])
+    def test_offering_creation(self, offering_data, expected_data, data_filler=None, err_type=None, err_msg=None):
+
+        if data_filler:
+            data = data_filler(self, offering_data)
+        else:
+            data = offering_data
+
         user = User.objects.get(username='test_user')
-        profile = UserProfile.objects.get(user=user)
         org = Organization.objects.get(name='test_organization')
-        profile.current_organization = org
-        profile.organizations.append({
+        user.userprofile.current_organization = org
+        user.userprofile.organizations.append({
             'organization': org.pk,
             'roles': ['customer', 'provider']
         })
-        profile.save()
+        user.userprofile.save()
 
-        offerings_management.create_offering(user, data)
-        content = self._db.wstore_offering.find_one({"name": "test_offering"})
-
-        self.assertEqual(content['name'], 'test_offering')
-        self.assertEqual(content['version'], '1.0')
-        self.assertEqual(content['state'], 'uploaded')
-        self.assertEqual(content['image_url'], '/media/test_organization__test_offering__1.0/test_image.png')
-        self.assertEqual(content['description_url'], 'http://testrepository/storeOfferingCollection/test_organization__test_offering__1.0')
-
-        self.assertEqual(len(content['related_images']), 2)
-        contains = '/media/test_organization__test_offering__1.0/test_screen1.png' in content['related_images']
-        self.assertTrue(contains)
-        contains = '/media/test_organization__test_offering__1.0/test_screen2.png' in content['related_images']
-        self.assertTrue(contains)
-
-    def test_create_offering_usdl_url(self):
-
-        data = {
-            'name': 'test_offering',
-            'version': '1.0',
-            'repository': 'test_repository',
-            'image': {
-                'name': 'test_image.png',
-                'data': self._image,
-            },
-            'related_images': [],
-            'description_url': 'http://examplerep/v1/test_usdl'
-        }
-
-        user = User.objects.get(username='test_user')
-        profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        profile.current_organization = org
-        profile.organizations.append({
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        })
-        profile.save()
-
-        offerings_management.create_offering(user, data)
-        content = self._db.wstore_offering.find_one({"name": "test_offering"})
-
-        self.assertEqual(content['name'], 'test_offering')
-        self.assertEqual(content['version'], '1.0')
-        self.assertEqual(content['state'], 'uploaded')
-        self.assertEqual(content['image_url'], '/media/test_organization__test_offering__1.0/test_image.png')
-        self.assertEqual(content['description_url'], 'http://examplerep/v1/test_usdl')
-
-    def test_create_offering_invalid_version(self):
-        """
-        Test the creating of an offering with invalid version format
-        """
-        data = {
-            'name': 'test_offering',
-            'version': '1.0.',
-            'repository': 'test_repository',
-            'image': {
-                'name': 'test_image.png',
-                'data': self._image,
-            },
-            'related_images': [],
-            'offering_description': {
-                'content_type': 'application/rdf+xml',
-                'data': self._usdl
-            }
-        }
-        user = User.objects.get(username='test_user')
-        profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        profile.current_organization = org
-        profile.organizations.append({
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        })
-        profile.save()
-        error = False
+        error = None
         try:
             offerings_management.create_offering(user, data)
-        except Exception, e:
-            error = True
-            msg = e.message
+        except Exception as e:
+            error = e
 
-        self.assertTrue(error)
-        self.assertEqual(msg, 'Invalid version format')
+        if not err_type:
+            self.assertEquals(error, None)
+            # Check offering contents
+            content = self._db.wstore_offering.find_one({"name": offering_data['name']})
+            self.assertEqual(content['name'], offering_data['name'])
+            self.assertEqual(content['version'], offering_data['version'])
+            self.assertEqual(content['state'], 'uploaded')
+            self.assertEqual(content['image_url'], expected_data['image'])
+            self.assertEqual(content['description_url'], expected_data['description_url'])
 
-    def test_create_offering_invalid_JSON(self):
-        """
-        Test the creating of an offering with invalid json document
-        """
-        data = {
-            'na': 'test_offering',
-            'version': '1.0',
-            'repository': 'test_repository',
-            'image': {
-                'name': 'test_image.png',
-                'data': self._image,
-            },
-            'related_images': [],
-            'offering_description': {
-                'content_type': 'application/rdf+xml',
-                'data': self._usdl
-            }
-        }
-        user = User.objects.get(username='test_user')
-        profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        profile.current_organization = org
-        profile.organizations.append({
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        })
-        profile.save()
-        error = False
-        try:
-            offerings_management.create_offering(user, data)
-        except Exception:
-            error = True
+            if 'screenshots' in expected_data:
+                self.assertEquals(content['related_images'], expected_data['screenshots'])
 
-        self.assertTrue(error)
-
-    def test_create_offering_invalid_USDL(self):
-        """
-        Test the creating of an offering with an invalid USDL format
-        """
-        data = {
-            'name': 'test_offering',
-            'version': '1.0',
-            'repository': 'test_repository',
-            'image': {
-                'name': 'test_image.png',
-                'data': self._image,
-            },
-            'related_images': [],
-            'offering_description': {
-                'content_type': 'application/rdf+xml',
-                'data': 'Invalid data'
-            }
-        }
-        user = User.objects.get(username='test_user')
-        profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        profile.current_organization = org
-        profile.organizations.append({
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        })
-        profile.save()
-        error = False
-        try:
-            offerings_management.create_offering(user, data)
-        except:
-            error = True
-
-        self.assertTrue(error)
-
-    def test_create_offering_already_existing(self):
-
-        data = {
-            'name': 'test_offering_fail',
-            'version': '1.0',
-            'repository': 'test_repository',
-            'image': {
-                'name': 'test_image.png',
-                'data': self._image,
-            },
-            'related_images': [],
-            'offering_description': {
-                'content_type': 'application/rdf+xml',
-                'data': self._usdl
-            }
-        }
-        user = User.objects.get(username='test_user')
-        profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        profile.current_organization = org
-        profile.organizations.append({
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        })
-        profile.save()
-
-        error = False
-        msg = None
-
-        try:
-            offerings_management.create_offering(user, data)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, 'The offering already exists')
+                for sc in expected_data['screenshots']:
+                    self.assertTrue(sc in content['related_images'])
+        else:
+            self.assertEquals(unicode(error), err_msg)
+            self.assertTrue(isinstance(error, err_type))
 
 
 class OfferingUpdateTestCase(TestCase):
