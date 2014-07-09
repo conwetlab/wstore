@@ -264,12 +264,10 @@ def count_offerings(user, filter_='published', owned=False):
 
         # If the current organization is not the user organization
         # get only the offerings owned by that organization
-        if  filter_ == 'uploaded':
-            count = Offering.objects.filter(owner_admin_user=user, state='uploaded', owner_organization=current_org).count()
+        if  filter_ == 'uploaded' or filter_ == 'published':
+            count = Offering.objects.filter(owner_admin_user=user, state=filter_, owner_organization=current_org).count()
         elif filter_ == 'all':
             count = Offering.objects.filter(owner_admin_user=user, owner_organization=current_org).count()
-        elif  filter_ == 'published':
-            count = Offering.objects.filter(owner_admin_user=user, state='published', owner_organization=current_org).count()
         elif filter_ == 'purchased':
             count = len(current_org.offerings_purchased)
             if user.userprofile.is_user_org():
@@ -278,6 +276,8 @@ def count_offerings(user, filter_='published', owned=False):
     else:
         if  filter_ == 'published':
             count = Offering.objects.filter(state='published').count()
+        else:
+            raise ValueError('Filter not allowed')
 
     return {'number': count}
 
