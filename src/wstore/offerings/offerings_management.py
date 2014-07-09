@@ -45,6 +45,7 @@ from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.utils.name import is_valid_id
+from wstore.store_commons.utils.url import is_valid_url
 
 
 def get_offering_info(offering, user):
@@ -390,9 +391,13 @@ def create_offering(provider, json_data):
     if 'notification_url' in json_data:
         if json_data['notification_url'] == 'default':
             notification_url = organization.notification_url
-            if notification_url == '':
+            if not notification_url:
                 raise ValueError('No default URL defined for the organization')
         else:
+            # Check the notification URL
+            if not is_valid_url(json_data['notification_url']):
+                raise ValueError("Invalid notification URL format: It doesn't seem to be an URL")
+
             notification_url = json_data['notification_url']
 
     # Create the directory for app media
