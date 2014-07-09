@@ -394,6 +394,22 @@ OFFERING_NO_USDL = {
         'data': '',
     }
 }
+
+OFFERING_USDL_DATA_INVALID = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_info': {
+        'pricing': {
+            'price_model': 'free'
+        }
+    }
+}
 ##############################################################################
 ############################# Test Cases #####################################
 ##############################################################################
@@ -586,7 +602,8 @@ class OfferingCreationTestCase(TestCase):
         (OFFERING_NOTIFY_DEFAULT, None, _fill_basic_images, ValueError, 'No default URL defined for the organization'),
         (OFFERING_NOTIFY_URL_INVALID, None, _fill_basic_images, ValueError, "Invalid notification URL format: It doesn't seem to be an URL"),
         (OFFERING_URL, None, _fill_existing_url, ValueError, 'The provided USDL description is already registered'),
-        (OFFERING_NO_USDL, None, _fill_image, Exception, 'No USDL description provided')
+        (OFFERING_NO_USDL, None, _fill_image, Exception, 'No USDL description provided'),
+        (OFFERING_USDL_DATA_INVALID, None, _fill_image, Exception, 'Invalid USDL info')
     ])
     def test_offering_creation(self, offering_data, expected_data, data_filler=None, err_type=None, err_msg=None):
 
