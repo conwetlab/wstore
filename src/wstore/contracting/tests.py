@@ -136,9 +136,19 @@ class PurchasesCreationTestCase(TestCase):
                 'city': 'test city',
                 'country': 'test country'
             },
-            'payment_method': 'paypal',
+            'payment_method': 'credit_card',
             'plan': 'update'
-        })
+        }),
+        (None, False, {
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment_method': 'credit_card',
+            'plan': 'update'
+        }, Exception, 'The customer does not have payment info')
     ])
     def test_purchase_creation(self, side_effect, org_owned=False, payment_info=None, err_type=None, err_msg=None):
 
