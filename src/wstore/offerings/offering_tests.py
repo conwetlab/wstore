@@ -18,12 +18,16 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import pymongo
 import os
 import base64
 import json
+import rdflib
 from mock import MagicMock
 from nose_parameterized import parameterized
+from datetime import datetime
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -139,6 +143,25 @@ BASIC_EXPECTED = {
     'description_url': 'http://testrepository/storeOfferingCollection/test_organization__test_offering__1.0'
 }
 
+OFFERING_BIGGER_VERSION = {
+    'name': 'test_offering',
+    'version': '3.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+EXPECTED_BIGGER_VERSION = {
+    'image': '/media/test_organization__test_offering__3.0/test_image.png',
+    'description_url': 'http://testrepository/storeOfferingCollection/test_organization__test_offering__3.0'
+}
+
 OFFERING_WITH_IMAGES = {
     'name': 'test_offering',
     'version': '1.0',
@@ -170,6 +193,45 @@ EXPECTED_WITH_IMAGES = {
     ]
 }
 
+OFFERING_USDL_DATA = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_info': {
+        'description': 'Test offering',
+        'pricing': {
+            'price_model': 'free'
+        }
+    }
+}
+
+OFFERING_USDL_DATA_COMPLETE = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_info': {
+        'description': 'Test offering',
+        'pricing': {
+            'price_model': 'single_payment',
+            'price': 5
+        },
+        'legal': {
+            'title': 'legal title',
+            'text': 'legal text'
+        }
+    }
+}
+
 OFFERING_URL = {
     'name': 'test_offering',
     'version': '1.0',
@@ -187,9 +249,85 @@ EXPECTED_URL = {
     'description_url': 'http://examplerep/v1/test_usdl'
 }
 
+OFFERING_APPLICATIONS_RESOURCES = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    },
+    'applications': [{
+        'name': 'test_app1',
+        'url': 'http://test_app1.com',
+        'id': 1,
+        'description': 'a test application'
+    }],
+    'resources': [{
+        'name': 'test_res',
+        'description': 'a test resource'
+    }]
+}
+
+OFFERING_NOTIFY_URL = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'notification_url': 'http://notification_url.com',
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+OFFERING_NOTIFY_DEFAULT = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'notification_url': 'default',
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+EXPECTED_NOTIFY_URL = {
+    'image': '/media/test_organization__test_offering__1.0/test_image.png',
+    'description_url': 'http://testrepository/storeOfferingCollection/test_organization__test_offering__1.0',
+    'notification_url': 'http://notification_url.com'
+}
+
 OFFERING_INVALID_VERSION = {
     'name': 'test_offering',
     'version': '1.0.',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+OFFERING_INVALID_NAME = {
+    'name': 'námê',
+    'version': '1.0',
     'repository': 'test_repository',
     'image': {
         'name': 'test_image.png',
@@ -217,6 +355,21 @@ OFFERING_INVALID_JSON = {
     }
 }
 
+OFFERING_NOTIFY_URL_INVALID = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'notification_url': 'invalid url',
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
 OFFERING_EXISTING = {
     'name': 'test_offering_fail',
     'version': '1.0',
@@ -229,6 +382,16 @@ OFFERING_EXISTING = {
     'offering_description': {
         'content_type': 'application/rdf+xml',
         'data': ''
+    }
+}
+
+OFFERING_NO_USDL = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
     }
 }
 ##############################################################################
@@ -264,26 +427,11 @@ class OfferingCreationTestCase(TestCase):
 
         super(OfferingCreationTestCase, cls).setUpClass()
 
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
     def setUp(self):
-        pass
+        settings.OILAUTH = False
 
-    def tearDown(self):
-        # Remove media files
+    def _remove_media(self, dir_name):
         try:
-            dir_name = 'test_organization__test_offering__1.0'
-            path = os.path.join(settings.MEDIA_ROOT, dir_name)
-            files = os.listdir(path)
-
-            for f in files:
-                file_path = os.path.join(path, f)
-                os.remove(file_path)
-
-            os.rmdir(path)
-            dir_name = 'test_organization__test_offering_fail__1.0'
             path = os.path.join(settings.MEDIA_ROOT, dir_name)
             files = os.listdir(path)
 
@@ -295,8 +443,36 @@ class OfferingCreationTestCase(TestCase):
         except:
             pass
 
+    def tearDown(self):
+        # Remove media files
+        self._remove_media('test_organization__test_offering__1.0')
+        self._remove_media('test_organization__test_offering_fail__1.0')
+        self._remove_media('test_organization__test_offering__3.0')
+
         # Remove offering collection
         self._db.wstore_offering.drop()
+
+    def _create_offering(self, offering_data):
+        user = User.objects.get(username='test_user')
+        org = Organization.objects.get(name='test_organization')
+
+        # Create an offering
+        Offering.objects.create(
+            name=offering_data['name'],
+            owner_organization=org,
+            owner_admin_user=user,
+            version=offering_data['version'],
+            state='uploaded',
+            description_url=offering_data['url'],
+            resources=[],
+            comments=[],
+            tags=[],
+            image_url='image',
+            related_images=[],
+            offering_description={},
+            notification_url='',
+            creation_date=datetime.now(),
+        )
 
     def _fill_image(self, offering_data):
         offering_data['image']['data'] = self._image
@@ -338,14 +514,79 @@ class OfferingCreationTestCase(TestCase):
 
         return offering_data
 
+    def _fill_previous_version(self, offering_data):
+        offering_data['image']['data'] = self._image
+        offering_data['offering_description']['data'] = self._usdl
+
+        self._create_offering({
+            'name': offering_data['name'],
+            'version': '2.0',
+            'url': 'url'
+        })
+        return offering_data
+
+    def _fill_applications(self, offering_data):
+        settings.OILAUTH = True
+        offering_data['image']['data'] = self._image
+        offering_data['offering_description']['data'] = self._usdl
+        offerings_management.bind_resources = MagicMock()
+        return offering_data
+
+    def _fill_notification_url(self, offering_data):
+        offering_data['image']['data'] = self._image
+        offering_data['offering_description']['data'] = self._usdl
+        org = Organization.objects.get(name='test_organization')
+        org.notification_url = 'http://notification_url.com'
+        org.save()
+
+        return offering_data
+
+    def _fill_existing_url(self, offering_data):
+        offering_data['image']['data'] = self._image
+        self._create_offering({
+            'name': 'existing offering',
+            'version': '2.0',
+            'url': 'http://examplerep/v1/test_usdl'
+        })
+        return offering_data
+
+    def _serialize(self, type_):
+        graph = rdflib.Graph()
+        graph.parse(data=self._usdl, format='application/rdf+xml')
+        return graph.serialize(format=type_, auto_compact=True)
+
+    def _fill_turtle(self, offering_data):
+        offering_data['image']['data'] = self._image
+        offering_data['offering_description']['content_type']= 'text/turtle'
+        offering_data['offering_description']['data'] = self._serialize('n3')
+        return offering_data
+
+    def _fill_json(self, offering_data):
+        offering_data['image']['data'] = self._image
+        offering_data['offering_description']['content_type']= 'application/json'
+        offering_data['offering_description']['data'] = self._serialize('json-ld')
+        return offering_data
+
     @parameterized.expand([
-        (BASIC_OFFERING, BASIC_EXPECTED, _fill_basic_images),
+        (BASIC_OFFERING, BASIC_EXPECTED, _fill_json),
         (OFFERING_WITH_IMAGES, EXPECTED_WITH_IMAGES, _fill_screenshots),
         (OFFERING_URL, EXPECTED_URL, _fill_image),
+        (OFFERING_BIGGER_VERSION, EXPECTED_BIGGER_VERSION, _fill_previous_version),
+        (OFFERING_APPLICATIONS_RESOURCES, BASIC_EXPECTED, _fill_applications),
+        (OFFERING_NOTIFY_URL, EXPECTED_NOTIFY_URL, _fill_turtle),
+        (OFFERING_NOTIFY_DEFAULT, EXPECTED_NOTIFY_URL, _fill_notification_url),
+        (OFFERING_USDL_DATA, BASIC_EXPECTED, _fill_image),
+        (OFFERING_USDL_DATA_COMPLETE, BASIC_EXPECTED, _fill_image),
+        (OFFERING_INVALID_NAME, None, None, ValueError, 'Invalid name format'),
+        (BASIC_OFFERING, None, _fill_previous_version, ValueError, 'A bigger version of the current offering exists'),
         (OFFERING_INVALID_VERSION, None, None, ValueError, 'Invalid version format'),
         (OFFERING_INVALID_JSON, None, _fill_basic_images, ValueError, 'Missing required fields'),
         (BASIC_OFFERING, None, _fill_image_err, Exception, 'Malformed USDL'),
-        (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering already exists')
+        (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering already exists'),
+        (OFFERING_NOTIFY_DEFAULT, None, _fill_basic_images, ValueError, 'No default URL defined for the organization'),
+        (OFFERING_NOTIFY_URL_INVALID, None, _fill_basic_images, ValueError, "Invalid notification URL format: It doesn't seem to be an URL"),
+        (OFFERING_URL, None, _fill_existing_url, ValueError, 'The provided USDL description is already registered'),
+        (OFFERING_NO_USDL, None, _fill_image, Exception, 'No USDL description provided')
     ])
     def test_offering_creation(self, offering_data, expected_data, data_filler=None, err_type=None, err_msg=None):
 
@@ -372,7 +613,10 @@ class OfferingCreationTestCase(TestCase):
         if not err_type:
             self.assertEquals(error, None)
             # Check offering contents
-            content = self._db.wstore_offering.find_one({"name": offering_data['name']})
+            content = self._db.wstore_offering.find_one({
+                "name": offering_data['name'],
+                "version": offering_data["version"]
+            })
             self.assertEqual(content['name'], offering_data['name'])
             self.assertEqual(content['version'], offering_data['version'])
             self.assertEqual(content['state'], 'uploaded')
@@ -382,8 +626,15 @@ class OfferingCreationTestCase(TestCase):
             if 'screenshots' in expected_data:
                 self.assertEquals(content['related_images'], expected_data['screenshots'])
 
-                for sc in expected_data['screenshots']:
-                    self.assertTrue(sc in content['related_images'])
+            if 'applications' in offering_data:
+                self.assertEquals(content['applications'], offering_data['applications'])
+
+            if 'resources' in offering_data:
+                off = Offering.objects.get(name=offering_data['name'], version=offering_data['version'])
+                offerings_management.bind_resources.assert_called_once_with(off, offering_data['resources'], user)
+
+            if 'notification_url' in offering_data:
+                self.assertEquals(content['notification_url'], expected_data['notification_url'])
         else:
             self.assertEquals(unicode(error), err_msg)
             self.assertTrue(isinstance(error, err_type))
