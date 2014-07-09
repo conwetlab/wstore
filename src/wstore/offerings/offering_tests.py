@@ -326,7 +326,7 @@ OFFERING_INVALID_VERSION = {
 }
 
 OFFERING_INVALID_NAME = {
-    'name': 'námê',
+    'name': '.name',
     'version': '1.0',
     'repository': 'test_repository',
     'image': {
