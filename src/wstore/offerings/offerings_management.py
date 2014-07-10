@@ -567,7 +567,7 @@ def update_offering(offering, data):
     # Check if the offering has been published,
     # if published the offering cannot be updated
     if offering.state != 'uploaded':
-        raise Exception('The offering cannot be edited')
+        raise PermissionDenied('The offering cannot be edited')
 
     dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
@@ -623,7 +623,7 @@ def update_offering(offering, data):
 
         # Check the link
         if usdl_url != offering.description_url:
-            raise Exception('The provided USDL URL is not valid')
+            raise ValueError('The provided USDL URL is not valid')
 
         # Download new content
         repository_adaptor = RepositoryAdaptor(usdl_url)
@@ -640,7 +640,7 @@ def update_offering(offering, data):
         }
         # Validate USDL info
         if not 'description' in data['offering_info'] or not 'pricing' in data['offering_info']:
-            raise Exception('Invalid USDL info')
+            raise ValueError('Invalid USDL info')
 
         offering_info = data['offering_info']
         offering_info['image_url'] = offering.image_url
