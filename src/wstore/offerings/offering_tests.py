@@ -1312,6 +1312,27 @@ class OfferingBindingTestCase(TestCase):
         except:
             pass
 
+    def _publish_offering(self):
+        offering = Offering.objects.get(name='test_offering1')
+        offering.state = 'published'
+        offering.save()
+
+    def _deleted_resource(self):
+        res = Resource.objects.get(name='test_resource1')
+        res.state = 'deleted'
+        res.save()
+
+    def _resource_not_open(self):
+        offering = Offering.objects.get(name='test_offering1')
+        offering.open = True
+        offering.save()
+
+    def _resource_included(self):
+        offering = Offering.objects.get(name='test_offering2')
+        res = Resource.objects.get(name='test_resource3')
+        offering.resources.append(res.pk)
+        offering.save()
+
     @parameterized.expand([
         ([{
             'name': 'test_resource1',
@@ -1325,15 +1346,34 @@ class OfferingBindingTestCase(TestCase):
             'name': 'test_resource3',
             'version': '1.0'
         }], 'test_offering2'),
+        ([{
+            'name': 'test_resource1',
+            'version': '1.0'
+        },
+        {
+            'name': 'test_resource3',
+            'version': '1.0'
+        }], 'test_offering2', _resource_included),
         ([], 'test_offering2'),
         ([{
             'name': 'test_resource4',
             'version': '1.0'
-        }], 'test_offering1', ValueError, 'Resource not found: test_resource4 1.0')
+        }], 'test_offering1', None, ValueError, 'Resource not found: test_resource4 1.0'),
+        ([], 'test_offering1', _publish_offering, PermissionDenied, 'This offering cannot be modified'),
+        ([{
+            'name': 'test_resource1',
+            'version': '1.0'
+        }], 'test_offering1', _deleted_resource, PermissionDenied, 'Invalid resource, the resource test_resource1 1.0 is deleted'),
+        ([{
+            'name': 'test_resource1',
+            'version': '1.0'
+        }], 'test_offering1', _resource_not_open, PermissionDenied, 'It is not allowed to include not open resources in an open offering')
     ])
-    def test_binding(self, data, offering_name, err_type=None, err_msg=None):
+    def test_binding(self, data, offering_name, side_effect=None, err_type=None, err_msg=None):
 
-        #import ipdb; ipdb.set_trace()
+        if side_effect:
+            side_effect(self)
+
         offering = Offering.objects.get(name=offering_name)
         provider = User.objects.get(username='test_user')
         org = Organization.objects.get(name=provider.username)

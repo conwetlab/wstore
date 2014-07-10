@@ -845,11 +845,11 @@ def bind_resources(offering, data, provider):
 
         # Check resource state
         if resource.state == 'deleted':
-            raise PermissionDenied('Invalid resource, the resource is deleted')
+            raise PermissionDenied('Invalid resource, the resource ' + res['name'] + ' ' + res['version'] + ' is deleted')
 
         # Check open
         if not resource.open and offering.open:
-            raise ValueError('It is not allowed to include not open resources in an open offering')
+            raise PermissionDenied('It is not allowed to include not open resources in an open offering')
 
         if not ObjectId(resource.pk) in offering_resources:
             added_resources.append(resource.pk)
