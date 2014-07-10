@@ -679,7 +679,7 @@ def update_offering(offering, data):
         })
 
         if not valid[0]:
-            raise Exception(valid[1])
+            raise ValueError(valid[1])
 
         # Serialize and store USDL info in json-ld format
         graph = rdflib.Graph()
@@ -691,8 +691,12 @@ def update_offering(offering, data):
         elif usdl_info['content_type'] == 'application/json':
             rdf_format = 'json-ld'
 
-        graph.parse(data=usdl, format=rdf_format)
-        offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
+        off_description = usdl
+        if rdf_format != 'json-ld':
+            graph.parse(data=usdl, format=rdf_format)
+            off_description = graph.serialize(format='json-ld', auto_compact=True)
+
+        offering.offering_description = json.loads(off_description)
 
     offering.save()
 
