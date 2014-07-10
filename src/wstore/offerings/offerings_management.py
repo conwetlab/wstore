@@ -33,6 +33,7 @@ from urlparse import urlparse
 from django.conf import settings
 from django.template import loader
 from django.template import Context as TmplContext
+from django.core.exceptions import PermissionDenied
 
 from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.market_adaptor.marketadaptor import MarketAdaptor
@@ -829,7 +830,7 @@ def bind_resources(offering, data, provider):
 
     # Check that the offering supports binding
     if offering.state != 'uploaded':
-        raise Exception('This offering cannot be modified')
+        raise PermissionDenied('This offering cannot be modified')
 
     added_resources = []
     offering_resources = []
@@ -837,11 +838,14 @@ def bind_resources(offering, data, provider):
         offering_resources.append(of_res)
 
     for res in data:
-        resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider.userprofile.current_organization)
+        try:
+            resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider.userprofile.current_organization)
+        except:
+            raise ValueError('Resource not found: ' + res['name'] + ' ' + res['version'])
 
         # Check resource state
         if resource.state == 'deleted':
-            raise Exception('Invalid resource, the resource is deleted')
+            raise PermissionDenied('Invalid resource, the resource is deleted')
 
         # Check open
         if not resource.open and offering.open:
