@@ -28,6 +28,7 @@ import rdflib
 from mock import MagicMock
 from nose_parameterized import parameterized
 from datetime import datetime
+from bson.objectid import ObjectId
 
 from django.test import TestCase
 from django.contrib.auth.models import User
@@ -1330,7 +1331,7 @@ class OfferingBindingTestCase(TestCase):
     def _resource_included(self):
         offering = Offering.objects.get(name='test_offering2')
         res = Resource.objects.get(name='test_resource3')
-        offering.resources.append(res.pk)
+        offering.resources.append(ObjectId(res.pk))
         offering.save()
 
     @parameterized.expand([
