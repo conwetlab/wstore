@@ -726,6 +726,16 @@ class OfferingCountTestCase(TestCase):
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(error), err_msg)
 
+
+class RemoveMock():
+    calls = []
+
+    def __call__(self, path):
+        self.calls.append(path)
+
+    def assertCall(self, path):
+        assert path in self.calls
+
 class OfferingUpdateTestCase(TestCase):
 
     tags = ('update',)
@@ -734,18 +744,43 @@ class OfferingUpdateTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
-
         path = os.path.join(settings.BASEDIR, 'wstore/test/')
+        cls.test_dir = os.path.join(path, 'test_organization__test_offering2__1.0')
+        # Create test offering media dir
+        os.makedirs(cls.test_dir)
+
         # loads test USDL
         f = open(os.path.join(path, 'test_usdl.rdf'), 'rb')
         cls._usdl = f.read()
         super(OfferingUpdateTestCase, cls).setUpClass()
 
+    @classmethod
+    def tearDownClass(cls):
+        reload(os)
+        try:
+            for file_ in os.listdir(cls.test_dir):
+                file_path = os.path.join(cls.test_dir, file_)
+                os.remove(file_path)
+        except:
+            pass
+        os.rmdir(cls.test_dir)
+        super(OfferingUpdateTestCase, cls).tearDownClass()
+
     def setUp(self):
+        offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
+
+    def tearDown(self):
+        try:
+            for file_ in os.listdir(self.test_dir):
+                file_path = os.path.join(self.test_dir, file_)
+                os.remove(file_path)
+        except:
+            pass
+        reload(offerings_management)
+        settings.MEDIA_ROOT = os.path.join(settings.BASEDIR, '/media/')
 
     def _serialize(self, type_):
         graph = rdflib.Graph()
@@ -762,6 +797,26 @@ class OfferingUpdateTestCase(TestCase):
         offering.save()
         return data
 
+    def _mock_images(self, data):
+        offerings_management.os.remove = RemoveMock()
+        offerings_management.base64 = MagicMock()
+        offerings_management.base64.b64decode.return_value = 'decoded data'
+        settings.MEDIA_ROOT = os.path.join(settings.BASEDIR, 'wstore/test/')
+        return data
+
+    def _invalid_usdl(self, data):
+        offerings_management.validate_usdl = MagicMock()
+        offerings_management.validate_usdl.side_effect = ValueError('Invalid USDL')
+        return data
+
+    def _fit_usdl_n3(self, data):
+        data['offering_description']['data'] = self._serialize('n3')
+        return data
+
+    def _fit_usdl_json(self, data):
+        data['offering_description']['data'] = self._serialize('json-ld')
+        return data
+
     @parameterized.expand([
         ({
             'offering_description': {
@@ -770,15 +825,59 @@ class OfferingUpdateTestCase(TestCase):
             }
         }, _fit_usdl),
         ({
+            'offering_description': {
+                'content_type': 'text/turtle',
+                'data': ''
+            }
+        }, _fit_usdl_n3),
+        ({
+            'offering_description': {
+                'content_type': 'application/json',
+                'data': ''
+            }
+        }, _fit_usdl_json),
+        ({
             'description_url':  "http://examplerep/v1/test_usdl"
         },),
+        ({
+            'image': {
+                'name': 'test_logo.png',
+                'data': 'encoded data'
+            },
+            'related_images': [{
+                'name': 'test_screen1.png',
+                'data': 'encoded_data'
+            }],
+            'offering_info': {
+                'description': 'Test offering',
+                'pricing': {
+                    'price_model': 'single_payment',
+                    'price': 5
+                },
+                'legal': {
+                    'title': 'legal title',
+                    'text': 'legal text'
+                }
+            }
+        }, _mock_images),
         ({}, _publish_offering, PermissionDenied, 'The offering cannot be edited'),
         ({
             'description_url': {
                 'content_type': 'application/rdf+xml',
                 'link': 'http://examplerep/v1/invalid'
             }
-        }, None, ValueError, 'The provided USDL URL is not valid')
+        }, None, ValueError, 'The provided USDL URL is not valid'),
+        ({
+            'description_url':  "http://examplerep/v1/test_usdl"
+        }, _invalid_usdl, ValueError, 'Invalid USDL'),
+        ({
+            'offering_info': {
+                'pricing': {
+                    'price_model': 'single_payment',
+                    'price': 5
+                }
+            }
+        }, None, ValueError, 'Invalid USDL info')
     ])
     def test_offering_update(self, initial_data, data_filler=None, err_type=None, err_msg=None):
 
@@ -798,27 +897,55 @@ class OfferingUpdateTestCase(TestCase):
         if not err_type:
             self.assertEquals(error, None)
 
-            if 'offering_description' in data or 'description_url' in data:
-                offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
-                usdl = offering.offering_description
+            new_offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
+            self.se_object.update_index.assert_called_with(offering)
+
+            if 'offering_description' in data or 'description_url' in data or 'offering_info' in data:
+                usdl = new_offering.offering_description
 
                 parser = USDLParser(json.dumps(usdl), 'application/json')
 
                 usdl_content = parser.parse()
-
                 self.assertEqual(len(usdl_content['services_included']), 1)
                 service = usdl_content['services_included'][0]
 
-                self.assertEqual(service['name'], 'Map viewer')
-                self.assertEqual(service['vendor'], 'CoNWeT')
+                if 'offering_description' in data or 'description_url' in data:
+                    self.assertEqual(service['name'], 'Map viewer')
+                    self.assertEqual(service['vendor'], 'CoNWeT')
 
-                self.assertEqual(usdl_content['pricing']['title'], 'Map viewer free use')
-                self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
+                    self.assertEqual(usdl_content['pricing']['title'], 'Map viewer free use')
+                    self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
 
-                plan = usdl_content['pricing']['price_plans'][0]
-                self.assertEqual(plan['title'], 'Free use')
+                    plan = usdl_content['pricing']['price_plans'][0]
+                    self.assertEqual(plan['title'], 'Free use')
 
-                self.se_object.update_index.assert_called_with(offering)
+                else:
+                    self.assertEqual(service['name'], 'test_offering2')
+
+                    self.assertEqual(usdl_content['pricing']['title'], 'test_offering2')
+                    self.assertEqual(usdl_content['pricing']['description'], 'Test offering')
+                    self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
+
+                    plan = usdl_content['pricing']['price_plans'][0]
+                    self.assertEqual(plan['description'], 'This price plan defines a single payment')
+
+            if 'image' in data:
+                # Check deletion of old image
+                offerings_management.os.remove.assertCall(os.path.join(settings.BASEDIR, 'wstore/test/test_organization__test_offering2__1.0/image.png'))
+
+                f = open(os.path.join(self.test_dir, data['image']['name']), "rb")
+                content = f.read()
+                self.assertEquals(content, 'decoded data')
+                self.assertEquals(new_offering.image_url, '/media/test_organization__test_offering2__1.0/test_logo.png')
+
+            if 'related_images' in data:
+
+                os.remove.assertCall(os.path.join(settings.BASEDIR, 'wstore/test/test_organization__test_offering2__1.0/screen1.png'))
+
+                for img in data['related_images']:
+                    f = open(os.path.join(self.test_dir, img['name']), "rb")
+                    content = f.read()
+                    self.assertEquals(content, 'decoded data')
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
