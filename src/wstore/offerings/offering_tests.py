@@ -32,6 +32,7 @@ from datetime import datetime
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 
 from wstore.offerings import offerings_management
 from wstore.store_commons.utils.usdlParser import USDLParser
@@ -1295,91 +1296,76 @@ class OfferingPublicationTestCase(TestCase):
 
 class OfferingBindingTestCase(TestCase):
 
+    tags = ('binding',)
     fixtures = ['bind.json']
 
     @classmethod
     def setUpClass(cls):
         settings.OILAUTH = False
 
-    def test_basic_binding(self):
-        data = [{
+    def _fill_resources_org(self, data, org):
+        try:
+            for res in data:
+                resource = Resource.objects.get(name=res['name'])
+                resource.provider = org
+                resource.save()
+        except:
+            pass
+
+    @parameterized.expand([
+        ([{
             'name': 'test_resource1',
             'version': '1.0'
-        }]
-        offering = Offering.objects.get(name='test_offering1')
-        provider = User.objects.get(username='test_user')
-        org = Organization.objects.get(name=provider.username)
-        resource = Resource.objects.get(name='test_resource1')
-        resource.provider = org
-        resource.save()
-
-        offerings_management.bind_resources(offering, data, provider)
-        offering = Offering.objects.get(name='test_offering1')
-
-        self.assertEqual(len(offering.resources), 1)
-        resource = Resource.objects.get(pk=offering.resources[0])
-        self.assertEqual(resource.name, 'test_resource1')
-        self.assertEqual(resource.version, '1.0')
-
-    def test_bind_mix_resources(self):
-        data = [{
+        }], 'test_offering1'),
+        ([{
             'name': 'test_resource1',
             'version': '1.0'
         },
         {
             'name': 'test_resource3',
             'version': '1.0'
-        }]
-        offering = Offering.objects.get(name='test_offering2')
-        provider = User.objects.get(username='test_user')
-
-        org = Organization.objects.get(name=provider.username)
-        resource = Resource.objects.get(name='test_resource1')
-        resource.provider = org
-        resource.save()
-
-        resource = Resource.objects.get(name='test_resource3')
-        resource.provider = org
-        resource.save()
-
-        offerings_management.bind_resources(offering, data, provider)
-        offering = Offering.objects.get(name='test_offering2')
-
-        self.assertEqual(len(offering.resources), 2)
-        resource = Resource.objects.get(pk=offering.resources[0])
-        self.assertEqual(resource.name, 'test_resource1')
-        self.assertEqual(resource.version, '1.0')
-        resource = Resource.objects.get(pk=offering.resources[1])
-        self.assertEqual(resource.name, 'test_resource3')
-        self.assertEqual(resource.version, '1.0')
-        resource = Resource.objects.get(name='test_resource2')
-        self.assertEqual(len(resource.offerings), 0)
-
-    def test_unbind_resources(self):
-        data = []
-
-        offering = Offering.objects.get(name='test_offering2')
-        provider = User.objects.get(username='test_user')
-        offerings_management.bind_resources(offering, data, provider)
-        offering = Offering.objects.get(name='test_offering2')
-
-        self.assertEqual(len(offering.resources), 0)
-
-    def test_bind_not_existing_resource(self):
-        data = [{
+        }], 'test_offering2'),
+        ([], 'test_offering2'),
+        ([{
             'name': 'test_resource4',
             'version': '1.0'
-        }]
-        offering = Offering.objects.get(name='test_offering1')
+        }], 'test_offering1', ValueError, 'Resource not found: test_resource4 1.0')
+    ])
+    def test_binding(self, data, offering_name, err_type=None, err_msg=None):
+
+        #import ipdb; ipdb.set_trace()
+        offering = Offering.objects.get(name=offering_name)
         provider = User.objects.get(username='test_user')
-        error = False
+        org = Organization.objects.get(name=provider.username)
+
+        self._fill_resources_org(data, org)
+
+        error = None
         try:
             offerings_management.bind_resources(offering, data, provider)
-        except:
-            error = True
+        except Exception as e:
+            error = e
 
-        self.assertTrue(error)
+        if not err_type:
+            self.assertEquals(error, None)
+            # Refresh offering object
+            offering = Offering.objects.get(name=offering_name)
+            # Check binding
+            self.assertEquals(len(offering.resources), len(data))
 
+            for off_res in offering.resources:
+                found = False
+                res = Resource.objects.get(pk=off_res)
+
+                for exp_res in data:
+                    if res.name == exp_res['name']:
+                        self.assertEquals(res.version, exp_res['version'])
+                        found = True
+                        break
+                self.assertTrue(found)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
 
 class OfferingDeletionTestCase(TestCase):
 
