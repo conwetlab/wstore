@@ -728,6 +728,7 @@ class OfferingCountTestCase(TestCase):
 
 class OfferingUpdateTestCase(TestCase):
 
+    tags = ('update',)
     fixtures = ['update.json']
     _usdl = None
 
@@ -746,102 +747,81 @@ class OfferingUpdateTestCase(TestCase):
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
 
-    def test_basic_offering_update(self):
-        data = {
+    def _serialize(self, type_):
+        graph = rdflib.Graph()
+        graph.parse(data=self._usdl, format='application/rdf+xml')
+        return graph.serialize(format=type_, auto_compact=True)
+
+    def _fit_usdl(self, data):
+        data['offering_description']['data'] = self._usdl
+        return data
+
+    def _publish_offering(self, data):
+        offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
+        offering.state = 'published'
+        offering.save()
+        return data
+
+    @parameterized.expand([
+        ({
             'offering_description': {
                 'content_type': 'application/rdf+xml',
-                'data': self._usdl
+                'data': ''
             }
-        }
-        offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
-
-        offerings_management.update_offering(offering, data)
-
-        offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
-        usdl = offering.offering_description
-
-        parser = USDLParser(json.dumps(usdl), 'application/json')
-
-        usdl_content = parser.parse()
-
-        self.assertEqual(len(usdl_content['services_included']), 1)
-        service = usdl_content['services_included'][0]
-
-        self.assertEqual(service['name'], 'Map viewer')
-        self.assertEqual(service['vendor'], 'CoNWeT')
-
-        self.assertEqual(usdl_content['pricing']['title'], 'Map viewer free use')
-        self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
-
-        plan = usdl_content['pricing']['price_plans'][0]
-        self.assertEqual(plan['title'], 'Free use')
-
-        self.se_object.update_index.assert_called_with(offering)
-
-    def test_offering_update_from_url(self):
-
-        data = {
+        }, _fit_usdl),
+        ({
             'description_url':  "http://examplerep/v1/test_usdl"
-        }
-        offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
-
-        offerings_management.update_offering(offering, data)
-
-        offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
-        usdl = offering.offering_description
-
-        parser = USDLParser(json.dumps(usdl), 'application/json')
-
-        usdl_content = parser.parse()
-
-        self.assertEqual(len(usdl_content['services_included']), 1)
-        service = usdl_content['services_included'][0]
-
-        self.assertEqual(service['name'], 'Map viewer')
-        self.assertEqual(service['vendor'], 'CoNWeT')
-
-        self.assertEqual(usdl_content['pricing']['title'], 'Map viewer free use')
-        self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
-
-        plan = usdl_content['pricing']['price_plans'][0]
-        self.assertEqual(plan['title'], 'Free use')
-        self.se_object.update_index.assert_called_with(offering)
-
-    def test_offering_update_published(self):
-
-        offering = Offering.objects.get(pk="61000aba8e05ac2115f022f9")
-
-        error = False
-        msg = None
-        try:
-            offerings_management.update_offering(offering, {})
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEquals(msg, 'The offering cannot be edited')
-
-    def test_offering_update_invalid_link(self):
-
-        data = {
+        },),
+        ({}, _publish_offering, PermissionDenied, 'The offering cannot be edited'),
+        ({
             'description_url': {
                 'content_type': 'application/rdf+xml',
                 'link': 'http://examplerep/v1/invalid'
             }
-        }
+        }, None, ValueError, 'The provided USDL URL is not valid')
+    ])
+    def test_offering_update(self, initial_data, data_filler=None, err_type=None, err_msg=None):
+
+        if data_filler:
+            data = data_filler(self, initial_data)
+        else:
+            data = initial_data
+
         offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
 
-        error = False
-        msg = None
+        error = None
         try:
             offerings_management.update_offering(offering, data)
-        except Exception, e:
-            error = True
-            msg = e.message
+        except Exception as e:
+            error = e
 
-        self.assertTrue(error)
-        self.assertEquals(msg, 'The provided USDL URL is not valid')
+        if not err_type:
+            self.assertEquals(error, None)
+
+            if 'offering_description' in data or 'description_url' in data:
+                offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
+                usdl = offering.offering_description
+
+                parser = USDLParser(json.dumps(usdl), 'application/json')
+
+                usdl_content = parser.parse()
+
+                self.assertEqual(len(usdl_content['services_included']), 1)
+                service = usdl_content['services_included'][0]
+
+                self.assertEqual(service['name'], 'Map viewer')
+                self.assertEqual(service['vendor'], 'CoNWeT')
+
+                self.assertEqual(usdl_content['pricing']['title'], 'Map viewer free use')
+                self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
+
+                plan = usdl_content['pricing']['price_plans'][0]
+                self.assertEqual(plan['title'], 'Free use')
+
+                self.se_object.update_index.assert_called_with(offering)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
 
 
 class OfferingRetrievingTestCase(TestCase):
