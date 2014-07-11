@@ -167,8 +167,8 @@
                 $('#loading').addClass('hide');
                 var msg = 'Your offering has been created. You have to publish your offering before making it available to third parties.';
                 MessageManager.showMessage('Created', msg);
-                if (getCurrentTab() == '#provided-tab') {
-                    getUserOfferings('#provided-tab', paintProvidedOfferings, EndpointManager.getEndpoint('OFFERING_COLLECTION'), false);
+                if (getCurrentView() == 'provided') {
+                    paintCatalogue(true);
                 }
             },
             error: function (xhr) {

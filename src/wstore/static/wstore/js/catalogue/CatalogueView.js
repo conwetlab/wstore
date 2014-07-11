@@ -197,9 +197,11 @@
         calculatePositions();
     };
 
-    paintCatalogue = function paintCatalogue() {
-        
-        createCatalogueContents();
+    paintCatalogue = function paintCatalogue(useContents) {
+
+        if (!useContents) {
+            createCatalogueContents();
+        }
         searchView = new CatalogueSearchView();
 
         // Create menu
@@ -223,6 +225,10 @@
     setView = function setView(view) {
         currentView = view;
     };
+
+    getCurrentView = function getCurrentView() {
+        return currentView;
+    }
 
     notifyEvent = function notifyEvent() {
         evntAllowed = true;
