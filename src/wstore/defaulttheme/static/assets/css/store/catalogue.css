@@ -124,3 +124,10 @@
 .res-title {
   white-space: nowrap;
 }
+
+#open-help {
+  position: relative;
+  top: 4px;
+  left: 4px;
+}
+
