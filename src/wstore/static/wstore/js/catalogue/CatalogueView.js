@@ -23,6 +23,7 @@
     var mpainter;
     var searchView;
     var evntAllowed = true;
+    var currentView = 'purchased';
 
     fillStarsRating = function fillStarsRating(rating, container) {
         // Fill rating stars
@@ -104,6 +105,7 @@
                 $('#catalogue-container').empty();
                 createCatalogueContents();
             }
+            currentView = 'purchased';
             searchView.initSearchView('OFFERING_COLLECTION', 'purchased');
         });
         $('#menu-second-text').click(function() {
@@ -112,6 +114,8 @@
                 $('#catalogue-container').empty();
                 createCatalogueContents();
             }
+
+            currentView = 'provided';
 
             if (USERPROFILE.getCurrentRoles().indexOf('provider') != -1) {
                 searchView.initSearchView('OFFERING_COLLECTION', 'provided');
@@ -203,7 +207,7 @@
             mpainter = new MenuPainter(menuHandler);
         }
 
-        searchView.initSearchView('OFFERING_COLLECTION', 'purchased');
+        searchView.initSearchView('OFFERING_COLLECTION', currentView);
     };
 
 
@@ -216,9 +220,14 @@
         paintCatalogue();
     };
 
+    setView = function setView(view) {
+        currentView = view;
+    };
+
     notifyEvent = function notifyEvent() {
         evntAllowed = true;
     };
+
     calculatePositions = function calculatePositions(evnt) {
 
         if (evnt && evntAllowed) {
