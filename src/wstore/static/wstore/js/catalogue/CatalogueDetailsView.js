@@ -91,7 +91,7 @@
             $('#main-action').remove();
         }
         // Check price for action button
-        if (action == 'Purchase' && !offeringElement.isOpen()) {
+        if (action == 'Purchase' && !this.offeringElement.isOpen()) {
             var priceStr = getPriceStr(this.offeringElement.getPricing());
             if (priceStr != 'View pricing'){
                 $('#main-action').val(priceStr);
