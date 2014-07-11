@@ -80,7 +80,7 @@
                 return function() {
                     if ($.trim($('#text-search').val()) != '') {
                         self.setTitle('Offerings');
-                        self.initSearchView(this.searchEndp);
+                        self.initSearchView(self.searchEndp);
                     }
                 }
             })(this));
@@ -91,7 +91,7 @@
                         e.preventDefault();
                         e.stopPropagation();
                         self.setTitle('Offerings');
-                        self.initSearchView(this.searchEndp);
+                        self.initSearchView(self.searchEndp);
                     }
                 }
             })(this));

@@ -20,8 +20,14 @@
 
 (function() {
 
-    MenuPainter = function MenuPainter(buttonsListener) {
-        this.buttonsListener = buttonsListener;
+    MenuPainter = function MenuPainter(firstListener, secondListener, thirdListener) {
+        this.firstListener = firstListener;
+        this.secondListener = secondListener;
+
+        if (thirdListener) {
+            this.thirdListener = thirdListener;
+        }
+
         this.expanded = true;
         setListeners(this);
     };
@@ -43,12 +49,37 @@
 
         $('.left-bar .icon-remove').click(clickHandlerDecrease.bind(this))
         $('.left-bar').animate({'width': '205px'}, 1000, function() {
-            this.buttonsListener();
+            setListeners(this);
         }.bind(this));
     };
 
     var setListeners = function setListerners(self) {
-        self.buttonsListener();
+        $('#menu-first-text').off('click');
+        $('#menu-second-text').off('click');
+        $('#menu-third-text').off('click');
+
+        $('#menu-first-text').click(function() {
+            $('#menu-first-text').addClass('menu-first-hover');
+            $('#menu-second-text').removeClass('menu-second-hover');
+            $('#menu-third-text').removeClass('menu-third-hover');
+            this.firstListener();
+        }.bind(self));
+
+        $('#menu-second-text').click(function() {
+            $('#menu-first-text').removeClass('menu-first-hover');
+            $('#menu-second-text').addClass('menu-second-hover');
+            $('#menu-third-text').removeClass('menu-third-hover');
+            this.secondListener();
+        }.bind(self));
+
+        if (self.thirdListener) {
+            $('#menu-third-text').click(function() {
+                $('#menu-first-text').removeClass('menu-first-hover');
+                $('#menu-second-text').removeClass('menu-second-hover');
+                $('#menu-third-text').addClass('menu-third-hover');
+                this.thirdListener();
+            }.bind(self));
+        }
     };
 
     MenuPainter.prototype.decrease = function decrease() {

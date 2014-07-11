@@ -95,11 +95,7 @@
         });
     };
 
-    var menuHandler = function menuHandler() {
-        $('#menu-first-text').off('click');
-        $('#menu-second-text').off('click');
-
-        $('#menu-first-text').click(function() {
+    var purchasedHandler = function purchasedHandler() {
             // Check if details view
             if ($('.detailed-info').length) {
                 $('#catalogue-container').empty();
@@ -107,43 +103,43 @@
             }
             currentView = 'purchased';
             searchView.initSearchView('OFFERING_COLLECTION', 'purchased');
-        });
-        $('#menu-second-text').click(function() {
-            // Check if details view
-            if ($('.detailed-info').length) {
-                $('#catalogue-container').empty();
-                createCatalogueContents();
-            }
+    }
 
-            currentView = 'provided';
+    var providedHandler = function providedHandler() {
+     // Check if details view
+        if ($('.detailed-info').length) {
+            $('#catalogue-container').empty();
+            createCatalogueContents();
+        }
 
-            if (USERPROFILE.getCurrentRoles().indexOf('provider') != -1) {
-                searchView.initSearchView('OFFERING_COLLECTION', 'provided');
+        currentView = 'provided';
+
+        if (USERPROFILE.getCurrentRoles().indexOf('provider') != -1) {
+            searchView.initSearchView('OFFERING_COLLECTION', 'provided');
+        } else {
+            // Build the non-provider view
+            var msg;
+            if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
+                msg = "You don't have the provider role. To request the role please click ";
+                if (USERPROFILE.providerRequested()) {
+                    msg = "You don't have the provider role yet. Your request is pending for approval";
+                }
             } else {
-                // Build the non-provider view
-                var msg;
-                if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
-                    msg = "You don't have the provider role. To request the role please click ";
-                    if (USERPROFILE.providerRequested()) {
-                        msg = "You don't have the provider role yet. Your request is pending for approval";
-                    }
-                } else {
-                    msg = "You don't have the provider role for the current organization. Ask an organization manager to request the role";
-                }
-                $('#catalogue-title').text('Provided');
-                MessageManager.showAlertInfo('Unauthorized', msg, $('.offerings-container'));
-                $('.offerings-container .alert-info').removeClass('span8');
-
-                if ((USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) && !USERPROFILE.providerRequested()) {
-                    var reqBtn = $('<a>here</a>');
-                    var requestForm = new ProviderRequestForm(USERPROFILE);
-                    
-                    reqBtn.click(function() {
-                        requestForm.display();
-                    }).appendTo('.alert-info');
-                }
+                msg = "You don't have the provider role for the current organization. Ask an organization manager to request the role";
             }
-        });
+            $('#catalogue-title').text('Provided');
+            MessageManager.showAlertInfo('Unauthorized', msg, $('.offerings-container'));
+            $('.offerings-container .alert-info').removeClass('span8');
+
+            if ((USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) && !USERPROFILE.providerRequested()) {
+                var reqBtn = $('<a>here</a>');
+                var requestForm = new ProviderRequestForm(USERPROFILE);
+
+                reqBtn.click(function() {
+                    requestForm.display();
+                }).appendTo('.alert-info');
+            }
+        }
     };
 
     closeMenuPainter = function closeMenuPainter() {
@@ -206,7 +202,7 @@
 
         // Create menu
         if (!mpainter) {
-            mpainter = new MenuPainter(menuHandler);
+            mpainter = new MenuPainter(purchasedHandler, providedHandler);
         }
 
         searchView.initSearchView('OFFERING_COLLECTION', currentView);

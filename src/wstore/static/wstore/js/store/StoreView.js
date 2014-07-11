@@ -200,35 +200,30 @@
         }
     }
 
-    setMenuHandlers = function setMenuHandlers() {
-
-        $('#menu-first-text').off('click');
-        $('#menu-second-text').off('click');
-        $('#menu-third-text').off('click');
-
-        $('#menu-first-text').click(function() {
-            if ($('.detailed-info').length) {
-                $('#home-container').empty()
-            }
-            searchView.setTitle('Services');
-            searchView.initSearchView('SEARCH_TAG_ENTRY', 'service');
-        });
-        $('#menu-second-text').click(function() {
-            if ($('.detailed-info').length) {
-                $('#home-container').empty()
-            }
-            searchView.setTitle('Datasets');
-            searchView.initSearchView('SEARCH_TAG_ENTRY', 'dataset');
-        });
-        $('#menu-third-text').click(function() {
-            if ($('.detailed-info').length) {
-                $('#home-container').empty()
-            }
-            searchView.setTitle('Widgets / Mashups');
-            searchView.initSearchView('SEARCH_TAG_ENTRY', 'widget');
-        });
+    setServiceHandler = function setServiceHandler() {
+        if ($('.detailed-info').length) {
+            $('#home-container').empty()
+        }
+        searchView.setTitle('Services');
+        searchView.initSearchView('SEARCH_TAG_ENTRY', 'service');
     };
-    
+
+    setDataHandler = function setDataHandler() {
+        if ($('.detailed-info').length) {
+            $('#home-container').empty()
+        }
+        searchView.setTitle('Datasets');
+        searchView.initSearchView('SEARCH_TAG_ENTRY', 'dataset');
+    };
+
+    setWidgetHandler = function setWidgetHandler() {
+        if ($('.detailed-info').length) {
+            $('#home-container').empty()
+        }
+        searchView.setTitle('Widgets / Mashups');
+        searchView.initSearchView('SEARCH_TAG_ENTRY', 'widget');
+    };
+
     paintHomePage = function paintHomePage () {
         // Create search view object
         searchView = new StoreSearchView();
@@ -261,7 +256,7 @@
 
         // Bind menu handlers
         if (!mpainter)  {
-            mpainter = new MenuPainter(setMenuHandlers);
+            mpainter = new MenuPainter(setServiceHandler, setDataHandler, setWidgetHandler);
         }
         // Get initial offerings
         calculatePositions();
