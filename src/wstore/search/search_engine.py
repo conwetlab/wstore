@@ -210,10 +210,24 @@ class SearchEngine():
                 if pagination['limit'] < 0:
                     raise ValueError('Limit param must be positive')
 
+                search_params = (query_, )
+                search_kwparams = {
+                    'filter': filter_,
+                }
+
                 if sort:
-                    search_result = searcher.search_page(query_, pagination['start'], filter=filter_, pagelen=pagination['limit'], sortedby=sort, reverse=reverse)
+                    search_kwparams['sortedby'] = sort
+                    search_kwparams['reverse'] = reverse
+
+                # Check limits
+                search_len = len(searcher.search(*search_params, **search_kwparams))
+
+                if pagination['start'] > search_len:
+                    search_result = []
                 else:
-                    search_result = searcher.search_page(query_, pagination['start'], filter=filter_, pagelen=pagination['limit'])
+                    search_params = (query_, pagination['start'])
+                    search_kwparams['pagelen'] = pagination['limit']
+                    search_result = searcher.search_page(*search_params, **search_kwparams)
             else:
                 if sort:
                     search_result = searcher.search(query_, filter=filter_, limit=None, sortedby=sort, reverse=reverse)
