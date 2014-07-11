@@ -22,6 +22,7 @@ import os
 from datetime import datetime
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 
 from wstore.charging_engine.charging_engine import ChargingEngine
 from wstore.models import Purchase
@@ -36,7 +37,10 @@ from wstore.search.search_engine import SearchEngine
 def create_purchase(user, offering, org_owned=False, payment_info=None):
 
     if offering.state != 'published':
-        raise Exception("This offering can't be purchased")
+        raise PermissionDenied("This offering can't be purchased")
+
+    if offering.open:
+        raise PermissionDenied('Open offerings cannot be purchased')
 
     profile = UserProfile.objects.get(user=user)
 
@@ -92,7 +96,7 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
                 raise Exception('The customer does not have payment info')
 
     elif payment_info['payment_method'] != 'paypal':
-        raise Exception('Invalid payment method')
+        raise ValueError('Invalid payment method')
 
     # Create the purchase
     purchase = Purchase.objects.create(

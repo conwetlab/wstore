@@ -242,14 +242,18 @@
                 'value': repositories[i].name,
                 'text': repositories[i].name}).appendTo('#repositories');
         }
-        // Set listeners
-        $('#pricing-select').change(function() {
-            if ($(this).val() == 'free') {
-                $('#price-input').prop('disabled', true);
-            } else {
-                $('#price-input').prop('disabled', false);
-            }
-        });
+       // Set listeners
+        if (offeringInfo.open) {
+            $('#pricing-select').prop('disabled', true);
+        } else {
+            $('#pricing-select').change(function() {
+                if ($(this).val() == 'free') {
+                    $('#price-input').prop('disabled', true);
+                } else {
+                    $('#price-input').prop('disabled', false);
+                }
+            });
+        }
     };
 
     /**
@@ -263,6 +267,11 @@
         $.template('usdlTemplate', $('#select_usdl_form_template'));
         $.tmpl('usdlTemplate').appendTo('.modal-body');
 
+        // If the offering is an open offering show an informative message
+        if (offeringInfo.open) {
+            var msg = 'You are creating an open offering, so you cannot specify a pricing model';
+            MessageManager.showAlertInfo('Note', msg, $('#error-message'));
+        }
         // The create USDL form is displayed by default
         displayCreateUSDLForm(repositories);
 
@@ -369,7 +378,7 @@
             // If the USDL is loaded go to the final step, application selection
             if (!error) {
                 var userForm = new BindResourcesForm({});
-                userForm.getUserResources(showResourcesForm);
+                userForm.getUserResources(showResourcesForm, offeringInfo.open);
             } else {
                 MessageManager.showAlertError('Error', msg, $('#error-message'));
             }
@@ -465,6 +474,9 @@
 
         $('#notification-help').click(helpHandler);
 
+        $('#open-help').popover({'trigger': 'manual'});
+        $('#open-help').click(helpHandler);
+
         $('[name="notify-select"]').change(function() {
            if ($(this).val() == 'new') {
                $('#notify').removeClass('hide');
@@ -491,6 +503,12 @@
                 $('#notification-help').popover('hide');
                 $('#notification-help').prop('displayed', false);
                 $('#notification-help').removeClass('question-sing-sel');
+                $(document).unbind('click');
+            }
+            if ($('#open-help').prop('displayed')) {
+                $('#open-help').popover('hide');
+                $('#open-help').prop('displayed', false);
+                $('#open-help').removeClass('question-sing-sel');
                 $(document).unbind('click');
             }
 
@@ -547,6 +565,9 @@
                 error = true;
                 msg = 'Select and option for notification URL';
             }
+
+            // Check if the offering is an open offering
+            offeringInfo.open = $('#open-offering').prop('checked');
 
             // If the fields are properly filled, display the next form
             if (!error) {

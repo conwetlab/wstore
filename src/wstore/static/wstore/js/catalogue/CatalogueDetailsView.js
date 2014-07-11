@@ -71,7 +71,11 @@
         if (action == 'Purchase' && USERPROFILE.orgOwnerMember(this.offeringElement)) {
             action = null;
         }
-        
+
+        if (action == 'Purchase' && this.offeringElement.isOpen()) {
+            action = 'Download';
+        }
+
         $.template('detailsTemplate', $('#details_offering_template'));
         $.tmpl('detailsTemplate', {
             'name': this.offeringElement.getName(),
@@ -87,7 +91,7 @@
             $('#main-action').remove();
         }
         // Check price for action button
-        if (action == 'Purchase') {
+        if (action == 'Purchase' && !offeringElement.isOpen()) {
             var priceStr = getPriceStr(this.offeringElement.getPricing());
             if (priceStr != 'View pricing'){
                 $('#main-action').val(priceStr);

@@ -712,7 +712,7 @@ class ResourceColectionTestCase(TestCase):
         response = resource_collection.read(request)
 
         # Check correct call
-        views.get_provider_resources.assert_called_once_with(self.user)
+        views.get_provider_resources.assert_called_once_with(self.user, filter_=None)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
@@ -772,7 +772,7 @@ class ResourceColectionTestCase(TestCase):
         response = resource_collection.read(request)
 
         # Check correct call
-        views.get_provider_resources.assert_called_once_with(self.user)
+        views.get_provider_resources.assert_called_once_with(self.user, filter_=None)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')

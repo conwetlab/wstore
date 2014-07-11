@@ -180,30 +180,21 @@ class ServeMedia(API_Resource):
         dir_path = os.path.join(settings.MEDIA_ROOT, path)
 
         # Protect the resources from not authorized downloads
-        if dir_path.endswith('resources'):
-            user_profile = UserProfile.objects.get(user=request.user)
-            found = False
+        if dir_path.endswith('resources') :
 
             # Check if the request user has access to the resource
             splited_name = name.split('__')
             prov = Organization.objects.get(name=splited_name[0])
             resource = Resource.objects.get(provider=prov, name=splited_name[1], version=splited_name[2])
 
-            # Check if the user has purchased an offering with the resource
-            for off in user_profile.offerings_purchased:
-                o = Offering.objects.get(pk=off)
+            if not resource.open:
+                user_profile = UserProfile.objects.get(user=request.user)
+                found = False
 
-                for res in o.resources:
-                    if str(res) == resource.pk:
-                        found = True
-                        break
-
-                if found:
-                    break
-
-            if not found:
-                # Check if the user organization has an offering with the resource
-                for off in user_profile.current_organization.offerings_purchased:
+                # Check if the user has purchased an offering with the resource 
+                # only if the offering is not open
+            
+                for off in user_profile.offerings_purchased:
                     o = Offering.objects.get(pk=off)
 
                     for res in o.resources:
@@ -215,7 +206,20 @@ class ServeMedia(API_Resource):
                         break
 
                 if not found:
-                    return build_response(request, 404, 'Not found')
+                    # Check if the user organization has an offering with the resource
+                    for off in user_profile.current_organization.offerings_purchased:
+                        o = Offering.objects.get(pk=off)
+
+                        for res in o.resources:
+                            if str(res) == resource.pk:
+                                found = True
+                                break
+
+                        if found:
+                            break
+
+                    if not found:
+                        return build_response(request, 404, 'Not found')
 
         if dir_path.endswith('bills'):
             user_profile = UserProfile.objects.get(user=request.user)

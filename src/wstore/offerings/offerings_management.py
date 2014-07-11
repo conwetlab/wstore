@@ -33,6 +33,7 @@ from urlparse import urlparse
 from django.conf import settings
 from django.template import loader
 from django.template import Context as TmplContext
+from django.core.exceptions import PermissionDenied
 
 from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.market_adaptor.marketadaptor import MarketAdaptor
@@ -45,6 +46,7 @@ from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.utils.name import is_valid_id
+from wstore.store_commons.utils.url import is_valid_url
 
 
 def get_offering_info(offering, user):
@@ -87,6 +89,7 @@ def get_offering_info(offering, user):
         'related_images': offering.related_images,
         'creation_date': str(offering.creation_date),
         'publication_date': str(offering.publication_date),
+        'open': offering.open,
         'resources': []
     }
 
@@ -97,10 +100,11 @@ def get_offering_info(offering, user):
             'name': resource.name,
             'version': resource.version,
             'description': resource.description,
-            'content_type': resource.content_type
+            'content_type': resource.content_type,
+            'open': resource.open
         }
 
-        if (state == 'purchased' or state == 'rated'):
+        if (state == 'purchased' or state == 'rated' or offering.open):
             if resource.resource_path != '':
                 res_info['link'] = resource.resource_path
             elif resource.download_link != '':
@@ -261,20 +265,22 @@ def count_offerings(user, filter_='published', owned=False):
 
         # If the current organization is not the user organization
         # get only the offerings owned by that organization
-        if  filter_ == 'uploaded':
-            count = Offering.objects.filter(owner_admin_user=user, state='uploaded', owner_organization=current_org).count()
+        if  filter_ == 'uploaded' or filter_ == 'published':
+            count = Offering.objects.filter(owner_admin_user=user, state=filter_, owner_organization=current_org).count()
         elif filter_ == 'all':
             count = Offering.objects.filter(owner_admin_user=user, owner_organization=current_org).count()
-        elif  filter_ == 'published':
-            count = Offering.objects.filter(owner_admin_user=user, state='published', owner_organization=current_org).count()
         elif filter_ == 'purchased':
             count = len(current_org.offerings_purchased)
             if user.userprofile.is_user_org():
                 count += len(user.userprofile.offerings_purchased)
+        else:
+            raise ValueError('Filter not allowed')
 
     else:
         if  filter_ == 'published':
             count = Offering.objects.filter(state='published').count()
+        else:
+            raise ValueError('Filter not allowed')
 
     return {'number': count}
 
@@ -364,6 +370,8 @@ def create_offering(provider, json_data):
         if is_lower_version(data['version'], off.version):
             raise ValueError('A bigger version of the current offering exists')
 
+    is_open = json_data.get('open', False)
+
     # If using the idm, get the applications from the request
     if settings.OILAUTH:
 
@@ -386,9 +394,13 @@ def create_offering(provider, json_data):
     if 'notification_url' in json_data:
         if json_data['notification_url'] == 'default':
             notification_url = organization.notification_url
-            if notification_url == '':
+            if not notification_url:
                 raise ValueError('No default URL defined for the organization')
         else:
+            # Check the notification URL
+            if not is_valid_url(json_data['notification_url']):
+                raise ValueError("Invalid notification URL format: It doesn't seem to be an URL")
+
             notification_url = json_data['notification_url']
 
     # Create the directory for app media
@@ -478,6 +490,7 @@ def create_offering(provider, json_data):
         raise Exception('No USDL description provided')
 
     # Validate the USDL
+    data['open'] = is_open
     data['organization'] = organization
     valid = validate_usdl(usdl, usdl_info['content_type'], data)
 
@@ -529,7 +542,8 @@ def create_offering(provider, json_data):
         related_images=data['related_images'],
         offering_description=json.loads(data['offering_description']),
         notification_url=notification_url,
-        creation_date=datetime.now()
+        creation_date=datetime.now(),
+        open=is_open
     )
 
     if settings.OILAUTH:
@@ -553,7 +567,7 @@ def update_offering(offering, data):
     # Check if the offering has been published,
     # if published the offering cannot be updated
     if offering.state != 'uploaded':
-        raise Exception('The offering cannot be edited')
+        raise PermissionDenied('The offering cannot be edited')
 
     dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
@@ -609,7 +623,7 @@ def update_offering(offering, data):
 
         # Check the link
         if usdl_url != offering.description_url:
-            raise Exception('The provided USDL URL is not valid')
+            raise ValueError('The provided USDL URL is not valid')
 
         # Download new content
         repository_adaptor = RepositoryAdaptor(usdl_url)
@@ -626,7 +640,7 @@ def update_offering(offering, data):
         }
         # Validate USDL info
         if not 'description' in data['offering_info'] or not 'pricing' in data['offering_info']:
-            raise Exception('Invalid USDL info')
+            raise ValueError('Invalid USDL info')
 
         offering_info = data['offering_info']
         offering_info['image_url'] = offering.image_url
@@ -665,7 +679,7 @@ def update_offering(offering, data):
         })
 
         if not valid[0]:
-            raise Exception(valid[1])
+            raise ValueError(valid[1])
 
         # Serialize and store USDL info in json-ld format
         graph = rdflib.Graph()
@@ -677,8 +691,12 @@ def update_offering(offering, data):
         elif usdl_info['content_type'] == 'application/json':
             rdf_format = 'json-ld'
 
-        graph.parse(data=usdl, format=rdf_format)
-        offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
+        off_description = usdl
+        if rdf_format != 'json-ld':
+            graph.parse(data=usdl, format=rdf_format)
+            off_description = graph.serialize(format='json-ld', auto_compact=True)
+
+        offering.offering_description = json.loads(off_description)
 
     offering.save()
 
@@ -816,7 +834,7 @@ def bind_resources(offering, data, provider):
 
     # Check that the offering supports binding
     if offering.state != 'uploaded':
-        raise Exception('This offering cannot be modified')
+        raise PermissionDenied('This offering cannot be modified')
 
     added_resources = []
     offering_resources = []
@@ -824,11 +842,18 @@ def bind_resources(offering, data, provider):
         offering_resources.append(of_res)
 
     for res in data:
-        resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider.userprofile.current_organization)
+        try:
+            resource = Resource.objects.get(name=res['name'], version=res['version'], provider=provider.userprofile.current_organization)
+        except:
+            raise ValueError('Resource not found: ' + res['name'] + ' ' + res['version'])
 
         # Check resource state
         if resource.state == 'deleted':
-            raise Exception('Inavalid resource, the resource is deleted')
+            raise PermissionDenied('Invalid resource, the resource ' + res['name'] + ' ' + res['version'] + ' is deleted')
+
+        # Check open
+        if not resource.open and offering.open:
+            raise PermissionDenied('It is not allowed to include not open resources in an open offering')
 
         if not ObjectId(resource.pk) in offering_resources:
             added_resources.append(resource.pk)

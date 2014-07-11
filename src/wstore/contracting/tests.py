@@ -18,17 +18,21 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import json
 import rdflib
 import types
 from mock import MagicMock
 from urllib2 import HTTPError
+from nose_parameterized import parameterized
 
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.test.client import RequestFactory
 from django.contrib.sites.models import Site
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from social_auth.db.django_models import UserSocialAuth
 
 import wstore.contracting.purchase_rollback
@@ -97,6 +101,85 @@ class PurchasesCreationTestCase(TestCase):
         purchases_management.SearchEngine = MagicMock()
         se_obj = MagicMock()
         purchases_management.SearchEngine.return_value = se_obj
+
+    def _open_offering(self):
+        offering = Offering.objects.get(name='test_offering')
+        offering.open = True
+        offering.save()
+
+    def _fill_user_payment(self):
+        user = User.objects.get(username='test_user')
+        user.userprofile.payment_info = {
+            'number': '1234123412341234',
+            'type': 'Visa',
+            'expire_year': '2018',
+            'expire_month': '3',
+            'cvv2': '111'
+        }
+        user.userprofile.save()
+
+    @parameterized.expand([
+        (_open_offering, False, None, PermissionDenied, 'Open offerings cannot be purchased'),
+        (None, False, {
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment_method': 'incorrect'
+        }, ValueError, 'Invalid payment method'),
+        (_fill_user_payment, False, {
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment_method': 'credit_card',
+            'plan': 'update'
+        }),
+        (None, False, {
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            },
+            'payment_method': 'credit_card',
+            'plan': 'update'
+        }, Exception, 'The customer does not have payment info')
+    ])
+    def test_purchase_creation(self, side_effect, org_owned=False, payment_info=None, err_type=None, err_msg=None):
+
+        if side_effect:
+            side_effect(self)
+
+        user = User.objects.get(username='test_user')
+        offering = Offering.objects.get(name='test_offering')
+
+        error = None
+        try:
+            purchase = purchases_management.create_purchase(user, offering, org_owned, payment_info)
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            # Check that no error occurs
+            self.assertEquals(error, None)
+
+            # Check purchase information
+            self.assertEqual(purchase.customer.username, 'test_user')
+            self.assertEqual(purchase.owner_organization.name, 'test_user')
+            self.assertEqual(purchase.organization_owned, False)
+            self.assertEqual(purchase.offering_id, offering.pk)
+            self.assertEqual(purchase.tax_address['street'], 'test street')
+            self.assertEqual(purchase.tax_address['postal'], '28000')
+            self.assertEqual(purchase.tax_address['city'], 'test city')
+            self.assertEqual(purchase.tax_address['country'], 'test country')
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
 
     def test_basic_purchase_creation(self):
 

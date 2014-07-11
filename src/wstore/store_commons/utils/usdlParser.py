@@ -684,6 +684,21 @@ def validate_usdl(usdl, mimetype, offering_data):
             valid = False
             reason = 'Only a Service included in the offering is supported'
 
+    # Check that if the offering is a open offering no pricing has been defined
+    is_open = offering_data.get('open', False)
+
+    if valid and is_open:
+        if valid and len(parsed_document['pricing']['price_plans']) > 1:
+            valid = False
+            reason = 'For open offerings only a price plan is allowed and must specify free use'
+
+        if valid and len(parsed_document['pricing']['price_plans']) == 1 and \
+            'price_components' in parsed_document['pricing']['price_plans'][0] and \
+            len(parsed_document['pricing']['price_plans'][0]['price_compoents']) > 0:
+
+            valid = False
+            reason = 'It is not allowed to specify pricing models for open offerings'
+
     # Check that if there are more than a price plan all of them contain a label
     update_plan = False
     updates = 0

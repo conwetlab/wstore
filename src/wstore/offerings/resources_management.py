@@ -106,19 +106,25 @@ def register_resource(provider, data, file_=None):
         download_link=resource_data['link'],
         resource_path=resource_data['content_path'],
         content_type=resource_data['content_type'],
-        state='created'
+        state='created',
+        open=data.get('open', False)
     )
 
 
-def get_provider_resources(provider):
-    resouces = Resource.objects.filter(provider=provider.userprofile.current_organization)
+def get_provider_resources(provider, filter_=None):
+    resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
     response = []
-    for res in resouces:
+    for res in resources:
+        # Filter by open property if needed
+        if (filter_ == 'true' and not res.open) or (filter_ == 'false' and res.open):
+            continue
+        
         resource_info = {
             'name': res.name,
             'version': res.version,
             'description': res.description,
-            'content_type': res.content_type
+            'content_type': res.content_type,
+            'open': res.open
         }
 
         response.append(resource_info)

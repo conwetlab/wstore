@@ -26,7 +26,6 @@ import time
 import codecs
 import subprocess
 import threading
-import importlib
 from pymongo import MongoClient
 from bson import ObjectId
 from urllib2 import HTTPError
@@ -139,7 +138,7 @@ class ChargingEngine:
         client_class = cln_str.split('.')[-1]
         client_package = cln_str.partition('.' + client_class)[0]
 
-        payment_client = getattr(importlib.import_module(client_package), client_class)
+        payment_client = getattr(__import__(client_package, globals(), locals(), [client_class], -1), client_class)
 
         # build the payment client
         client = payment_client(self._purchase)

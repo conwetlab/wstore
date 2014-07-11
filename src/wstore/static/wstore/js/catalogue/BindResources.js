@@ -43,10 +43,15 @@
     /**
      * Gets the user resources
      */
-    BindResourcesForm.prototype.getUserResources = function getUserResources (callback) {
+    BindResourcesForm.prototype.getUserResources = function getUserResources (callback, open) {
+        var qstring = '';
+
+        if (open) {
+            qstring = '?open=true';
+        }
         $.ajax({
             type: "GET",
-            url: EndpointManager.getEndpoint('RESOURCE_COLLECTION'),
+            url: EndpointManager.getEndpoint('RESOURCE_COLLECTION') + qstring,
             dataType: 'json',
             success: function (response) {
                 callback(response);

@@ -332,10 +332,16 @@ class ResourceCollection(Resource):
 
     @authentication_required
     def read(self, request):
+
         profile = request.user.userprofile
+        filter_ = request.GET.get('open', None)
+
+        if filter_ and filter_ != 'true' and filter_ != 'false':
+            return build_response(request, 400, 'Invalid open param')
+
         if 'provider' in profile.get_current_roles():
             try:
-                response = get_provider_resources(request.user)
+                response = get_provider_resources(request.user, filter_=filter_)
             except Exception, e:
                 return build_response(request, 400, e.message)
         else:

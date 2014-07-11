@@ -50,6 +50,7 @@ class Offering(models.Model):
     creation_date = models.DateTimeField()
     publication_date = models.DateTimeField(null=True, blank=True)
     applications = ListField()
+    open = models.BooleanField(default=False)
 
     def is_owner(self, user):
         """
@@ -76,6 +77,7 @@ class Resource(models.Model):
     download_link = models.CharField(max_length=200)
     resource_path = models.CharField(max_length=100)
     offerings = ListField(models.ForeignKey(Offering))
+    open = models.BooleanField(default=False)
 
     def get_url(self):
         url = None
