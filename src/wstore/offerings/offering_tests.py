@@ -780,7 +780,7 @@ class OfferingUpdateTestCase(TestCase):
         except:
             pass
         reload(offerings_management)
-        settings.MEDIA_ROOT = os.path.join(settings.BASEDIR, '/media/')
+        settings.MEDIA_ROOT = os.path.join(settings.BASEDIR, 'media')
 
     def _serialize(self, type_):
         graph = rdflib.Graph()
