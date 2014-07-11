@@ -806,7 +806,7 @@ class OfferingUpdateTestCase(TestCase):
 
     def _invalid_usdl(self, data):
         offerings_management.validate_usdl = MagicMock()
-        offerings_management.validate_usdl.side_effect = ValueError('Invalid USDL')
+        offerings_management.validate_usdl.return_value = (False, 'Invalid USDL')
         return data
 
     def _fit_usdl_n3(self, data):
@@ -847,7 +847,9 @@ class OfferingUpdateTestCase(TestCase):
             'related_images': [{
                 'name': 'test_screen1.png',
                 'data': 'encoded_data'
-            }],
+            }]
+        }, _mock_images),
+        ({
             'offering_info': {
                 'description': 'Test offering',
                 'pricing': {
@@ -859,7 +861,7 @@ class OfferingUpdateTestCase(TestCase):
                     'text': 'legal text'
                 }
             }
-        }, _mock_images),
+        },),
         ({}, _publish_offering, PermissionDenied, 'The offering cannot be edited'),
         ({
             'description_url': {
