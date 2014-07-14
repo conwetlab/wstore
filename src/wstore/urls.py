@@ -39,6 +39,10 @@ urlpatterns = patterns('',
 
     # Views
     url(r'^/?$', 'wstore.views.home', name='home'),
+    url(r'^search/?$', 'wstore.views.home_search', name='home_search'),
+    url(r'^search/keyword/(?P<keyword>[\w -]+)/?$', 'wstore.views.home_search_text', name='home_search_text'),
+    url(r'^search/tag/(?P<tag>[\w -]+)/?$', 'wstore.views.home_search_tag', name='home_search_tag'),
+    url(r'^offering/(?P<org>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/?$', 'wstore.views.home_details', name='home_details'),
     url(r'^administration/?$', 'wstore.views.admin', name='admin'),
     url(r'^catalogue/?$', 'wstore.views.catalogue', name='catalogue'),
     url(r'^organization/$', 'wstore.views.organization', name='organization'),

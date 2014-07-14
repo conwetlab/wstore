@@ -213,11 +213,6 @@
         return mpainter;
     };
 
-    refreshView = function refreshView() {
-        $('#catalogue-container').empty();
-        paintCatalogue();
-    };
-
     setView = function setView(view) {
         currentView = view;
     };

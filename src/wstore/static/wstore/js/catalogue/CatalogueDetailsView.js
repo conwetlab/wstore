@@ -45,8 +45,16 @@
     CatalogueDetailsView.prototype.showView = function showView () {
         var screen, action, actions;
 
+        history.pushState({}, 'FI-WARE Store', EndpointManager.getClientEndpoint('OFFERING_ENTRY', {
+            'organization': this.offeringElement.getOrganization(),
+            'name': this.offeringElement.getName(),
+            'version': this.offeringElement.getVersion()
+        }))
         // Clean the container
         $(this.container).empty();
+        if ($('#store-search').length) {
+            $('#store-search').css('display', 'none');
+        }
 
         if (USERPROFILE.isOwner(this.offeringElement)) {
             actions = {
@@ -205,6 +213,9 @@
 
         $('#back').click((function (e) {
             $(this.container).empty();
+            if ($('#store-search').length) {
+                $('#store-search').removeAttr('style');
+            }
             this.backAction();
         }).bind(this));
 

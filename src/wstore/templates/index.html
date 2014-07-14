@@ -20,6 +20,12 @@
         <script type="text/javascript">
             USERNAME = "{{ user.username }}";
             ORGANIZATION = "{{ organization }}";
+            INITIAL_PAGE = "{{ loader }}";
+            {% if loader == 'details' %}
+                INIT_INFO = {{ info }};
+            {% else %}
+                INIT_INFO = "{{ info }}";
+            {% endif %}
             // USERROLES = {{ roles }};
         </script>
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.8.2.js"></script>
@@ -45,6 +51,8 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/StoreSearchView.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/StoreView.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CommentForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/PageManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/Loader.js"></script>
 
         <script type="text/x-jquery-tmpl" id="modal_template">{% include "modal_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="yes_no_window_template">{% include "yes_no_window_template.html" %}</script>
@@ -124,7 +132,13 @@
         <div class="container-fluid">
             <div class="row-fluid" id="message-container">
             </div>
-            <!-- TODO change container id-->
+            <div class="fluid-row" id="store-search">
+                <form class="form form-horizontal">
+                    <input type="text" id="text-search" placeholder="Search" />
+                    <input type="button" class="btn btn-blue" id="search" value="Search" />
+                    <input type="button" class="btn btn-basic" id="all" value="View all" />
+                </form>
+            </div>
             <div class="row-fluid" id="home-container">
             </div>
         </div>

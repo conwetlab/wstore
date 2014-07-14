@@ -61,21 +61,39 @@
         'SEARCH_TAG_ENTRY': '/api/search/tag/${text}',
         'CURRENCY_ENTRY': '/api/administration/currency/${currency}',
         'PURCHASE_ENTRY':   '/api/contracting/${ref}'
-    }
+    };
+
+    var clientStaticEndpoints = {
+        'OFFERING_COLLECTION': '/search'
+    };
+
+    var clientContextEndpoints = {
+        'SEARCH_ENTRY': '/search/keyword/${text}',
+        'SEARCH_TAG_ENTRY': '/search/tag/${text}',
+        'OFFERING_ENTRY': '/offering/${organization}/${name}/${version}'
+    };
+
+    var selectEndpoint = function selectEndpoint(staticEP, contextEP, endpoint, options) {
+        var result;
+
+        if (endpoint in staticEP) {
+            result = staticEP[endpoint];
+        } else if (endpoint in contextEP) {
+            $.template('endpointTemplate', contextEP[endpoint])
+            result = $.tmpl('endpointTemplate', options).text();
+        }
+
+        return result;
+    };
 
     /**
      * Returns the endpoint in string format rendered if necessary
      */
     EndpointManager.getEndpoint = function getEndpoint(endpoint, options) {
-        var result;
+        return selectEndpoint(staticEndpoints, contextEndpoints, endpoint, options);
+    }
 
-        if (endpoint in staticEndpoints) {
-            result = staticEndpoints[endpoint];
-        } else if (endpoint in contextEndpoints) {
-            $.template('endpointTemplate', contextEndpoints[endpoint])
-            result = $.tmpl('endpointTemplate', options).text();
-        }
-
-        return result;
+    EndpointManager.getClientEndpoint = function getClientEndpoint(endpoint, options) {
+        return selectEndpoint(clientStaticEndpoints, clientContextEndpoints, endpoint, options);
     }
 })();

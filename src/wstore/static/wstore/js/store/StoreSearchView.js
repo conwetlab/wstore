@@ -71,38 +71,40 @@
 
         // Check if the main page template has been destroyed and 
         // create it again if needed
-        if ($('#store-search').length == 0) {
-            $.template('homePageTemplate', $('#home_page_template'));
-            $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
 
-            // Set search listeners
-            $('#search').click((function(self) {
-                return function() {
-                    if ($.trim($('#text-search').val()) != '') {
-                        self.setTitle('Offerings');
-                        self.initSearchView(self.searchEndp);
-                    }
-                }
-            })(this));
-            // Set listener for enter key
-            $('#text-search').keypress((function(self) {
-                return function(e) {
-                    if (e.which == 13 && $.trim($(this).val()) != '') {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        self.setTitle('Offerings');
-                        self.initSearchView(self.searchEndp);
-                    }
-                }
-            })(this));
-
-            $('#all').click((function(self) {
-                return function() {
-                    self.setTitle('Offerings');
-                    self.initSearchView('OFFERING_COLLECTION');
-                }
-            })(this))
+        if (!$('#store-container').length) {
+            $('<div class="clear space" /><div class="row-fluid" id="store-container"></div>').appendTo('#home-container');
         }
+        // Set search listeners
+        $('#search').off();
+        $('#search').click((function(self) {
+            return function() {
+                if ($.trim($('#text-search').val()) != '') {
+                    self.setTitle('Offerings');
+                    self.initSearchView('SEARCH_ENTRY');
+                }
+            }
+        })(this));
+        // Set listener for enter key
+        $('#text-search').off();
+        $('#text-search').keypress((function(self) {
+            return function(e) {
+                if (e.which == 13 && $.trim($(this).val()) != '') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    self.setTitle('Offerings');
+                    self.initSearchView('SEARCH_ENTRY');
+                }
+            }
+        })(this));
+
+        $('#all').off();
+        $('#all').click((function(self) {
+            return function() {
+                self.setTitle('Offerings');
+                self.initSearchView('OFFERING_COLLECTION');
+            }
+        })(this));
 
         $('#store-container').empty()
 
@@ -150,6 +152,16 @@
         this.pagination.getNextPage();
     };
 
+    StoreSearchView.prototype.setBrowserState = function setBrowserState() {
+        var clientURL;
+
+        if (this.searchEndpoint != 'OFFERING_COLLECTION') {
+            clientURL = EndpointManager.getClientEndpoint(this.searchEndp, {'text': this.searchParams.keyword});
+        } else {
+            clientURL = EndpointManager.getClientEndpoint(this.searchEndp);
+        }
+        history.pushState({}, 'FI-WARE Store', clientURL);
+    };
     /**
      * Initialize the search view
      */
@@ -174,6 +186,9 @@
             this.searchParams.keyword = '';
             this.calculatedEndp = EndpointManager.getEndpoint(endpoint);
         }
+
+        this.setBrowserState();
+
         // Paint the search view
         this.paintSearchView();
 

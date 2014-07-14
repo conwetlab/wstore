@@ -29,14 +29,14 @@ from django.utils.encoding import smart_str
 from django.views.static import serve
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.utils.safestring import mark_safe
 
 from store_commons.utils.http import build_response, authentication_required, \
 supported_request_mime_types
 from wstore.store_commons.resource import Resource as API_Resource
 from wstore.models import UserProfile, Organization
-from wstore.models import Purchase
-from wstore.models import Resource
-from wstore.models import Offering
+from wstore.models import Purchase, Resource, Offering
+from wstore.offerings.offerings_management import get_offering_info
 
 
 MAIN_PORTAL_URL = "http://lab.fi-ware.org/"
@@ -44,8 +44,7 @@ CLOUD_PORTAL_URL = "http://cloud.lab.fi-ware.org/"
 MASHUP_PORTAL_URL = "http://mashup.lab.fi-ware.org/"
 ACCOUNT_PORTAL_URL = "https://account.lab.fi-ware.org/"
 
-@login_required
-def home(request):
+def _load_home_context(request):
     context = {
        'organization': request.user.userprofile.current_organization.name,
        'oil': settings.OILAUTH,
@@ -58,7 +57,61 @@ def home(request):
         context['mashup'] = MASHUP_PORTAL_URL
         context['account'] = ACCOUNT_PORTAL_URL
 
+    return context
+
+
+@login_required
+def home(request):
+    context = _load_home_context(request)
+    context['loader'] = 'home'
     return render(request, 'index.html', context)
+
+
+@login_required
+def home_search(request):
+    context = _load_home_context(request)
+
+    context['loader'] = 'offerings'
+    return render(request, 'index.html', context)
+
+
+@login_required
+def home_search_text(request, keyword):
+    context = _load_home_context(request)
+
+    context['loader'] = 'keyword'
+    context['info'] = mark_safe(keyword)
+    return render(request, 'index.html', context)
+
+
+@login_required
+def home_search_tag(request, tag):
+    context = _load_home_context(request)
+
+    context['loader'] = 'tag'
+    context['info'] = tag
+    return render(request, 'index.html', context)
+
+
+@login_required
+def home_details(request, org, name, version):
+    context = _load_home_context(request)
+
+    context['loader'] = 'details'
+    try:
+        owner_org = Organization.objects.get(name=org)
+        offering = Offering.objects.get(owner_organization=owner_org, name=name, version=version)
+        offering_info = get_offering_info(offering, request.user)
+    except:
+        return build_response(request, 404, 'Not found')
+
+    context['info'] = mark_safe(json.dumps(offering_info))
+    return render(request, 'index.html', context)
+
+
+@login_required
+def home_search_resource(request, org, name, version):
+    pass
 
 
 @login_required

@@ -49,6 +49,7 @@
 
 	    <script type="text/javascript">
             USERNAME = "{{ user.username }}";
+            INITIAL_PAGE = "admin";
             // USERROLES = {{ roles }};
         </script>
         <link href="https://fonts.googleapis.com/css?family=Comfortaa|Open+Sans" rel="stylesheet" type="text/css">
@@ -73,6 +74,8 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/CurrencyForm.js"></script>
 
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/EndpointForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/PageManager.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/Loader.js"></script>
         {% include "oil/header_imports.html" %}
     </head>
     <body>

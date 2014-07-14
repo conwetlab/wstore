@@ -24,11 +24,6 @@
     var evntAllowed = true;
     var mpainter;
 
-    refreshView = function refreshView() {
-        $('home-container').empty();
-        paintHomePage();
-    };
-
     fillStarsRating = function fillStarsRating(rating, container) {
         // Fill rating stars
 
@@ -225,6 +220,8 @@
     };
 
     paintHomePage = function paintHomePage () {
+        // Change browser URL
+        history.pushState({}, 'FI-WARE Store', '/');
         // Create search view object
         searchView = new StoreSearchView();
 
@@ -271,6 +268,14 @@
     openMenuPainter = function openMenuPainter() {
         mpainter.increase();
     };
+
+    setMenuPainter = function setMenuPainter(menuPainter) {
+        mpainter = menuPainter;
+    };
+
+    setSearchView = function setSearchView(searchV) {
+        searchView = searchV;
+    }
 
     calculatePositions = function calculatePositions(evnt) {
         var position;

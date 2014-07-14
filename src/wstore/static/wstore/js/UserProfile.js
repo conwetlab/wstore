@@ -21,6 +21,7 @@
 (function() {
 
     UserProfile = function UserProfile() {
+        this.firstLoad = true;
     };
 
     UserProfile.prototype.buildProfile = function buildProfile(userInfo) {
@@ -53,7 +54,10 @@
 
         this.expenditureLimits = userInfo.limits;
         // Notify the views that the userprofile is created
-        refreshView();
+        if (!this.firstLoad) {
+            refreshView();
+        }
+        this.firstLoad = false;
     }
 
     UserProfile.prototype.getUsername = function getUsername() {

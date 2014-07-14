@@ -107,11 +107,6 @@
         $('#back').attr('href', referrer);
     };
 
-    refreshView = function refreshView() {
-        paintElementTable();
-        calculatePositions();
-    };
-
     calculatePositions = function calculatePositions() {
         var position;
         // Fixed position in admin view
