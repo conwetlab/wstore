@@ -59,6 +59,7 @@
         'USDL_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/usdl',
         'SEARCH_ENTRY': '/api/search/keyword/${text}',
         'SEARCH_TAG_ENTRY': '/api/search/tag/${text}',
+        'SEARCH_RESOURCE_ENTRY': '/api/search/resource/${org}/${name}/${version}',
         'CURRENCY_ENTRY': '/api/administration/currency/${currency}',
         'PURCHASE_ENTRY':   '/api/contracting/${ref}'
     };
@@ -70,6 +71,7 @@
     var clientContextEndpoints = {
         'SEARCH_ENTRY': '/search/keyword/${text}',
         'SEARCH_TAG_ENTRY': '/search/tag/${text}',
+        'SEARCH_RESOURCE_ENTRY': '/search/resource/${org}/${name}/${version}',
         'OFFERING_ENTRY': '/offering/${organization}/${name}/${version}'
     };
 

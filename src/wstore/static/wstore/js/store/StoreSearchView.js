@@ -26,7 +26,8 @@
     StoreSearchView = function StoreSearchView() {
         this.searchParams = {
             'searching': false,
-            'keyword': ''
+            'keyword': '',
+            'params': {}
         };
         this.title = 'Offerings';
     }
@@ -155,8 +156,10 @@
     StoreSearchView.prototype.setBrowserState = function setBrowserState() {
         var clientURL;
 
-        if (this.searchEndpoint != 'OFFERING_COLLECTION') {
+        if (this.searchEndp != 'OFFERING_COLLECTION' && this.searchEndp != 'SEARCH_RESOURCE_ENTRY') {
             clientURL = EndpointManager.getClientEndpoint(this.searchEndp, {'text': this.searchParams.keyword});
+        } else if (this.searchEndp == 'SEARCH_RESOURCE_ENTRY'){
+            clientURL = EndpointManager.getClientEndpoint(this.searchEndp, this.searchParams.params);
         } else {
             clientURL = EndpointManager.getClientEndpoint(this.searchEndp);
         }
@@ -176,10 +179,13 @@
             // to retrieve it from the form field
             if (!searchWord) {
                 this.searchParams.keyword = $.trim($('#text-search').val());
-            } else {
+            } else if (typeof searchWord == 'string' || searchWord instanceof String){
                 this.searchParams.keyword = searchWord;
+                this.calculatedEndp = EndpointManager.getEndpoint(endpoint, {'text': this.searchParams.keyword});
+            } else {
+                this.searchParams.params = searchWord;
+                this.calculatedEndp = EndpointManager.getEndpoint(endpoint, searchWord);
             }
-            this.calculatedEndp = EndpointManager.getEndpoint(endpoint, {'text': this.searchParams.keyword});
         } else {
             // Get all offerings
             this.searchParams.searching = false;

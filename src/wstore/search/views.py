@@ -29,6 +29,9 @@ from django.conf import settings
 from wstore.store_commons.utils.http import build_response, authentication_required
 from wstore.store_commons.resource import Resource
 from wstore.search.search_engine import SearchEngine
+from wstore.models import Resource as WStore_resource
+from wstore.models import Organization, Offering
+from wstore.offerings.offerings_management import get_offering_info
 
 
 class SearchEntry(Resource):
@@ -91,5 +94,33 @@ class SearchEntry(Resource):
 
         elif filter_ == 'purchased':
             response = search_engine.full_text_search(request.user, text, state='purchased', count=count, pagination=pagination, sort=sort)
+
+        return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
+
+
+class SearchByResourceEntry(Resource):
+
+    @authentication_required
+    def read(self, request, org, name, version):
+        # Get resource model
+        try:
+            organization = Organization.objects.get(name=org)
+            resource = WStore_resource.objects.get(provider=organization, name=name, version=version)
+        except:
+            return build_response(request, 404, 'Resource not found')
+
+        # Check resource state
+        if resource.state == 'deleted':
+            return build_response(request, 404, 'Resource not found')
+
+        # Get offering where the resource is included
+        response = []
+
+        try:
+            for off in resource.offerings:
+                offering = Offering.objects.get(pk=off)
+                response.append(get_offering_info(offering, request.user))
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')

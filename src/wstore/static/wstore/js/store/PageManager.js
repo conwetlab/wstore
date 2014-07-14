@@ -27,7 +27,8 @@
             'offerings': this.loadOfferingsPage.bind(this),
             'keyword': this.loadSearchKeywordPage.bind(this),
             'tag': this.loadSearchTagPage.bind(this),
-            'details': this.loadDetailsPage.bind(this)
+            'details': this.loadDetailsPage.bind(this),
+            'resource': this.loadResourceSearchPage.bind(this)
         };
     };
 
@@ -90,6 +91,10 @@
         }, '#home-container');
 
         catDetailsView.showView();
+    };
+
+    PageManager.prototype.loadResourceSearchPage = function loadResourceSearchPage() {
+        loadSearchPage(INIT_INFO.name, 'SEARCH_RESOURCE_ENTRY', INIT_INFO);
     };
 
     PageManager.prototype.getPageLoader = function getPageLoader(page) {

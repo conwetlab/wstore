@@ -21,7 +21,7 @@
             USERNAME = "{{ user.username }}";
             ORGANIZATION = "{{ organization }}";
             INITIAL_PAGE = "{{ loader }}";
-            {% if loader == 'details' %}
+            {% if loader == 'details' or loader == 'resource' %}
                 INIT_INFO = {{ info }};
             {% else %}
                 INIT_INFO = "{{ info }}";

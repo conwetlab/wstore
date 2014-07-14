@@ -111,7 +111,16 @@ def home_details(request, org, name, version):
 
 @login_required
 def home_search_resource(request, org, name, version):
-    pass
+    context = _load_home_context(request)
+
+    context['loader'] = 'resource'
+    context['info'] = mark_safe(json.dumps({
+        'org': org,
+        'name': name,
+        'version': version
+    }))
+
+    return render(request, 'index.html', context)
 
 
 @login_required
