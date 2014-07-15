@@ -219,9 +219,15 @@
         searchView.initSearchView('SEARCH_TAG_ENTRY', 'widget');
     };
 
-    paintHomePage = function paintHomePage () {
-        // Change browser URL
+    var setContext = function setContext() {
+     // Change browser URL
         history.pushState({}, 'FI-WARE Store', '/');
+        pageLoader.setCurrentPage('home');
+    };
+
+    paintHomePage = function paintHomePage () {
+        setContext();
+
         // Create search view object
         searchView = new StoreSearchView();
 

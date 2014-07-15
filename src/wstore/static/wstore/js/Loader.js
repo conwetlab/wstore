@@ -119,6 +119,10 @@
         ORGANIZATIONPROFILE.fillUserInfo(this.includeFilabOrgMenu.bind(this));
     };
 
+    Loader.prototype.setCurrentPage = function setCurrentPage(page) {
+        this.currentPage = this.pageManager.getPageLoader(page);
+    };
+
     Loader.prototype.loadPage = function loadPage() {
         this.currentPage();
     };

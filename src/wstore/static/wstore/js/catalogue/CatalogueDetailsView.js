@@ -52,8 +52,11 @@
         }))
         // Clean the container
         $(this.container).empty();
+
         if ($('#store-search').length) {
             $('#store-search').css('display', 'none');
+            pageLoader.setCurrentPage('details');
+            INIT_INFO = this.offeringElement.getRawData();
         }
 
         if (USERPROFILE.isOwner(this.offeringElement)) {

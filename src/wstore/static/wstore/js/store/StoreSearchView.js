@@ -30,7 +30,33 @@
             'params': {}
         };
         this.title = 'Offerings';
+        this.allowedEndpoints = {
+            'OFFERING_COLLECTION': {
+                'page': 'offerings',
+                'data': ''
+            },
+            'SEARCH_ENTRY': {
+                'page': 'keyword',
+                'data': this.getKeyword.bind(this)
+            },
+            'SEARCH_TAG_ENTRY': {
+                'page': 'tag',
+                'data': this.getKeyword.bind(this)
+            },
+            'SEARCH_RESOURCE_ENTRY': {
+                'page': 'resource',
+                'data': this.getParams.bind(this)
+            }
+        }
     }
+
+    StoreSearchView.prototype.getKeyword = function getKeyword() {
+        return this.searchParams.keyword;
+    };
+
+    StoreSearchView.prototype.getParams = function getParams() {
+        return this.searchParams.params;
+    };
 
     /**
      * Set the endpoint to be used in searches
@@ -164,6 +190,8 @@
             clientURL = EndpointManager.getClientEndpoint(this.searchEndp);
         }
         history.pushState({}, 'FI-WARE Store', clientURL);
+        pageLoader.setCurrentPage(this.allowedEndpoints[this.searchEndp].page);
+        INIT_INFO = this.allowedEndpoints[this.searchEndp].data()
     };
     /**
      * Initialize the search view

@@ -65,6 +65,7 @@
         } else {
             this.applications = [];
         }
+        this.rawData = offeringData;
     };
 
     OfferingElement.prototype.updateOfferingInfo = function updateOfferingInfo(callback) {
@@ -187,5 +188,10 @@
 
     OfferingElement.prototype.isOpen = function isOpen() {
         return this.open;
-    }
+    };
+
+    OfferingElement.prototype.getRawData = function getRawData() {
+        return this.rawData;
+    };
+
 })();
