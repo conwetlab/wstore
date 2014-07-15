@@ -227,18 +227,23 @@
 
     calculatePositions = function calculatePositions(evnt) {
 
-        if (evnt && evntAllowed) {
-            evntAllowed = false;
-            searchView.initializeComponents();
+        if ($('.offerings-scroll-container').length) {
+            if (evnt && evntAllowed) {
+                evntAllowed = false;
+                searchView.initializeComponents();
+            }
+
+            var scrollContPos, offset = $(window).height() - $('.offerings-scroll-container').offset().top - 30;
+
+            $('.offerings-scroll-container').css('height', offset.toString() + 'px');
+
+            scrollContPos = $('.offerings-container').offset().left -5;
+            // Set title left
+            $('#catalogue-title').css('left', scrollContPos.toString() + 'px');
+
         }
-        var scrollContPos, offset = $(window).height() - $('.offerings-scroll-container').offset().top - 30;
-
-        $('.offerings-scroll-container').css('height', offset.toString() + 'px');
-
-        scrollContPos = $('.offerings-container').offset().left -5;
-        // Set title left
-        $('#catalogue-title').css('left', scrollContPos.toString() + 'px');
     }
+
     $(window).resize(calculatePositions);
 
 })();
