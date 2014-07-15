@@ -195,6 +195,8 @@
 
     paintCatalogue = function paintCatalogue(useContents) {
 
+        history.pushState({}, 'FI-WARE Store', '/catalogue');
+
         if (!useContents) {
             createCatalogueContents();
         }
