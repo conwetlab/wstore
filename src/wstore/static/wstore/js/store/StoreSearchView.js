@@ -33,7 +33,7 @@
         this.allowedEndpoints = {
             'OFFERING_COLLECTION': {
                 'page': 'offerings',
-                'data': ''
+                'data': function(){}
             },
             'SEARCH_ENTRY': {
                 'page': 'keyword',
