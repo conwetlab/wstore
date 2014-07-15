@@ -179,6 +179,7 @@
             // to retrieve it from the form field
             if (!searchWord) {
                 this.searchParams.keyword = $.trim($('#text-search').val());
+                this.calculatedEndp = EndpointManager.getEndpoint(endpoint, {'text': this.searchParams.keyword});
             } else if (typeof searchWord == 'string' || searchWord instanceof String){
                 this.searchParams.keyword = searchWord;
                 this.calculatedEndp = EndpointManager.getEndpoint(endpoint, {'text': this.searchParams.keyword});
