@@ -4,8 +4,8 @@
  * This file is part of WStore.
  *
  * WStore is free software: you can redistribute it and/or modify
- * it under the terms of the European Union Public Licence (EUPL) 
- * as published by the European Commission, either version 1.1 
+ * it under the terms of the European Union Public Licence (EUPL)
+ * as published by the European Commission, either version 1.1
  * of the License, or (at your option) any later version.
  *
  * WStore is distributed in the hope that it will be useful,
@@ -14,7 +14,7 @@
  * European Union Public Licence for more details.
  *
  * You should have received a copy of the European Union Public Licence
- * along with WStore.  
+ * along with WStore.
  * If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
  */
 
@@ -111,25 +111,6 @@
         this.getUserResources(this.paintResources.bind(this));
     };
 
-    var clickHandler = function clickHandler(e) {
-     // Hide every opened popover
-        $('.resource').popover('hide');
-        $('.resource').removeClass('res-hover');
-        var resElem = $(this);
-        if (!resElem.prop('displayed')) {
-            resElem.popover('show');
-            resElem.prop('displayed', true);
-            resElem.addClass('res-hover');
-            // Add document event handler
-            e.stopPropagation();
-            $(document).click(function() {
-                resElem.popover('hide');
-                resElem.prop('displayed', false);
-                resElem.removeClass('res-hover');
-                $(document).unbind('click');
-            });
-        }
-    }
     /**
      * Paints the resources
      * @param resources Resources to be painted
@@ -141,14 +122,12 @@
         for (var i = 0; i < resources.length; i++) {
             var res = resources[i];
             var found = false;
-            var j = 0;
+            var templ, j = 0;
 
             res.number = i;
             $.template('resourceTemplate', $('#resource_template'));
-            $.tmpl('resourceTemplate', res).
-                appendTo('#resources').
-                click(clickHandler).
-                popover({'trigger': 'manual'});
+            templ = $.tmpl('resourceTemplate', res).
+                appendTo('#resources');
 
             if (!this.viewOnly) {
                 // Checks if the resource is already bound to the offering
@@ -160,6 +139,14 @@
                     }
                     j++;
                 }
+            } else {
+                // In the visualization mode it should be possible to expand resource info
+                templ.click(function (self, resource) {
+                    var resDetails = new ResourceDetailsPainter(resource, self);
+                    return function () {
+                        resDetails.paint();
+                    }
+                }(this, res));
             }
         }
         $('.modal-body').on('scroll', function() {
@@ -177,4 +164,33 @@
         }
     };
 
+})();
+
+(function() {
+
+    ResourceDetailsPainter = function ResourceDetailsPainter(resource, caller) {
+        this.resource = resource;
+        this.caller = caller;
+    };
+
+    ResourceDetailsPainter.prototype.setListeners = function setListeners () {
+        // Set back listener
+        $('#res-back').click(function() {
+            this.caller.display();
+        }.bind(this));
+
+        // TODO
+        // Set delete listener
+        // Set update listener
+    };
+
+    ResourceDetailsPainter.prototype.paint = function paint() {
+        // Clean modal body
+        $('.modal-body').empty()
+
+        $.template('resourceDetails', $('#resource_details_template'));
+        $.tmpl('resourceDetails', this.resource).appendTo('.modal-body');
+
+        this.setListeners();
+    };
 })();

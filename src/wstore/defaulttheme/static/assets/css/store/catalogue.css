@@ -131,3 +131,15 @@
   left: 4px;
 }
 
+.resource-options i {
+  font-size: 12px;
+}
+
+.resource-options .res-edit {
+  float: right;
+}
+
+.resource-options .res-remove {
+  float: right;
+  margin-left: 5px;
+}
