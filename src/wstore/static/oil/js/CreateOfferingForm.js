@@ -46,6 +46,15 @@
 
         var reader = new FileReader();
 
+        // Preview the image if is the logo
+        if (type == 'logo') {
+            var prevReader = new FileReader();
+            prevReader.readAsDataURL(files[0]);
+            prevReader.onloadend = function () {
+                $('.image-preview').attr('src', this.result);
+            }
+        }
+
         var readImages = function readImages(images) {
 
             if(images.length > 0) {
@@ -541,8 +550,13 @@
     showCreateAppForm = function showCreateAppForm(repositories) {
         var i, repLength = repositories.length;
 
+        // Reset params
         screenShots = [];
+        usdl = null;
         logo = [];
+        offeringInfo = {};
+        logoFailure = false;
+        screenFailure = false;
 
         if (repLength == 0) {
             var msg = 'No repositories registered';

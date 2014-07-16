@@ -152,3 +152,22 @@
 .res-det-title {
   margin-bottom: 0;
 }
+
+.image-container {
+  font-size: 0;
+  text-align: center;
+  width: 170px;
+  height: 80px;
+  float: right;
+  BORDER: solid 1px rgb(193,193,193);
+  border-radius: 4px
+}
+
+.image-preview {
+  background: white;
+  border-radius: 4px;
+  display: inline-block;
+  vertical-align: middle;
+  max-height: 100%;
+  max-width: 100%;
+}

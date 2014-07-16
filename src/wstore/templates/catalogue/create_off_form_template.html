@@ -1,34 +1,50 @@
 <form class="form form-vertical">
     <div id="error-message"></div>
     <div class="clear"></div>
-    <label>Name</label>
-    <input type="text" name="app-name" placeholder="Offering name"></input>
-    <label>Version</label>
-    <input type="text" name="app-version" placeholder="Offering version"></input>
-    <label>Image or Logo</label>
-    <input type="file" name="files" id="img-logo"></input>
-    <label>Screen shots</label>
-    <input type="file" name="files" id="screen-shots" multiple></input>
-    <div class="clear space"></div>
+    <fieldset>
+        <section class="span6">
+            <label>Name</label>
+            <input type="text" name="app-name" placeholder="Offering name"></input>
+            <label>Version</label>
+            <input type="text" name="app-version" placeholder="Offering version"></input>
+        </section>
+        <section class="span6">
+            <div class="control-group">
+                <label class="control-label">Notification URL</label>
+                <i class="icon-question-sign" id="notification-help" rel="popover" data-content="The notification URL is used to notify you when the offering is purchased. You can use your default URL defined in your profile, provide a new URL, or not use an URL. The structure of the notification is defined in the Store GE documentation" data-original-title="Help"></i>
+                <div class="controls notify-controls">
+                    <label class="radio">
+                        <input type="radio" name="notify-select" id="not-opt-1" value="default"> Use default notification URL.
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="notify-select" id="not-opt-2" value="new"> Provide a notification URL.
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="notify-select" id="not-opt-3" value="none"> Not use a notification URL.
+                    </label>
+                </div>
+            </div>
 
-    <div class="control-group">
-        <label class="control-label">Notification URL</label>
-        <i class="icon-question-sign" id="notification-help" rel="popover" data-content="The notification URL is used to notify you when the offering is purchased. You can use your default URL defined in your profile, provide a new URL, or not use an URL. The structure of the notification is defined in the Store GE documentation" data-original-title="Help"></i>
-        <div class="controls notify-controls">
-            <label class="radio">
-                <input type="radio" name="notify-select" id="not-opt-1" value="default"> Use default notification URL.
-            </label>
-            <label class="radio">
-                <input type="radio" name="notify-select" id="not-opt-2" value="new"> Provide a notification URL.
-            </label>
-            <label class="radio">
-                <input type="radio" name="notify-select" id="not-opt-3" value="none"> Not use a notification URL.
-            </label>
+            <div class="clear space"></div>
+            <input class="hide" type="text" id="notify" placeholder="Notification URL" />
+        </section>
+
+        <div class="space clear" />
+        <div class="clear line" />
+        <div class="space" />
+
+        <div class="image-container">
+            <div class="img-filler" />
+            <img src="{{ STATIC_URL }}assets/img/noimage.png"" class="image-preview" />
         </div>
-    </div>
 
-    <div class="clear space"></div>
-    <input class="hide" type="text" id="notify" placeholder="Notification URL" />
-    <div class="clear space"></div>
-    <input type="checkbox" id="open-offering" value="open"/> Open Offering <i class="icon-question-sign" id="open-help" rel="popover" data-content="Choose whether your offering is an open offering, that is, all the resources and applications included in the offering will be directly available to all the users" data-original-title="Help"></i>
+        <label>Image or Logo</label>
+        <input type="file" name="files" id="img-logo"></input>
+        <label>Screen shots</label>
+        <input type="file" name="files" id="screen-shots" multiple></input>
+        <div class="clear space"></div>
+
+        <div class="clear space"></div>
+        <input type="checkbox" id="open-offering" value="open"/> Open Offering <i class="icon-question-sign" id="open-help" rel="popover" data-content="Choose whether your offering is an open offering, that is, all the resources and applications included in the offering will be directly available to all the users" data-original-title="Help"></i>
+    </fieldset>
 </form>
