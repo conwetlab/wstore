@@ -2,8 +2,8 @@
 .store-menu .icon-credit-card {
   font-size: 20px;
   position: relative;
-  top: 9px;
-  left: 7px;
+  top: 10px;
+  left: 8px;
   color: rgb(255,255,255);
 }
 
@@ -142,4 +142,13 @@
 .resource-options .res-remove {
   float: right;
   margin-left: 5px;
+}
+
+.resource-details dd {
+  border-top: 1px solid rgb(193, 193, 193);
+  padding-top: 6px;
+}
+
+.res-det-title {
+  margin-bottom: 0;
 }
