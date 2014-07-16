@@ -74,7 +74,7 @@ class ReviewManager():
         # Check the top rated structure
         context = Context.objects.all()[0]
 
-        context.top_rated = [off.pk for off in Offering.objects.all().order_by('-rating')[:8]]
+        context.top_rated = [off.pk for off in Offering.objects.filter(state="published").order_by('-rating')[:8]]
         context.save()
 
     def _get_and_validate_review(self, user, review_id, owner=False):

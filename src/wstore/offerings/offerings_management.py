@@ -754,6 +754,12 @@ def delete_offering(offering):
     repository_adaptor = RepositoryAdaptor(host, collection)
     repository_adaptor.delete(path[4])
 
+    index_path = os.path.join(settings.BASEDIR, 'wstore')
+    index_path = os.path.join(index_path, 'search')
+    index_path = os.path.join(index_path, 'indexes')
+
+    se = SearchEngine(index_path)
+
     if offering.state == 'uploaded':
 
         # If the offering has media files delete them
@@ -766,6 +772,9 @@ def delete_offering(offering):
             os.remove(file_path)
 
         os.rmdir(path)
+
+        # Remove the search index
+        se.remove_index(offering)
 
         offering.delete()
     else:
@@ -780,11 +789,6 @@ def delete_offering(offering):
         offering.save()
 
         # Update offering indexes
-        index_path = os.path.join(settings.BASEDIR, 'wstore')
-        index_path = os.path.join(index_path, 'search')
-        index_path = os.path.join(index_path, 'indexes')
-
-        se = SearchEngine(index_path)
         se.update_index(offering)
 
         context = Context.objects.all()[0]

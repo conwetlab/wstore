@@ -151,6 +151,19 @@ class SearchEngine():
 
         index_writer.commit()
 
+    def remove_index(self, offering):
+        """
+        Remove the document associated with an offering
+        """
+        if not os.path.exists(self._index_path) or os.listdir(self._index_path) == []:
+            raise Exception('The index does not exists')
+
+        index = open_dir(self._index_path)
+        index_writer = index.writer()
+
+        index_writer.delete_by_term('id', unicode(offering.pk))
+        index_writer.commit()
+
     def full_text_search(self, user, text, state=None, count=False, pagination=None, sort=None):
         """
         Performs a full text search over the search index allowing for counting, filtering
