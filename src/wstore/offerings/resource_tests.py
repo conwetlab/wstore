@@ -21,12 +21,14 @@
 import base64
 import os
 from StringIO import StringIO
+from mock import MagicMock
+from nose_parameterized import parameterized
 
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from wstore.offerings.resources_management import register_resource
+from wstore.offerings import resources_management
 from wstore.models import Resource, Organization
 
 
@@ -37,124 +39,100 @@ class ResourceRegisteringTestCase(TestCase):
     tags = ('fiware-ut-3',)
     fixtures = ['reg_res.json']
 
-    def test_resource_registering_download_encoded(self):
-
+    def _basic_encoder(self, data):
         f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
         encoded = base64.b64encode(f.read())
         f.close()
-        data = {
+        data['content']['data'] = encoded
+
+    def _fill_provider(self, data):
+        res = Resource.objects.get(name=data['name'], version=data['version'])
+        provider = User.objects.get(username='test_user')
+        res.provider = provider.userprofile.current_organization
+        res.save()
+
+    @parameterized.expand([
+        ({
             'name': 'Download',
             'version': '1.0',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
             'content': {
                 'name': 'test_usdl.rdf',
-                'data': encoded 
+                'data': ''
             },
             'content_type': 'application/rdf+xml'
-        }
-
-        provider = User.objects.get(username='test_user')
-        register_resource(provider, data)
-
-        res = Resource.objects.get(name='Download')
-        self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_path, '/media/resources/test_user__Download__1.0__test_usdl.rdf')
-
-        res_path = settings.BASEDIR + res.resource_path
-        os.remove(res_path)
-
-    def test_resource_registering_download_multipart(self):
-
-        f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
-        f1 = StringIO(f.read())
-        f.close()
-
-        f1.name = 'test_usdl.rdf'
-
-        data = {
-            'name': 'Download',
-            'version': '1.0',
-            'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
-            'content_type': 'application/rdf+xml'
-        }
-
-        provider = User.objects.get(username='test_user')
-        register_resource(provider, data, f1)
-
-        res = Resource.objects.get(name='Download')
-        self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.resource_path, '/media/resources/test_user__Download__1.0__test_usdl.rdf')
-
-        res_path = settings.BASEDIR + res.resource_path
-        os.remove(res_path)
-
-    def test_resource_registering_download_link(self):
-
-        data = {
+        }, _basic_encoder),
+        ({
             'name': 'History Mod',
             'version': '1.0',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
             'type': 'download',
             'link': 'https://historymod.com/download',
             'content_type': 'text/plain'
-        }
-
-        provider = User.objects.get(username='test_user')
-        register_resource(provider, data)
-
-        res = Resource.objects.get(name='History Mod')
-
-        self.assertEqual(res.version, '1.0')
-        self.assertEqual(res.download_link, 'https://historymod.com/download')
-        self.assertEqual(res.content_type, 'text/plain')
-
-    def test_resource_registering_already_existing(self):
-
-        data = {
+        },),
+        ({
+            'name': 'Download',
+            'version': '1.0',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'type': 'download',
+            'content_type': 'application/rdf+xml'
+        }, None, True),
+        ({
             'name': 'Existing',
             'version': '1.0',
             'description': '',
             'type': 'download',
             'link': 'https://existing.com/download'
-        }
-
-        provider = User.objects.get(username='test_user')
-        org = Organization.objects.get(name=provider.username)
-        resource = Resource.objects.get(name='Existing')
-        resource.provider = org
-        resource.save()
-
-        error = False
-        msg = None
-        try:
-            register_resource(provider, data)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, 'The resource already exists')
-
-    def test_resource_registering_invalid_version(self):
-
-        data = {
+        }, _fill_provider, False, ValueError, 'The resource already exists'),
+        ({
             'name': 'Invalid',
             'version': '1.0a',
             'description': '',
             'type': 'download',
             'link': 'https://existing.com/download'
-        }
+        }, None, False, ValueError, 'Invalid version format')
+    ])
+    def test_resource_registering(self, data, encoder=None, is_file=False, err_type=None, err_msg=None):
 
+        # Call the encoder for the data if needed
+        if encoder:
+            encoder(self, data)
+
+        f1 = None
+        if is_file:
+            f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
+            f1 = StringIO(f.read())
+            f.close()
+            f1.name = 'test_usdl.rdf'
+
+        # Build the provider
         provider = User.objects.get(username='test_user')
 
-        error = False
-        msg = None
+        # Call the method
+        error = None
         try:
-            register_resource(provider, data)
-        except Exception, e:
-            error = True
-            msg = e.message
+            resources_management.register_resource(provider, data, file_=f1)
+        except Exception as e:
+            error = e
 
-        self.assertTrue(error)
-        self.assertEqual(msg, 'Invalid version format')
+        # Check result
+        if not err_type:
+            self.assertEquals(error, None)
+            res = Resource.objects.get(name=data['name'])
+            self.assertEquals(res.version, data['version'])
+            self.assertEquals(res.content_type, data['content_type'])
+
+            if 'content' in data or is_file:
+                if is_file:
+                    f_name = f1.name
+                else:
+                    f_name = data['content']['name']
+
+                self.assertEquals(res.resource_path, '/media/resources/' + 'test_user__' + data['name'] + '__' + data['version'] + '__' + f_name)
+                res_path = settings.BASEDIR + res.resource_path
+                os.remove(res_path)
+            elif 'link' in data:
+                self.assertEquals(res.download_link, data['link'])
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
