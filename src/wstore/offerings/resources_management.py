@@ -42,7 +42,7 @@ def _save_resource_file(provider, name, version, file_):
 
     # Check file name
     if not is_valid_file(f_name):
-        raise Exception('Invalid file name format: Unsupported character')
+        raise ValueError('Invalid file name format: Unsupported character')
 
     # Create file
     file_name = provider + '__' + name + '__' + version + '__' + f_name
@@ -102,7 +102,7 @@ def register_resource(provider, data, file_=None):
             # Add the download link
             # Check link format
             if not is_valid_url(data['link']):
-                raise Exception('Invalid Resource link format')
+                raise ValueError('Invalid resource link format')
 
             resource_data['link'] = data['link']
             resource_data['content_path'] = ''

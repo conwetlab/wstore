@@ -90,7 +90,33 @@ class ResourceRegisteringTestCase(TestCase):
             'description': '',
             'type': 'download',
             'link': 'https://existing.com/download'
-        }, None, False, ValueError, 'Invalid version format')
+        }, None, False, ValueError, 'Invalid version format'),
+        ({
+            'name': 'invalidname$',
+            'version': '1.0',
+            'description': '',
+            'type': 'download',
+            'link': 'https://existing.com/download',
+            'content_type': 'text/plain'
+        }, None, False, ValueError, 'Invalid name format'),
+        ({
+            'name': 'InvalidURL',
+            'version': '1.0',
+            'description': '',
+            'type': 'download',
+            'link': 'not an uri',
+            'content_type': 'text/plain'
+        }, None, False, ValueError, 'Invalid resource link format'),
+        ({
+            'name': 'Download',
+            'version': '1.0',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'content': {
+                'name': 'test_usd$&.rdf',
+                'data': ''
+            },
+            'content_type': 'application/rdf+xml'
+        }, _basic_encoder, False, ValueError, 'Invalid file name format: Unsupported character')
     ])
     def test_resource_registering(self, data, encoder=None, is_file=False, err_type=None, err_msg=None):
 
