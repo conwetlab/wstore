@@ -27,6 +27,32 @@ from django.conf import settings
 from wstore.models import Resource
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
+from wstore.store_commons.utils.version import is_lower_version
+from django.core.exceptions import PermissionDenied
+
+
+def _save_resource_file(provider, name, version, file_):
+    # Load file contents
+    if isinstance(file_, dict):
+        f_name = file_['name']
+        content = base64.b64decode(file_['data'])
+    else:
+        f_name = file_.name
+        content = file_.read()
+
+    # Check file name
+    if not is_valid_file(f_name):
+        raise Exception('Invalid file name format: Unsupported character')
+
+    # Create file
+    file_name = provider + '__' + name + '__' + version + '__' + f_name
+    path = os.path.join(settings.MEDIA_ROOT, 'resources')
+    file_path = os.path.join(path, file_name)
+    f = open(file_path, "wb")
+    f.write(content)
+    f.close()
+
+    return settings.MEDIA_URL + 'resources/' + file_name
 
 
 def register_resource(provider, data, file_=None):
@@ -48,6 +74,18 @@ def register_resource(provider, data, file_=None):
     if not is_valid_id(data['name']):
         raise Exception('Invalid name format')
 
+    # Check if a bigger version of the resource exists
+    res_versions = Resource.objects.filter(name=data['name'], provider=current_organization)
+
+    invalid_version = False
+    for prev_ver in res_versions:
+        if is_lower_version(data['version'], prev_ver.version):
+            invalid_version = True
+            break
+
+    if invalid_version:
+        raise ValueError('A bigger version of the resource exists')
+
     resource_data = {
         'name': data['name'],
         'version': data['version'],
@@ -55,23 +93,9 @@ def register_resource(provider, data, file_=None):
         'content_type': data['content_type']
     }
 
-    if file_ is None:
+    if not file_:
         if 'content' in data:
-            resource = data['content']
-
-            # Check file name format
-            if not is_valid_file(resource['name']):
-                raise Exception('Invalid file name format: Unsupported character')
-
-            #decode the content and save the media file
-            file_name = current_organization.name + '__' + data['name'] + '__' + data['version'] + '__' + resource['name']
-            path = os.path.join(settings.MEDIA_ROOT, 'resources')
-            file_path = os.path.join(path, file_name)
-            f = open(file_path, "wb")
-            dec = base64.b64decode(resource['data'])
-            f.write(dec)
-            f.close()
-            resource_data['content_path'] = settings.MEDIA_URL + 'resources/' + file_name
+            resource_data['content_path'] = _save_resource_file(current_organization.name, data['name'], data['version'], data['content'])
             resource_data['link'] = ''
 
         elif 'link' in data:
@@ -84,18 +108,7 @@ def register_resource(provider, data, file_=None):
             resource_data['content_path'] = ''
 
     else:
-        #decode the content and save the media file
-        # Check file name format
-        if not is_valid_file(file_.name):
-            raise Exception('Invalid file name format: Unsupported character')
-
-        file_name = current_organization.name + '__' + data['name'] + '__' + data['version'] + '__' + file_.name
-        path = os.path.join(settings.MEDIA_ROOT, 'resources')
-        file_path = os.path.join(path, file_name)
-        f = open(file_path, "wb")
-        f.write(file_.read())
-        f.close()
-        resource_data['content_path'] = settings.MEDIA_URL + 'resources/' + file_name
+        resource_data['content_path'] = _save_resource_file(current_organization.name, data['name'], data['version'], file_)
         resource_data['link'] = ''
 
     Resource.objects.create(
