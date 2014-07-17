@@ -66,13 +66,13 @@ def register_resource(provider, data, file_=None):
         existing = False
 
     if existing:
-        raise Exception('The resource already exists')
+        raise ValueError('The resource already exists')
 
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
-        raise Exception('Invalid version format')
+        raise ValueError('Invalid version format')
 
     if not is_valid_id(data['name']):
-        raise Exception('Invalid name format')
+        raise ValueError('Invalid name format')
 
     # Check if a bigger version of the resource exists
     res_versions = Resource.objects.filter(name=data['name'], provider=current_organization)
