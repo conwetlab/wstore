@@ -194,3 +194,126 @@ class ResourceRegisteringTestCase(TestCase):
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
+
+
+RESOURCE_DATA1 = {
+    'name': 'Resource1',
+    'version': '1.0',
+    'description': 'Test resource 1',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': False,
+    'link': 'http://localhost/media/resources/resource1'
+}
+
+RESOURCE_DATA2 = {
+    'name': 'Resource2',
+    'version': '2.0',
+    'description': 'Test resource 2',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': False,
+    'link': 'http://localhost/media/resources/resource2'
+}
+
+RESOURCE_DATA3 = {
+    'name': 'Resource3',
+    'version': '2.0',
+    'description': 'Test resource 3',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': True,
+    'link': 'http://localhost/media/resources/resource3'
+}
+
+RESOURCE_DATA4 = {
+    'name': 'Resource4',
+    'version': '1.0',
+    'description': 'Test resource 4',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': True,
+    'link': 'http://localhost/media/resources/resource4'
+}
+
+class ResourceRetrievingTestCase(TestCase):
+
+    tags = ('fiware-ut-3', )
+
+    def setUp(self):
+        # Mock resource model
+        resource1 = MagicMock()
+        resource1.name = 'Resource1'
+        resource1.version = '1.0'
+        resource1.description = 'Test resource 1'
+        resource1.content_type = 'text/plain'
+        resource1.state = 'created'
+        resource1.open = False
+        resource1.get_url.return_value = 'http://localhost/media/resources/resource1'
+
+        resource2 = MagicMock()
+        resource2.name = 'Resource2'
+        resource2.version = '2.0'
+        resource2.description = 'Test resource 2'
+        resource2.content_type = 'text/plain'
+        resource2.state = 'created'
+        resource2.open = False
+        resource2.get_url.return_value = 'http://localhost/media/resources/resource2'
+
+        resource3 = MagicMock()
+        resource3.name = 'Resource3'
+        resource3.version = '2.0'
+        resource3.description = 'Test resource 3'
+        resource3.content_type = 'text/plain'
+        resource3.state = 'created'
+        resource3.open = True
+        resource3.get_url.return_value = 'http://localhost/media/resources/resource3'
+
+        resource4 = MagicMock()
+        resource4.name = 'Resource4'
+        resource4.version = '1.0'
+        resource4.description = 'Test resource 4'
+        resource4.content_type = 'text/plain'
+        resource4.state = 'created'
+        resource4.open = True
+        resource4.get_url.return_value = 'http://localhost/media/resources/resource4'
+
+
+        resources_management.Resource = MagicMock()
+        resources_management.Resource.objects.filter.return_value = [
+            resource1,
+            resource2,
+            resource3,
+            resource4
+        ]
+        self.user = MagicMock()
+        self.org = MagicMock()
+        self.user.userprofile.current_organization = self.org
+
+    @classmethod
+    def tearDownClass(cls):
+        # Restore resource model
+        reload(resources_management)
+        super(ResourceRetrievingTestCase, cls).tearDownClass()
+
+    @parameterized.expand([
+        ([RESOURCE_DATA1, RESOURCE_DATA2, RESOURCE_DATA3, RESOURCE_DATA4],),
+        ([RESOURCE_DATA3, RESOURCE_DATA4], 'true'),
+        ([RESOURCE_DATA1, RESOURCE_DATA2], 'false')
+    ])
+    def test_resource_retrieving(self, expected_result, filter_=None):
+
+        # Call the method
+        error = False
+        try:
+            result = resources_management.get_provider_resources(self.user, filter_)
+        except:
+            error = True
+
+        # Assert that no error occurs
+        self.assertFalse(error)
+
+        # Check calls
+        resources_management.Resource.objects.filter.assert_called_once_with(provider=self.org)
+        # Check result
+        self.assertEquals(result, expected_result)
