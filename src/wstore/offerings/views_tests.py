@@ -813,6 +813,140 @@ class ResourceCollectionTestCase(TestCase):
             self.assertEqual(body_response['result'], 'error')
 
 
+class ResourceEntryTestCase(TestCase):
+
+    tags = ('offering-api',)
+
+    def setUp(self):
+        # Create request factory
+        self.factory = RequestFactory()
+
+        # Create testing user
+        self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+        self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.user.userprofile.get_current_roles.return_value = ['provider', 'customer']
+        self.user.userprofile.save()
+
+        # Create resource model mock
+        self.resource = MagicMock()
+        self.resource.provider = self.user.userprofile.current_organization
+        views.OfferingResource = MagicMock()
+        views.OfferingResource.objects.get.return_value = self.resource
+
+    def tearDown(self):
+        views.json = json
+
+    def _not_found(self):
+        views.OfferingResource.objects.get.side_effect = Exception('Not found')
+
+    def _no_provider(self):
+        self.user.userprofile.get_current_roles.return_value = ['customer']
+
+    def _exception_update(self):
+        views.update_resource.side_effect = Exception('Exception in call')
+
+    def _exception_delete(self):
+        views.delete_resource.side_effect = Exception('Exception in call')
+
+    def _invalid_json(self):
+        views.json = MagicMock()
+        views.json.loads.side_effect = Exception('Invalid content')
+
+    @parameterized.expand([
+        (RESOURCE_DATA, 200, 'OK'),
+        (RESOURCE_DATA, 200, 'OK', True),
+        (RESOURCE_DATA, 400, 'Invalid content', False, _invalid_json, True),
+        (RESOURCE_DATA, 400, 'Invalid content', True, _invalid_json, True),
+        (RESOURCE_DATA, 404, 'Resource not found', False, _not_found, True),
+        (RESOURCE_DATA, 403, 'Forbidden', False, _no_provider, True),
+        (RESOURCE_DATA, 400, 'Exception in call', False, _exception_update, True)
+    ])
+    def test_resource_update_api(self, data, code, msg, file_=False, side_effect=None, error=False):
+
+        # Mock update method
+        views.update_resource = MagicMock(name='update_resource')
+
+        if side_effect:
+            side_effect(self)
+
+        content = json.dumps(data)
+        content_type = 'application/json'
+
+        if file_:
+            f = StringIO()
+            f.name = 'test_file.txt'
+            f.write('test file')
+            content = {
+                'json': json.dumps(data),
+                'file': f
+            }
+            content_type = MULTIPART_CONTENT
+
+        request = self.factory.post(
+            '/api/offering/resources/test_user/test_resource/1.0',
+            content,
+            content_type=content_type,
+            HTTP_ACCEPT='application/json'
+        )
+        request.user = self.user
+
+        res_entry = views.ResourceEntry(permitted_methods=('POST', 'DELETE'))
+        response = res_entry.create(request, 'test_user', 'test_resource', '1.0')
+
+        self.assertEqual(response.status_code, code)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], msg)
+
+        if not error:
+            if not file_:
+                views.update_resource.assert_called_once_with(self.resource, data)
+            else:
+                expected_file = request.FILES['file']  # The type change when loaded
+                views.update_resource.assert_called_once_with(self.resource, data, expected_file)
+            self.assertEqual(body_response['result'], 'correct')
+        else:
+            self.assertEqual(body_response['result'], 'error')
+
+    @parameterized.expand([
+        (204, 'No Content'),
+        (404, 'Resource not found', _not_found, True),
+        (403, 'Forbidden', _no_provider, True),
+        (400, 'Exception in call', _exception_delete, True)
+    ])
+    def test_resource_deletion_api(self, code, msg, side_effect=None, error=False):
+
+        # Mock delete resource method
+        views.delete_resource = MagicMock(name='delete_resource')
+
+        if side_effect:
+            side_effect(self)
+
+        request = self.factory.delete(
+            '/api/offering/resources/test_user/test_resource/1.0',
+            HTTP_ACCEPT='application/json'
+        )
+        request.user = self.user
+
+        res_entry = views.ResourceEntry(permitted_methods=('POST', 'DELETE'))
+        response = res_entry.delete(request, 'test_user', 'test_resource', '1.0')
+
+        self.assertEqual(response.status_code, code)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEqual(type(body_response), dict)
+        self.assertEqual(body_response['message'], msg)
+
+        if not error:
+            views.delete_resource.assert_called_once_with(self.resource)
+            self.assertEqual(body_response['result'], 'correct')
+        else:
+            self.assertEqual(body_response['result'], 'error')
+
+
 class PublishEntryTestCase(TestCase):
 
     tags = ('offering-api',)
