@@ -46,10 +46,11 @@ class ResourceRegisteringTestCase(TestCase):
         data['content']['data'] = encoded
 
     def _fill_provider(self, data):
-        res = Resource.objects.get(name=data['name'], version=data['version'])
+        res = Resource.objects.filter(name=data['name'])
         provider = User.objects.get(username='test_user')
-        res.provider = provider.userprofile.current_organization
-        res.save()
+        for resource in res:
+            resource.provider = provider.userprofile.current_organization
+            resource.save()
 
     @parameterized.expand([
         ({
@@ -78,6 +79,14 @@ class ResourceRegisteringTestCase(TestCase):
             'content_type': 'application/rdf+xml'
         }, None, True),
         ({
+            'name': 'New version resource',
+            'version': '2.1',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'type': 'download',
+            'link': 'https://historymod.com/download',
+            'content_type': 'text/plain'
+        }, _fill_provider),
+        ({
             'name': 'Existing',
             'version': '1.0',
             'description': '',
@@ -89,6 +98,7 @@ class ResourceRegisteringTestCase(TestCase):
             'version': '1.0a',
             'description': '',
             'type': 'download',
+            'content_type': 'text/plain',
             'link': 'https://existing.com/download'
         }, None, False, ValueError, 'Invalid version format'),
         ({
@@ -116,7 +126,29 @@ class ResourceRegisteringTestCase(TestCase):
                 'data': ''
             },
             'content_type': 'application/rdf+xml'
-        }, _basic_encoder, False, ValueError, 'Invalid file name format: Unsupported character')
+        }, _basic_encoder, False, ValueError, 'Invalid file name format: Unsupported character'),
+        ({
+            'name': 'New version resource',
+            'version': '1.1',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'type': 'download',
+            'link': 'https://historymod.com/download',
+            'content_type': 'text/plain'
+        }, _fill_provider, False, ValueError, 'A bigger version of the resource exists'),
+        ({
+            'version': '1.1',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'type': 'download',
+            'link': 'https://historymod.com/download',
+            'content_type': 'text/plain'
+        }, None, False, ValueError, 'Invalid request: Missing required field'),
+        ({
+            'name': 'Download',
+            'version': '1.1',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'type': 'download',
+            'content_type': 'text/plain'
+        }, None, False, ValueError, 'Invalid request: Missing resource content'),
     ])
     def test_resource_registering(self, data, encoder=None, is_file=False, err_type=None, err_msg=None):
 
@@ -144,7 +176,7 @@ class ResourceRegisteringTestCase(TestCase):
         # Check result
         if not err_type:
             self.assertEquals(error, None)
-            res = Resource.objects.get(name=data['name'])
+            res = Resource.objects.get(name=data['name'], version=data['version'])
             self.assertEquals(res.version, data['version'])
             self.assertEquals(res.content_type, data['content_type'])
 
