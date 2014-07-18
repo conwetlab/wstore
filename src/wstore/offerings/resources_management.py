@@ -146,7 +146,9 @@ def get_provider_resources(provider, filter_=None):
             'version': res.version,
             'description': res.description,
             'content_type': res.content_type,
-            'open': res.open
+            'state': res.state,
+            'open': res.open,
+            'link': res.get_url()
         }
 
         response.append(resource_info)
