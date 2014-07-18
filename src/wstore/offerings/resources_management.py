@@ -68,9 +68,16 @@ def register_resource(provider, data, file_=None):
     if existing:
         raise ValueError('The resource already exists')
 
+    # Check contents
+    if not 'name' in data or not 'version' in data or\
+    not 'description' in data or not 'content_type' in data:
+        raise ValueError('Invalid request: Missing required field')
+
+    # Check version format
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise ValueError('Invalid version format')
 
+    # Check name format
     if not is_valid_id(data['name']):
         raise ValueError('Invalid name format')
 
@@ -106,6 +113,8 @@ def register_resource(provider, data, file_=None):
 
             resource_data['link'] = data['link']
             resource_data['content_path'] = ''
+        else:
+            raise ValueError('Invalid request: Missing resource content')
 
     else:
         resource_data['content_path'] = _save_resource_file(current_organization.name, data['name'], data['version'], file_)
