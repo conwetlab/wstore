@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import base64
 import os
 from StringIO import StringIO
@@ -29,10 +31,12 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 from wstore.offerings import resources_management
-from wstore.models import Resource, Organization
+from wstore.models import Resource
+from django.core.exceptions import PermissionDenied
 
 
 __test__ = False
+
 
 class ResourceRegisteringTestCase(TestCase):
 
@@ -236,6 +240,19 @@ RESOURCE_DATA4 = {
     'link': 'http://localhost/media/resources/resource4'
 }
 
+RESOURCE_IN_USE_DATA = {
+    'description': 'Test resource 4',
+    'content_type': 'text/plain'
+}
+
+RESOURCE_CONTENT = {
+    'content': {
+        'name': 'test_usdl.rdf',
+        'data': ''
+    },
+}
+
+
 class ResourceRetrievingTestCase(TestCase):
 
     tags = ('fiware-ut-3', )
@@ -278,7 +295,6 @@ class ResourceRetrievingTestCase(TestCase):
         resource4.open = True
         resource4.get_url.return_value = 'http://localhost/media/resources/resource4'
 
-
         resources_management.Resource = MagicMock()
         resources_management.Resource.objects.filter.return_value = [
             resource1,
@@ -317,3 +333,218 @@ class ResourceRetrievingTestCase(TestCase):
         resources_management.Resource.objects.filter.assert_called_once_with(provider=self.org)
         # Check result
         self.assertEquals(result, expected_result)
+
+
+class ResourceDeletionTestCase(TestCase):
+
+    tags = ('fiware-ut-3', )
+
+    def setUp(self):
+        self.resource = MagicMock()
+
+    @classmethod
+    def tearDownClass(cls):
+        reload(os)
+        super(ResourceDeletionTestCase, cls).tearDownClass()
+
+    def _res_in_use(self):
+        self.resource.offerings = ['1111', '2222']
+
+    def _check_in_use(self):
+        self.assertEquals(self.resource.state, 'deleted')
+        self.resource.save.assert_called_once_with()
+
+    def _res_file(self):
+        self.resource.offerings = []
+        self.resource.resource_path = '/media/resources/test_resource'
+        # Mock delete method
+        os.remove = MagicMock()
+
+    def _check_file(self):
+        os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
+        self.resource.delete.assert_called_once_with()
+
+    def _res_url(self):
+        self.resource.offerings = []
+        self.resource.resource_path = ''
+        # Mock delete method
+        os.remove = MagicMock()
+
+    def _check_url(self):
+        os.remove.assert_not_called()
+        self.resource.delete.assert_called_once_with()
+
+    def _deleted_res(self):
+        self.resource.state = 'deleted'
+
+    @parameterized.expand([
+        (_res_in_use, _check_in_use),
+        (_res_file, _check_file),
+        (_res_url, _check_url),
+        (_deleted_res, None, PermissionDenied, 'The resource is already deleted')
+    ])
+    def test_resource_deletion(self, res_builder, check=None, err_type=None, err_msg=None):
+
+        res_builder(self)
+
+        error = None
+        try:
+            resources_management.delete_resource(self.resource)
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            self.assertEquals(error, None)
+            # Check calls
+            check(self)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
+
+
+class ResourceUpdateTestCase(TestCase):
+
+    tags = ('fiware-ut-3', )
+
+    @classmethod
+    def setUpClass(cls):
+        f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
+        cls.content = base64.b64encode(f.read())
+        f.seek(0)
+        cls.res_file = StringIO(f.read())
+        cls.res_file.name = 'test_usdl.rdf'
+        f.close()
+        super(ResourceUpdateTestCase, cls).setUpClass()
+
+    def setUp(self):
+        self.resource = MagicMock()
+        self.resource.offerings = []
+        self.resource.resource_path = ''
+        resources_management.Resource = MagicMock()
+        resources_management.Resource.objects.filter.return_value = []
+
+    @classmethod
+    def tearDownClass(cls):
+        reload(resources_management)
+        reload(os)
+        super(ResourceUpdateTestCase, cls).tearDownClass()
+
+    def _res_deleted(self):
+        self.resource.state = 'deleted'
+
+    def _res_in_use(self):
+        self.resource.offerings = ['111', '222']
+
+    def _mock_save_file(self):
+        resources_management._save_resource_file = MagicMock()
+        resources_management._save_resource_file.return_value = '/media/resources/test_resource'
+
+    def _mock_res_filter(self):
+        res1 = MagicMock()
+        res1.version = '1.0'
+        res2 = MagicMock()
+        res2.version = '1.1'
+        resources_management.Resource.objects.filter.return_value = [res1, res2]
+
+    def _existing_file(self):
+        os.remove = MagicMock()
+        self.resource.resource_path = '/media/resources/test_resource'
+
+    def _mock_save_file_existing(self):
+        self._mock_save_file()
+        self._existing_file()
+
+    def _check_in_use(self):
+        self.assertEquals(self.resource.description, 'Test resource 4')
+        self.assertEquals(self.resource.content_type, 'text/plain')
+
+    def _check_complete(self):
+        self.assertEquals(self.resource.name, 'Resource1')
+        self.assertEquals(self.resource.version, '1.0')
+        self.assertEquals(self.resource.description, 'Test resource 1')
+        self.assertEquals(self.resource.content_type, 'text/plain')
+        self.assertEquals(self.resource.open, False)
+        self.assertEquals(self.resource.resource_path, '')
+        self.assertEquals(self.resource.download_link, 'http://localhost/media/resources/resource1')
+
+    def _check_content_paths(self):
+        self.assertEquals(self.resource.resource_path, '/media/resources/test_resource')
+        self.assertEquals(self.resource.download_link, '')
+
+    def _check_content(self):
+        self._check_content_paths()
+        resources_management._save_resource_file.assert_called_once_with(
+            self.resource.provider.name,
+            self.resource.name,
+            self.resource.version,
+            {'name': 'test_usdl.rdf', 'data': self.content}
+        )
+
+    def _check_content_file(self):
+        self._check_content_paths()
+        resources_management._save_resource_file.assert_called_once_with(
+            self.resource.provider.name,
+            self.resource.name,
+            self.resource.version,
+            self.res_file
+        )
+
+    def _check_description(self):
+        self.assertEquals(self.resource.description, 'Modified description')
+
+    def _check_bigger_version(self):
+        self.assertEquals(self.resource.version, '2.0')
+
+    def _check_complete_with_del(self):
+        self._check_complete()
+        os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
+
+    def _check_content_file_with_del(self):
+        self._check_content_file()
+        os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
+
+    @parameterized.expand([
+        (RESOURCE_IN_USE_DATA, _check_in_use, False, _res_in_use),
+        (RESOURCE_DATA1, _check_complete),
+        (RESOURCE_CONTENT, _check_content, False, _mock_save_file),
+        (RESOURCE_CONTENT, _check_content_file, True, _mock_save_file),
+        ({'version': '2.0'}, _check_bigger_version, False, _mock_res_filter),
+        (RESOURCE_DATA1, _check_complete_with_del, False, _existing_file),
+        (RESOURCE_CONTENT, _check_content_file_with_del, True, _mock_save_file_existing),
+        ({'description': 'Modified description'}, _check_description),
+        ({'name': '$name'}, None, False, None, ValueError, 'Invalid name format'),
+        ({'version': '1.0a'}, None, False, None, ValueError, 'Invalid version format'),
+        ({'version': '0.1'}, None, False, _mock_res_filter, ValueError, 'A bigger version of the resource exists'),
+        ({'content_type': 3}, None, False, None, TypeError, 'Invalid type for content_type field'),
+        ({'description': 3}, None, False, None, TypeError, 'Invalid type for description field'),
+        ({'open': 'true'}, None, False, None, TypeError, 'Invalid type for open field'),
+        ({'link': 'not a valid url'}, None, False, None, ValueError, 'Invalid URL format'),
+        (RESOURCE_DATA1, None, False, _res_in_use, PermissionDenied, 'The resource is being used, only description and content type can be modified'),
+        (RESOURCE_IN_USE_DATA, None, True, _res_in_use, PermissionDenied, 'The resource is being used, only description and content type can be modified'),
+        ({}, None, False, _res_deleted, PermissionDenied, 'Deleted resources cannot be updated')
+    ])
+    def test_resource_update(self, data, check=None, file_=False, side_effect=None, err_type=None, err_msg=None):
+
+        if side_effect:
+            side_effect(self)
+
+        res_file = None
+        if file_:
+            res_file = self.res_file
+        elif 'content' in data:
+            data['content']['data'] = self.content
+
+        error = None
+        try:
+            resources_management.update_resource(self.resource, data, res_file)
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            self.assertEquals(error, None)
+            check(self)
+            self.resource.save.assert_called_once_with()
+
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
