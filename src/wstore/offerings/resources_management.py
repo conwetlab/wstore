@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import base64
 import os
 import re
@@ -140,7 +142,7 @@ def get_provider_resources(provider, filter_=None):
         # Filter by open property if needed
         if (filter_ == 'true' and not res.open) or (filter_ == 'false' and res.open):
             continue
-        
+
         resource_info = {
             'name': res.name,
             'version': res.version,
@@ -155,13 +157,115 @@ def get_provider_resources(provider, filter_=None):
 
     return response
 
+
 def delete_resource(resource):
 
+    if resource.state == 'deleted':
+        raise PermissionDenied('The resource is already deleted')
+
     # If the resource is not included in any offering delete it
-    if len(resource.offerings) == 0:
+    if not len(resource.offerings):
+        # Delete files if needed
+        if resource.resource_path:
+            path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
+            os.remove(path)
+
         resource.delete()
     else:
         # If the resource is part of an offering mark it as deleted
         resource.state = 'deleted'
         resource.save()
 
+
+def update_resource(resource, data, file_=None):
+
+    # Check that the resource can be updated
+    if resource.state == 'deleted':
+        raise PermissionDenied('Deleted resources cannot be updated')
+
+    # If the resource is included in an offering
+    # only the resource fields can be updated
+    # (not the resource itself)
+    if len(resource.offerings):
+
+        invalid_data = False
+        for field in data:
+            if field != 'content_type' and field != 'description':
+                invalid_data = True
+                break
+
+        if not invalid_data and file_:
+            invalid_data = True
+
+        if invalid_data:
+            raise PermissionDenied('The resource is being used, only description and content type can be modified')
+
+    if 'name' in data:
+        if not is_valid_id(data['name']):
+            raise ValueError('Invalid name format')
+
+        resource.name = data['name']
+
+    if 'version' in data:
+        if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
+            raise ValueError('Invalid version format')
+
+        invalid_version = False
+        prev_versions = Resource.objects.filter(name=resource.name, provider=resource.provider)
+        for vers in prev_versions:
+            if vers != resource and is_lower_version(data['version'], vers.version):
+                invalid_version = True
+                break
+
+        if invalid_version:
+            raise ValueError('A bigger version of the resource exists')
+
+        resource.version = data['version']
+
+    if 'content_type' in data:
+        if not isinstance(data['content_type'], unicode) and not isinstance(data['content_type'], str):
+            raise TypeError('Invalid type for content_type field')
+
+        resource.content_type = data['content_type']
+
+    if 'open' in data:
+        if not isinstance(data['open'], bool):
+            raise TypeError('Invalid type for open field')
+
+        resource.open = data['open']
+
+    if 'description' in data:
+        if not isinstance(data['description'], unicode) and not isinstance(data['description'], str):
+            raise TypeError('Invalid type for description field')
+
+        resource.description = data['description']
+
+    if file_ or 'content' in data:
+        # Check if a file exists
+        if not resource.resource_path == '':
+            # Remove file
+            path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
+            os.remove(path)
+            resource.resource_path = ''
+
+        if file_:
+            file_content = file_
+        else:
+            file_content = data['content']
+
+        # Create new file
+        resource.resource_path = _save_resource_file(resource.provider.name, resource.name, resource.version, file_content)
+        resource.download_link = ''
+    elif 'link' in data:
+        if not is_valid_url(data['link']):
+            raise ValueError('Invalid URL format')
+
+        if not resource.resource_path == '':
+            # Remove file
+            path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
+            os.remove(path)
+            resource.resource_path = ''
+
+        resource.download_link = data['link']
+
+    resource.save()
