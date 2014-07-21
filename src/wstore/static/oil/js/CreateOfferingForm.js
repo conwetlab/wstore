@@ -648,6 +648,14 @@
                 }
             }
 
+            // Check version format
+            if (version) {
+                var versReg = new RegExp(/^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$/);
+                if (!versReg.test(version)) {
+                    error = true;
+                    msg = 'Invalid version format';
+                }
+            }
             // Check failures in image loading
             if (logoFailure) {
                 error = true;
