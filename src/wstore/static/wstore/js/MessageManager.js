@@ -21,15 +21,25 @@
 (function () {
     MessageManager = {};
 
-    MessageManager.showMessage = function showMessage(title, msg) {
-        
-        $('#message-container').empty();
-        $.template('modal', $('#modal_template'));
-        $.tmpl('modal', {'title': title, 'message': msg}).appendTo('#message-container');
+    MessageManager.showMessage = function showMessage(title, msg, msgContainer) {
+        var container = $('#message-container');
+        var id = 'message';
 
-        $('#message').modal('show');
-        $('#message').on('hidden', function() {
-            $('#message-container').empty();
+        if (msgContainer) {
+            container = msgContainer;
+            id = 'sec-message';
+        }
+        container.empty();
+        $.template('modal', $('#modal_template'));
+        $.tmpl('modal', {
+            'title': title,
+            'message': msg,
+            'id': id
+        }).appendTo(container);
+
+        $('#' + id).modal('show');
+        $('#' + id).on('hidden', function() {
+            container.empty();
         });
     };
 
@@ -85,32 +95,47 @@
         });
     };
 
-    MessageManager.showYesNoWindow = function showYesNoWindow (msg, handler, tit) {
+    MessageManager.showYesNoWindow = function showYesNoWindow (msg, handler, tit, msgContainer, cancelHandler) {
         var title = '';
+        var container = $('#message-container');
+        var id = 'message';
+
+        // Default cancel behaviour is closing the window 
+        var cHandler = function  () {
+            $('#' + id).modal('hide');
+        };
 
         if (tit) {
             title = tit;
+            if (msgContainer) {
+                container = msgContainer;
+                id = 'sec-message';
+
+                if (cancelHandler) {
+                    cHandler = cancelHandler;
+                }
+            }
         }
 
-        $('#message-container').empty();
+        container.empty();
         $.template('yesNoWindowTemplate', $('#yes_no_window_template'));
         $.tmpl('yesNoWindowTemplate', {
             'title': tit,
-            'msg': msg
-        }).appendTo('#message-container');
+            'msg': msg,
+            'id': id
+        }).appendTo(container);
 
         $('#btn-yes').click(function() {
-            $('#message').modal('hide');
+            $('#' + id).modal('hide');
             handler();
         });
 
-        $('#btn-no').click(function  () {
-            $('#message').modal('hide');
-        });
+        $('#btn-no').click(cHandler);
 
-        $('#message').modal('show');
-        $('#message').on('hidden', function() {
-            $('#message-container').empty();
+        $('#' + id).modal('show');
+        $('#' + id).on('hidden', function() {
+            cHandler();
+            container.empty();
         })
     }
 
