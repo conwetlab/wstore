@@ -32,11 +32,11 @@ from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
 authentication_required
-from wstore.models import Offering, Organization
+from wstore.models import Offering, Organization, Resource as OfferingResource
 from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
 publish_offering, bind_resources, count_offerings, update_offering
-from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource
+from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource, update_resource
 from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.social.reviews.review_manager import ReviewManager
 
@@ -318,7 +318,7 @@ class ResourceCollection(Resource):
                     register_resource(user, data)
                 except Exception, e:
                     return build_response(request, 400, e.message)
-            elif content_type == 'multipart/form-data':
+            else:
                 try:
                     data = json.loads(request.POST['json'])
                     f = request.FILES['file']
@@ -350,30 +350,86 @@ class ResourceCollection(Resource):
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json; charset=utf-8')
 
 
+def _get_resource(resource_id_info):
+    try:
+        # Get the resource
+        provider_org = Organization.objects.get(name=resource_id_info['provider'])
+        resource = OfferingResource.objects.get(provider=provider_org, name=resource_id_info['name'], version=resource_id_info['version'])
+    except:
+        raise ValueError('Resource not found')
+
+    return resource
+
+
+def _call_resource_entry_method(request, resource_id_info, method, data=None):
+
+    response = build_response(request, 204, 'No Content')
+
+    if data:
+        response = build_response(request, 200, 'OK')
+
+    error = False
+
+    try:
+        resource = _get_resource(resource_id_info)
+    except:
+        error = True
+        response = build_response(request, 404, 'Resource not found')
+
+    # Check permissions
+    if not error and (not 'provider' in request.user.userprofile.get_current_roles() or\
+      not request.user.userprofile.current_organization == resource.provider):
+        error = True
+        response = build_response(request, 403, 'Forbidden')
+
+    # Try to make the specified action
+    if not error:
+        try:
+            args = (resource, )
+            if data:
+                args = args + data
+
+            method(*args)
+        except Exception as e:
+            response = build_response(request, 400, unicode(e))
+
+    # Return the response
+    return response
+
+
 class ResourceEntry(Resource):
 
     @authentication_required
     def delete(self, request, provider, name, version):
+        return _call_resource_entry_method(request, {
+            'provider': provider,
+            'name': name,
+            'version': version
+        }, delete_resource)
 
-        response = build_response(request, 204, 'No Content')
-        error = False
+    @supported_request_mime_types(('application/json', 'multipart/form-data'))
+    @authentication_required
+    def create(self, request, provider, name, version):
+
+        content_type = get_content_type(request)[0]
+
         try:
-            # Get the resource
-            resource = Resource.objects.get(provider=provider_org, name=name, version=version)
+            # Extract the data depending on the content type
+            if content_type ==  'application/json':
+                data = json.loads(request.raw_post_data)
+                params = (data, )
+            else:
+                data = json.loads(request.POST['json'])
+                file_ = request.FILES['file']
+                params = (data, file_)
         except:
-            # set error response
-            response = build_response(request, 404, 'Resource not found')
-            error = True
+            return build_response(request, 400, 'Invalid content')
 
-        # Try to delete the resource
-        if not error:
-            try:
-                delete_resource(resource)
-            except Exception, e:
-                response = build_response(request, 400, e.message)
-
-        # Return the response
-        return response
+        return _call_resource_entry_method(request, {
+            'provider': provider,
+            'name': name,
+            'version': version
+        }, update_resource, params)
 
 
 class BindEntry(Resource):
