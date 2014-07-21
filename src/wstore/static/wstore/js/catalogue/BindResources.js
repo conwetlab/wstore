@@ -118,6 +118,14 @@
     BindResourcesForm.prototype.paintResources = function paintResources (resources) {
         this.resources = resources;
 
+        // Check if there is any resource
+        if (!resources.length) {
+            var msg = "You don't have any resource registered";
+            MessageManager.showAlertInfo('No resources', msg, $('.modal-body'));
+            $('.alert-info').removeClass('span8');
+            return;
+        }
+
         // Append the provider resources
         for (var i = 0; i < resources.length; i++) {
             var res = resources[i];
@@ -149,10 +157,6 @@
                 }(this, res));
             }
         }
-        $('.modal-body').on('scroll', function() {
-            $('.resource').popover('hide');
-            $('.resource').removeClass('res-hover');
-        })
 
         if(!this.viewOnly) {
             // Set listener
