@@ -53,6 +53,7 @@
         'PUBLISH_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/publish',
         'TAG_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/tag',
         'BIND_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/bind',
+        'RESOURCE_ENTRY': '/api/offering/resources/${provider}/${name}/${version}',
         'REVIEW_COLLECTION': '/api/offering/offerings/${organization}/${name}/${version}/review',
         'REVIEW_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/review/${review}',
         'RESPONSE_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/review/${review}/response',

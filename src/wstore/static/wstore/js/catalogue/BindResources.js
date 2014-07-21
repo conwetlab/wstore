@@ -172,22 +172,86 @@
 
 (function() {
 
+    /**
+     * Constructor of the ResourceDeatilsPainter
+     * @param resource. Object containing the info of the resource to be displayed
+     * @param caller. BindResources object that called the view used to return when needed
+     * @returns {ResourceDetailsPainter}
+     */
     ResourceDetailsPainter = function ResourceDetailsPainter(resource, caller) {
         this.resource = resource;
         this.caller = caller;
     };
 
+    /**
+     * Handler for removing the resource
+     */
+    var removeHandler = function removeHandler() {
+        var resCllient;
+        // Hide yes no window
+        $('#sec-message').modal('hide');
+        $('#yes-no-container').remove();
+
+        // Create a resource client
+        resClient = new ServerClient('RESOURCE_ENTRY', '');
+        resClient.remove(function() {
+            cancelHandler();
+            this.caller.display();
+        }.bind(this), {
+            'provider': ORGANIZATION,
+            'name': this.resource.name,
+            'version': this.resource.version
+        })
+    };
+
+    /**
+     * Handler for the cancel option when removing the resource.
+     * Redisplays the details view modal
+     */
+    var cancelHandler = function cancelHandler() {
+        // Hide yes no window
+        $('#sec-message').modal('hide');
+        $('#yes-no-container').remove();
+
+        // Restore resource view and hidden listener
+        $('#message').modal('show');
+        $('#message').on('hidden', function(){
+            $('#message-container').empty();
+        });
+    };
+
+    /**
+     * Set the different listeners included in the resource details
+     * view, including the back button, the edit button and the remove
+     * button
+     */
     ResourceDetailsPainter.prototype.setListeners = function setListeners () {
         // Set back listener
         $('#res-back').click(function() {
             this.caller.display();
         }.bind(this));
 
-        // TODO
         // Set delete listener
+        $('.res-remove').click(function() {
+            var msg = "Are you sure that you want to remove the resource " + this.resource.name + ' version ' + this.resource.version;
+
+            // Hide the current modal
+            $('#message').off('hidden');
+            $('#message').modal('hide');
+
+            //  Build a container for the new message
+            $('<div id="yes-no-container"></div>').appendTo('#message-container');
+            // Show yes no window
+            MessageManager.showYesNoWindow(msg, removeHandler.bind(this), 'Remove', $('#yes-no-container'), cancelHandler.bind(this));
+        }.bind(this));
         // Set update listener
+        $('.res-edit').click(function() {
+        });
     };
 
+    /**
+     * Paint the resource details in the displayed modal
+     */
     ResourceDetailsPainter.prototype.paint = function paint() {
         // Clean modal body
         $('.modal-body').empty()
