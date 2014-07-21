@@ -143,12 +143,16 @@ def get_provider_resources(provider, filter_=None):
         if (filter_ == 'true' and not res.open) or (filter_ == 'false' and res.open):
             continue
 
+        state = res.state
+        if state != 'deleted' and len(res.offerings):
+            state = 'used'
+
         resource_info = {
             'name': res.name,
             'version': res.version,
             'description': res.description,
             'content_type': res.content_type,
-            'state': res.state,
+            'state': state,
             'open': res.open,
             'link': res.get_url()
         }
