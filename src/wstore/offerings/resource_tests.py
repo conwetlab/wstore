@@ -235,9 +235,9 @@ RESOURCE_DATA4 = {
     'version': '1.0',
     'description': 'Test resource 4',
     'content_type': 'text/plain',
-    'state': 'created',
+    'state': 'used',
     'open': True,
-    'link': 'http://localhost/media/resources/resource4'
+    'link': 'http://localhost/media/resources/resource4',
 }
 
 RESOURCE_IN_USE_DATA = {
@@ -294,6 +294,7 @@ class ResourceRetrievingTestCase(TestCase):
         resource4.state = 'created'
         resource4.open = True
         resource4.get_url.return_value = 'http://localhost/media/resources/resource4'
+        resource4.offerings = ['1111', '2222']
 
         resources_management.Resource = MagicMock()
         resources_management.Resource.objects.filter.return_value = [
