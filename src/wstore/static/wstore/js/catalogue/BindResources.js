@@ -184,34 +184,51 @@
     };
 
     /**
+     * Private method that hides the current modal
+     */
+    var hideModal = function hideModal() {
+        // Hide the current modal
+        $('#message').off('hidden');
+        $('#message').modal('hide');
+
+        //  Build a container for the new message
+        $('<div id="new-container"></div>').appendTo('#message-container');
+    }
+
+    /**
+     * Private method that shows the hidden modal
+     */
+    var showModal = function showModal() {
+        closeHandler();
+        this.caller.display();
+    }
+
+    /**
      * Handler for removing the resource
      */
     var removeHandler = function removeHandler() {
         var resCllient;
         // Hide yes no window
         $('#sec-message').modal('hide');
-        $('#yes-no-container').remove();
+        $('#new-container').remove();
 
         // Create a resource client
         resClient = new ServerClient('RESOURCE_ENTRY', '');
-        resClient.remove(function() {
-            cancelHandler();
-            this.caller.display();
-        }.bind(this), {
+        resClient.remove(showModal.bind(this), {
             'provider': ORGANIZATION,
             'name': this.resource.name,
             'version': this.resource.version
-        })
+        });
     };
 
     /**
      * Handler for the cancel option when removing the resource.
      * Redisplays the details view modal
      */
-    var cancelHandler = function cancelHandler() {
+    var closeHandler = function closeHandler() {
         // Hide yes no window
         $('#sec-message').modal('hide');
-        $('#yes-no-container').remove();
+        $('#new-container').remove();
 
         // Restore resource view and hidden listener
         $('#message').modal('show');
@@ -231,22 +248,32 @@
             this.caller.display();
         }.bind(this));
 
-        // Set delete listener
-        $('.res-remove').click(function() {
-            var msg = "Are you sure that you want to remove the resource " + this.resource.name + ' version ' + this.resource.version;
+        if (this.resource.state != 'deleted') {
+            // Set delete listener
+            $('.res-remove').click(function() {
+                var msg = "Are you sure that you want to remove the resource " + this.resource.name + ' version ' + this.resource.version;
 
-            // Hide the current modal
-            $('#message').off('hidden');
-            $('#message').modal('hide');
+                hideModal();
 
-            //  Build a container for the new message
-            $('<div id="yes-no-container"></div>').appendTo('#message-container');
-            // Show yes no window
-            MessageManager.showYesNoWindow(msg, removeHandler.bind(this), 'Remove', $('#yes-no-container'), cancelHandler.bind(this));
-        }.bind(this));
-        // Set update listener
-        $('.res-edit').click(function() {
-        });
+                // Show yes no window
+                MessageManager.showYesNoWindow(msg, removeHandler.bind(this), 'Remove', $('#new-container'), closeHandler.bind(this));
+            }.bind(this));
+
+            // Set update listener
+            $('.res-edit').click(function() {
+                var regRes;
+
+                hideModal();
+
+                // Create the new form
+                regRes = new RegisterResourceForm(this.resource, '#sec-message');
+                regRes.display($('#new-container'));
+
+                // Override hidden behaviour
+                $('#sec-message').off('hidden');
+                $('#sec-message').on('hidden', showModal.bind(this))
+            }.bind(this));
+        }
     };
 
     /**
@@ -259,6 +286,11 @@
         $.template('resourceDetails', $('#resource_details_template'));
         $.tmpl('resourceDetails', this.resource).appendTo('.modal-body');
 
+        // If the resource is deleted remove options
+        if (this.resource.state == 'deleted') {
+            $('.res-remove').addClass('hide');
+            $('.res-edit').addClass('hide');
+        }
         this.setListeners();
     };
 })();

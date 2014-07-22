@@ -159,7 +159,10 @@
             $('#create-app').click(function () {
                 getRepositories(showCreateAppForm);
             });
-            $('#register-res').click(showRegisterResourceForm);
+            $('#register-res').click(function() {
+                var regResForm = new RegisterResourceForm();
+                regResForm.display();
+            });
             $('#view-res').click(function() {
                 var resForm, offElem = {}
                 offElem.getResources = function() {

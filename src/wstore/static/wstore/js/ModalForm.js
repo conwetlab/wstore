@@ -30,9 +30,13 @@
     /**
      * Displays the modal window and renders the template
      */
-    ModalForm.prototype.display = function display() {
+    ModalForm.prototype.display = function display(container) {
         if (!this.modalCreated) {
-            MessageManager.showMessage(this.title, '');
+            if (container) {
+                MessageManager.showMessage(this.title, '', container);
+            } else {
+                MessageManager.showMessage(this.title, '');
+            }
             this.modalCreated = true;
         }
 
