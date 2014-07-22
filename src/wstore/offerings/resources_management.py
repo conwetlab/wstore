@@ -23,10 +23,11 @@ from __future__ import unicode_literals
 import base64
 import os
 import re
+from bson import ObjectId
 
 from django.conf import settings
 
-from wstore.models import Resource
+from wstore.models import Resource, Offering
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.version import is_lower_version
@@ -162,6 +163,15 @@ def get_provider_resources(provider, filter_=None):
     return response
 
 
+def _remove_resource(resource):
+    # Delete files if needed
+    if resource.resource_path:
+        path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
+        os.remove(path)
+
+    resource.delete()
+
+
 def delete_resource(resource):
 
     if resource.state == 'deleted':
@@ -169,16 +179,28 @@ def delete_resource(resource):
 
     # If the resource is not included in any offering delete it
     if not len(resource.offerings):
-        # Delete files if needed
-        if resource.resource_path:
-            path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
-            os.remove(path)
-
-        resource.delete()
+        _remove_resource(resource)
     else:
-        # If the resource is part of an offering mark it as deleted
-        resource.state = 'deleted'
-        resource.save()
+        # If the resource is part of an offering check if all the
+        # offerings are in uploaded state
+        used_offerings = []
+        for off in resource.offerings:
+            offering = Offering.objects.get(pk=off)
+
+            # Remove resource from uploaded offerings
+            if offering.state == 'uploaded':
+                offering.resources.remove(ObjectId(resource.pk))
+                offering.save()
+            else:
+                used_offerings.append(off)
+
+        # If the resource is not included in any offering delete it
+        if not len(used_offerings):
+            _remove_resource(resource)
+        else:
+            resource.offerings = used_offerings
+            resource.state = 'deleted'
+            resource.save()
 
 
 def update_resource(resource, data, file_=None):
