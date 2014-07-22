@@ -341,16 +341,50 @@ class ResourceDeletionTestCase(TestCase):
 
     def setUp(self):
         self.resource = MagicMock()
+        self.resource.pk = '4444'
+        resources_management.Offering = MagicMock()
 
     @classmethod
     def tearDownClass(cls):
         reload(os)
+        reload(resources_management)
         super(ResourceDeletionTestCase, cls).tearDownClass()
 
     def _res_in_use(self):
+
+        def _mock_get(pk=None):
+            result = MagicMock()
+            if pk == '1111':
+                result.state = 'published'
+                result.pk = '1111'
+            else:
+                result.state = 'uploaded'
+                result.pk = '2222'
+            return result
+
+        resources_management.Offering.objects.get = _mock_get
+        resources_management.ObjectId = MagicMock()
         self.resource.offerings = ['1111', '2222']
 
+    def _res_in_use_uploaded(self):
+        def _mock_get_up(pk=None):
+            result = MagicMock()
+            result.state = 'uploaded'
+            if pk == '1111':
+                result.pk = '1111'
+            else:
+                result.pk = '2222'
+            return result
+
+        resources_management.Offering.objects.get = _mock_get_up
+        resources_management.ObjectId = MagicMock()
+        self.resource.offerings = ['1111', '2222']
+        self.resource.resource_path = '/media/resources/test_resource'
+        # Mock delete method
+        os.remove = MagicMock()
+
     def _check_in_use(self):
+        self.assertEquals(self.resource.offerings, ['1111'])
         self.assertEquals(self.resource.state, 'deleted')
         self.resource.save.assert_called_once_with()
 
@@ -360,7 +394,7 @@ class ResourceDeletionTestCase(TestCase):
         # Mock delete method
         os.remove = MagicMock()
 
-    def _check_file(self):
+    def _check_deleted(self):
         os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
         self.resource.delete.assert_called_once_with()
 
@@ -379,7 +413,8 @@ class ResourceDeletionTestCase(TestCase):
 
     @parameterized.expand([
         (_res_in_use, _check_in_use),
-        (_res_file, _check_file),
+        (_res_in_use_uploaded, _check_deleted),
+        (_res_file, _check_deleted),
         (_res_url, _check_url),
         (_deleted_res, None, PermissionDenied, 'The resource is already deleted')
     ])
