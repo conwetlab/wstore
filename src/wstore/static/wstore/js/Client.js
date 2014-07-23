@@ -39,7 +39,7 @@
      * @param data, JSON data for PUT and POST request
      * @param elemDict, Object used for URL rendering if needed
      */
-    var request = function request(self, method, callback, data, elemDict, queryString) {
+    var request = function request(self, method, callback, data, elemDict, queryString, errCallback) {
         var url;
         var csrfToken = $.cookie('csrftoken');
 
@@ -82,9 +82,13 @@
             },
             error: function (xhr) {
                 $('#loading').addClass('hide');
-                var resp = xhr.responseText;
-                var msg = JSON.parse(resp).message;
-                MessageManager.showMessage('Error', msg);
+                if (!errCallback) {
+                    var resp = xhr.responseText;
+                    var msg = JSON.parse(resp).message;
+                    MessageManager.showMessage('Error', msg);
+                } else {
+                    errCallback(xhr);
+                }
             }
         });
     };
@@ -103,12 +107,12 @@
      * @param data, JSON info to be sent
      * @param callback, Function to be called on success
      */
-    ServerClient.prototype.create = function create(data, callback, elemDict) {
+    ServerClient.prototype.create = function create(data, callback, elemDict, errCallback) {
         var cont = {};
         if (elemDict) {
             cont = elemDict;
         }
-        request(this, 'POST', callback, data, cont);
+        request(this, 'POST', callback, data, cont, null, errCallback);
     };
 
     /**
@@ -117,8 +121,8 @@
      * @param callback, Function to be called on success
      * @param elemDict, Object used for URL rendering if needed
      */
-    ServerClient.prototype.update = function update(data, callback, elemDict) {
-        request(this, 'PUT', callback, data, elemDict);
+    ServerClient.prototype.update = function update(data, callback, elemDict, errCallback) {
+        request(this, 'PUT', callback, data, elemDict, null, errCallback);
     };
 
     /**

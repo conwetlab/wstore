@@ -160,7 +160,7 @@
                 getRepositories(showCreateAppForm);
             });
             $('#register-res').click(function() {
-                var regResForm = new RegisterResourceForm();
+                var regResForm = buildRegisterResourceForm('create');
                 regResForm.display();
             });
             $('#view-res').click(function() {

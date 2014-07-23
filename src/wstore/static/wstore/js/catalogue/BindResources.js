@@ -198,7 +198,7 @@
     /**
      * Private method that shows the hidden modal
      */
-    var showModal = function showModal() {
+    ResourceDetailsPainter.prototype.showModal = function showModal() {
         closeHandler();
         this.caller.display();
     }
@@ -266,12 +266,26 @@
                 hideModal();
 
                 // Create the new form
-                regRes = new RegisterResourceForm(this.resource, '#sec-message');
+                regRes = buildRegisterResourceForm('edit', this.resource, '#sec-message', this);
                 regRes.display($('#new-container'));
 
                 // Override hidden behaviour
                 $('#sec-message').off('hidden');
-                $('#sec-message').on('hidden', showModal.bind(this))
+                $('#sec-message').on('hidden', this.showModal.bind(this));
+            }.bind(this));
+
+            // Set upgade listener
+            $('.res-upgrade').click(function() {
+                var regRes;
+
+                hideModal();
+                // Create the new form
+                regRes = buildRegisterResourceForm('upgrade', this.resource, '#sec-message', this);
+                regRes.display($('#new-container'));
+
+                // Override hidden behaviour
+                $('#sec-message').off('hidden');
+                $('#sec-message').on('hidden', this.showModal.bind(this));
             }.bind(this));
         }
     };
@@ -290,6 +304,7 @@
         if (this.resource.state == 'deleted') {
             $('.res-remove').addClass('hide');
             $('.res-edit').addClass('hide');
+            $('.res-upgrade').addClass('hide');
         }
         this.setListeners();
     };
