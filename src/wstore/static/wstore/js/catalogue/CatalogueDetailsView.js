@@ -313,7 +313,7 @@
             var msg = "Are you sure that you want to delete the offering";
             MessageManager.showYesNoWindow(msg, (function() {
                 this.deleteOffering();
-            }).bind(this));
+            }).bind(this), 'Delete');
         } else if (action == 'Download') {
             downloadElements(this.offeringElement);
         }
