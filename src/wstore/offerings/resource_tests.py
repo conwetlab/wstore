@@ -572,6 +572,7 @@ class ResourceUpgradeTestCase(TestCase):
         ({'version': '1.0a'}, False, None, ValueError, 'Invalid version format'),
         ({'version': '1.0'}, False, _deleted_res, PermissionDenied, 'Deleted resources cannot be upgraded'),
         ({'version': '0.0.1'}, False, None, ValueError, 'The new version cannot be lower that the current version: 0.0.1 - 0.1'),
+        ({'version': '0.1'}, False, None, ValueError, 'The new version cannot be lower that the current version: 0.1 - 0.1'),
         ({'version': '1.0'}, False, None, ValueError, 'No resource has been provided'),
         (UPGRADE_INV_LINK, False, None, ValueError, 'Invalid URL format')
     ])
