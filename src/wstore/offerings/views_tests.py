@@ -845,6 +845,9 @@ class ResourceEntryTestCase(TestCase):
     def _exception_update(self):
         views.update_resource.side_effect = Exception('Exception in call')
 
+    def _exception_upgrade(self):
+        views.upgrade_resource.side_effect = Exception('Exception in call')
+
     def _exception_delete(self):
         views.delete_resource.side_effect = Exception('Exception in call')
 
@@ -854,17 +857,52 @@ class ResourceEntryTestCase(TestCase):
 
     @parameterized.expand([
         (RESOURCE_DATA, 200, 'OK'),
+        (RESOURCE_DATA, 400, 'Invalid content', _invalid_json, 'error'),
+        (RESOURCE_DATA, 403, 'Forbidden', _no_provider, 'error'),
+        (RESOURCE_DATA, 400, 'Exception in call', _exception_update, 'error')
+    ])
+    def test_resouorce_update_api(self, data, code, msg, side_effect=None, status='correct'):
+        views.update_resource = MagicMock(name='update_resource')
+
+        if side_effect:
+            side_effect(self)
+
+        request = self.factory.put(
+            '/api/offering/resources/test_user/test_resource/1.0',
+            json.dumps(data),
+            content_type='application/json',
+            HTTP_ACCEPT='application/json'
+        )
+        request.user = self.user
+
+        res_entry = views.ResourceEntry(permitted_methods=('PUT', 'POST', 'DELETE'))
+        response = res_entry.update(request, 'test_user', 'test_resource', '1.0')
+
+        self.assertEqual(response.status_code, code)
+        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
+        body_response = json.loads(response.content)
+
+        self.assertEquals(type(body_response), dict)
+        self.assertEquals(body_response['message'], msg)
+        self.assertEquals(body_response['result'], status)
+
+        # Check call to update method if needed
+        if status != 'error':
+            views.update_resource.assert_called_once_with(self.resource, data)
+
+    @parameterized.expand([
+        (RESOURCE_DATA, 200, 'OK'),
         (RESOURCE_DATA, 200, 'OK', True),
         (RESOURCE_DATA, 400, 'Invalid content', False, _invalid_json, True),
         (RESOURCE_DATA, 400, 'Invalid content', True, _invalid_json, True),
         (RESOURCE_DATA, 404, 'Resource not found', False, _not_found, True),
         (RESOURCE_DATA, 403, 'Forbidden', False, _no_provider, True),
-        (RESOURCE_DATA, 400, 'Exception in call', False, _exception_update, True)
+        (RESOURCE_DATA, 400, 'Exception in call', False, _exception_upgrade, True)
     ])
-    def test_resource_update_api(self, data, code, msg, file_=False, side_effect=None, error=False):
+    def test_resource_upgrade_api(self, data, code, msg, file_=False, side_effect=None, error=False):
 
         # Mock update method
-        views.update_resource = MagicMock(name='update_resource')
+        views.upgrade_resource = MagicMock(name='upgrade_resource')
 
         if side_effect:
             side_effect(self)
@@ -890,7 +928,7 @@ class ResourceEntryTestCase(TestCase):
         )
         request.user = self.user
 
-        res_entry = views.ResourceEntry(permitted_methods=('POST', 'DELETE'))
+        res_entry = views.ResourceEntry(permitted_methods=('PUT', 'POST', 'DELETE'))
         response = res_entry.create(request, 'test_user', 'test_resource', '1.0')
 
         self.assertEqual(response.status_code, code)
@@ -902,10 +940,10 @@ class ResourceEntryTestCase(TestCase):
 
         if not error:
             if not file_:
-                views.update_resource.assert_called_once_with(self.resource, data)
+                views.upgrade_resource.assert_called_once_with(self.resource, data)
             else:
                 expected_file = request.FILES['file']  # The type change when loaded
-                views.update_resource.assert_called_once_with(self.resource, data, expected_file)
+                views.upgrade_resource.assert_called_once_with(self.resource, data, expected_file)
             self.assertEqual(body_response['result'], 'correct')
         else:
             self.assertEqual(body_response['result'], 'error')

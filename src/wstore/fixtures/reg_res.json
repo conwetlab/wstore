@@ -28,33 +28,5 @@
             "resource_path": "/media/resources/test_user__test_resource__1.0",
             "offerings": ["61000aba8e05ac2115f022f0"]
         }
-    },
-    {
-        "pk": "61000bba8e05ac2116f11111",
-        "model": "wstore.Resource",
-        "fields": {
-            "name": "New version resource",
-            "version": "1.0",
-            "provider": "51000aba8e05ac2115f022f9",
-            "description": "Example resource",
-            "state": "uploaded",
-            "download_link": "",
-            "resource_path": "/media/resources/test_user__test_resource__1.0",
-            "offerings": ["61000aba8e05ac2115f022f0"]
-        }
-    },
-    {
-        "pk": "61000bba8e05ac2116f22222",
-        "model": "wstore.Resource",
-        "fields": {
-            "name": "New version resource",
-            "version": "2.0",
-            "provider": "51000aba8e05ac2115f022f9",
-            "description": "Example resource",
-            "state": "uploaded",
-            "download_link": "",
-            "resource_path": "/media/resources/test_user__test_resource__1.0",
-            "offerings": ["61000aba8e05ac2115f022f0"]
-        }
     }
 ]
