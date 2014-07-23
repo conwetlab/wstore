@@ -135,7 +135,7 @@ def upgrade_resource(resource, data, file_=None):
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise ValueError('Invalid version format')
 
-    if is_lower_version(data['version'], resource.version):
+    if not is_lower_version(resource.version, data['version']):
         raise ValueError('The new version cannot be lower that the current version: ' + data['version'] + ' - ' + resource.version)
 
     # Check resource state
