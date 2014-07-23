@@ -86,7 +86,7 @@ class Resource(models.Model):
     resource_path = models.CharField(max_length=100)
     offerings = ListField(models.ForeignKey(Offering))
     open = models.BooleanField(default=False)
-    old_versions = ListField(EmbeddedModelField('ResourceVersion'))
+    old_versions = ListField(EmbeddedModelField(ResourceVersion))
 
     def get_url(self):
         url = None
