@@ -24,7 +24,6 @@ import json
 import urllib2
 from urllib2 import HTTPError
 
-from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.contrib.sites.models import get_current_site
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
@@ -36,7 +35,8 @@ from wstore.models import Offering, Organization, Resource as OfferingResource
 from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
 publish_offering, bind_resources, count_offerings, update_offering
-from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource, update_resource
+from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource,\
+update_resource, upgrade_resource
 from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.social.reviews.review_manager import ReviewManager
 
@@ -422,6 +422,23 @@ class ResourceEntry(Resource):
                 data = json.loads(request.POST['json'])
                 file_ = request.FILES['file']
                 params = (data, file_)
+        except:
+            return build_response(request, 400, 'Invalid content')
+
+        return _call_resource_entry_method(request, {
+            'provider': provider,
+            'name': name,
+            'version': version
+        }, upgrade_resource, params)
+
+    @supported_request_mime_types(('application/json',))
+    @authentication_required
+    def update(self, request, provider, name, version):
+
+        try:
+            # Extract the data depending on the content type
+            data = json.loads(request.raw_post_data)
+            params = (data, )
         except:
             return build_response(request, 400, 'Invalid content')
 

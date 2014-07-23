@@ -21,7 +21,7 @@
 from urlparse import urljoin
 from django.contrib.auth.models import User
 from django.db import models
-from djangotoolbox.fields import ListField, DictField
+from djangotoolbox.fields import ListField, DictField, EmbeddedModelField
 
 from wstore.models import Marketplace
 from wstore.models import Organization, Context
@@ -63,6 +63,14 @@ class Offering(models.Model):
         unique_together = ('name', 'owner_organization', 'version')
 
 
+# This embedded class is used to save old versions
+# of resources to allow downgrades
+class ResourceVersion(models.Model):
+    version = models.CharField(max_length=20)
+    resource_path = models.CharField(max_length=100)
+    download_link = models.CharField(max_length=200)
+
+
 # The resources are the frontend components of an application
 # a resource could be a web based component or an API used to
 # access backend components
@@ -78,6 +86,7 @@ class Resource(models.Model):
     resource_path = models.CharField(max_length=100)
     offerings = ListField(models.ForeignKey(Offering))
     open = models.BooleanField(default=False)
+    old_versions = ListField(EmbeddedModelField('ResourceVersion'))
 
     def get_url(self):
         url = None
@@ -93,4 +102,4 @@ class Resource(models.Model):
 
     class Meta:
         app_label = 'wstore'
-        unique_together = ('name', 'provider', 'version')
+        unique_together = ('name', 'provider')

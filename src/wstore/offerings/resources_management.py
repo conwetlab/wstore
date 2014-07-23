@@ -28,6 +28,7 @@ from bson import ObjectId
 from django.conf import settings
 
 from wstore.models import Resource, Offering
+from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.version import is_lower_version
@@ -64,12 +65,12 @@ def register_resource(provider, data, file_=None):
     existing = True
     current_organization = provider.userprofile.current_organization
     try:
-        Resource.objects.get(name=data['name'], provider=current_organization, version=data['version'])
+        Resource.objects.get(name=data['name'], provider=current_organization)
     except:
         existing = False
 
     if existing:
-        raise ValueError('The resource already exists')
+        raise ValueError('The resource ' + data['name'] + ' already exists. Please upgrade the resource if you want to provide new content')
 
     # Check contents
     if not 'name' in data or not 'version' in data or\
@@ -83,18 +84,6 @@ def register_resource(provider, data, file_=None):
     # Check name format
     if not is_valid_id(data['name']):
         raise ValueError('Invalid name format')
-
-    # Check if a bigger version of the resource exists
-    res_versions = Resource.objects.filter(name=data['name'], provider=current_organization)
-
-    invalid_version = False
-    for prev_ver in res_versions:
-        if is_lower_version(data['version'], prev_ver.version):
-            invalid_version = True
-            break
-
-    if invalid_version:
-        raise ValueError('A bigger version of the resource exists')
 
     resource_data = {
         'name': data['name'],
@@ -134,6 +123,55 @@ def register_resource(provider, data, file_=None):
         state='created',
         open=data.get('open', False)
     )
+
+
+def upgrade_resource(resource, data, file_=None):
+
+    # Validate data
+    if not 'version' in data:
+        raise ValueError('Missing a required field: Version')
+
+    # Check version format
+    if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
+        raise ValueError('Invalid version format')
+
+    if is_lower_version(data['version'], resource.version):
+        raise ValueError('The new version cannot be lower that the current version: ' + data['version'] + ' - ' + resource.version)
+
+    # Check resource state
+    if resource.state == 'deleted':
+        raise PermissionDenied('Deleted resources cannot be upgraded')
+
+    # Save the old version
+    resource.old_versions.append(ResourceVersion(
+        version=resource.version,
+        resource_path=resource.resource_path,
+        download_link=resource.download_link
+    ))
+
+    # Update new version number
+    resource.version = data['version']
+
+    # Update offerings
+    if file_ or 'content' in data:
+        if file_:
+            file_content = file_
+        else:
+            file_content = data['content']
+
+        # Create new file
+        resource.resource_path = _save_resource_file(resource.provider.name, resource.name, resource.version, file_content)
+        resource.download_link = ''
+    elif 'link' in data:
+        if not is_valid_url(data['link']):
+            raise ValueError('Invalid URL format')
+
+        resource.download_link = data['link']
+        resource.resource_path = ''
+    else:
+        raise ValueError('No resource has been provided')
+
+    resource.save()
 
 
 def get_provider_resources(provider, filter_=None):
@@ -203,7 +241,7 @@ def delete_resource(resource):
             resource.save()
 
 
-def update_resource(resource, data, file_=None):
+def update_resource(resource, data):
 
     # Check that the resource can be updated
     if resource.state == 'deleted':
@@ -216,38 +254,24 @@ def update_resource(resource, data, file_=None):
 
         invalid_data = False
         for field in data:
-            if field != 'content_type' and field != 'description':
+            if field != 'description':
                 invalid_data = True
                 break
 
-        if not invalid_data and file_:
-            invalid_data = True
-
         if invalid_data:
-            raise PermissionDenied('The resource is being used, only description and content type can be modified')
+            raise PermissionDenied('The resource is being used, only description can be modified')
+
+    # Check that no contents has been provided
+    if 'content' in data or 'link' in data:
+        raise ValueError('Resource contents cannot be updated. Please upgrade the resource to provide new contents')
 
     if 'name' in data:
-        if not is_valid_id(data['name']):
-            raise ValueError('Invalid name format')
-
-        resource.name = data['name']
+        raise ValueError('Name field cannot be updated since is used to identify the resource')
 
     if 'version' in data:
-        if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
-            raise ValueError('Invalid version format')
+        raise ValueError('Version field cannot be updated since is used to identify the resource')
 
-        invalid_version = False
-        prev_versions = Resource.objects.filter(name=resource.name, provider=resource.provider)
-        for vers in prev_versions:
-            if vers != resource and is_lower_version(data['version'], vers.version):
-                invalid_version = True
-                break
-
-        if invalid_version:
-            raise ValueError('A bigger version of the resource exists')
-
-        resource.version = data['version']
-
+    # Update fields
     if 'content_type' in data:
         if not isinstance(data['content_type'], unicode) and not isinstance(data['content_type'], str):
             raise TypeError('Invalid type for content_type field')
@@ -265,33 +289,5 @@ def update_resource(resource, data, file_=None):
             raise TypeError('Invalid type for description field')
 
         resource.description = data['description']
-
-    if file_ or 'content' in data:
-        # Check if a file exists
-        if not resource.resource_path == '':
-            # Remove file
-            path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
-            os.remove(path)
-            resource.resource_path = ''
-
-        if file_:
-            file_content = file_
-        else:
-            file_content = data['content']
-
-        # Create new file
-        resource.resource_path = _save_resource_file(resource.provider.name, resource.name, resource.version, file_content)
-        resource.download_link = ''
-    elif 'link' in data:
-        if not is_valid_url(data['link']):
-            raise ValueError('Invalid URL format')
-
-        if not resource.resource_path == '':
-            # Remove file
-            path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
-            os.remove(path)
-            resource.resource_path = ''
-
-        resource.download_link = data['link']
 
     resource.save()
