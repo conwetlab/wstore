@@ -76,6 +76,13 @@ class ResourceRegisteringTestCase(TestCase):
             'content_type': 'text/plain'
         },),
         ({
+            'name': 'History Mod',
+            'version': '1.0',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'type': 'download',
+            'content_type': 'text/plain'
+        }, None, True),
+        ({
             'name': 'Existing',
             'version': '1.0',
             'description': '',
@@ -420,6 +427,11 @@ UPDATE_DATA1 = {
     'open': False
 }
 
+UPDATE_DATA2 = {
+    'content_type': 'text/plain',
+    'open': False
+}
+
 class ResourceUpdateTestCase(TestCase):
 
     tags = ('fiware-ut-3', )
@@ -455,17 +467,15 @@ class ResourceUpdateTestCase(TestCase):
     def _check_description(self):
         self.assertEquals(self.resource.description, 'Modified description')
 
-    def _check_complete_with_del(self):
-        self._check_complete()
-        os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
-
-    def _check_content_file_with_del(self):
-        self._check_content_file()
-        os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
+    def _check_no_description(self):
+        self.assertEquals(self.resource.content_type, 'text/plain')
+        self.assertEquals(self.resource.open, False)
+        self.assertEquals(self.resource.resource_path, '')
 
     @parameterized.expand([
         (RESOURCE_IN_USE_DATA, _check_in_use, _res_in_use),
         (UPDATE_DATA1, _check_complete),
+        (UPDATE_DATA2, _check_no_description),
         ({'description': 'Modified description'}, _check_description),
         ({'name': 'name'}, None, None, ValueError, 'Name field cannot be updated since is used to identify the resource'),
         ({'version': '1.0'}, None, None, ValueError, 'Version field cannot be updated since is used to identify the resource'),
@@ -510,6 +520,12 @@ UPGRADE_LINK = {
     'version': '1.0',
     'link': 'http://newlinktoresource.com'
 }
+
+UPGRADE_INV_LINK = {
+    'version': '1.0',
+    'link': 'invalid link'
+}
+
 class ResourceUpgradeTestCase(TestCase):
 
     tags = ('fiware-ut-3', )
@@ -556,7 +572,8 @@ class ResourceUpgradeTestCase(TestCase):
         ({'version': '1.0a'}, False, None, ValueError, 'Invalid version format'),
         ({'version': '1.0'}, False, _deleted_res, PermissionDenied, 'Deleted resources cannot be upgraded'),
         ({'version': '0.0.1'}, False, None, ValueError, 'The new version cannot be lower that the current version: 0.0.1 - 0.1'),
-        ({'version': '1.0'}, False, None, ValueError, 'No resource has been provided')
+        ({'version': '1.0'}, False, None, ValueError, 'No resource has been provided'),
+        (UPGRADE_INV_LINK, False, None, ValueError, 'Invalid URL format')
     ])
     def test_resource_upgrade(self, data, file_used=False, side_effect=None, err_type=None, err_msg=None):
 
