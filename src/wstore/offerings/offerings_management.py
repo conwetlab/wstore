@@ -120,7 +120,7 @@ def get_offering_info(offering, user):
     parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
     result['offering_description'] = parser.parse()
 
-    if state == 'purchased' or state == 'rated':
+    if not offering.open and (state == 'purchased' or state == 'rated'):
         result['bill'] = purchase.bill
 
         # If the offering has been purchased the parsed pricing model is replaced
