@@ -26,7 +26,7 @@ from datetime import datetime
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
 
-from wstore.models import Offering, Context
+from wstore.models import Offering, Context, Purchase
 from wstore.social.reviews.models import Review, Response
 from wstore.search.search_engine import SearchEngine
 
@@ -107,10 +107,18 @@ class ReviewManager():
         """
         Creates a new review for a given offering
         """
-        # Check if the user can review the offering.
+
+        # Check if the user has purchased the offering (Not if the offering is open)
+        if not offering.open:
+            try:
+                purchase = Purchase.objects.get(offering=offering, owner_organization=user.userprofile.current_organization)
+            except:
+                raise PermissionDenied('You cannot review this offering since you has not acquire it')
+
+        # Check if the user has already review the offering.
         if (user.userprofile.is_user_org() and offering.pk in user.userprofile.rated_offerings)\
         or (not user.userprofile.is_user_org() and user.userprofile.current_organization.has_rated_offering(user, offering)):
-            raise PermissionDenied('The user cannot review this offering')
+            raise PermissionDenied('You cannot review this offering again. Please update your review to provide new comments')
 
         # Validate review data
         validation = self._validate_content(review)

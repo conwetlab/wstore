@@ -193,11 +193,15 @@ class ReviewTestCase(TestCase):
         review_manager.datetime = MagicMock()
         review_manager.datetime.now.return_value = self.datetime
 
+        # Mock Purchase object
+        review_manager.Purchase = MagicMock()
+
         # Create test offering mock
         self.offering = MagicMock()
         self.offering.pk = '222222'
         self.offering.comments = ['333333', '444444', '555555']
         self.offering.rating = 5.0
+        self.offering.open = False
 
         # Create user objects mock
         self.org = MagicMock()
@@ -242,12 +246,21 @@ class ReviewTestCase(TestCase):
     def _update_not_allowed(self, rev):
         rev.user = MagicMock()
 
+    def _not_purchased(self):
+        review_manager.Purchase.objects.get.side_effect = Exception('Not purchased')
+
+    def _open_offering(self):
+        self._not_purchased()
+        self.offering.open = True
+
     @parameterized.expand([
         (EXAMPLE_REVIEW, 4.5),
+        (EXAMPLE_REVIEW, 4.5, _open_offering),
         (EXAMPLE_REVIEW, 3, _no_rated),
         (EXAMPLE_REVIEW, 4.5, _org_rated, True),
-        (EXAMPLE_REVIEW, None, _usr_not_allowed, False, PermissionDenied, 'The user cannot review this offering'),
-        (EXAMPLE_REVIEW, None, _usr_not_allowed_org, False, PermissionDenied, 'The user cannot review this offering'),
+        (EXAMPLE_REVIEW, None, _usr_not_allowed, False, PermissionDenied, 'You cannot review this offering again. Please update your review to provide new comments'),
+        (EXAMPLE_REVIEW, None, _not_purchased, False, PermissionDenied, 'You cannot review this offering since you has not acquire it'),
+        (EXAMPLE_REVIEW, None, _usr_not_allowed_org, False, PermissionDenied, 'You cannot review this offering again. Please update your review to provide new comments'),
         (('user',), None, None, False, TypeError, 'Invalid review data'),
         (REVIEW_MISSING_TITLE, None, None, False, ValueError, 'Missing required field'),
         (REVIEW_MISSING_COMMENT, None, None, False, ValueError, 'Missing required field'),
@@ -283,6 +296,12 @@ class ReviewTestCase(TestCase):
         # Check calls and objects
         if not err_type:
             self.assertEquals(exception, None)
+
+            if not self.offering.open:
+                review_manager.Purchase.objects.get.assert_called_once_with(
+                    owner_organization=self.org,
+                    offering=self.offering
+                )
 
             review_object.objects.create.assert_called_once_with(
                 user=self.user,
