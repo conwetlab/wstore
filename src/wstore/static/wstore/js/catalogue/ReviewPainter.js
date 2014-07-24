@@ -121,7 +121,9 @@
         this.scrollPag.configurePaginationParams(360, 3);
 
         // Show review button if needed
-        if (this.offeringElement.getState() == 'purchased') {
+        if (this.offeringElement.getState() == 'purchased' ||
+            (this.offeringElement.getState() == 'published' && this.offeringElement.isOpen())) {
+
             $('#comment-btn').removeClass('hide').click((function() {
                 paintCommentForm(this.offeringElement, this.callerObj);
             }).bind(this));
