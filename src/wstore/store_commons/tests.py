@@ -424,6 +424,39 @@ class USDLValidationTestCase(TestCase):
 
 
     @parameterized.expand([
+        ('open', {
+            'services_included': ['service'],
+            'pricing': {
+                'price_plans': [{
+                    'title': 'open plan'
+                }]
+            }
+        }, None, True, True),
+        ('open_plans', {
+            'services_included': ['service'],
+            'pricing': {
+                'price_plans': [{
+                    'title': 'plan 1',
+                    'label': 'plan_label1'
+                },{
+                    'title': 'plan 2',
+                    'label': 'plan_label2'
+                }]
+            }
+        }, 'For open offerings only a price plan is allowed and must specify free use', False, True),
+        ('open_plan_price', {
+            'services_included': ['service'],
+            'pricing': {
+                'price_plans': [{
+                    'title': 'plan 1',
+                    'label': 'plan_label1',
+                    'price_components' : [{
+                        'currency': 'EUR',
+                        'value': '10'
+                    }]
+                }]
+            }
+        }, 'It is not allowed to specify pricing models for open offerings', False, True),
         ('no_label', {
             'services_included': ['service'],
             'pricing': {
@@ -483,7 +516,7 @@ class USDLValidationTestCase(TestCase):
             }
         }, 'It is not possible to define an updating plan without a previous version of the offering')
     ])
-    def test_pricing_validation(self, name, data, msg):
+    def test_pricing_validation(self, name, data, msg=None, correct=False, open_=False):
 
         # Mock USDL parser
         usdlParser.USDLParser = MagicMock()
@@ -495,11 +528,15 @@ class USDLValidationTestCase(TestCase):
         usdlParser.USDLParser.return_value = parser
         valid = usdlParser.validate_usdl('', 'text/turtle', {
             'organization': org,
-            'name': 'offering'
+            'name': 'offering',
+            'open': open_
         })
 
-        self.assertFalse(valid[0])
-        self.assertEquals(valid[1], msg)
+        if not correct:
+            self.assertFalse(valid[0])
+            self.assertEquals(valid[1], msg)
+        else:
+            self.assertTrue(valid[0])
 
 
 class FakeParser(USDLParser):
