@@ -694,7 +694,7 @@ def validate_usdl(usdl, mimetype, offering_data):
 
         if valid and len(parsed_document['pricing']['price_plans']) == 1 and \
             'price_components' in parsed_document['pricing']['price_plans'][0] and \
-            len(parsed_document['pricing']['price_plans'][0]['price_compoents']) > 0:
+            len(parsed_document['pricing']['price_plans'][0]['price_components']) > 0:
 
             valid = False
             reason = 'It is not allowed to specify pricing models for open offerings'
