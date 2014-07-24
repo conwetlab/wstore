@@ -372,7 +372,7 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
     };
 
     RegisterResourceForm.prototype.loadResource = function loadResource(request) {
-        link = $.trim($(self.msgId + ' [name="res-link"]').val());
+        link = $.trim($(this.msgId + ' [name="res-link"]').val());
         if (!$.isEmptyObject(this.resource)) {
             // Check resource
             if (this.resource.error) {
