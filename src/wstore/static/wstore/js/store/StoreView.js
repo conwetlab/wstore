@@ -144,6 +144,8 @@
 
             if (!offering_elem.isOpen()) {
                 priceStr = getPriceStr(offering_elem.getPricing());
+            } else {
+                templ.addClass('open-offering');
             }
             // Append button
             if ((USERPROFILE.getCurrentOrganization() != offering_elem.getOrganization()) 
@@ -168,12 +170,16 @@
                 })(offDetailsView)).css('padding-left', padding).appendTo(templ.find('.offering-meta'));
             } else {
                 var span = $('<span></span>').addClass('mini-off-price').text(priceStr);
-                if (priceStr == 'Free') {
+                if (priceStr == 'Free' || priceStr == 'Open') {
                     span.css('color', 'green');
                 }
                 span.appendTo(templ.find('.offering-meta'));
             }
-                
+
+            if (labelValue == 'rated' && offering_elem.isOpen()) {
+                labelValue = 'published';
+            }
+
             if (labelValue != 'published') {
                 var label = $('<span></span>');
                 if (labelValue == 'purchased' || labelValue == 'rated') {
