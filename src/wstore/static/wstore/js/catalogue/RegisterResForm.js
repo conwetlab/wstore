@@ -335,7 +335,7 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
             return function(e) {
                 var binaryContent = e.target.result;
                 // Check name format
-                var nameReg = new RegExp(/^[\w\s-]+\.[\w]+$/);
+                var nameReg = new RegExp(/^[\w\s-.]+\.[\w]+$/);
 
                 if (!nameReg.test(file.name)) {
                     this.resource.error = true;
@@ -376,7 +376,7 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
         if (!$.isEmptyObject(this.resource)) {
             // Check resource
             if (this.resource.error) {
-                throw resource.msg;
+                throw this.resource.msg;
             } else {
                 request.content = this.resource;
             }
