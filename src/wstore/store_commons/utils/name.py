@@ -25,4 +25,5 @@ def is_valid_id(id_):
 
 
 def is_valid_file(file_name):
-    return re.match(re.compile('^[\w -]+\.[\w]+$'), file_name)
+    return re.match(re.compile('^[\w .-]+\.[\w]+$'), file_name)
+
