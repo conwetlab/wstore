@@ -214,7 +214,7 @@
 
         // Create a resource client
         resClient = new ServerClient('RESOURCE_ENTRY', '');
-        resClient.remove(showModal.bind(this), {
+        resClient.remove(this.showModal.bind(this), {
             'provider': ORGANIZATION,
             'name': this.resource.name,
             'version': this.resource.version
