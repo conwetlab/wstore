@@ -23,6 +23,7 @@
     MenuPainter = function MenuPainter(firstListener, secondListener, thirdListener) {
         this.firstListener = firstListener;
         this.secondListener = secondListener;
+        this.currentState = '';
 
         if (thirdListener) {
             this.thirdListener = thirdListener;
@@ -48,6 +49,7 @@
             $('.left-bar').empty()
             $.template('menuTemplate', $('#menu-template'));
             $.tmpl('menuTemplate').appendTo('.left-bar');
+            this.setState(this.currentState);
 
             $('.left-bar .icon-remove').click(clickHandlerDecrease.bind(this))
             $('.left-bar').animate({'width': '205px'}, 1000, function() {
@@ -79,24 +81,18 @@
         $('#menu-third-text').off('click');
 
         $('#menu-first-text').click(function() {
-            $('#menu-first-text').addClass('menu-first-hover');
-            $('#menu-second-text').removeClass('menu-second-hover');
-            $('#menu-third-text').removeClass('menu-third-hover');
+            this.setState('first');
             this.firstListener();
         }.bind(self));
 
         $('#menu-second-text').click(function() {
-            $('#menu-first-text').removeClass('menu-first-hover');
-            $('#menu-second-text').addClass('menu-second-hover');
-            $('#menu-third-text').removeClass('menu-third-hover');
+            this.setState('second');
             this.secondListener();
         }.bind(self));
 
         if (self.thirdListener) {
             $('#menu-third-text').click(function() {
-                $('#menu-first-text').removeClass('menu-first-hover');
-                $('#menu-second-text').removeClass('menu-second-hover');
-                $('#menu-third-text').addClass('menu-third-hover');
+                this.setState('third');
                 this.thirdListener();
             }.bind(self));
         }
@@ -108,6 +104,9 @@
         });
     };
 
+    /**
+     * Launches  the decreasing animation
+     */
     MenuPainter.prototype.decrease = function decrease() {
         if (this.expanded) {
             var clicker = clickHandlerDecrease.bind(this);
@@ -115,10 +114,49 @@
         }
     }
 
+    /**
+     * Launches the increasing animation
+     */
     MenuPainter.prototype.increase = function increase() {
         if (!this.expanded) {
             var clicker = clickHandlerIncrease.bind(this);
             clicker();
         }
     };
+
+    var getCurrentButton = function getCurrentButton(self) {
+        var ids = {
+           'first': '#menu-first-text',
+           'second': '#menu-second-text',
+           'third': '#menu-third-text'
+        }
+
+        var cssClasses = {
+            'first': 'menu-first-hover',
+            'second': 'menu-second-hover',
+            'third': 'menu-third-hover'
+        }
+
+        return {
+            'id': ids[self.currentState],
+            'cssClass': cssClasses[self.currentState]
+        };
+    };
+
+    MenuPainter.prototype.setState = function setState(state) {
+        this.currentState = state;
+
+        // Set the proper selection in the menu
+        $('#menu-first-text').removeClass('menu-first-hover');
+        $('#menu-second-text').removeClass('menu-second-hover');
+        $('#menu-third-text').removeClass('menu-third-hover');
+
+        if (this.currentState) {
+            var selectedBtn;
+
+            selectedBtn = getCurrentButton(this);
+            $(selectedBtn.id).addClass(selectedBtn.cssClass);
+        }
+    };
+
 })();

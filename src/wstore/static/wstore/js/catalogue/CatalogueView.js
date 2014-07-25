@@ -208,6 +208,7 @@
         // Create menu
         if (!mpainter) {
             mpainter = new MenuPainter(purchasedHandler, providedHandler);
+            mpainter.setState('first');
         }
 
         searchView.initSearchView('OFFERING_COLLECTION', currentView);

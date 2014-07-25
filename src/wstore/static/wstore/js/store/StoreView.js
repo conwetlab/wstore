@@ -107,6 +107,7 @@
         var action = function() {
             paintHomePage();
             mpainter.increase();
+            mpainter.setState('');
         }
 
         if (toEmpty) {
@@ -117,6 +118,7 @@
             action = function() {
                 backAct();
                 mpainter.increase();
+                mpainter.setState('');
             }
         }
 
@@ -231,6 +233,42 @@
         pageLoader.setCurrentPage('home');
     };
 
+    setSearchListeners = function setSearchListeners(searchV) {
+     // Set search listeners
+        $('#search').off();
+        $('#search').click((function(self) {
+            return function() {
+                if ($.trim($('#text-search').val()) != '') {
+                    self.setTitle('Offerings');
+                    self.initSearchView('SEARCH_ENTRY');
+                    mpainter.setState('');
+                }
+            }
+        })(searchV));
+        // Set listener for enter key
+        $('#text-search').off();
+        $('#text-search').keypress((function(self) {
+            return function(e) {
+                if (e.which == 13 && $.trim($(this).val()) != '') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    self.setTitle('Offerings');
+                    self.initSearchView('SEARCH_ENTRY');
+                    mpainter.setState('');
+                }
+            }
+        })(searchV));
+
+        $('#all').off();
+        $('#all').click((function(self) {
+            return function() {
+                self.setTitle('Offerings');
+                self.initSearchView('OFFERING_COLLECTION');
+                mpainter.setState('');
+            }
+        })(searchV));
+    };
+
     paintHomePage = function paintHomePage () {
         setContext();
 
@@ -241,32 +279,15 @@
         $.template('homePageTemplate', $('#home_page_template'));
         $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
 
-        $('#search').click(function() {
-            if ($.trim($('#text-search').val()) != '') {
-                searchView.setTitle('Offerings');
-                searchView.initSearchView('SEARCH_ENTRY');
-            }
-        });
-
-        // Set listener for enter key
-        $('#text-search').keypress(function(e) {
-            if (e.which == 13 && $.trim($(this).val()) != '') {
-                e.preventDefault();
-                e.stopPropagation();
-                searchView.setTitle('Offerings');
-                searchView.initSearchView('SEARCH_ENTRY');
-            }
-        });
-
-        $('#all').click(function() {
-            searchView.setTitle('Offerings');
-            searchView.initSearchView('OFFERING_COLLECTION');
-        })
-
         // Bind menu handlers
         if (!mpainter)  {
             mpainter = new MenuPainter(setServiceHandler, setDataHandler, setWidgetHandler);
+        } else {
+            mpainter.setState('');
         }
+
+        setSearchListeners(searchView);
+
         // Get initial offerings
         calculatePositions();
         getOfferings(EndpointManager.getEndpoint('NEWEST_COLLECTION'), $('#newest-container'));
@@ -279,6 +300,10 @@
 
     openMenuPainter = function openMenuPainter() {
         mpainter.increase();
+    };
+
+    resetMenuState = function resetMenuState() {
+        mpainter.setState('');
     };
 
     setMenuPainter = function setMenuPainter(menuPainter) {
@@ -309,7 +334,7 @@
             // Set title left
             $('#search-title').css('left', scrollContPos.toString() + 'px');
         }
-            
+
         if ($('#container-rated-newest').length > 0) {
             // Fixed position in: Homepage in the store view
             var offsetStore;

@@ -146,6 +146,7 @@
             // Write tags
             var tags = this.offeringElement.getTags();
             var tagElem = $('#tags');
+
             for (var i = 0; i < tags.length; i++) {
                 var icn = $('<i></i>').addClass('icon-tag');
                 var cont = $('<code></code>').append(icn);
@@ -157,8 +158,10 @@
                         var searchView = new StoreSearchView('SEARCH_TAG_ENTRY');
                         $('#home-container').empty();
                         openMenuPainter();
+                        resetMenuState();
                         searchView.setTitle($(this).text());
                         searchView.initSearchView('SEARCH_TAG_ENTRY', $(this).text());
+                        $('#store-search').removeAttr('style');
                     });
                 } else {
                     var tagLink = $('<span></span>').addClass('tag').text(tags[i]).appendTo(cont);

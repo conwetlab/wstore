@@ -102,36 +102,8 @@
         if (!$('#store-container').length) {
             $('<div class="clear space" /><div class="row-fluid" id="store-container"></div>').appendTo('#home-container');
         }
-        // Set search listeners
-        $('#search').off();
-        $('#search').click((function(self) {
-            return function() {
-                if ($.trim($('#text-search').val()) != '') {
-                    self.setTitle('Offerings');
-                    self.initSearchView('SEARCH_ENTRY');
-                }
-            }
-        })(this));
-        // Set listener for enter key
-        $('#text-search').off();
-        $('#text-search').keypress((function(self) {
-            return function(e) {
-                if (e.which == 13 && $.trim($(this).val()) != '') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    self.setTitle('Offerings');
-                    self.initSearchView('SEARCH_ENTRY');
-                }
-            }
-        })(this));
 
-        $('#all').off();
-        $('#all').click((function(self) {
-            return function() {
-                self.setTitle('Offerings');
-                self.initSearchView('OFFERING_COLLECTION');
-            }
-        })(this));
+        setSearchListeners(this);
 
         $('#store-container').empty()
 
