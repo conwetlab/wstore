@@ -941,6 +941,10 @@ footer {
   transition: left 1s;
 }
 
+.store-sub-menu li:hover {
+  cursor: pointer;
+}
+
 .menu-icon {
   width: 40px;
   height: 40px;

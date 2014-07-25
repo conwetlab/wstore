@@ -97,6 +97,12 @@
                 this.thirdListener();
             }.bind(self));
         }
+
+        // Set navigation listeners
+        $('.store-sub-menu li').click(function() {
+            var anchor = $(this).find('a');
+            window.location = anchor.attr('href');
+        });
     };
 
     MenuPainter.prototype.decrease = function decrease() {
