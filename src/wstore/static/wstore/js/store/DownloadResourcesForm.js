@@ -25,24 +25,28 @@
 
         MessageManager.showMessage('Download', '');
 
-        $('<h2></h2>').text('Invoices').appendTo('.modal-body');
+        // Show invoices only for not open offerings
+        if (!offeringElement.isOpen()) {
+            $('<h2></h2>').text('Invoices').appendTo('.modal-body');
 
-        for (var i = 0; i < offeringElement.getBillPath().length; i++) {
-            var path_elem = offeringElement.getBillPath()[i];
-            var p = $('<p></p>');
-            var date = path_elem.split("_")[1];
+            for (var i = 0; i < offeringElement.getBillPath().length; i++) {
+                var path_elem = offeringElement.getBillPath()[i];
+                var p = $('<p></p>');
+                var date = path_elem.split("_")[1];
 
-            date = date.split(".")[0];
+                date = date.split(".")[0];
 
-            $('<a></a>').text(date).click((function (path) {
-                return function () {
-                    window.open(path);
-                };
-            })(path_elem)).appendTo(p);
+                $('<a></a>').text(date).click((function (path) {
+                    return function () {
+                        window.open(path);
+                    };
+                })(path_elem)).appendTo(p);
 
-            p.appendTo('.modal-body');
+                p.appendTo('.modal-body');
+            }
+
         }
-
+        // Show resources
         $('<h2></h2>').text('Resources').appendTo('.modal-body');
         for (var i = 0; i < resources.length; i++) {
             var p = $('<p></p>');
