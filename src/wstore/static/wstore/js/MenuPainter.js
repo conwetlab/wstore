@@ -54,6 +54,23 @@
     };
 
     var setListeners = function setListerners(self) {
+        // Set close button listeners
+        $('.close-btn').off();
+        $('.close-btn').mouseover(function() {
+            $('.store-menu').css('left', '25px');
+            $('.store-sub-menu').css('left', '25px');
+        });
+
+        $('.close-btn').mouseout(function() {
+            $('.store-menu').removeAttr('style');
+            $('.store-sub-menu').removeAttr('style');
+        });
+
+        $('.close-btn').click(function() {
+            this.decrease();
+        }.bind(self));
+
+        // Set button listeners
         $('#menu-first-text').off('click');
         $('#menu-second-text').off('click');
         $('#menu-third-text').off('click');
