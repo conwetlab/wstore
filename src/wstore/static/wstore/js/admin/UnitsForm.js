@@ -44,23 +44,25 @@
         var name = $.trim($('#unit-name').val());
         var model = $('#defined-model').val();
 
+        validation.valid = true;
         // Check unit name
         if (name == '') {
-            error = true;
-            msg = "Name field is required";
+            validation.valid = false;
+            validation.msg = "Name field is required";
+            validation.errFields = [$('#unit-name').parent().parent()];
         }
 
         // Check renovation period
         if (model == 'subscription') {
             if ($.trim($('#ren-period').val()) == ''){
-                error = true;
-                msg = 'The reovation period is required';
+                validation.valid = false;
+                validation.msg = 'The renovation period is required';
+                validation.errFields = [$('#ren-period').parent().parent()];
             }
         }
 
-        validation.valid = !error;
         // Id the form is correctly filled make the request
-        if (!error) {
+        if (validation.valid) {
             validation.data = {
                 'name': name,
                 'defined_model': model
@@ -71,8 +73,6 @@
                 validation.data.renovation_period = $.trim($('#ren-period').val());
             }
 
-        } else {
-            validation.msg = msg;
         }
         return validation;
     };
