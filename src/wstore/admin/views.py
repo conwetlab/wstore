@@ -140,9 +140,8 @@ class CurrencyCollection(Resource):
         else:
             currs = []
 
-        response = json.dumps({
-            'allowed_currencies': currs
-        })
+        response = json.dumps(currs)
+
         return HttpResponse(response, status=200, mimetype='application/json; charset=utf-8')
 
     @authentication_required

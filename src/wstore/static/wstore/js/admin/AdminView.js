@@ -34,6 +34,7 @@
         var userForm = new UserForm();
         var marketplaceForm = EndpointFormBuilder('marketplace');
         var repositoryForm = EndpointFormBuilder('repository');
+        var currencyForm = new CurrencyForm();
 
         $('.show-markets').click(function() {
             marketplaceForm.elementInfoRequest();
@@ -60,8 +61,8 @@
         });
 
         $('.show-currencies').click(function() {
-            currencyInfoRequest();
-         });
+            currencyForm.elementInfoRequest();
+        });
 
         $('.add-market').click(function() {
             marketplaceForm.paintForm();
@@ -88,7 +89,7 @@
         });
 
         $('.add-currency').click(function() {
-            paintCurrencyForm();
+            currencyForm.paintForm();
         });
         // Set back button
         if (!referrer) {
