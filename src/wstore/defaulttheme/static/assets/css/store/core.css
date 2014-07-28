@@ -927,6 +927,11 @@ footer {
 }
 
 /* Menu style */
+.store-menu-container {
+  opacity: 0;
+  transition: opacity 1s;
+}
+
 .store-menu {
   position: absolute;
   top: 0;

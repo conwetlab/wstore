@@ -35,6 +35,7 @@
 
     var clickHandlerDecrease = function clickHandlerDecrease() {
         this.expanded = false;
+        $('.store-menu-container').css('opacity', '0');
         $('.left-bar').animate({'width': '0'}, 1000, function() {
             $('.left-bar').empty();
             $('.left-bar').append('<a><i class="icon-th-list"></i></a>');
@@ -51,7 +52,7 @@
             $.tmpl('menuTemplate').appendTo('.left-bar');
             this.setState(this.currentState);
 
-            $('.left-bar .icon-remove').click(clickHandlerDecrease.bind(this))
+            $('.store-menu-container').css('opacity', '1');
             $('.left-bar').animate({'width': '205px'}, 1000, function() {
                 setListeners(this);
             }.bind(this));
@@ -59,6 +60,7 @@
     };
 
     var setListeners = function setListerners(self) {
+        $('.store-menu-container').css('opacity', '1');
         // Set close button listeners
         $('.close-btn').off();
         $('.close-btn').mouseover(function() {
