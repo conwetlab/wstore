@@ -194,6 +194,8 @@ class BasicNavigationTestCase(WStoreSeleniumTestCase):
         self.open_offering_details('test_offering1')
         self.back()
 
+        self.logout()
+
     def test_catalogue_navigation(self):
         self.login(username='provider')
 
@@ -207,6 +209,8 @@ class BasicNavigationTestCase(WStoreSeleniumTestCase):
 
         # Check provided offerings
         self._check_container('offerings-container', ['test_offering1', 'test_offering2'])
+
+        self.logout()
 
 
 class ResourceManagementTestCase(WStoreSeleniumTestCase):

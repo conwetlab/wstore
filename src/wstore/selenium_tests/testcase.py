@@ -52,6 +52,12 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         # Click login
         self.driver.find_element_by_css_selector('#login-form button').click()
 
+    def logout(self):
+        self.driver.find_element_by_class_name('arrow-down-settings').click()
+        options = self.driver.find_elements_by_css_selector('#settings-menu > li')
+
+        options[-1].click()
+
     def tearDown(self):
         self.driver.quit()
         TestCase.tearDown(self)
