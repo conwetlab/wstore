@@ -28,6 +28,7 @@ from django.test import TestCase
 
 from wstore.admin.markets import markets_management
 from wstore.admin.markets import views
+from wstore.store_commons.utils import http
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
 decorator_mock_callable, HTTPResponseMock
 
@@ -211,24 +212,6 @@ class MarketplaceViewTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from wstore.store_commons.utils import http
-        # Save the reference of the decorators
-        cls._old_auth = types.FunctionType(
-            http.authentication_required.func_code,
-            http.authentication_required.func_globals,
-            name=http.authentication_required.func_name,
-            argdefs=http.authentication_required.func_defaults,
-            closure=http.authentication_required.func_closure
-        )
-
-        cls._old_supp = types.FunctionType(
-            http.supported_request_mime_types.func_code,
-            http.supported_request_mime_types.func_globals,
-            name=http.supported_request_mime_types.func_name,
-            argdefs=http.supported_request_mime_types.func_defaults,
-            closure=http.supported_request_mime_types.func_closure
-        )
-
         # Mock class decorators
         http.authentication_required = decorator_mock
         http.supported_request_mime_types = decorator_mock_callable
@@ -247,9 +230,7 @@ class MarketplaceViewTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         # Restore mocked decorators
-        from wstore.store_commons.utils import http
-        http.authentication_required = cls._old_auth
-        http.supported_request_mime_types = cls._old_supp
+        reload(http)
         super(MarketplaceViewTestCase, cls).tearDownClass()
 
     def setUp(self):
