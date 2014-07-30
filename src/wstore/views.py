@@ -186,6 +186,7 @@ def organization(request):
     else:
         return build_response(request, 403, 'This view is not enabled with iDM auth')
 
+
 class ProviderRequest(API_Resource):
 
     @authentication_required
