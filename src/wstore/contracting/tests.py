@@ -737,6 +737,11 @@ class ProviderNotificationTestCase(TestCase):
         self.user.userprofile.save()
         settings.OILAUTH = self.prev_value
 
+    @classmethod
+    def tearDownClass(cls):
+        settings.OILAUTH = cls.prev_value
+        super(ProviderNotificationTestCase, cls).tearDownClass()
+
     def test_provider_notification(self):
 
         settings.OILAUTH = False

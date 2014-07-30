@@ -25,6 +25,8 @@ from nose_parameterized import parameterized
 from urllib2 import HTTPError
 
 from django.test import TestCase
+from django.conf import settings
+
 from wstore.store_commons.utils import http
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock, decorator_mock_callable
 from wstore.admin.rss import views
@@ -69,12 +71,14 @@ class RSSViewTestCase(TestCase):
         reload(views)
         cls.views = views
         cls.views.build_response = build_response_mock
+        cls._auth = settings.OILAUTH
         super(RSSViewTestCase, cls).setUpClass()
 
     @classmethod
     def tearDownClass(cls):
         # Restore mocked decorators
         reload(http)
+        settings.OILAUTH = cls._auth
         super(RSSViewTestCase, cls).tearDownClass()
 
     def setUp(self):
@@ -111,7 +115,6 @@ class RSSViewTestCase(TestCase):
         self.views.RSS.objects.delete = MagicMock()
         self.views.RSS.objects.filter.return_value = []
 
-        from django.conf import settings
         settings.OILAUTH = True
 
     # Different side effects that can occur

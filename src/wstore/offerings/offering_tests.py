@@ -429,6 +429,7 @@ class OfferingCreationTestCase(TestCase):
         # Create database connection and load initial data
         connection = pymongo.MongoClient()
         cls._db = connection.test_database
+        cls._auth = settings.OILAUTH
 
         settings.OILAUTH = False
         # Capture repository calls
@@ -461,12 +462,16 @@ class OfferingCreationTestCase(TestCase):
         except:
             pass
 
+    @classmethod
+    def tearDownClass(cls):
+        settings.OILAUTH = cls._auth
+        super(OfferingCreationTestCase, cls).tearDownClass()
+
     def tearDown(self):
         # Remove media files
         self._remove_media('test_organization__test_offering__1.0')
         self._remove_media('test_organization__test_offering_fail__1.0')
         self._remove_media('test_organization__test_offering__3.0')
-
         # Remove offering collection
         self._db.wstore_offering.drop()
 
@@ -1411,7 +1416,13 @@ class OfferingBindingTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls._auth = settings.OILAUTH
         settings.OILAUTH = False
+
+    @classmethod
+    def tearDownClass(cls):
+        settings.OILAUTH = cls._auth
+        super(OfferingBindingTestCase, cls).tearDownClass()
 
     def _fill_resources_org(self, data, org):
         try:

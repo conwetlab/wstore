@@ -120,10 +120,16 @@ class SinglePaymentChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         reload(charging_engine)
+        cls._auth = settings.OILAUTH
         charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         super(SinglePaymentChargingTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        settings.OILAUTH = cls._auth
+        super(SinglePaymentChargingTestCase, cls).tearDownClass()
 
     def test_basic_charging_single_payment(self):
 
@@ -560,10 +566,16 @@ class PayPerUseChargingTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls._auth = settings.OILAUTH
         settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         super(PayPerUseChargingTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        settings.OILAUTH = cls._auth
+        super(PayPerUseChargingTestCase, cls).tearDownClass()
 
     def test_basic_sdr_feeding(self):
 
@@ -1662,11 +1674,16 @@ class PriceFunctionPaymentTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls._auth = settings.OILAUTH
         settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         super(PriceFunctionPaymentTestCase, cls).setUpClass()
 
+    @classmethod
+    def tearDownClass(cls):
+        settings.OILAUTH = cls._auth
+        super(PriceFunctionPaymentTestCase, cls).tearDownClass()
     def test_basic_price_function_payment(self):
 
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')

@@ -25,6 +25,7 @@ from urllib2 import HTTPError
 from nose_parameterized import parameterized
 
 from django.test import TestCase
+from django.conf import settings
 
 from wstore.admin.users import views
 from wstore.store_commons.utils import http
@@ -176,6 +177,7 @@ class UserCollectionTestCase(TestCase):
         http.authentication_required = decorator_mock
         http.supported_request_mime_types = decorator_mock_callable
 
+        cls._auth = settings.OILAUTH
         reload(views)
         cls.views = views
         cls.views.build_response = build_response_mock
@@ -187,6 +189,7 @@ class UserCollectionTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         # Restore mocked decorators
+        settings.OILAUTH = cls._auth
         reload(http)
         reload(views)
         super(UserCollectionTestCase, cls).tearDownClass()
@@ -319,6 +322,7 @@ class UserEntryTestCase(TestCase):
         http.authentication_required = decorator_mock
         http.supported_request_mime_types = decorator_mock_callable
 
+        cls._auth = settings.OILAUTH
         reload(views)
         cls.views = views
         cls.views.build_response = build_response_mock
@@ -336,6 +340,7 @@ class UserEntryTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         # Restore mocked decorators
+        settings.OILAUTH = cls._auth
         reload(http)
         reload(views)
         super(UserEntryTestCase, cls).tearDownClass()
