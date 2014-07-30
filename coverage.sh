@@ -2,6 +2,7 @@
 pip install coverage
 pip install mock
 pip install nose-parameterized
+pip install selenium
 
 cd $WORKSPACE/src
 

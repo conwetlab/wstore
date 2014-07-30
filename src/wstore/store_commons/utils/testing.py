@@ -19,8 +19,11 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-
+import os
+import shutil
 from mock import MagicMock
+
+from django.conf import settings
 
 
 def decorator_mock(func):
@@ -80,3 +83,30 @@ def mock_request(method, url, data, headers):
         'data': data,
         'headers': headers
     }
+
+def save_indexes():
+    index_path = os.path.join(settings.BASEDIR, 'wstore')
+    index_path = os.path.join(index_path, 'search')
+    index_path = os.path.join(index_path, 'indexes')
+
+    destination_path = os.path.join(settings.BASEDIR, 'wstore')
+    destination_path = os.path.join(destination_path, 'test')
+    destination_path = os.path.join(destination_path, 'indexes')
+
+    shutil.move(index_path, destination_path)
+
+def restore_indexes():
+    index_path = os.path.join(settings.BASEDIR, 'wstore')
+    index_path = os.path.join(index_path, 'search')
+    index_path = os.path.join(index_path, 'indexes')
+
+    try:
+        shutil.rmtree(index_path)
+    except:
+        pass
+
+    destination_path = os.path.join(settings.BASEDIR, 'wstore')
+    destination_path = os.path.join(destination_path, 'test')
+    destination_path = os.path.join(destination_path, 'indexes')
+
+    shutil.move(destination_path, index_path)

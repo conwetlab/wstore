@@ -1,0 +1,61 @@
+[
+    {
+        "pk": "51000aba8e05111111111111",
+        "model": "auth.user",
+        "fields": {
+            "username": "provider",
+            "first_name": "provider",
+            "last_name": "provider",
+            "email": "admin@c.com",
+            "password": "sha1$5AphFrMHRX5o$bd3394cfeb25266a67d88683d24ae0c7b0647bd8",
+            "is_staff": false,
+            "is_active": true,
+            "is_superuser": false,
+            "last_login": "2011-10-10 11:27:12",
+            "date_joined": "2011-10-10 11:27:12"
+        }
+    },
+    {
+        "pk": "21000aba8e05ac2115f022ff",
+        "model": "wstore.Offering",
+        "fields": {
+            "name": "test_offering1",
+            "owner_admin_user": "51000aba8e05111111111111",
+            "version": "1.1",
+            "state": "published",
+            "marketplaces": [],
+            "rating": "0",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/provider__test_offering1__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
+            "resources": [],
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46"
+        }
+    },
+    {
+        "pk": "31000aba8e05ac2115f022f0",
+        "model": "wstore.Offering",
+        "fields": {
+            "name": "test_offering2",
+            "owner_admin_user": "51000aba8e05111111111111",
+            "version": "1.0",
+            "state": "published",
+            "marketplaces": [],
+            "rating": "0",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/provider__test_offering2__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.0",
+            "resources": [],
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
+        }
+    }
+]

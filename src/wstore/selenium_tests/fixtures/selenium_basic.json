@@ -1,0 +1,26 @@
+[
+    {
+        "pk": "51000aba8e05ac2115f022f9",
+        "model": "auth.user",
+        "fields": {
+            "username": "admin",
+            "first_name": "admin",
+            "last_name": "admin",
+            "email": "admin@c.com",
+            "password": "sha1$5AphFrMHRX5o$bd3394cfeb25266a67d88683d24ae0c7b0647bd8",
+            "is_staff": true,
+            "is_active": true,
+            "is_superuser": false,
+            "last_login": "2011-10-10 11:27:12",
+            "date_joined": "2011-10-10 11:27:12"
+        }
+    },
+    {
+        "pk": "515ab0738e05ac20b622888b",
+        "model": "sites.site",
+        "fields": {
+            "domain": "http://localhost:8081",
+            "name": "Local"
+        }
+    }
+]

@@ -18,6 +18,7 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+
 from os import path
 
 DEBUG = True
@@ -54,37 +55,20 @@ THEME_ACTIVE = 'defaulttheme'
 # Language code for this installation.
 LANGUAGE_CODE = 'en'
 
-SITE_ID = u'51f64f368e05ac639c9039b2'
-
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
-USE_I18N = True
-
-# If you set this to False, Django will not format dates, numbers and
-# calendars according to the current locale.
-USE_L10N = True
-
-# If you set this to False, Django will not use timezone-aware datetimes.
-USE_TZ = True
+SITE_ID=u''
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
-# Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = path.join(BASEDIR, 'media')
 
 BILL_ROOT = path.join(MEDIA_ROOT, 'bills')
+
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash.
-# Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = '/media/'
 
 # Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-# Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = path.join(BASEDIR, 'static')
 
 # URL prefix for static files.
-# Example: "http://media.lawrence.com/static/"
 STATIC_URL = '/static/'
 
 # List of finder classes that know how to find static files in
@@ -92,9 +76,37 @@ STATIC_URL = '/static/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
-#    'wstore.themes.ActiveThemeFinder',
 )
+
+INSTALLED_APPS = (
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.admin',
+    'django_mongodb_engine',
+    'djangotoolbox',
+    'wstore',
+    'wstore.defaulttheme',
+    'wstore.charging_engine',
+    'wstore.store_commons',
+    'wstore.social.tagging',
+    'wstore.selenium_tests',
+    'django_crontab',
+    'django_nose',
+    'social_auth',
+    'wstore.registration'
+)
+
+# Create a testing variable containing whether django is in testing mode
+import sys
+TESTING = sys.argv[1:2] == ['test']
+
+# Load test_settings if testing
+if TESTING and 'wstore.selenium_tests' in INSTALLED_APPS:
+    from wstore.selenium_tests.test_settings import *
 
 if OILAUTH:
     LOGIN_URL = "/login/fiware/"
@@ -179,27 +191,6 @@ WSGI_APPLICATION = 'wsgi.application'
 # Payment method determines the payment gateway to be used
 # Allowed values: paypal, fipay, None (default)
 PAYMENT_METHOD = None
-
-INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.admin',
-    'django_mongodb_engine',
-    'djangotoolbox',
-    'wstore',
-    'wstore.defaulttheme',
-    'wstore.charging_engine',
-    'wstore.store_commons',
-    'wstore.social.tagging',
-    'django_crontab',
-    'django_nose',
-    'social_auth',
-    'wstore.registration'
-)
 
 ACTIVATION_DAYS = 2
 

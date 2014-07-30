@@ -58,23 +58,17 @@ LANGUAGE_CODE = 'en'
 SITE_ID=u'{{ site_id }}'
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
-# Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = path.join(BASEDIR, 'media')
 
 BILL_ROOT = path.join(MEDIA_ROOT, 'bills')
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash.
-# Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
+
+# URL that handles the media served from MEDIA_ROOT.
 MEDIA_URL = '/media/'
 
 # Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-# Example: "/home/media/media.lawrence.com/static/"
 STATIC_ROOT = path.join(BASEDIR, 'static')
 
 # URL prefix for static files.
-# Example: "http://media.lawrence.com/static/"
 STATIC_URL = '/static/'
 
 # List of finder classes that know how to find static files in
@@ -82,9 +76,37 @@ STATIC_URL = '/static/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
-#    'wstore.themes.ActiveThemeFinder',
 )
+
+INSTALLED_APPS = (
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.admin',
+    'django_mongodb_engine',
+    'djangotoolbox',
+    'wstore',
+    'wstore.defaulttheme',
+    'wstore.charging_engine',
+    'wstore.store_commons',
+    'wstore.social.tagging',
+    'wstore.selenium_tests',
+    'django_crontab',
+    'django_nose',
+    'social_auth',
+    'wstore.registration'
+)
+
+# Create a testing variable containing whether django is in testing mode
+import sys
+TESTING = sys.argv[1:2] == ['test']
+
+# Load test_settings if testing
+if TESTING and 'wstore.selenium_tests' in INSTALLED_APPS:
+    from wstore.selenium_tests.test_settings import *
 
 if OILAUTH:
     LOGIN_URL = "/login/fiware/"
@@ -166,28 +188,9 @@ ROOT_URLCONF = 'urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'wsgi.application'
 
-PAYMENT_CLIENT = 'wstore.charging_engine.paypal_client.fipay_client.PayPalClient'
-
-INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.admin',
-    'django_mongodb_engine',
-    'djangotoolbox',
-    'wstore',
-    'wstore.defaulttheme',
-    'wstore.charging_engine',
-    'wstore.store_commons',
-    'wstore.social.tagging',
-    'django_crontab',
-    'django_nose',
-    'social_auth',
-    'wstore.registration'
-)
+# Payment method determines the payment gateway to be used
+# Allowed values: paypal, fipay, None (default)
+PAYMENT_METHOD = None
 
 ACTIVATION_DAYS = 2
 
@@ -196,7 +199,6 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-#SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 
 FIWARE_APP_ID = {{ client_id }}
 FIWARE_API_SECRET = '{{ client_secret }}'
@@ -219,4 +221,10 @@ from django.contrib.sites import models as site_app
 
 signals.post_syncdb.disconnect(create_default_site, site_app)
 
+CLIENTS = {
+    'paypal': 'wstore.charging_engine.payment_client.paypal_client.PayPalClient',
+    'fipay': 'wstore.charging_engine.payment_client.fipay_client.FiPayClient',
+    None: 'wstore.charging_engine.payment_client.payment_client.PaymentClient'
+}
 
+PAYMENT_CLIENT = CLIENTS[PAYMENT_METHOD]
