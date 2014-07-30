@@ -175,11 +175,18 @@ class ReviewTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls._old_context = review_manager.Context
         se_obj = MagicMock()
         review_manager.SearchEngine = MagicMock();
         review_manager.SearchEngine.return_value = se_obj
 
         super(ReviewTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        review_manager.Context = cls._old_context
+        reload(review_manager)
+        super(ReviewTestCase, cls).tearDownClass()
 
     def setUp(self):
         # Mock context

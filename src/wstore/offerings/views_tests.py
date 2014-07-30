@@ -43,6 +43,13 @@ class OfferingCollectionTestCase(TestCase):
     def setUpClass(cls):
         super(OfferingCollectionTestCase, cls).setUpClass()
 
+    @classmethod
+    def tearDownClass(cls):
+        from wstore.offerings import offerings_management
+        reload(offerings_management)
+        reload(views)
+        super(OfferingCollectionTestCase, cls).tearDownClass()
+
     def setUp(self):
         # Create request factory
         self.factory = RequestFactory()
@@ -355,6 +362,13 @@ class OfferingEntryTestCase(TestCase):
         self.factory = RequestFactory()
         # Create testing user
         self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+
+    @classmethod
+    def tearDownClass(cls):
+        from wstore.offerings import offerings_management
+        reload(offerings_management)
+        reload(views)
+        super(OfferingEntryTestCase, cls).tearDownClass()
 
     def test_get_offering(self):
 
@@ -698,6 +712,13 @@ class ResourceCollectionTestCase(TestCase):
         self.user.userprofile.get_current_roles.return_value = ['provider', 'customer']
         self.user.userprofile.save()
 
+    @classmethod
+    def tearDownClass(cls):
+        from wstore.offerings import offerings_management
+        reload(offerings_management)
+        reload(views)
+        super(ResourceCollectionTestCase, cls).tearDownClass()
+
     def _no_provider(self):
         self.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
         self.user.userprofile.get_current_roles.return_value = ['customer']
@@ -832,6 +853,13 @@ class ResourceEntryTestCase(TestCase):
         self.resource.provider = self.user.userprofile.current_organization
         views.OfferingResource = MagicMock()
         views.OfferingResource.objects.get.return_value = self.resource
+
+    @classmethod
+    def tearDownClass(cls):
+        from wstore.offerings import offerings_management
+        reload(offerings_management)
+        reload(views)
+        super(ResourceEntryTestCase, cls).tearDownClass()
 
     def tearDown(self):
         views.json = json

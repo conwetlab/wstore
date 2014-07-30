@@ -69,6 +69,7 @@ class RSSViewTestCase(TestCase):
         http.supported_request_mime_types = decorator_mock_callable
 
         reload(views)
+        cls._old_context = views.Context
         cls.views = views
         cls.views.build_response = build_response_mock
         cls._auth = settings.OILAUTH
@@ -77,7 +78,9 @@ class RSSViewTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         # Restore mocked decorators
+        views.Context = cls._old_context
         reload(http)
+        reload(views)
         settings.OILAUTH = cls._auth
         super(RSSViewTestCase, cls).tearDownClass()
 

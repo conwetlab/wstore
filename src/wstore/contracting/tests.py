@@ -889,6 +889,16 @@ class UpdatingPurchasesTestCase(TestCase):
     tags = ('fiware-ut-28',)
     fixtures = ('multiple_plan.json',)
 
+    @classmethod
+    def setUpClass(cls):
+        cls._old_context = Context
+        super(UpdatingPurchasesTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        Context = cls._old_context
+        super(UpdatingPurchasesTestCase, cls).tearDownClass()
+
     def setUp(self):
         # Create request factory
         self.factory = RequestFactory()
@@ -1208,6 +1218,16 @@ class DeveloperPurchaseTestCase(TestCase):
 
     tags = ('fiware-ut-29',)
     fixtures = ('multiple_plan.json',)
+
+    @classmethod
+    def setUpClass(cls):
+        cls._old_context = Context
+        super(DeveloperPurchaseTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        Context = cls._old_context
+        super(DeveloperPurchaseTestCase, cls).tearDownClass()
 
     def setUp(self):
         # Create request factory
