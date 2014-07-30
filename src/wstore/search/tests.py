@@ -215,7 +215,7 @@ class FullTextSearchTestCase(TestCase):
         (RESULT_ALL, None, 'all',),
         (RESULT_PURCHASED, None, 'purchased', False, None, 'popularity'),
         (RESULT_UPLOADED, None, 'uploaded', False, {'start': 1, 'limit': 1}, 'date'),
-        (RESULT_DELETED, None, 'deleted', False, {'start': 1, 'limit': 1}),
+        (RESULT_DELETED, None, 'deleted', False, {'start': 1, 'limit': 1}, 'name'),
         (RESULT_PUBLISHED, None, None, False, None, 'name'),
         (RESULT_COUNT, None, None, True)
     ])
