@@ -188,6 +188,7 @@ class UserCollectionTestCase(TestCase):
     def tearDownClass(cls):
         # Restore mocked decorators
         reload(http)
+        reload(views)
         super(UserCollectionTestCase, cls).tearDownClass()
 
     def setUp(self):
@@ -336,6 +337,7 @@ class UserEntryTestCase(TestCase):
     def tearDownClass(cls):
         # Restore mocked decorators
         reload(http)
+        reload(views)
         super(UserEntryTestCase, cls).tearDownClass()
 
     def setUp(self):
