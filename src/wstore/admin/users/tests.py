@@ -176,6 +176,7 @@ class UserCollectionTestCase(TestCase):
         # Mock class decorators
         http.authentication_required = decorator_mock
         http.supported_request_mime_types = decorator_mock_callable
+        cls._old_http_response = views.HttpResponse
 
         cls._auth = settings.OILAUTH
         reload(views)
@@ -189,6 +190,7 @@ class UserCollectionTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         # Restore mocked decorators
+        views.HttpResponse = cls._old_http_response
         settings.OILAUTH = cls._auth
         reload(http)
         reload(views)

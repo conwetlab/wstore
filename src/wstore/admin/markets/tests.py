@@ -19,7 +19,6 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-import types
 from urllib2 import HTTPError
 from mock import MagicMock
 from nose_parameterized import parameterized
@@ -215,6 +214,7 @@ class MarketplaceViewTestCase(TestCase):
         # Mock class decorators
         http.authentication_required = decorator_mock
         http.supported_request_mime_types = decorator_mock_callable
+        cls._old_http_response = views.HttpResponse
 
         reload(views)
         views.build_response = build_response_mock
@@ -230,7 +230,9 @@ class MarketplaceViewTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         # Restore mocked decorators
+        views.HttpResponse = cls._old_http_response
         reload(http)
+        reload(views)
         super(MarketplaceViewTestCase, cls).tearDownClass()
 
     def setUp(self):

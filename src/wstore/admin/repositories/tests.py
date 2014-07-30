@@ -19,8 +19,6 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-import types
-from urllib2 import HTTPError
 from mock import MagicMock
 from nose_parameterized import parameterized
 
@@ -30,7 +28,7 @@ from wstore.admin.repositories.repositories_management import register_repositor
 from wstore.models import Repository
 from wstore.admin.repositories import views
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
-decorator_mock_callable, HTTPResponseMock
+decorator_mock_callable
 from wstore.store_commons.utils import http
 
 
@@ -137,6 +135,7 @@ class RepositoryViewTestCase(TestCase):
     def tearDownClass(cls):
         # Restore mocked decorators
         reload(http)
+        reload(views)
         super(RepositoryViewTestCase, cls).tearDownClass()
 
     def setUp(self):

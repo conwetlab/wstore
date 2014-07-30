@@ -19,7 +19,6 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-import types
 from mock import MagicMock
 from nose_parameterized import parameterized
 from urllib2 import HTTPError
@@ -105,6 +104,7 @@ class OrganizationEntryTestCase(TestCase):
         # Mock class decorators
         http.authentication_required = decorator_mock
         http.supported_request_mime_types = decorator_mock_callable
+        cls._old_response = views.HttpResponse
 
         reload(views)
         views.build_response = build_response_mock
@@ -125,7 +125,9 @@ class OrganizationEntryTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         # Restore mocked decorators
+        views.HttpResponse = cls._old_response
         reload(http)
+        reload(views)
         super(OrganizationEntryTestCase, cls).tearDownClass()
 
     def setUp(self):
@@ -331,6 +333,7 @@ class OrganizationCollectionTestCase(TestCase):
         # Mock class decorators
         http.authentication_required = decorator_mock
         http.supported_request_mime_types = decorator_mock_callable
+        cls._old_http_response = views.HttpResponse
 
         reload(views)
         views.build_response = build_response_mock
@@ -340,7 +343,9 @@ class OrganizationCollectionTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         # Restore mocked decorators
+        views.HttpResponse = cls._old_http_response
         reload(http)
+        reload(views)
         super(OrganizationCollectionTestCase, cls).tearDownClass()
 
     def setUp(self):
