@@ -57,5 +57,57 @@
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
         }
+    },
+    {
+        "pk": "aaaaaaaaaaaaac2115f022f0",
+        "model": "wstore.Offering",
+        "fields": {
+            "name": "test_offering3",
+            "owner_admin_user": "51000aba8e05ac2115f022f9",
+            "version": "1.0",
+            "state": "published",
+            "marketplaces": [],
+            "rating": "0",
+            "comments": [],
+            "tags": [],
+            "image_url": "/media/provider__test_offering3__1.0/image.png",
+            "related_images": [],
+            "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
+            "resources": [],
+            "owner_organization": "91000aba8e06ac2115f022f0",
+            "offering_description": {},
+            "creation_date": "2013-02-05 17:06:46",
+            "publication_date": "2013-02-05 17:06:46"
+        }
+    },
+    {
+        "pk": "61006aba8e05ac21bbbbbbbb",
+        "model": "wstore.Purchase",
+        "fields": {
+            "ref": "61006aba8e05ac21bbbbbbbb",
+            "customer": "51000aba8e05111111111111",
+            "organization_owned": false,
+            "owner_organization": "51000aba8e05a777777122ff",
+            "date": "2013-02-05 17:06:46",
+            "offering": "aaaaaaaaaaaaac2115f022f0",
+            "state": "paid",
+            "bill": ["/media/bills/61006aba8e05ac2115f022f0.pdf"],
+            "tax_address": {
+                "street": "test street",
+                "postal": "20000",
+                "city": "test city",
+                "country": "test country"
+            }
+        }
+    },
+    {
+        "pk": "abab0b3aba05acb1161020b9",
+        "model": "charging_engine.contract",
+        "fields": {
+            "pricing_model": {},
+            "applied_sdrs": [],
+            "charges": [],
+            "purchase": "61006aba8e05ac21bbbbbbbb"
+        }
     }
 ]

@@ -70,9 +70,6 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         # Click search button
         self.driver.find_element_by_css_selector('#search').click()
 
-    def select_main_menu(self, option):
-        pass
-
     def open_offering_details(self, offering_name):
 
         elements = self.driver.find_elements_by_class_name('menu-offering')
@@ -81,3 +78,30 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
             if element.find_element_by_css_selector('h2').text == offering_name:
                 element.click()
                 break
+
+    def _get_navs(self):
+        submenu = self.driver.find_element_by_class_name('store-sub-menu')
+        # Get first element
+        return submenu.find_elements_by_css_selector('li')
+
+    def click_first_cat(self):
+        self.driver.find_element_by_id('menu-first-text').click()
+
+    def click_second_cat(self):
+        self.driver.find_element_by_id('menu-second-text').click()
+
+    def click_third_cat(self):
+        self._get_categories()[2].click()
+
+    def click_first_nav(self):
+        self._get_navs()[0].click()
+
+    def click_second_nav(self):
+        self._get_navs()[1].click()
+
+    def _open_provider_option(self, option):
+        self.driver.find_element_by_id('provider-options').click()
+        self.driver.find_element_by_id(option).click()
+
+    def register_resource(self, resource_info):
+        pass
