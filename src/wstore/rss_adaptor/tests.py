@@ -24,8 +24,7 @@ from urllib2 import HTTPError
 
 from django.test import TestCase
 
-from wstore.rss_adaptor import rss_adaptor
-from wstore.rss_adaptor import expenditure_manager
+from wstore.rss_adaptor import rss_adaptor, expenditure_manager, rss_manager
 from wstore.store_commons.utils.testing import mock_request
 
 
@@ -181,17 +180,32 @@ class ExpenditureManagerTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # Save used libraries
+        cls._old_RSS = rss_manager.RSS
+        cls._old_urllib = rss_manager.urllib2
+        cls._old_method_req = rss_manager.MethodRequest
+
         # Create Mocks
         cls.rss_mock = MagicMock()
         cls.opener = MagicMock()
         cls.mock_response = MagicMock()
         cls.opener.open.return_value = cls.mock_response
-        expenditure_manager.RSS = MagicMock()
-        expenditure_manager.RSS.objects.get.return_value = cls.rss_mock
-        expenditure_manager.urllib2 = MagicMock()
-        expenditure_manager.urllib2.build_opener.return_value = cls.opener
-        expenditure_manager.MethodRequest = mock_request
+
+        rss_manager.RSS = MagicMock()
+        rss_manager.RSS.objects.get.return_value = cls.rss_mock
+        rss_manager.urllib2 = MagicMock()
+        rss_manager.urllib2.build_opener.return_value = cls.opener
+        rss_manager.MethodRequest = mock_request
         super(ExpenditureManagerTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        # Unmock libraries
+        rss_manager.RSS = cls._old_RSS
+        rss_manager.urllib2 = cls._old_urllib
+        rss_manager.MethodRequest = cls._old_method_req
+        reload(rss_manager)
+        super(ExpenditureManagerTestCase, cls).tearDownClass()
 
     def setUp(self):
         self.rss_mock.reset_mock()
