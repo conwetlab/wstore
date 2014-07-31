@@ -21,6 +21,7 @@
 from urllib2 import HTTPError
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 
 from wstore.models import Marketplace
 from wstore.market_adaptor.marketadaptor import MarketAdaptor
@@ -55,7 +56,7 @@ def register_on_market(name, host, site):
         existing = False
 
     if existing:
-        raise Exception('Marketplace already registered')
+        raise PermissionDenied('Marketplace already registered')
 
     store_name = settings.STORE_NAME
 
