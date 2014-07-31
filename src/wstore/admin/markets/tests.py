@@ -276,7 +276,15 @@ class MarketplaceViewTestCase(TestCase):
     ({
         'name': 'test_market',
         'host': 'http://testmarket.com'
-    }, (400, 'Bad request', 'error'), True, _bad_request)
+    }, (400, 'Bad request', 'error'), True, _bad_request),
+    ({
+        'name': 'test_market$',
+        'host': 'http://testmarket.com'
+    }, (400, 'Invalid name format', 'error'), True),
+    ({
+        'name': 'test_market',
+        'host': 'invalid_url'
+    }, (400, 'Invalid URL format', 'error'), True)
     ])
     def test_market_api_create(self, data, exp_resp, error, side_effect=None):
         # Create request data
