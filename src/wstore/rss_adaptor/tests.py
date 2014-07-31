@@ -435,3 +435,35 @@ class ModelManagerTestCase(TestCase):
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
+
+    @parameterized.expand([
+        ('default_prov',),
+        ('provider', 'test_user')
+    ])
+    def test_get_model(self, name, provider=None):
+
+        mock_models = [{
+            'appProviderId': 'wstore',
+            'productClass': 'app',
+            'percRevenueShare': 20.0
+        }]
+        self.manager._make_request.return_value = mock_models
+
+        # Call the get method
+        error = False
+        try:
+            models = self.manager.get_revenue_models(provider)
+        except:
+            error = True
+
+        # Check no error occurs
+        self.assertFalse(error)
+
+        # Check calls
+        if not provider:
+            provider = settings.STORE_NAME.lower()
+
+        self.manager._make_request.assert_called_once_with('GET', 'http://testrss.com/fiware-rss/rss/rsModelsMgmt?appProviderId=' + provider)
+
+        # Check returned value
+        self.assertEquals(models, mock_models)

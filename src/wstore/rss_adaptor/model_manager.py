@@ -69,9 +69,14 @@ class ModelManager(RSSManager):
 
     def get_revenue_models(self, provider=None):
 
-        # FIXME: get only provider models
-        endpoint = urljoin(self._rss.host, '/fiware-rss/rss/rsModelsMgmt')
+        # Get provider
+        if not provider:
+            provider = settings.STORE_NAME.lower()
 
+        # Build URL
+        endpoint = urljoin(self._rss.host, '/fiware-rss/rss/rsModelsMgmt?appProviderId=' + provider)
+
+        # Get provider models from the RSS
         models = self._make_request('GET', endpoint)
         self._refresh_rss()
 
