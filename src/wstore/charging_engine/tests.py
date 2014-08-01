@@ -31,6 +31,7 @@ from mock import MagicMock
 from django.test import TestCase
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.test.utils import override_settings
 
 from wstore.charging_engine import charging_engine
 from wstore.models import Purchase
@@ -1425,7 +1426,7 @@ class AdaptorWrapperThread():
     def start(self):
         self._context._cdrs = self._cdr
 
-
+@override_settings(STORE_NAME='wstore')
 class CDRGeranationTestCase(TestCase):
 
     tags = ('fiware-ut-18',)
@@ -1474,13 +1475,13 @@ class CDRGeranationTestCase(TestCase):
         self.assertEqual(len(self._cdrs), 1)
 
         cdr = self._cdrs[0]
-        self.assertEqual(cdr['provider'], 'test_organization')
+        self.assertEqual(cdr['provider'], 'wstore')
         self.assertEqual(cdr['service'], 'example service')
         self.assertEqual(cdr['defined_model'], 'Single payment event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
         self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'SaaS')
+        self.assertEqual(cdr['product_class'], 'use')
         self.assertEqual(cdr['description'], 'Single payment: 1 EUR')
         self.assertEqual(cdr['cost_currency'], '1')
         self.assertEqual(cdr['cost_value'], '1')
@@ -1524,13 +1525,13 @@ class CDRGeranationTestCase(TestCase):
         self.assertEqual(len(self._cdrs), 2)
 
         cdr = self._cdrs[0]
-        self.assertEqual(cdr['provider'], 'test_organization')
+        self.assertEqual(cdr['provider'], 'wstore')
         self.assertEqual(cdr['service'], 'example service')
         self.assertEqual(cdr['defined_model'], 'Single payment event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
         self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'SaaS')
+        self.assertEqual(cdr['product_class'], 'use')
         self.assertEqual(cdr['description'], 'Single payment: 1 EUR')
         self.assertEqual(cdr['cost_currency'], '1')
         self.assertEqual(cdr['cost_value'], '1')
@@ -1538,13 +1539,13 @@ class CDRGeranationTestCase(TestCase):
         self.assertEqual(cdr['customer'], 'test_user')
 
         cdr = self._cdrs[1]
-        self.assertEqual(cdr['provider'], 'test_organization')
+        self.assertEqual(cdr['provider'], 'wstore')
         self.assertEqual(cdr['service'], 'example service')
         self.assertEqual(cdr['defined_model'], 'Subscription event')
         self.assertEqual(cdr['correlation'], '1')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
         self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'SaaS')
+        self.assertEqual(cdr['product_class'], 'use')
         self.assertEqual(cdr['description'], 'Subscription: 10 EUR per month')
         self.assertEqual(cdr['cost_currency'], '1')
         self.assertEqual(cdr['cost_value'], '10')
@@ -1641,13 +1642,13 @@ class CDRGeranationTestCase(TestCase):
         self.assertEqual(len(self._cdrs), 1)
 
         cdr = self._cdrs[0]
-        self.assertEqual(cdr['provider'], 'test_organization')
+        self.assertEqual(cdr['provider'], 'wstore')
         self.assertEqual(cdr['service'], 'example service')
         self.assertEqual(cdr['defined_model'], 'Pay per use event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
         self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'SaaS')
+        self.assertEqual(cdr['product_class'], 'use')
         self.assertEqual(cdr['description'], 'Fee per invocation, Consumption: 25')
         self.assertEqual(cdr['cost_currency'], '1')
         self.assertEqual(cdr['cost_value'], '25.0')
