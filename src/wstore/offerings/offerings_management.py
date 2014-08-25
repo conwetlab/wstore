@@ -760,7 +760,7 @@ def delete_offering(offering):
 
     se = SearchEngine(index_path)
 
-    if offering.state == 'uploaded':
+    if offering.state == 'uploaded' or offering.open:
 
         # If the offering has media files delete them
         dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
