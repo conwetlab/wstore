@@ -23,6 +23,7 @@ from django.http import HttpResponseRedirect
 from django.conf import settings
 
 from wstore.store_commons.utils.http import build_response
+from wstore.store_commons.utils.url import add_slash
 
 
 class Http403(Exception):
@@ -38,13 +39,15 @@ def logout(request):
         # Check if the logout request is originated in a different domain
         if 'HTTP_ORIGIN' in request.META:
             origin = request.META['HTTP_ORIGIN']
+            origin = add_slash(origin)
 
             from wstore.views import ACCOUNT_PORTAL_URL, CLOUD_PORTAL_URL, MASHUP_PORTAL_URL
 
             allowed_origins = [
-                ACCOUNT_PORTAL_URL,
-                CLOUD_PORTAL_URL,
-                MASHUP_PORTAL_URL]
+                add_slash(ACCOUNT_PORTAL_URL),
+                add_slash(CLOUD_PORTAL_URL),
+                add_slash(MASHUP_PORTAL_URL)
+            ]
 
             if origin in allowed_origins:
                 headers = {
@@ -52,6 +55,8 @@ def logout(request):
                     'Access-Control-Allow-Credentials': 'true'
                 }
                 response = build_response(request, 200, 'OK', headers=headers)
+            else:
+                response = build_response(request, 403, 'Forbidden')
 
         else:
             # If using the FI-LAB authentication and it is not a cross domain
