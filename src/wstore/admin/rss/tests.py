@@ -168,7 +168,17 @@ class RSSViewTestCase(TestCase):
             'daily': '10000',
             'weekly': '10000',
             'monthly': '10000'
-        }
+        },
+        'models': [{
+            'class': 'single-payment',
+            'percentage': 10.0
+        }, {
+            'class': 'subscription',
+            'percentage': 20.0
+        }, {
+            'class': 'use',
+            'percentage': 30.0
+        }]
     }, True, (201, 'Created', 'correct'), True, {
         'currency': 'EUR',
         'perTransaction':10000.0,
@@ -209,6 +219,14 @@ class RSSViewTestCase(TestCase):
         'host': 'http://rss.test.com/'
     }, False, (403, 'Forbidden', 'error'), False, {}, _revoke_staff),
     ({
+        'name': 'testrss$',
+        'host': 'http://rss.test.com/'
+    }, False, (400, 'Invalid name format', 'error'), False, {}),
+    ({
+        'name': 'testrss',
+        'host': 'invalid_host'
+    }, False, (400, 'Invalid URL format', 'error'), False, {}),
+    ({
         'name': 'testrss',
         'host': 'http://rss.test.com/'
     }, False, (400, 'Invalid JSON content', 'error'), False, {}, _existing_rss),
@@ -231,6 +249,72 @@ class RSSViewTestCase(TestCase):
         'name': 'testrss',
         'host': 'http://rss.test.com/'
     }, False, (502, 'The RSS has failed creating the expenditure limits', 'error'), False, {}, _rss_failure),
+    ({
+        'name': 'testrss',
+        'host': 'http://rss.test.com/',
+         'models': [{
+            'percentage': 10.0
+        }, {
+            'class': 'subscription',
+            'percentage': 20.0
+        }, {
+            'class': 'use',
+            'percentage': 30.0
+        }]
+    }, False, (400, 'Invalid revenue sharing model: Missing a required field', 'error'), False, {}),
+    ({
+        'name': 'testrss',
+        'host': 'http://rss.test.com/',
+         'models': [{
+            'class': 'invalid',
+            'percentage': 10.0
+        }, {
+            'class': 'subscription',
+            'percentage': 20.0
+        }, {
+            'class': 'use',
+            'percentage': 30.0
+        }]
+    }, False, (400, 'Invalid revenue sharing model: Invalid product class', 'error'), False, {}),
+    ({
+        'name': 'testrss',
+        'host': 'http://rss.test.com/',
+         'models': [{
+            'class': 'single-payment',
+            'percentage': 10.0
+        }, {
+            'class': 'subscription',
+            'percentage': 'as'
+        }, {
+            'class': 'use',
+            'percentage': 30.0
+        }]
+    }, False, (400, 'Invalid revenue sharing model: Invalid percentage type', 'error'), False, {}),
+    ({
+        'name': 'testrss',
+        'host': 'http://rss.test.com/',
+         'models': [{
+            'class': 'single-payment',
+            'percentage': 10.0
+        }, {
+            'class': 'subscription',
+            'percentage': 150.0
+        }, {
+            'class': 'use',
+            'percentage': 30.0
+        }]
+    }, False, (400, 'Invalid revenue sharing model: The percentage must be a number between 0 and 100', 'error'), False, {}),
+    ({
+        'name': 'testrss',
+        'host': 'http://rss.test.com/',
+         'models': [{
+            'class': 'single-payment',
+            'percentage': 10.0
+        }, {
+            'class': 'use',
+            'percentage': 30.0
+        }]
+    }, False, (400, 'Invalid revenue sharing model: Missing a required product class', 'error'), False, {})
     ])
     def test_rss_creation(self, data, refresh, resp, created, expected_request, side_effect=None):
 
@@ -239,6 +323,8 @@ class RSSViewTestCase(TestCase):
 
         # Mock ExpenditureManager
         self.views.ExpenditureManager = MagicMock()
+        # Mock ModelManager
+        self.views.ModelManager = MagicMock()
 
         # Create a mock method to manage the token refresh
         # if needed

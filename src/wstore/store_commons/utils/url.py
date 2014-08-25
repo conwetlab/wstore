@@ -43,3 +43,10 @@ def url_fix(s, charset='utf-8'):
     qs = urllib.quote_plus(qs, ':&=')
 
     return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+
+
+def add_slash(url):
+    if url[-1] != '/':
+        url += '/'
+
+    return url

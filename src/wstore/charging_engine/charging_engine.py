@@ -187,7 +187,7 @@ class ChargingEngine:
             'correlation': str(corr_number),
             'purchase': self._purchase.pk,
             'offering': cdr_info['offering'],
-            'product_class': 'SaaS',
+            'product_class': cdr_info['product_class'],
             'description': cdr_info['description'],
             'cost_currency': currency,
             'cost_value': str(part['value']),
@@ -231,7 +231,7 @@ class ChargingEngine:
                     service_name = node[dc_tag + ':title']['@value']
 
             # Get the provider (Organization)
-            provider = self._purchase.offering.owner_organization.name
+            provider = settings.STORE_NAME.lower()
 
             # Set offering ID
             offering = self._purchase.offering.name + ' ' + self._purchase.offering.version
@@ -253,7 +253,8 @@ class ChargingEngine:
                 'offering': offering,
                 'country_code': country_code,
                 'time_stamp': time_stamp,
-                'customer': customer
+                'customer': customer,
+                'product_class': self._purchase.contract.revenue_class
             }
 
             # If any deduction has been applied the whole payment is
@@ -669,12 +670,22 @@ class ChargingEngine:
             cnt = WStore_context.objects.all()[0]
             price_model['general_currency'] = cnt.allowed_currencies['default']
 
+        # Calculate the revenue sharing class
+        revenue_class = None
+        if 'pay_per_use' in price_model:
+            revenue_class = 'use'
+        elif 'subscription' in price_model:
+            revenue_class = 'subscription'
+        elif 'single_payment' in price_model:
+            revenue_class = 'single-payment'
+    
         # Create the contract entry
         Contract.objects.create(
             pricing_model=price_model,
             charges=[],
             applied_sdrs=[],
-            purchase=self._purchase
+            purchase=self._purchase,
+            revenue_class=revenue_class
         )
         self._price_model = price_model
 

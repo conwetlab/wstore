@@ -18,22 +18,38 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import json
 from urllib2 import HTTPError
 from mock import MagicMock
 from nose_parameterized import parameterized
 
 from django.test import TestCase
+from django.core.exceptions import PermissionDenied
 
 from wstore.admin.markets import markets_management
 from wstore.admin.markets import views
 from wstore.store_commons.utils import http
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
 decorator_mock_callable, HTTPResponseMock
+from wstore.store_commons.utils import http
 
 
 __test__ = False
 
+
+BASIC_MARKET_DATA = {
+    'name': 'test_market',
+    'host': 'http://testmarket.com',
+    'site': 'http://currentsite.com'
+}
+
+BASIC_MARKET_DATA1 = {
+    'name': 'test_market1',
+    'host': 'http://testmarket.com/',
+    'site': 'http://currentsite.com/'
+}
 
 class RegisteringOnMarketplaceTestCase(TestCase):
 
@@ -52,70 +68,45 @@ class RegisteringOnMarketplaceTestCase(TestCase):
         markets_management.Marketplace = MagicMock()
         markets_management.Marketplace.objects.get.side_effect = Exception('Not found')
 
-    @parameterized.expand([
-    ({
-        'name': 'test_market',
-        'host': 'http://testmarket.com',
-        'site': 'http://currentsite.com'
-    },),
-    ({
-        'name': 'test_market1',
-        'host': 'http://testmarket.com/',
-        'site': 'http://currentsite.com/'
-    },)
-    ])
-    def test_basic_registering_on_market(self, data):
-
-        markets_management.register_on_market(data['name'], data['host'], data['site'])
-
-        # Check calls
-        markets_management.MarketAdaptor.assert_called_with('http://testmarket.com/')
-        markets_management.Marketplace.objects.get.assert_called_with(name=data['name'])
-        self.adaptor_object.add_store.assert_called_with({
-            'store_name': 'test_store',
-            'store_uri': data['site']
-        })
-        markets_management.Marketplace.objects.create.assert_called_with(name=data['name'], host='http://testmarket.com/')
-
-    def test_registering_already_registered(self):
-
+    def _internal_market_error(self):
         self.adaptor_object.add_store.side_effect = HTTPError('site', 500, 'Internal server error', None, None)
-        try:
-            markets_management.register_on_market('test_market', 'http://testmarket.com', 'http://currentsiteerr.com')
-        except Exception as e:
-            error = True
-            msg = e.message
 
-        self.assertTrue(error)
-        self.assertEquals(msg, 'Bad Gateway')
-
-    def test_registering_existing_name(self):
-
+    def _existing(self):
         markets_management.Marketplace.objects.get.side_effect = None
-        error = False
-        try:
-            markets_management.register_on_market('test_market1', 'http://testmarket.com', 'http://currentsite.com')
-        except Exception as e:
-            error = True
-            msg = e.message
 
-        self.assertTrue(error)
-        self.assertEquals(msg, 'Marketplace already registered')
-
-    def test_registering_creation_error(self):
-        # Mock Marketplace
+    def _creation_error(self):
         markets_management.Marketplace.objects.create.side_effect = Exception('Creation error')
 
-        error = False
-        msg = None
-        try:
-            markets_management.register_on_market('test_market', 'http://testmarket.com', 'http://currentsite.com')
-        except Exception as e:
-            error = True
-            msg = e.message
+    @parameterized.expand([
+        (BASIC_MARKET_DATA,),
+        (BASIC_MARKET_DATA1, _internal_market_error, Exception, 'Bad Gateway'),
+        (BASIC_MARKET_DATA, _existing, PermissionDenied, 'Marketplace already registered'),
+        (BASIC_MARKET_DATA, _creation_error, Exception, 'Creation error')
+    ])
+    def test_basic_registering_on_market(self, data, side_effect=None, err_type=None, err_msg=None):
 
-        self.assertTrue(error)
-        self.assertEquals('Creation error', msg)
+        if side_effect:
+            side_effect(self)
+
+        error = None
+        try:
+            markets_management.register_on_market(data['name'], data['host'], data['site'])
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            self.assertEquals(error, None)
+            # Check calls
+            markets_management.MarketAdaptor.assert_called_with('http://testmarket.com/')
+            markets_management.Marketplace.objects.get.assert_called_with(name=data['name'])
+            self.adaptor_object.add_store.assert_called_with({
+                'store_name': 'test_store',
+                'store_uri': data['site']
+            })
+            markets_management.Marketplace.objects.create.assert_called_with(name=data['name'], host='http://testmarket.com/')
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
 
 
 class MarketPlacesRetievingTestCase(TestCase):
@@ -269,7 +260,15 @@ class MarketplaceViewTestCase(TestCase):
     ({
         'name': 'test_market',
         'host': 'http://testmarket.com'
-    }, (400, 'Bad request', 'error'), True, _bad_request)
+    }, (400, 'Bad request', 'error'), True, _bad_request),
+    ({
+        'name': 'test_market$',
+        'host': 'http://testmarket.com'
+    }, (400, 'Invalid name format', 'error'), True),
+    ({
+        'name': 'test_market',
+        'host': 'invalid_url'
+    }, (400, 'Invalid URL format', 'error'), True)
     ])
     def test_market_api_create(self, data, exp_resp, error, side_effect=None):
         # Create request data

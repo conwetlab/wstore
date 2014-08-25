@@ -21,11 +21,12 @@
 import json
 from mock import MagicMock
 from urllib2 import HTTPError
+from nose_parameterized import parameterized
 
 from django.test import TestCase
+from django.conf import settings
 
-from wstore.rss_adaptor import rss_adaptor
-from wstore.rss_adaptor import expenditure_manager
+from wstore.rss_adaptor import rss_adaptor, expenditure_manager, rss_manager, model_manager
 from wstore.store_commons.utils.testing import mock_request
 
 
@@ -181,17 +182,32 @@ class ExpenditureManagerTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # Save used libraries
+        cls._old_RSS = rss_manager.RSS
+        cls._old_urllib = rss_manager.urllib2
+        cls._old_method_req = rss_manager.MethodRequest
+
         # Create Mocks
         cls.rss_mock = MagicMock()
         cls.opener = MagicMock()
         cls.mock_response = MagicMock()
         cls.opener.open.return_value = cls.mock_response
-        expenditure_manager.RSS = MagicMock()
-        expenditure_manager.RSS.objects.get.return_value = cls.rss_mock
-        expenditure_manager.urllib2 = MagicMock()
-        expenditure_manager.urllib2.build_opener.return_value = cls.opener
-        expenditure_manager.MethodRequest = mock_request
+
+        rss_manager.RSS = MagicMock()
+        rss_manager.RSS.objects.get.return_value = cls.rss_mock
+        rss_manager.urllib2 = MagicMock()
+        rss_manager.urllib2.build_opener.return_value = cls.opener
+        rss_manager.MethodRequest = mock_request
         super(ExpenditureManagerTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        # Unmock libraries
+        rss_manager.RSS = cls._old_RSS
+        rss_manager.urllib2 = cls._old_urllib
+        rss_manager.MethodRequest = cls._old_method_req
+        reload(rss_manager)
+        super(ExpenditureManagerTestCase, cls).tearDownClass()
 
     def setUp(self):
         self.rss_mock.reset_mock()
@@ -331,3 +347,123 @@ class ExpenditureManagerTestCase(TestCase):
         # Make the call
         self.manager.update_balance(charge, profile)
         self.manager._make_request.assert_called_with('PUT', 'http://testrss.com/expenditureLimit/balanceAccumulated/1', expected_data)
+
+
+class ModelManagerTestCase(TestCase):
+
+    tags = ('rs-models', )
+
+    @classmethod
+    def setUpClass(cls):
+        # Save used libraries
+        cls._old_RSS = rss_manager.RSS
+
+        # Create Mocks
+        cls.rss_mock = MagicMock()
+        cls.opener = MagicMock()
+        cls.mock_response = MagicMock()
+        cls.opener.open.return_value = cls.mock_response
+
+        rss_manager.RSS = MagicMock()
+        rss_manager.RSS.objects.get.return_value = cls.rss_mock
+        super(ModelManagerTestCase, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        rss_manager.RSS = cls._old_RSS
+        reload(rss_manager)
+        super(ModelManagerTestCase, cls).tearDownClass()
+
+    def setUp(self):
+        self.rss_mock.reset_mock()
+        self.rss_mock.host = 'http://testrss.com/'
+        self.manager = model_manager.ModelManager(self.rss_mock, 'accesstoken')
+        self.manager._make_request = MagicMock()
+        TestCase.setUp(self)
+
+    @parameterized.expand([
+        ('complete_model', {
+            'class': 'app',
+            'percentage': 20.0
+        }),
+        ('complete_provider',  {
+            'class': 'app',
+            'percentage': 20.0
+        }, 'test_user'),
+        ('missing_class', {
+            'percentage': 20.0
+        }, None, ValueError, 'Missing a required field in model info'),
+        ('missing_perc', {
+            'class': 'app'
+        }, None, ValueError, 'Missing a required field in model info'),
+        ('inv_data', ('app', 20.0), None, TypeError, 'Invalid type for model info'),
+        ('inv_class', {
+            'class': 7,
+            'percentage': 20.0
+        }, None, TypeError, 'Invalid type for class field'),
+        ('inv_percentage', {
+            'class': 'app',
+            'percentage': '20.0'
+        }, None, TypeError, 'Invalid type for percentage field'),
+        ('bigger_perc', {
+            'class': 'app',
+            'percentage': 102.0
+        }, None, ValueError, 'The percentage must be a number between 0 and 100')
+    ])
+    def test_create_model(self, name, data, provider=None, err_type=None, err_msg=None):
+
+        error = None
+        try:
+            self.manager.create_revenue_model(data, provider)
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            self.assertEquals(error, None)
+            # Check calls
+            if provider:
+                exp_prov = provider
+            else:
+                exp_prov = settings.STORE_NAME.lower()
+
+            exp_data = {
+                'appProviderId': exp_prov,
+                'productClass': data['class'],
+                'percRevenueShare': data['percentage']
+            }
+            self.manager._make_request.assert_called_with('POST', 'http://testrss.com/fiware-rss/rss/rsModelsMgmt', exp_data)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
+
+    @parameterized.expand([
+        ('default_prov',),
+        ('provider', 'test_user')
+    ])
+    def test_get_model(self, name, provider=None):
+
+        mock_models = [{
+            'appProviderId': 'wstore',
+            'productClass': 'app',
+            'percRevenueShare': 20.0
+        }]
+        self.manager._make_request.return_value = mock_models
+
+        # Call the get method
+        error = False
+        try:
+            models = self.manager.get_revenue_models(provider)
+        except:
+            error = True
+
+        # Check no error occurs
+        self.assertFalse(error)
+
+        # Check calls
+        if not provider:
+            provider = settings.STORE_NAME.lower()
+
+        self.manager._make_request.assert_called_once_with('GET', 'http://testrss.com/fiware-rss/rss/rsModelsMgmt?appProviderId=' + provider)
+
+        # Check returned value
+        self.assertEquals(models, mock_models)

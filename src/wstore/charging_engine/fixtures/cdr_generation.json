@@ -96,6 +96,7 @@
             "applied_sdrs": [],
             "pending_sdrs": [],
             "charges": [],
+            "revenue_class": "use",
             "purchase": "61004aba5e05acc115f022f0"
         }
     },

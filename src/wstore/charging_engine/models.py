@@ -39,6 +39,8 @@ class Contract(models.Model):
     purchase = models.OneToOneField(Purchase)
     # Pending paid info used in asynchronous charges
     pending_payment = DictField()
+    # Revenue sharing product class
+    revenue_class = models.CharField(max_length=15, blank=True, null=True)
 
 
 # This model is used as a unit dictionary in order to determine

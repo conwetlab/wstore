@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import json
 from urllib2 import HTTPError
 
@@ -29,6 +31,7 @@ from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
 authentication_required, identity_manager_required
 from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
+from wstore.rss_adaptor.model_manager import ModelManager
 from wstore.models import RSS, Context
 
 
@@ -111,6 +114,45 @@ def _check_limits(user_limits):
     return limits
 
 
+def _check_revenue_models(models):
+    """
+    Check the revenue sharing models provided in the request
+    """
+    fixed_models = []
+    found_models = []
+    for model in models:
+        # Check model contents
+        if not 'class' in model or not 'percentage' in model:
+            raise ValueError('Invalid revenue sharing model: Missing a required field')
+
+        # Check product class
+        if model['class'] != 'single-payment' and model['class'] != 'subscription' and model['class'] != 'use':
+            raise ValueError('Invalid revenue sharing model: Invalid product class')
+        else:
+            found_models.append(model['class'])
+
+        # Check percentage type
+        if not isinstance(model['percentage'], float) and not isinstance(model['percentage'], int)\
+        and ((isinstance(model['percentage'], unicode) or isinstance(model['percentage'], str))\
+        and not model['percentage'].isdigit()):
+            raise TypeError('Invalid revenue sharing model: Invalid percentage type')
+        else:
+            model['percentage'] = float(model['percentage'])
+
+        # Check percentage value
+        if model['percentage'] < 0 or model['percentage'] > 100:
+            raise ValueError('Invalid revenue sharing model: The percentage must be a number between 0 and 100')
+
+        fixed_models.append(model)
+
+    # Check that a percentage has been included for every needed product class
+    if len(found_models) != 3 or not 'single-payment' in found_models\
+     or not 'subscription' in found_models or not 'use' in found_models:
+        raise ValueError('Invalid revenue sharing model: Missing a required product class')
+
+    return fixed_models
+
+
 class RSSCollection(Resource):
 
     @identity_manager_required
@@ -163,7 +205,7 @@ class RSSCollection(Resource):
             try:
                 limits = _check_limits(data['limits'])
             except Exception as e:
-                return build_response(request, 400, e.message)
+                return build_response(request, 400, unicode(e))
 
         if not len(limits):
             # Set default limits
@@ -174,6 +216,26 @@ class RSSCollection(Resource):
                 'daily': 10000,
                 'monthly': 100000
             }
+
+        # Check revenue sharing models
+        sharing_models = []
+        if 'models' in data:
+            try:
+                sharing_models = _check_revenue_models(data['models'])
+            except Exception as e:
+                return build_response(request, 400, unicode(e))
+        else:
+            # Set default revenue models
+            sharing_models = [{
+                'class': 'single-payment',
+                'percentage': 10.0
+            },{
+                'class': 'subscription',
+                'percentage': 20.0
+            },{
+                'class': 'use',
+                'percentage': 30.0
+            }]
 
         # Create the new entry
         rss = RSS.objects.create(
@@ -190,6 +252,22 @@ class RSSCollection(Resource):
             rss.delete()
             # Return error response
             return build_response(request, call_result[1], call_result[2])
+
+        # Create default revenue sharing models
+        model_manager = ModelManager(rss, request.user.userprofile.access_token)
+
+        model_created = False
+        for model in sharing_models:
+            def call_model_creation():
+                model_manager.create_revenue_model(model)
+
+            call_result = _make_expenditure_request(model_manager, call_model_creation, request.user)
+
+            if call_result[0] and not model_created:
+                rss.delete()
+                return build_response(request, call_result[1], call_result[2])
+            elif not call_result[0]:
+                model_created = True
 
         # The request has been success so the used credentials are valid
         # Store the credentials for future access

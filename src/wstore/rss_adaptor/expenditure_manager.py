@@ -18,49 +18,22 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
-import json
-import urllib2
-from urllib2 import HTTPError
+from __future__ import unicode_literals
+
 from urlparse import urljoin
 
-from wstore.store_commons.utils.method_request import MethodRequest
-from wstore.models import RSS
+from wstore.rss_adaptor.rss_manager import RSSManager
 
 
-class ExpenditureManager():
+class ExpenditureManager(RSSManager):
 
-    _rss = None
-    _credentials = None
     _provider_id = None
 
     def __init__(self, rss, credentials):
-        self._rss = rss
-        self._credentials = credentials
+        RSSManager.__init__(self, rss, credentials)
 
         from django.conf import settings
         self._provider_id = settings.STORE_NAME.lower()
-
-    def _make_request(self, method, url, data={}):
-        """
-           Makes requests to the RSS
-        """
-        opener = urllib2.build_opener()
-
-        headers = {
-            'content-type': 'application/json',
-            'X-Auth-Token': self._credentials
-        }
-        request = MethodRequest(method, url, json.dumps(data), headers)
-
-        response = opener.open(request)    
-
-        if not (response.code > 199 and response.code < 300):
-            raise HTTPError(response.url, response.code, response.msg, None, None)
-
-        return response
-
-    def _refresh_rss(self):
-        self._rss = RSS.objects.get(name=self._rss.name)
 
     def set_provider_limit(self):
         """
@@ -143,6 +116,3 @@ class ExpenditureManager():
         }
         endpoint = urljoin(self._rss.host, 'expenditureLimit/balanceAccumulated/' + str(actor_profile.actor_id))
         self._make_request('PUT', endpoint, data)
-
-    def set_credentials(self, credentials):
-        self._credentials = credentials
