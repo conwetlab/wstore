@@ -122,6 +122,16 @@
   color: rgb(0, 43, 103);
 }
 
+.login-brand {
+  position: relative;
+  left: 84px;
+  top: -57px;
+}
+
+.login-brand span {
+  position: relative;
+}
+
 .store_title {
     color: rgb(96, 193, 207);
     font-family: NeoTech;
