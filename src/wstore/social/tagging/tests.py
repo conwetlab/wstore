@@ -41,6 +41,10 @@ class TagCooccurrenceTestCase(TestCase):
 
     tags = ('tagging', 'fiware-ut-30')
 
+    def tearDown(self):
+        reload(recommendation_manager)
+        TestCase.tearDown(self)
+
     def _search_mock(self, tag):
         search_result = {
             'test': [{
@@ -98,15 +102,19 @@ class TagCooccurrenceTestCase(TestCase):
         for t in result_list:
             ix = tags.index(t[1])
             self.assertEquals(str(t[2]), scores[ix])
-        
+
 
 class USDLTagsTestCase(TestCase):
 
     tags = ('tagging', 'fiware-ut-30')
 
+    def tearDown(self):
+        reload(recommendation_manager)
+        TestCase.tearDown(self)
+
     def _aggregate_mock(self, offering):
         return "CoNWeT   Terms and conditions Description of the terms and conditions applied to this widget Android 2011-12-01 2011-12-31  Map viewer free use   Map viewer description"
-    
+
     def test_usdl_tagging_recommendation(self):
         # Create mocks
         recommendation_manager.SearchEngine = MagicMock
@@ -122,6 +130,7 @@ class USDLTagsTestCase(TestCase):
         self.assertEquals(len(result_list), len(expected_result))
         for res in result_list:
             self.assertTrue(res in expected_result)
+
 
 class TagManagementTestCase(TestCase):
 
@@ -143,6 +152,7 @@ class TagManagementTestCase(TestCase):
                 file_path = os.path.join(self._path, f)
                 os.remove(file_path)
             os.rmdir(self._path)
+        reload(tag_manager)
 
     @parameterized.expand([
         (False, '1111111111', ['test1', 'test2']),
@@ -227,6 +237,10 @@ class TagViewTestCase(TestCase):
             email='',
             password='passwd'
         )
+
+    def tearDown(self):
+        reload(views)
+        TestCase.tearDown(self)
 
     def _get_offering(self, owner_organization=None, name=None, version=None):
         if name!= 'test_offering':
@@ -360,6 +374,8 @@ class RecommendationProcessTestCase(TestCase):
         # Restore Tag init
         if self._init_copy:
             recommendation_manager.TagManager.__init__ = self._init_copy
+
+        reload(recommendation_manager)
 
     def test_tag_aggregation(self):
         # Create tag recommendation manager
