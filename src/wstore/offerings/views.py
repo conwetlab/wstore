@@ -90,52 +90,55 @@ class OfferingCollection(Resource):
 
     @authentication_required
     def read(self, request):
+        try:
+            # Read the query string in order to know the filter and the page
+            filter_ = request.GET.get('filter', 'published')
+            user = request.user
+            action = request.GET.get('action', None)
+            sort = request.GET.get('sort', None)
 
-        # Read the query string in order to know the filter and the page
-        filter_ = request.GET.get('filter', 'published')
-        user = request.user
-        action = request.GET.get('action', None)
-        sort = request.GET.get('sort', None)
+            # Check sorting values
+            if sort != None:
+                if sort != 'date' and sort != 'popularity' and sort != 'name':
+                    return build_response(request, 400, 'Invalid sorting')
 
-        # Check sorting values
-        if sort != None:
-            if sort != 'date' and sort != 'popularity' and sort != 'name':
-                return build_response(request, 400, 'Invalid sorting')
+            pagination = {
+                'skip': request.GET.get('start', None),
+                'limit': request.GET.get('limit', None)
+            }
 
-        pagination = {
-            'skip': request.GET.get('start', None),
-            'limit': request.GET.get('limit', None)
-        }
+            if action != 'count':
+                if pagination['skip'] and pagination['limit']:
+                    if filter_ == 'provided':
+                        result = get_offerings(user, request.GET.get('state'), owned=True, pagination=pagination, sort=sort)
 
-        if action != 'count':
-            if pagination['skip'] and pagination['limit']:
-                if filter_ == 'provided':
-                    result = get_offerings(user, request.GET.get('state'), owned=True, pagination=pagination, sort=sort)
+                    elif filter_ == 'published':
+                        result = get_offerings(user, pagination=pagination, sort=sort)
 
-                elif filter_ == 'published':
-                    result = get_offerings(user, pagination=pagination, sort=sort)
+                    elif filter_ == 'purchased':
+                        result = get_offerings(user, 'purchased', owned=True, pagination=pagination, sort=sort)
+                else:
+                    if filter_ == 'provided':
+                        result = get_offerings(user, request.GET.get('state'), owned=True, sort=sort)
 
-                elif filter_ == 'purchased':
-                    result = get_offerings(user, 'purchased', owned=True, pagination=pagination, sort=sort)
+                    elif filter_ == 'published':
+                        result = get_offerings(user, sort=sort)
+
+                    elif filter_ == 'purchased':
+                        result = get_offerings(user, 'purchased', owned=True, sort=sort)
+
             else:
                 if filter_ == 'provided':
-                    result = get_offerings(user, request.GET.get('state'), owned=True, sort=sort)
+                    result = count_offerings(user, request.GET.get('state'), owned=True)
 
                 elif filter_ == 'published':
-                    result = get_offerings(user, sort=sort)
+                    result = count_offerings(user)
 
                 elif filter_ == 'purchased':
-                    result = get_offerings(user, 'purchased', owned=True, sort=sort)
+                    result = count_offerings(user, 'purchased', owned=True)
 
-        else:
-            if filter_ == 'provided':
-                result = count_offerings(user, request.GET.get('state'), owned=True)
-
-            elif filter_ == 'published':
-                result = count_offerings(user)
-
-            elif filter_ == 'purchased':
-                result = count_offerings(user, 'purchased', owned=True)
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         mime_type = 'application/JSON; charset=UTF-8'
         return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
@@ -326,7 +329,7 @@ class ResourceCollection(Resource):
                 except Exception, e:
                     return build_response(request, 400, e.message)
         else:
-            return build_response(request, 403, 'Forbidden')
+            return build_response(request, 403, "You don't have the provider role")
 
         return build_response(request, 201, 'Created')
 
