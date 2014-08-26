@@ -84,21 +84,23 @@ def mock_request(method, url, data, headers):
         'headers': headers
     }
 
-def save_indexes():
+
+def _save_ixdir(orig_info, dest_info):
     index_path = os.path.join(settings.BASEDIR, 'wstore')
-    index_path = os.path.join(index_path, 'search')
-    index_path = os.path.join(index_path, 'indexes')
+    index_path = os.path.join(index_path, orig_info['module'])
+    index_path = os.path.join(index_path, orig_info['name'])
 
     destination_path = os.path.join(settings.BASEDIR, 'wstore')
-    destination_path = os.path.join(destination_path, 'test')
-    destination_path = os.path.join(destination_path, 'indexes')
+    destination_path = os.path.join(destination_path, dest_info['module'])
+    destination_path = os.path.join(destination_path, dest_info['name'])
 
     shutil.move(index_path, destination_path)
 
-def restore_indexes():
+
+def _restore_ixdir(orig_info, dest_info):
     index_path = os.path.join(settings.BASEDIR, 'wstore')
-    index_path = os.path.join(index_path, 'search')
-    index_path = os.path.join(index_path, 'indexes')
+    index_path = os.path.join(index_path, orig_info['module'])
+    index_path = os.path.join(index_path, orig_info['name'])
 
     try:
         shutil.rmtree(index_path)
@@ -106,7 +108,55 @@ def restore_indexes():
         pass
 
     destination_path = os.path.join(settings.BASEDIR, 'wstore')
-    destination_path = os.path.join(destination_path, 'test')
-    destination_path = os.path.join(destination_path, 'indexes')
+    destination_path = os.path.join(destination_path, dest_info['module'])
+    destination_path = os.path.join(destination_path, dest_info['name'])
 
     shutil.move(destination_path, index_path)
+
+
+def save_indexes():
+    orig_info = {
+        'module': 'search',
+        'name': 'indexes'
+    }
+    dest_info = {
+        'module': 'test',
+        'name': 'indexes'
+    }
+    _save_ixdir(orig_info, dest_info)
+
+
+def restore_indexes():
+    orig_info = {
+        'module': 'search',
+        'name': 'indexes'
+    }
+    dest_info = {
+        'module': 'test',
+        'name': 'indexes'
+    }
+    _restore_ixdir(orig_info, dest_info)
+
+
+def save_tags():
+    orig_info = {
+        'module': 'social',
+        'name': 'indexes'
+    }
+    dest_info = {
+        'module': 'test',
+        'name': 'tag_indexes'
+    }
+    _save_ixdir(orig_info, dest_info)
+
+
+def restore_tags():
+    orig_info = {
+        'module': 'social',
+        'name': 'indexes'
+    }
+    dest_info = {
+        'module': 'test',
+        'name': 'tag_indexes'
+    }
+    _restore_ixdir(orig_info, dest_info)
