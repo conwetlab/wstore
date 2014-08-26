@@ -1,3 +1,12 @@
+h1 {
+  font-family: NeoTech;
+  font-weight: normal;
+}
+
+h2 {
+  font-family: NeoTech;
+}
+
 .dropdown-menu>li>a:hover {
   background-color: rgb(0, 43, 103)
 }
@@ -302,10 +311,10 @@
     width: 191px;
     height: 20px;
     white-space: nowrap;
-    padding-top:2px;
+    padding-top:5px;
     overflow: hidden;
     position: absolute;
-    top: -8px;
+    top: -9px;
     left: 10px;
 }
 
