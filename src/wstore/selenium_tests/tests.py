@@ -24,16 +24,18 @@ import os
 import json
 import shutil
 import rdflib
+import time
 from nose_parameterized import parameterized
 
 from django.conf import settings
 from django.contrib.auth.models import User
 
-from wstore.store_commons.utils.testing import save_indexes, restore_indexes
+from wstore.store_commons.utils.testing import save_indexes, restore_indexes, save_tags, restore_tags
 from wstore.search.search_engine import SearchEngine
 from wstore.selenium_tests.testcase import WStoreSeleniumTestCase
 from wstore.offerings.offerings_management import _create_basic_usdl
 from wstore.models import Offering, Purchase
+from wstore.social.tagging.tag_manager import TagManager
 
 
 def _fill_offering_description(pk, usdl_info, owner):
@@ -84,7 +86,18 @@ def _create_indexes():
         search_engine.create_index(off)
 
 
-class BasicNavigationTestCase(WStoreSeleniumTestCase):
+def _create_tags():
+    tm = TagManager()
+    offering1 = Offering.objects.get(name='test_offering1')
+    offering2 = Offering.objects.get(name='test_offering2')
+    offering3 = Offering.objects.get(name='test_offering3')
+
+    tm.update_tags(offering1, ['service', 'tag'])
+    tm.update_tags(offering2, ['dataset', 'tag'])
+    tm.update_tags(offering3, ['widget'])
+
+
+class BasicSearchTestCase(WStoreSeleniumTestCase):
 
     tags = ('selenium', )
     _dirs_to_remove = []
@@ -151,6 +164,11 @@ class BasicNavigationTestCase(WStoreSeleniumTestCase):
         # Create indexes
         save_indexes()
         _create_indexes()
+
+        # Create tag indexes
+        save_tags()
+        _create_tags()
+
         WStoreSeleniumTestCase.setUp(self)
 
     def tearDown(self):
@@ -166,6 +184,7 @@ class BasicNavigationTestCase(WStoreSeleniumTestCase):
             except:
                 pass
         restore_indexes()
+        restore_tags()
         WStoreSeleniumTestCase.tearDown(self)
 
     def _check_container(self, container, offering_names):
@@ -178,11 +197,12 @@ class BasicNavigationTestCase(WStoreSeleniumTestCase):
             title = off_elem.find_element_by_css_selector('h2')
             self.assertTrue(title.text in offering_names)
 
-    def test_basic_navigation(self):
+    def test_offering_search(self):
         # Start interactions with the GUI
         self.login()
         self.view_all()
 
+        # Search by keyword
         self._check_container('search-container', ['test_offering1', 'test_offering2', 'test_offering3'])
         self.assertEquals(self.driver.current_url, 'http://localhost:8081/search')
 
@@ -192,11 +212,30 @@ class BasicNavigationTestCase(WStoreSeleniumTestCase):
         self.assertEquals(self.driver.current_url, 'http://localhost:8081/search/keyword/test')
 
         self.open_offering_details('test_offering1')
+
         self.back()
 
+        # Search by main categories
+        time.sleep(3)
+        self.click_first_cat()
+        self._check_container('search-container', ['test_offering1'])
+
+        self.click_second_cat()
+        self._check_container('search-container', ['test_offering2'])
+
+        self.click_third_cat()
+        self._check_container('search-container', ['test_offering3'])
+
+        # Search by tag
+        self.view_all()
+
+        self.open_offering_details('test_offering1')
+        self.click_tag('tag')
+        self._check_container('search-container', ['test_offering1', 'test_offering2'])
+        
         self.logout()
 
-    def test_catalogue_navigation(self):
+    def test_catalogue_search(self):
         self.login(username='provider')
 
         # Open my offerings page
@@ -210,7 +249,16 @@ class BasicNavigationTestCase(WStoreSeleniumTestCase):
         # Check provided offerings
         self._check_container('offerings-container', ['test_offering1', 'test_offering2'])
 
+        # Search by keyword
         self.logout()
+
+
+class AdministrationTestCase(WStoreSeleniumTestCase):
+    pass
+
+
+class OfferingManagementTestCase(WStoreSeleniumTestCase):
+    pass
 
 
 class ResourceManagementTestCase(WStoreSeleniumTestCase):

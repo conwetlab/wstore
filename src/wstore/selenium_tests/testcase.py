@@ -97,7 +97,7 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         self.driver.find_element_by_id('menu-second-text').click()
 
     def click_third_cat(self):
-        self._get_categories()[2].click()
+        self.driver.find_element_by_id('menu-third-text').click()
 
     def click_first_nav(self):
         self._get_navs()[0].click()
@@ -111,3 +111,11 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
 
     def register_resource(self, resource_info):
         pass
+
+    def click_tag(self, tag):
+        tag_elems = self.driver.find_elements_by_class_name('tag')
+
+        for te in tag_elems:
+            if te.text == tag:
+                te.click()
+                break
