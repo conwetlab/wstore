@@ -44,6 +44,12 @@ nav.navbar-inner .logo-header{
 
 }
 
+.portal-brand {
+  width: 169px !important;
+  margin-left: -11px;
+  margin-top: -13px !important;
+}
+
 .logo-header .brand{
   padding: 0;
   width: auto;
@@ -87,7 +93,8 @@ ul.oil-portal{
   float: left;
   line-height: 20px;
   font-size: 14px;
-  margin-left: 2px;
+  margin-left: -13px;
+  margin-top: -2px;
   padding-left: 0px;
   padding-right: 0px;
 }

@@ -7,9 +7,11 @@
       <nav class="navbar-inner">
 
         <div class="logo-header">
+          {% if not portal %}
           <a href=" {{ main }}" class="logo-header">
-            <img alt="FI-WARE" class="logo" src="{{ STATIC_URL }}oil/img/header-logo.png">
+                <img alt="FI-WARE" class="logo" src="{{ STATIC_URL }}oil/img/header-logo.png">
           </a>
+          {% endif %}
           <a href="{{ main }}" class="brand">
             {% if not portal %}
             <div class="store_title">
@@ -18,7 +20,7 @@
             </div>
             <div id="title-shadow"></div>
             {% else %}
-            <img alt="FI-WARE" class="logo" src="{{ STATIC_URL }}oil/img/Fi-lab.png" style="width: 97px;">
+            <img alt="FI-WARE" class="logo portal-brand" src="{{ STATIC_URL }}oil/img/Fi-lab.png">
             {% endif %}
           </a>
         </div>
