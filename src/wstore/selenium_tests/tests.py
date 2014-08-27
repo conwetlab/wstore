@@ -25,7 +25,10 @@ import json
 import shutil
 import rdflib
 import time
+
+from mock import MagicMock
 from nose_parameterized import parameterized
+from threading import Timer
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -36,7 +39,11 @@ from wstore.selenium_tests.testcase import WStoreSeleniumTestCase
 from wstore.offerings.offerings_management import _create_basic_usdl
 from wstore.models import Offering, Purchase
 from wstore.social.tagging.tag_manager import TagManager
+from wstore.repository_adaptor import repositoryAdaptor
+from wstore.selenium_tests.test_server import TestServer
 
+
+TESTING_PORT = 8989
 
 def _fill_offering_description(pk, usdl_info, owner):
     offering = Offering.objects.get(pk=pk)
@@ -187,16 +194,6 @@ class BasicSearchTestCase(WStoreSeleniumTestCase):
         restore_tags()
         WStoreSeleniumTestCase.tearDown(self)
 
-    def _check_container(self, container, offering_names):
-        # Check offerings container
-        container = self.driver.find_element_by_class_name(container)
-        offering_elems = container.find_elements_by_class_name('menu-offering')
-        self.assertEquals(len(offering_elems), len(offering_names))
-
-        for off_elem in offering_elems:
-            title = off_elem.find_element_by_css_selector('h2')
-            self.assertTrue(title.text in offering_names)
-
     def test_offering_search(self):
         # Start interactions with the GUI
         self.login()
@@ -250,6 +247,9 @@ class BasicSearchTestCase(WStoreSeleniumTestCase):
         self._check_container('offerings-container', ['test_offering1', 'test_offering2'])
 
         # Search by keyword
+        self.search_keyword('test', id_='#cat-search-input', btn='#cat-search')
+        self._check_container('offerings-container', ['test_offering1'])
+
         self.logout()
 
 
@@ -258,8 +258,76 @@ class AdministrationTestCase(WStoreSeleniumTestCase):
 
 
 class OfferingManagementTestCase(WStoreSeleniumTestCase):
-    pass
 
+    tags = ('selenium',)
+
+    def __init__(self, methodName='runTest'):
+        WStoreSeleniumTestCase.__init__(self, methodName=methodName)
+        self.fixtures.extend(['repositories.json'])
+
+    def setUp(self):
+        # Start the testing server
+        self._server = TestServer()
+        self._server.set_port(TESTING_PORT)
+        self._server.start()
+        _fill_provider_role('provider')
+        WStoreSeleniumTestCase.setUp(self)
+
+    def tearDown(self):
+        self._server.stop_server()
+        path = os.path.join(settings.BASEDIR, 'media/provider__test_offering__1.0')
+        try:
+            files = os.listdir(path)
+            for f in files:
+                file_path = os.path.join(path, f)
+                os.remove(file_path)
+
+            os.rmdir(path)
+        except:
+            pass
+        WStoreSeleniumTestCase.tearDown(self)
+
+    def test_create_offering(self):
+        self.login('provider')
+        self.click_first_nav()
+
+        self._check_container('offerings-container', [])
+
+        # Create
+        self.create_offering_menu()
+
+        self.fill_basic_offering_info({
+            'name': 'test_offering',
+            'version': '1.0',
+            'notification': None,
+            'open': False
+        })
+
+        self.driver.find_element_by_css_selector('.modal-footer > .btn').click()
+
+        self.fill_usdl_info({
+            'type': 'form',
+            'description': 'A test offering',
+            'price': '10',
+            'legal': {
+                'title': 'terms and conditions',
+                'text': 'An example terms and conditions'
+            }
+        })
+
+        self.driver.find_element_by_css_selector('.modal-footer > .btn').click()  # Next
+        self.driver.find_element_by_css_selector('.modal-footer > .btn').click()  # Accept
+        time.sleep(1)
+        self.driver.find_element_by_css_selector('.modal-footer > .btn').click()  # Accept
+
+        self.click_second_cat()
+        self._check_container('offerings-container', ['test_offering'])
+        
+        # Update
+        self.open_offering_details('test_offering')
+
+        # Bind
+        # Publish
 
 class ResourceManagementTestCase(WStoreSeleniumTestCase):
 

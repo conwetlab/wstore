@@ -1,0 +1,10 @@
+[
+   {
+        "pk": "61000bba8e05ac2ccccccccc",
+        "model": "wstore.Repository",
+        "fields": {
+            "name": "test_repository",
+            "host": "http://localhost:8989"
+        }
+    }
+]

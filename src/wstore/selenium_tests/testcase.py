@@ -20,9 +20,14 @@
 
 from __future__ import unicode_literals
 
+import os
 from selenium.webdriver.firefox.webdriver import WebDriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from django.test import TestCase
+from django.conf import settings
 from django.test.testcases import LiveServerTestCase
 
 class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
@@ -39,6 +44,16 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         self.driver.implicitly_wait(5)
         self.driver.get(self.live_server_url)
         TestCase.setUp(self)
+
+    def _check_container(self, container, offering_names):
+        # Check offerings container
+        container = self.driver.find_element_by_class_name(container)
+        offering_elems = container.find_elements_by_class_name('menu-offering')
+        self.assertEquals(len(offering_elems), len(offering_names))
+
+        for off_elem in offering_elems:
+            title = off_elem.find_element_by_css_selector('h2')
+            self.assertTrue(title.text in offering_names)
 
     def login(self, username='admin'):
         # Set username
@@ -68,13 +83,13 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
     def view_all(self):
         self.driver.find_element_by_css_selector('#all').click()
 
-    def search_keyword(self, keyword):
+    def search_keyword(self, keyword, id_='#text-search', btn='#search'):
         # Set search field
-        search_elem = self.driver.find_element_by_css_selector('#text-search')
+        search_elem = self.driver.find_element_by_css_selector(id_)
         search_elem.send_keys(keyword)
 
         # Click search button
-        self.driver.find_element_by_css_selector('#search').click()
+        self.driver.find_element_by_css_selector(btn).click()
 
     def open_offering_details(self, offering_name):
 
@@ -106,9 +121,62 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         self._get_navs()[1].click()
 
     def _open_provider_option(self, option):
-        self.driver.find_element_by_id('provider-options').click()
+        self.driver.find_element_by_css_selector('#provider-options a.btn').click()
         self.driver.find_element_by_id(option).click()
 
+    def create_offering_menu(self):
+        self._open_provider_option('create-app')
+
+    def fill_basic_offering_info(self, offering_info):
+        # Name and version
+        self.driver.find_element_by_css_selector('[name="app-name"]').send_keys(offering_info['name'])
+        self.driver.find_element_by_css_selector('[name="app-version"]').send_keys(offering_info['version'])
+
+        # Select the notification URL option
+        if not offering_info['notification']:
+            self.driver.find_element_by_css_selector('input[type="radio"][value="none"]').click()
+        elif offering_info['notification'] == 'default':
+            self.driver.find_element_by_css_selector('input[type="radio"][value="default"]').click()
+        else:
+            self.driver.find_element_by_css_selector('input[type="radio"][value="new"]').click()
+            self.driver.find_element_by_id('notify').send_keys(offering_info['notification'])
+
+        # Add the logo
+        logo_path = os.path.join(settings.BASEDIR, 'wstore/defaulttheme/static/assets/img/noimage.png')
+        self.driver.find_element_by_id('img-logo').send_keys(logo_path)
+
+        # Mark as open if needed
+        if offering_info['open']:
+            self.driver.find_element_by_id('open-offering').click()
+
+    def _fill_usdl_form(self, usdl_info):
+        # Fill description field
+        self.driver.find_element_by_id('description').send_keys(usdl_info['description'])
+
+        # Fill pricing info if needed
+        if 'price' in usdl_info:
+            self.driver.find_element_by_css_selector('#pricing-select option[value="single_payment"]').click()
+            self.driver.find_element_by_id('price-input').send_keys(usdl_info['price'])
+
+        if 'legal' in usdl_info:
+            self.driver.find_element_by_id('legal-title').send_keys(usdl_info['legal']['title'])
+            self.driver.find_element_by_id('legal-text').send_keys(usdl_info['legal']['text'])
+
+    def _fill_usdl_upload(self, usdl_info):
+        pass
+
+    def _fill_usdl_url(self, usdl_info):
+        pass
+
+    def fill_usdl_info(self, usdl_info):
+        # Select the correct method
+        methods = {
+            'form': self._fill_usdl_form,
+            'upload': self._fill_usdl_upload,
+            'url': self._fill_usdl_url
+        }
+        methods[usdl_info['type']](usdl_info)
+        
     def register_resource(self, resource_info):
         pass
 
