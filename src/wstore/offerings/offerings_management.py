@@ -776,6 +776,12 @@ def delete_offering(offering):
         # Remove the search index
         se.remove_index(offering)
 
+        # Remove the offering pk from the bound resources
+        for res in offering.resources:
+            resource = Resource.objects.get(pk=unicode(res))
+            resource.offerings.remove(offering.pk)
+            resource.save()
+
         offering.delete()
     else:
         # Delete the offering from marketplaces
