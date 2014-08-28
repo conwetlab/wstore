@@ -742,7 +742,7 @@ def delete_offering(offering):
 
     #delete the usdl description from the repository
     if offering.state == 'deleted':
-        raise Exception('The offering is already deleted')
+        raise PermissionDenied('The offering is already deleted')
 
     parsed_url = urlparse(offering.description_url)
     path = parsed_url.path

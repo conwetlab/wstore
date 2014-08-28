@@ -1533,41 +1533,64 @@ class OfferingDeletionTestCase(TestCase):
     tags = ('fiware-ut-5',)
     fixtures = ['del.json']
 
-    @classmethod
-    def setUpClass(cls):
-        # Create database connection and load initial data
-        offerings_management.MarketAdaptor = FakeMarketAdaptor
-        offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
-        super(OfferingDeletionTestCase, cls).setUpClass()
-
     def setUp(self):
+        offerings_management.os = MagicMock()
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
+        offerings_management.MarketAdaptor = FakeMarketAdaptor
+        offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
         offerings_management.SearchEngine.return_value = self.se_object
 
-    def test_delete_uploaded_offering(self):
-        offering = Offering.objects.get(name='test_offering')
-        # Mock os
-        offerings_management.os = MagicMock()
-        offerings_management.delete_offering(offering)
-        error = False
+    def tearDown(self):
+        reload(offerings_management)
+        TestCase.tearDown(self)
+
+    def _deleted(self, offering):
+        offering.state = 'deleted'
+        offering.save()
+
+    def _add_resources(self, offering):
+        # Mock resources
+        offerings_management.Resource = MagicMock()
+        self.res_obj = MagicMock()
+        offerings_management.Resource.objects.get.return_value = self.res_obj
+
+        offering.resources = ['1111', '2222']
+        offering.save()
+
+    @parameterized.expand([
+        ('uploaded', 'test_offering', True),
+        ('uploaded_resources', 'test_offering', True, True, _add_resources),
+        ('published', 'test_offering2'),
+        ('published_market', 'test_offering3'),
+        ('deleted', 'test_offering3', False, False, _deleted, PermissionDenied, 'The offering is already deleted'),
+    ])
+    def test_delete_offering(self, name, offering_name, deleted=False, del_resources=False, side_effect=None, err_type=None, err_msg=None):
+
+        # Get offering
+        offering = Offering.objects.get(name=offering_name)
+        pk = offering.pk
+        if side_effect:
+            side_effect(self, offering)
+
+        error = None
         try:
-            offering = Offering.objects.get(name='test_offering')
-        except:
-            error = True
+            offerings_management.delete_offering(offering)
+        except Exception as e:
+            error = e
 
-        self.assertTrue(error)
+        if not err_type:
+            self.assertEquals(error, None)
 
-    def test_delete_published_offering(self):
-        offering = Offering.objects.get(name='test_offering2')
-        offerings_management.delete_offering(offering)
-        offering = Offering.objects.get(name='test_offering2')
-        self.assertEqual(offering.state, 'deleted')
-        self.se_object.update_index.assert_called_with(offering)
-
-    def test_delete_published_offering_marketplace(self):
-        offering = Offering.objects.get(name='test_offering3')
-        offerings_management.delete_offering(offering)
-        offering = Offering.objects.get(name='test_offering3')
-        self.assertEqual(offering.state, 'deleted')
-        self.se_object.update_index.assert_called_with(offering)
+            if deleted:
+                self.assertEquals(len(Offering.objects.filter(name=offering_name)), 0)
+                self.se_object.remove_index.assert_called_with(offering)
+                if del_resources:
+                    self.res_obj.offerings.remove.assert_called_with(pk)
+            else:
+                offering = Offering.objects.get(name=offering_name)
+                self.assertEqual(offering.state, 'deleted')
+                self.se_object.update_index.assert_called_with(offering)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(error), err_msg)
