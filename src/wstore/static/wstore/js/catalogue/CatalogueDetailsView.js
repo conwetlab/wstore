@@ -195,7 +195,7 @@
             }
 
             // Bind resources and edit the offering
-            if (this.offeringElement.getState() == 'uploaded') {
+            if (this.offeringElement.getState() == 'uploaded' || this.offeringElement.isOpen()) {
                 $('<li><a>Bind resources</a></li>').appendTo('#advanced-op').click((function() {
                     var resForm = new BindResourcesForm(this.offeringElement, false, this);
                     resForm.display();

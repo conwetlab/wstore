@@ -566,7 +566,7 @@ def update_offering(offering, data):
 
     # Check if the offering has been published,
     # if published the offering cannot be updated
-    if offering.state != 'uploaded':
+    if offering.state != 'uploaded' and not offering.open:
         raise PermissionDenied('The offering cannot be edited')
 
     dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
