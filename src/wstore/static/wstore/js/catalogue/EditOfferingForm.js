@@ -45,6 +45,15 @@
 
         var reader = new FileReader();
 
+        // Preview the image if is the logo
+        if (type == 'logo') {
+            var prevReader = new FileReader();
+            prevReader.readAsDataURL(files[0]);
+            prevReader.onloadend = function () {
+                $('.image-preview').attr('src', this.result);
+            }
+        }
+
         var readImages = function readImages(images) {
 
             if(images.length > 0) {
@@ -389,14 +398,10 @@
         $('<div></div>').attr('id', 'edit-error').appendTo('.modal-body');
         $('<div></div>').addClass('clear space').appendTo('.modal-body');
 
-        $.template('editFormTemplate', $('#create_app_form_template'));
-        $.tmpl('editFormTemplate').appendTo('.modal-body');
-
-        // Remove unnecessary inputs
-        $('[name="app-name"]').remove();
-        $('[name="app-version"]').remove();
-        $('label:contains(Name)').remove();
-        $('label:contains(Version)').remove();
+        $.template('editFormTemplate', $('#update_off_form_template'));
+        $.tmpl('editFormTemplate', {
+            'image_url': offeringElement.getLogo()
+        }).appendTo('.modal-body');
 
         // Set listeners
         $('#img-logo').change(function(event) {
