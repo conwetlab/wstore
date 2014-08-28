@@ -42,6 +42,7 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         # Open the page
         self.driver = WebDriver()
         self.driver.implicitly_wait(5)
+        self.driver.set_window_size(1024, 768)
         self.driver.get(self.live_server_url)
         TestCase.setUp(self)
 
