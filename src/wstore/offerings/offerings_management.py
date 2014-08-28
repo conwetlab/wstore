@@ -735,6 +735,29 @@ def publish_offering(offering, data):
     se.update_index(offering)
 
 
+def _remove_offering(offering, se):
+    # If the offering has media files delete them
+        dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
+        path = os.path.join(settings.MEDIA_ROOT, dir_name)
+        files = os.listdir(path)
+
+        for f in files:
+            file_path = os.path.join(path, f)
+            os.remove(file_path)
+
+        os.rmdir(path)
+
+        # Remove the search index
+        se.remove_index(offering)
+
+        # Remove the offering pk from the bound resources
+        for res in offering.resources:
+            resource = Resource.objects.get(pk=unicode(res))
+            resource.offerings.remove(offering.pk)
+            resource.save()
+
+        offering.delete()
+
 def delete_offering(offering):
     # If the offering has been purchased it is not deleted
     # it is marked as deleted in order to allow customers that
@@ -760,42 +783,21 @@ def delete_offering(offering):
 
     se = SearchEngine(index_path)
 
-    if offering.state == 'uploaded' or offering.open:
-
-        # If the offering has media files delete them
-        dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
-        path = os.path.join(settings.MEDIA_ROOT, dir_name)
-        files = os.listdir(path)
-
-        for f in files:
-            file_path = os.path.join(path, f)
-            os.remove(file_path)
-
-        os.rmdir(path)
-
-        # Remove the search index
-        se.remove_index(offering)
-
-        # Remove the offering pk from the bound resources
-        for res in offering.resources:
-            resource = Resource.objects.get(pk=unicode(res))
-            resource.offerings.remove(offering.pk)
-            resource.save()
-
-        offering.delete()
+    if offering.state == 'uploaded':
+        _remove_offering(offering, se)
     else:
+        offering.state = 'deleted'
+        offering.save()
+
         # Delete the offering from marketplaces
         for market in offering.marketplaces:
-
             m = Marketplace.objects.get(pk=market)
             market_adaptor = MarketAdaptor(m.host)
             market_adaptor.delete_service(settings.STORE_NAME, offering.name)
 
-        offering.state = 'deleted'
-        offering.save()
-
         # Update offering indexes
-        se.update_index(offering)
+        if not offering.open:
+            se.update_index(offering)
 
         context = Context.objects.all()[0]
         # Check if the offering is in the newest list
@@ -838,6 +840,9 @@ def delete_offering(offering):
 
             context.top_rated = top_rated
             context.save()
+
+        if offering.open:
+            _remove_offering(offering, se)
 
 
 def bind_resources(offering, data, provider):
