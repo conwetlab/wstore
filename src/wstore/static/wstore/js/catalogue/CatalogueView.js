@@ -79,22 +79,6 @@
         return priceStr;
     };
 
-    var getRepositories = function getRepositories(callback) {
-        $.ajax({
-            type: "GET",
-            url: EndpointManager.getEndpoint('REPOSITORY_COLLECTION'),
-            dataType: 'json',
-            success: function(response) {
-                callback(response);
-            },
-            error: function(xhr) {
-                var resp = xhr.responseText;
-                var msg = JSON.parse(resp).message;
-                MessageManager.showMessage('Error', msg);
-            }
-        });
-    };
-
     var purchasedHandler = function purchasedHandler() {
             // Check if details view
             if ($('.detailed-info').length) {
@@ -157,7 +141,8 @@
             $.tmpl('providerOptionsTemplate', {}).appendTo('#provider-options');
 
             $('#create-app').click(function () {
-                getRepositories(showCreateAppForm);
+                var createOffForm = new CreateOfferingForm();
+                createOffForm.display();
             });
             $('#register-res').click(function() {
                 var regResForm = buildRegisterResourceForm('create');

@@ -196,6 +196,10 @@ h2 {
     float: right !important;
 }
 
+.float-left {
+  float: left !important;
+}
+
 .inline {
     display: inline;
 }
@@ -1127,4 +1131,18 @@ footer {
   vertical-align: middle;
   max-height: 100%;
   max-width: 100%;
+}
+
+.error ::-webkit-input-placeholder { /* WebKit browsers */
+    color: rgb(185, 74, 72);
+}
+
+.error :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color: rgb(185, 74, 72);
+}
+.error ::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color: rgb(185, 74, 72);
+}
+.error :-ms-input-placeholder { /* Internet Explorer 10+ */
+    color: rgb(185, 74, 72);
 }
