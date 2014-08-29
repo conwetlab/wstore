@@ -456,11 +456,10 @@ class BindEntry(Resource):
 
     # Binds resources with offerings
     @authentication_required
-    @supported_request_mime_types(('application/json', 'application/xml'))
+    @supported_request_mime_types(('application/json',))
     def create(self, request, organization, name, version):
         # Obtains the offering
         offering = None
-        content_type = get_content_type(request)[0]
         try:
             offering, org = _get_offering(organization, name, version)
         except ObjectDoesNotExist as e:
@@ -473,12 +472,12 @@ class BindEntry(Resource):
         or (not offering.is_owner(request.user) and not request.user.pk in org.managers):
             return build_response(request, 403, 'Forbidden')
 
-        if content_type == 'application/json':
-            try:
-                data = json.loads(request.raw_post_data)
-                bind_resources(offering, data, request.user)
-            except:
-                build_response(request, 400, 'Invalid JSON content')
+        # Bind the resources
+        try:
+            data = json.loads(request.raw_post_data)
+            bind_resources(offering, data, request.user)
+        except Exception as e:
+            return build_response(request, 400, unicode(e))
 
         return build_response(request, 200, 'OK')
 

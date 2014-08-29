@@ -848,7 +848,7 @@ def delete_offering(offering):
 def bind_resources(offering, data, provider):
 
     # Check that the offering supports binding
-    if offering.state != 'uploaded':
+    if offering.state != 'uploaded' and not offering.open:
         raise PermissionDenied('This offering cannot be modified')
 
     added_resources = []
