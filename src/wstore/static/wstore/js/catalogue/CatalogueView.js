@@ -168,6 +168,9 @@
                 offElem.getResources = function() {
                     return [];
                 }
+                offElem.isOpen = function() {
+                    return false;
+                }
                 resForm = new BindResourcesForm(offElem, true);
                 resForm.display();
             });

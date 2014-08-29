@@ -108,7 +108,7 @@
      * Implements the method defined in ModalForm
      */
     BindResourcesForm.prototype.includeContents = function includeContents() {
-        this.getUserResources(this.paintResources.bind(this));
+        this.getUserResources(this.paintResources.bind(this), this.offeringElem.isOpen());
     };
 
     /**
