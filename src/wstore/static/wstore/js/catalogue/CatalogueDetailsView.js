@@ -71,8 +71,8 @@
            actions = {
                 'uploaded': null,
                 'published': 'Purchase',
-                'purchased': 'Download',
-                'rated': 'Download',
+                'purchased': 'Resources',
+                'rated': 'Resources',
                 'deleted': null
             };
         }
@@ -84,7 +84,7 @@
         }
 
         if (action == 'Purchase' && this.offeringElement.isOpen()) {
-            action = 'Download';
+            action = 'Resources';
         }
 
         $.template('detailsTemplate', $('#details_offering_template'));
@@ -226,7 +226,7 @@
         }).bind(this));
 
         //Check renovations
-        if (action == 'Download') {
+        if (action == 'Resources') {
             this.checkRenovations();
         }
 
@@ -317,7 +317,7 @@
             MessageManager.showYesNoWindow(msg, (function() {
                 this.deleteOffering();
             }).bind(this), 'Delete');
-        } else if (action == 'Download') {
+        } else if (action == 'Resources') {
             downloadElements(this.offeringElement);
         }
     };
