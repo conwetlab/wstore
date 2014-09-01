@@ -126,10 +126,15 @@
                 } else if (labelValue == 'deleted') {
                     labelClass += " label-important";
                 }
+
+                if (labelValue == 'purchased') {
+                    labelValue = 'acquired';
+                }
+
                 label.addClass(labelClass).text(labelValue);
                 templ.find('.off-org-name').before(label);
                 templ.find('.off-org-name').css('width', '126px')
-                templ.find('.off-org-name').css('left', '78px');
+                templ.find('.off-org-name').css('left', '68px');
             }
             templ.appendTo('.offerings-container');
         }
