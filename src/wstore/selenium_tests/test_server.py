@@ -38,6 +38,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 class TestServer(threading.Thread):
 
     _keep_running = True
+    _call_received = False
 
     def set_port(self, port):
         self.testing_port = port
@@ -46,9 +47,13 @@ class TestServer(threading.Thread):
         self._keep_running = False
         self.httpd.socket.close()
 
+    def call_received(self):
+        return self._call_received
+
     def run(self):
         Handler = ServerHandler
         self.httpd = SocketServer.TCPServer(("", self.testing_port), Handler)
 
         # A single request is handle
         self.httpd.handle_request()
+        self._call_received = True

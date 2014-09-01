@@ -274,7 +274,16 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
         WStoreSeleniumTestCase.setUp(self)
 
     def tearDown(self):
-        self._server.stop_server()
+        # If the server is still waiting for a call make a
+        # fake call in order to terminate it
+        if not self._server.call_received():
+            from urllib2 import urlopen
+            try:
+                url = 'http://localhost:' + unicode(TESTING_PORT)
+                urlopen(url)
+            except:
+                pass
+
         path = os.path.join(settings.BASEDIR, 'media/provider__test_offering__1.0')
         try:
             files = os.listdir(path)
