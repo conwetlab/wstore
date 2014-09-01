@@ -92,7 +92,7 @@
     {% if legal %}
     <legal:TermsAndConditions xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ base_uri }}{{ fixed_name }}#EcCfJjMlQ5p0wQWs9">
         <dcterms:title xml:lang="en">Terms and conditions</dcterms:title>
-        <dcterms:description xml:lang="en">Description of the terms and conditions aplied to this widget</dcterms:description>
+        <dcterms:description xml:lang="en">Terms and conditions that applies to this offering</dcterms:description>
         <legal:hasClause rdf:resource="{{ base_uri }}{{ fixed_name }}#u67RUEHYQVBOK10VT"/>
     </legal:TermsAndConditions>
 
