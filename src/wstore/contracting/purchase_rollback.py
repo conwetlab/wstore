@@ -111,7 +111,8 @@ class PurchaseRollback():
             if unicode(e) != "This offering can't be purchased" and unicode(e) != 'The offering has been already purchased'\
              and unicode(e) != 'Invalid payment method' and unicode(e) != 'Invalid credit card info'\
              and unicode(e) != 'The customer does not have a tax address' and unicode(e) != 'The customer does not have payment info'\
-             and unicode(e) != 'The tax address is not valid' and unicode(e) != 'Open offerings cannot be purchased':
+             and unicode(e) != 'The tax address is not valid' and unicode(e) != 'Open offerings cannot be purchased' \
+             and unicode(e) != 'You must accept the terms and conditions of the offering to acquire it':
 
                 # Get the purchase
                 if org_owned:

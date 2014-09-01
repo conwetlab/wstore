@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import os
 from datetime import datetime
 
@@ -33,6 +35,21 @@ from wstore.contracting.notify_provider import notify_provider
 from wstore.search.search_engine import SearchEngine
 
 
+def accepted_needed(offering):
+    needed = False
+
+    # Get offering description graph clauses
+    graph = offering.offering_description['@graph']
+
+    # Check if a legal clause has been defined
+    for node in graph:
+        if '@type' in node and (node['@type'] == 'legal:Clause' or \
+        node['@type'] == 'http://www.linked-usdl.org/ns/usdl-legal#Clause'):
+            needed = True
+            break
+ 
+    return needed
+
 @PurchaseRollback
 def create_purchase(user, offering, org_owned=False, payment_info=None):
 
@@ -42,12 +59,15 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
     if offering.open:
         raise PermissionDenied('Open offerings cannot be purchased')
 
+    if accepted_needed(offering) and not payment_info['accepted']:
+        raise PermissionDenied('You must accept the terms and conditions of the offering to acquire it')
+ 
     profile = UserProfile.objects.get(user=user)
 
     # Check if the offering is already purchased
     if (org_owned and offering.pk in profile.current_organization.offerings_purchased) \
     or (not org_owned and offering.pk in profile.offerings_purchased):
-            raise Exception('The offering has been already purchased')
+            raise PermissionDenied('The offering has been already purchased')
 
     organization = profile.current_organization
 
@@ -65,13 +85,13 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
 
         # Check that the customer has a tax address
         if not 'street' in tax:
-            raise Exception('The customer does not have a tax address')
+            raise ValueError('The customer does not have a tax address')
     else:
         tax = payment_info['tax_address']
 
         # Check tax_address fields
         if (not 'street' in tax) or (not 'postal' in tax) or (not 'city' in tax) or (not 'country' in tax):
-            raise Exception('The tax address is not valid')
+            raise ValueError('The tax address is not valid')
 
     # Check the payment method before purchase creation in order to avoid
     # an inconsistent state in the database
@@ -82,7 +102,7 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
             if (not ('number' in payment_info['credit_card'])) or (not ('type' in payment_info['credit_card']))\
             or (not ('expire_year' in payment_info['credit_card'])) or (not ('expire_month' in payment_info['credit_card']))\
             or (not ('cvv2' in payment_info['credit_card'])):
-                raise Exception('Invalid credit card info')
+                raise ValueError('Invalid credit card info')
 
             credit_card_info = payment_info['credit_card']
         else:

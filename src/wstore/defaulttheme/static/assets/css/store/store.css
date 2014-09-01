@@ -189,3 +189,14 @@
   top: 132px;
   font-size: 30px;
 }
+
+.conditions-container {
+  width: 96%;
+  padding: 10px;
+  height: 300px;
+  border: 1px solid rgb(205, 206, 209);
+  border-radius: 4px;
+  overflow: auto;
+  margin-bottom: 10px;
+}
+

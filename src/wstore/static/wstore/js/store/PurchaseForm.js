@@ -158,6 +158,7 @@
                 'name': offeringElement.getName(),
                 'version': offeringElement.getVersion()
             },
+            'conditions_accepted': true
         }
 
         // If a tax address has been provided include it to the request
@@ -419,6 +420,55 @@
     }
 
     /**
+     * Displays the form for accepting the terms and contiditions that apply to
+     * the offering
+     */
+    showTermsAndConditionsForm = function showTermsAndConditionsForm(offeringElement, callerObj) {
+        var legal = offeringElement.getLegal();
+
+        $.template('termsTemplate', $('#terms_and_conditions_template'));
+        $.tmpl('termsTemplate').appendTo('.modal-body');
+
+        // Fill legal info
+        for (var i = 0; i < legal.length; i++) {
+            var legalCmp = legal[i];
+            for (var j = 0; j < legalCmp.clauses.length; j++) {
+                $('<h3></h3>').text(legalCmp.clauses[j].name).appendTo('.conditions-container');
+
+                var text = $('<p></p>').text(legalCmp.clauses[j].text).appendTo('.conditions-container');
+                var repText = text.text().split('\n').join('<br />');
+                text[0].innerHTML = repText;
+            }
+        }
+
+        // Set checkbox listener
+        $('#conditions-accepted').change(function() {
+            if ($(this).prop('checked')) {
+                $('.modal-footer .btn').prop('disabled', false)
+            } else {
+                $('.modal-footer .btn').prop('disabled', true)
+            }
+        });
+
+        // Set next listener
+        $('.modal-footer').empty();
+        $('<input type="button" class="btn btn-basic" data-dismiss="modal" value="Next" disabled></input>').appendTo('.modal-footer');
+        $('.modal-footer .btn').click(function(evnt) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+
+            // Add an aditional check for the terms and conditions
+            if (!$('#conditions-accepted').prop('checked')) {
+                msg = 'You must accept the terms and conditions to acquire this offering';
+                MessageManager.showAlertError('Error', msg, $('#purchase-error'));
+                $('#purchase-error .alert').removeClass('span8');
+            } else {
+                showTaxAddressForm(offeringElement, callerObj);
+            }
+        });
+    };
+
+    /**
      * Dsiplays the form for purchasing an offering
      * @param offeringElement, offering to be purchased
      * @param callerObj, Object that creates the form
@@ -428,7 +478,7 @@
         // Reset plan value
         plan = null;
         // Create the modal
-        MessageManager.showMessage('Purchase offering', '');
+        MessageManager.showMessage('Acquire offering', '');
 
         // Check if there are multiple pricing models
         if (plans.length > 1) {
@@ -509,12 +559,22 @@
                 if (!plan) {
                     MessageManager.showAlertError('Error', 'A price plan is needed', $('#error-message'));
                 } else {
-                    showTaxAddressForm(offeringElement, callerObj);
+                    // Check if terms and conditions has been provided
+                    if (offeringElement.getLegal().length) {
+                        showTermsAndConditionsForm(offeringElement, callerObj);
+                    } else {
+                        showTaxAddressForm(offeringElement, callerObj);
+                    }
                 }
                 
             });
         } else {
-            showTaxAddressForm(offeringElement, callerObj);
+            // Check if terms and conditions has been provided
+            if (offeringElement.getLegal().length) {
+                showTermsAndConditionsForm(offeringElement, callerObj);
+            } else {
+                showTaxAddressForm(offeringElement, callerObj);
+            }
         }
     };
 

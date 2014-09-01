@@ -101,6 +101,16 @@ class PurchasesCreationTestCase(TestCase):
         purchases_management.SearchEngine = MagicMock()
         se_obj = MagicMock()
         purchases_management.SearchEngine.return_value = se_obj
+        usdl_info = {
+            'name': 'test_offering',
+            'base_uri': 'http://localhost',
+            'image_url': '/media/test_image.png',
+            'pricing': {
+                'price_model': 'free'
+            },
+            'description': 'test offering'
+        }
+        self._load_usdl(usdl_info)
 
     def _open_offering(self):
         offering = Offering.objects.get(name='test_offering')
@@ -118,9 +128,45 @@ class PurchasesCreationTestCase(TestCase):
         }
         user.userprofile.save()
 
+    def _load_usdl(self, usdl_info):
+        # Load offering description to test offering
+        from wstore.offerings.offerings_management import _create_basic_usdl
+        offering = Offering.objects.get(name='test_offering')
+        usdl = _create_basic_usdl(usdl_info)
+        graph = rdflib.Graph()
+        graph.parse(data=usdl, format='application/rdf+xml')
+        offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
+        offering.save()
+
+    def _set_legal(self):
+        usdl_info = {
+            'name': 'test_offering',
+            'base_uri': 'http://localhost',
+            'image_url': '/media/test_image.png',
+            'pricing': {
+                'price_model': 'free'
+            },
+            'description': 'test offering',
+            'legal': {
+                'title': 'terms and conditions',
+                'text': 'this are the applied terms and conditions'
+            }
+        }
+        self._load_usdl(usdl_info)
+
+    def _non_published(self):
+        offering = Offering.objects.get(name='test_offering')
+        offering.state = 'uploaded'
+        offering.save()
+
+    def _already_purchased(self):
+        user = User.objects.get(username='test_user')
+        offering = Offering.objects.get(name='test_offering')
+        user.userprofile.offerings_purchased = [offering.pk]
+        user.userprofile.save()
+
     @parameterized.expand([
-        (_open_offering, False, None, PermissionDenied, 'Open offerings cannot be purchased'),
-        (None, False, {
+        ('invalid_payment', None, False, {
             'tax_address': {
                 'street': 'test street',
                 'postal': '28000',
@@ -129,7 +175,7 @@ class PurchasesCreationTestCase(TestCase):
             },
             'payment_method': 'incorrect'
         }, ValueError, 'Invalid payment method'),
-        (_fill_user_payment, False, {
+        ('user_payment', _fill_user_payment, False, {
             'tax_address': {
                 'street': 'test street',
                 'postal': '28000',
@@ -139,7 +185,7 @@ class PurchasesCreationTestCase(TestCase):
             'payment_method': 'credit_card',
             'plan': 'update'
         }),
-        (None, False, {
+        ('user_payment_no_info', None, False, {
             'tax_address': {
                 'street': 'test street',
                 'postal': '28000',
@@ -148,9 +194,62 @@ class PurchasesCreationTestCase(TestCase):
             },
             'payment_method': 'credit_card',
             'plan': 'update'
-        }, Exception, 'The customer does not have payment info')
+        }, Exception, 'The customer does not have payment info'),
+        ('open_offering', _open_offering, False, None, PermissionDenied, 'Open offerings cannot be purchased'),
+        ('no_tax_address', None, False, {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
+            }
+        }, ValueError, 'The customer does not have a tax address'),
+        ('invalid_tax_address', None, False, {
+           'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
+            },
+            'tax_address': {
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
+        }, ValueError, 'The tax address is not valid'),
+        ('invalid_card_info', None, False, {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
+            },
+            'tax_address': {
+                'street': 'test street',
+                'postal': '28000',
+                'city': 'test city',
+                'country': 'test country'
+            }
+        }, ValueError, 'Invalid credit card info'),
+        ('conditions', _set_legal, False, {
+            'payment_method': 'paypal',
+            'accepted': False
+        }, PermissionDenied, 'You must accept the terms and conditions of the offering to acquire it'),
+        ('non_published', _non_published, False, {
+            'payment_method': 'paypal',
+            'accepted': False
+        }, PermissionDenied, "This offering can't be purchased"),
+        ('already_purchased', _already_purchased, False, {
+            'payment_method': 'paypal',
+            'accepted': False
+        }, PermissionDenied, 'The offering has been already purchased')
     ])
-    def test_purchase_creation(self, side_effect, org_owned=False, payment_info=None, err_type=None, err_msg=None):
+    def test_purchase_creation(self, name, side_effect, org_owned=False, payment_info=None, err_type=None, err_msg=None):
 
         if side_effect:
             side_effect(self)
@@ -177,6 +276,10 @@ class PurchasesCreationTestCase(TestCase):
             self.assertEqual(purchase.tax_address['postal'], '28000')
             self.assertEqual(purchase.tax_address['city'], 'test city')
             self.assertEqual(purchase.tax_address['country'], 'test country')
+
+            user_profile = UserProfile.objects.get(user=user)
+            self.assertEqual(len(user_profile.offerings_purchased), 1)
+            self.assertEqual(user_profile.offerings_purchased[0], offering.pk)
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
@@ -335,168 +438,6 @@ class PurchasesCreationTestCase(TestCase):
         user_profile = UserProfile.objects.get(user=user)
         self.assertEqual(len(user_profile.offerings_purchased), 1)
         self.assertEqual(user_profile.offerings_purchased[0], offering.pk)
-
-    def test_purchase_non_published_off(self):
-
-        user = User.objects.get(username='test_user')
-        offering = Offering.objects.get(name='test_offering2')
-
-        payment_info = {
-            'payment_method': 'credit_card',
-            'credit_card': {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            },
-            'tax_address': {
-                'street': 'test street',
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }
-
-        error = False
-        msg = None
-
-        try:
-            purchases_management.create_purchase(user, offering, payment_info=payment_info)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, "This offering can't be purchased")
-
-    def test_purchase_already_purchased(self):
-
-        user = User.objects.get(username='test_user')
-        offering = Offering.objects.get(name='test_offering3')
-        user_profile = UserProfile.objects.get(user=user)
-        user_profile.offerings_purchased = ['81000aba8e05ac2115f022f0']
-        org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
-        user_profile.save()
-
-        payment_info = {
-            'payment_method': 'credit_card',
-            'credit_card': {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            },
-            'tax_address': {
-                'street': 'test street',
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }
-
-        error = False
-        msg = None
-
-        try:
-            purchases_management.create_purchase(user, offering, payment_info=payment_info)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, "The offering has been already purchased")
-
-    def test_purchase_exeptions(self):
-
-        # Load test info
-        user = User.objects.get(username='test_user')
-        offering = Offering.objects.get(name='test_offering')
-
-        error_messages = [
-            'The customer does not have a tax address',
-            'The tax address is not valid',
-            'Invalid credit card info',
-            'Invalid payment method',
-            'The customer does not have payment info'
-        ]
-        payment_info = [{
-            'payment_method': 'credit_card',
-            'credit_card': {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            }
-        }, {
-           'payment_method': 'credit_card',
-            'credit_card': {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            },
-            'tax_address': {
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }, {
-            'payment_method': 'credit_card',
-            'credit_card': {
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            },
-            'tax_address': {
-                'street': 'test street',
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }, {
-            'payment_method': 'credit',
-            'credit_card': {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            },
-            'tax_address': {
-                'street': 'test street',
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }, {
-            'payment_method': 'credit_card',
-            'tax_address': {
-                'street': 'test street',
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }
-        ]
-        # Test exceptions
-        for i in range(0, 3):
-            error = False
-            msg = None
-
-            try:
-                purchases_management.create_purchase(user, offering, payment_info=payment_info[i])
-            except Exception, e:
-                error = True
-                msg = e.message
-
-            self.assertTrue(error)
-            self.assertEqual(msg, error_messages[i])
 
     def test_purchase_creation_paypal(self):
         user = User.objects.get(username='test_user')
@@ -986,7 +927,8 @@ class UpdatingPurchasesTestCase(TestCase):
                 'country': 'test country'
             },
             'payment_method': 'paypal',
-            'plan': 'update'
+            'plan': 'update',
+            'accepted': False
         }
         views.create_purchase.assert_called_once_with(self._user, offering, org_owned=False, payment_info=payment_info)
 
@@ -1094,7 +1036,8 @@ class UpdatingPurchasesTestCase(TestCase):
                 'country': 'test country'
             },
             'payment_method': 'paypal',
-            'plan': 'update'
+            'plan': 'update',
+            'accepted': False
         }
         views.create_purchase.assert_called_once_with(self._user, offering, org_owned=True, payment_info=payment_info)
 
@@ -1305,7 +1248,8 @@ class DeveloperPurchaseTestCase(TestCase):
                 'country': 'test country'
             },
             'payment_method': 'paypal',
-            'plan': 'developer'
+            'plan': 'developer',
+            'accepted': False
         }
         views.create_purchase.assert_called_once_with(self._user, offering, org_owned=False, payment_info=payment_info)
 

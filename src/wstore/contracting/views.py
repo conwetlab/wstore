@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import json
 from urlparse import urlunparse, urlparse
 
@@ -136,101 +138,102 @@ class PurchaseCollection(Resource):
 
     # Creates a new purchase resource
     @authentication_required
-    @supported_request_mime_types(('application/json', 'application/xml'))
+    @supported_request_mime_types(('application/json',))
     def create(self, request):
 
         user = request.user
         content_type = get_content_type(request)[0]
 
-        if content_type == 'application/json':
+        try:
+            data = json.loads(request.raw_post_data)
+            payment_info = {}
 
-            try:
-                data = json.loads(request.raw_post_data)
-                payment_info = {}
+            if isinstance(data['offering'], dict):
+                id_ = data['offering']
+                org = Organization.objects.get(name=id_['organization'])
+                offering = Offering.objects.get(owner_organization=org, name=id_['name'], version=id_['version'])
+            else:
+                offering = Offering.objects.get(description_url=data['offering'])
 
-                if isinstance(data['offering'], dict):
-                    id_ = data['offering']
-                    org = Organization.objects.get(name=id_['organization'])
-                    offering = Offering.objects.get(owner_organization=org, name=id_['name'], version=id_['version'])
-                else:
-                    offering = Offering.objects.get(description_url=data['offering'])
+            if 'tax_address' in data:
+                payment_info['tax_address'] = data['tax_address']
 
-                if 'tax_address' in data:
-                    payment_info['tax_address'] = data['tax_address']
+            payment_info['payment_method'] = data['payment']['method']
 
-                payment_info['payment_method'] = data['payment']['method']
+            if 'credit_card' in data['payment']:
+                payment_info['credit_card'] = data['payment']['credit_card']
 
-                if 'credit_card' in data['payment']:
-                    payment_info['credit_card'] = data['payment']['credit_card']
+            # Get terms and conditions flag
+            payment_info['accepted'] = data.get('conditions_accepted', False)
 
-                # Check the selected price plan
-                update_plan = False
-                developer_plan = False
-                if 'plan_label' in data:
-                    payment_info['plan'] = data['plan_label']
-                    # Classify the plan
-                    # Check if the plan is an update
-                    if data['plan_label'].lower() == 'update':
-                        update_plan = True
-
-                    # Check if the plan is a developer purchase
-                    elif data['plan_label'].lower() == 'developer':
-                        developer_plan = True
-
-                # Check if the user is purchasing for an organization
-
-                org_owned = True
-                if user.userprofile.is_user_org():
-                    org_owned = False
-
-                # Check if the user has the customer role for the organization
-                roles = user.userprofile.get_current_roles()
-                if org_owned:
-
-                    if not 'customer' in roles and not developer_plan:
-                        return build_response(request, 403, 'Forbidden')
-
-                    # Load the purchased offerings if it is an update in
-                    # order to check versions later
-                    if update_plan:
-                        purchased_offerings = user.userprofile.current_organization.offerings_purchased
-                    
-                elif update_plan:
-                    purchased_offerings = user.userprofile.offerings_purchased
-                    
+            # Check the selected price plan
+            update_plan = False
+            developer_plan = False
+            if 'plan_label' in data:
+                payment_info['plan'] = data['plan_label']
+                # Classify the plan
                 # Check if the plan is an update
+                if data['plan_label'].lower() == 'update':
+                    update_plan = True
+
+                # Check if the plan is a developer purchase
+                elif data['plan_label'].lower() == 'developer':
+                    developer_plan = True
+
+            # Check if the user is purchasing for an organization
+
+            org_owned = True
+            if user.userprofile.is_user_org():
+                org_owned = False
+
+            # Check if the user has the customer role for the organization
+            roles = user.userprofile.get_current_roles()
+            if org_owned:
+
+                if not 'customer' in roles and not developer_plan:
+                    return build_response(request, 403, 'Forbidden')
+
+                # Load the purchased offerings if it is an update in
+                # order to check versions later
                 if update_plan:
-                    # Check if the user has purchased a previous version
-                    found = False
-                    offerings = Offering.objects.filter(owner_organization=offering.owner_organization, name=offering.name)
+                    purchased_offerings = user.userprofile.current_organization.offerings_purchased
 
-                    for off in offerings:
-                        if off.pk in purchased_offerings and is_lower_version(off.version, offering.version):
-                            found = True
-                            break
+            elif update_plan:
+                purchased_offerings = user.userprofile.offerings_purchased
+                    
+            # Check if the plan is an update
+            if update_plan:
+                # Check if the user has purchased a previous version
+                found = False
+                offerings = Offering.objects.filter(owner_organization=offering.owner_organization, name=offering.name)
 
-                    if not found:
-                        return build_response(request, 403, 'Forbidden')
+                for off in offerings:
+                    if off.pk in purchased_offerings and is_lower_version(off.version, offering.version):
+                        found = True
+                        break
 
-                if developer_plan and not 'developer' in roles:
-                        return build_response(request, 403, 'Forbidden')
+                if not found:
+                    return build_response(request, 403, 'Forbidden')
 
-                response_info = create_purchase(user, offering, org_owned=org_owned, payment_info=payment_info)
-            except Exception, e:
-                # Check if the offering has been paid before the exception has been raised
-                paid = False
+            if developer_plan and not 'developer' in roles:
+                    return build_response(request, 403, 'Forbidden')
 
-                if org_owned:
-                    if offering.pk in request.user.userprofile.current_organization.offerings_purchased:
-                        paid = True
-                        response_info = Purchase.objects.get(owner_organization=request.user.userprofile.current_organization, offering=offering)
-                else:
-                    if offering.pk in request.user.userprofile.offerings_purchased:
-                        paid = True
-                        response_info = Purchase.objects.get(customer=request.user, offering=offering, organization_owned=False)
+            response_info = create_purchase(user, offering, org_owned=org_owned, payment_info=payment_info)
+        except Exception as e:
+            # Check if the offering has been paid before the exception has been raised
+            paid = False
 
-                if not paid:
-                    return build_response(request, 400, e.message)
+            if org_owned:
+                if offering.pk in request.user.userprofile.current_organization.offerings_purchased:
+                    paid = True
+                    response_info = Purchase.objects.get(owner_organization=request.user.userprofile.current_organization, offering=offering)
+            else:
+                if offering.pk in request.user.userprofile.offerings_purchased:
+                    paid = True
+                    response_info = Purchase.objects.get(customer=request.user, offering=offering, organization_owned=False)
+
+            if not paid:
+                return build_response(request, 400, unicode(e))
 
         response = {}
         # If the value returned by the create_purchase method is a string means that
