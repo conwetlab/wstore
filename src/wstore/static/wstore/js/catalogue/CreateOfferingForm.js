@@ -20,12 +20,18 @@
 
 (function () {
 
-    var screenShots = [];
-    var usdl;
-    var logo = [];
-    var offeringInfo = {};
-    var logoFailure = false;
-    var screenFailure = false;
+    CreateOfferingForm = function CreateOfferingForm() {
+        this.screenShots = [];
+        this.usdl = null;
+        this.logo = [];
+        this.offeringInfo = {};
+        this.logoFailure = false;
+        this.screenFailure = false;
+    }
+
+    CreateOfferingForm.prototype = new ModalForm('Create new offering', '#create_off_form_template');
+
+    CreateOfferingForm.prototype.constructor = CreateOfferingForm;
 
     /**
      * Handles the selection of images, including the validation and
@@ -33,15 +39,15 @@
      * @param evnt Event thrown by the file input
      * @param type Type of image (Logo or screenshot)
      */
-    var handleImageFileSelection = function handleImageFileSelection(evnt, type) {
+    var handleImageFileSelection = function handleImageFileSelection(self, evnt, type) {
         var files = evnt.target.files;
         var imagesList = [];
 
         if (type == 'screenshots') {
-            screenShots = [];
-            screenFailure = false;
+            self.screenShots = [];
+            self.screenFailure = false;
         } else {
-            logoFailure = false;
+            self.logoFailure = false;
         }
 
         var reader = new FileReader();
@@ -61,7 +67,7 @@
                 var img = images.pop();
 
                 if (img.type.match('image.*')) {
-                    reader.onload = (function(file) {
+                    reader.onload = (function(self, file) {
 
                         return function(e) {
                             var binaryContent = e.target.result;
@@ -70,32 +76,32 @@
 
                             if (type == 'screenshots') {
                                 if (!imgReg.test(file.name)) {
-                                    screenFailure = true;
+                                    self.screenFailure = true;
                                 } else {
-                                    screenShots.push({
+                                    self.screenShots.push({
                                         'name': file.name,
                                         'data': encoded
                                     });
                                 }
                             } else if (type == 'logo') {
                                 if (!imgReg.test(file.name)) {
-                                    logoFailure = true;
+                                    self.logoFailure = true;
                                 } else {
-                                    logo = [{
+                                    self.logo = [{
                                         'name': file.name,
                                         'data': encoded
                                     }];
                                 }
                             }
-                            if (!screenFailure && !logoFailure) {
+                            if (!self.screenFailure && !self.logoFailure) {
                                 readImages(images);
                             }
                         };
-                    })(img);
+                    })(this, img);
                     reader.readAsBinaryString(img);
                 }
             }
-        }
+        }.bind(self);
         for(var i=0, f; f = files[i]; i+=1){
             imagesList.push(f);
         }
@@ -110,7 +116,7 @@
         var f = evnt.target.files[0];
         var reader = new FileReader();
 
-        reader.onload = (function(file) {
+        reader.onload = (function(self, file) {
             return function(e) {
                 var type = file.type;
                 if (!type) {
@@ -122,13 +128,13 @@
 
                 }
                 if (type == 'application/rdf+xml' || type == 'text/n3' || type == 'text/turtle') {
-                    usdl = {
+                    this.usdl = {
                         'content_type': type,
                         'data': e.target.result
                     };
                 }
-            };
-        })(f);
+            }.bind(self);
+        })(this, f);
         reader.readAsText(f);
     };
 
@@ -152,12 +158,12 @@
     /**
      * Make the request for creating the offering using the provided info
      */
-    var makeCreateOfferingRequest = function makeCreateOfferingRequest(evnt) {
+    CreateOfferingForm.prototype.makeCreateOfferingRequest = function makeCreateOfferingRequest(evnt) {
         var csrfToken = $.cookie('csrftoken');
-        offeringInfo.image = logo[0];
+        this.offeringInfo.image = this.logo[0];
 
-        if (screenShots.length > 0) {
-            offeringInfo.related_images = screenShots;
+        if (this.screenShots.length > 0) {
+            this.offeringInfo.related_images = this.screenShots;
         }
 
         $('#loading').removeClass('hide');  // Loading view when waiting for requests
@@ -171,10 +177,11 @@
             url: EndpointManager.getEndpoint('OFFERING_COLLECTION'),
             dataType: 'json',
             contentType: 'application/json',
-            data: JSON.stringify(offeringInfo),
+            data: JSON.stringify(this.offeringInfo),
             success: function (response) {
                 $('#loading').addClass('hide');
                 var msg = 'Your offering has been created. You have to publish your offering before making it available to third parties.';
+                $('#message').modal('hide');
                 MessageManager.showMessage('Created', msg);
                 if (getCurrentView() == 'provided') {
                     paintCatalogue(true);
@@ -184,6 +191,7 @@
                 $('#loading').addClass('hide');
                 var resp = xhr.responseText;
                 var msg = JSON.parse(resp).message;
+                $('#message').modal('hide');
                 MessageManager.showMessage('Error', msg);
             }
         });
@@ -192,7 +200,7 @@
     /**
      * Displays the form for uploading a USDL document
      */
-    var displayUploadUSDLForm = function displayUploadUSDLForm(repositories) {
+    CreateOfferingForm.prototype.displayUploadUSDLForm = function displayUploadUSDLForm(repositories) {
         var i, repLength = repositories.length;
         var helpMsg = "Upload an USDL document containing the offering info";
 
@@ -214,27 +222,28 @@
             window.open(USDLEDITOR, 'USDL editor');
         });
 
-        $('#usdl-doc').change(function(event) {
-            handleUSDLFileSelection(event);
-        });
+        $('#usdl-doc').change(handleUSDLFileSelection.bind(this));
     };
 
     /**
      * Displays the form for providing a URL pointing to an USDL
      */
-    var displayUSDLLinkForm = function displayUSDLLinkForm() {
+    CreateOfferingForm.prototype.displayUSDLLinkForm = function displayUSDLLinkForm() {
         var helpMsg = "Provide an URL of an USDL document uploaded in a Repository";
+        var cg, ctrls;
 
         $('#upload-help').attr('data-content', helpMsg);
         $('#usdl-container').empty();
-        $('<label></label>').text('USDL URL').appendTo('#usdl-container');
-        $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo('#usdl-container');
+        cg = $('<div class="control-group"></div>').appendTo('#usdl-container')
+        $('<label></label>').text('USDL URL').appendTo(cg);
+        ctrls = $('<div class="controls"></div>').appendTo(cg);
+        $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo(ctrls);
     };
 
     /**
      * Displays the form for creating a simple USDL document
      */
-    var displayCreateUSDLForm = function displayCreateUSDLForm(repositories) {
+    CreateOfferingForm.prototype.displayCreateUSDLForm = function displayCreateUSDLForm(repositories) {
         var i, repLength = repositories.length;
         var helpMsg = "Create a basic USDL for your offering. This method only supports free or single payment as price models";
 
@@ -251,8 +260,8 @@
                 'value': repositories[i].name,
                 'text': repositories[i].name}).appendTo('#repositories');
         }
-       // Set listeners
-        if (offeringInfo.open) {
+        // Set listeners
+        if (this.offeringInfo.open) {
             $('#pricing-select').prop('disabled', true);
         } else {
             $('#pricing-select').change(function() {
@@ -268,8 +277,8 @@
     /**
      * Displays the form for providing the USDL info
      */
-    var showUSDLForm = function showUSDLForm(repositories) {
-        var footBtn;
+    CreateOfferingForm.prototype.showUSDLForm = function showUSDLForm(repositories) {
+        var footBtn, backBtn;
         $('.modal-body').empty();
 
         // Create the form
@@ -277,40 +286,47 @@
         $.tmpl('usdlTemplate').appendTo('.modal-body');
 
         // If the offering is an open offering show an informative message
-        if (offeringInfo.open) {
+        if (this.offeringInfo.open) {
             var msg = 'You are creating an open offering, so you cannot specify a pricing model';
             MessageManager.showAlertInfo('Note', msg, $('#error-message'));
+            $('#error-message').removeClass('span8');
         }
         // The create USDL form is displayed by default
-        displayCreateUSDLForm(repositories);
+        this.displayCreateUSDLForm(repositories);
 
         // Listener for USDL field
-        $('#usdl-sel').change(function() {
-            if($(this).val() == "0") {
-                displayCreateUSDLForm(repositories);
-            } else if($(this).val() == "1") {
-                displayUploadUSDLForm(repositories);
-            } else if ($(this).val() == "2") {
-                displayUSDLLinkForm();
-            } else {
-                $('#usdl-container').empty()
-            }
-            // Quit the help menu if needed
-            if ($('#upload-help').prop('displayed')) {
-                $('#upload-help').popover('hide');
-                $('#upload-help').prop('displayed', false);
-                $('#upload-help').removeClass('question-sing-sel');
-            }
-        });
+        $('#usdl-sel').change(function(self) {
+            return function() {
+                if($(this).val() == "0") {
+                    self.displayCreateUSDLForm(repositories);
+                } else if($(this).val() == "1") {
+                    self.displayUploadUSDLForm(repositories);
+                } else if ($(this).val() == "2") {
+                    self.displayUSDLLinkForm();
+                } else {
+                    $('#usdl-container').empty()
+                }
+                // Quit the help menu if needed
+                if ($('#upload-help').prop('displayed')) {
+                    $('#upload-help').popover('hide');
+                    $('#upload-help').prop('displayed', false);
+                    $('#upload-help').removeClass('question-sing-sel');
+                }
+            };
+        }(this));
 
         $('#upload-help').popover({'trigger': 'manual'});
         $('#upload-help').click(helpHandler);
-
+        
         // Listener for application selection
         $('.modal-footer').empty();
+
+        // Set next action
         footBtn = $('<input></input>').addClass('btn btn-classic').attr('type', 'button').val('Next').appendTo('.modal-footer');
         footBtn.click(function(event) {
-            var msg, error = false;
+            var msg = [];
+            var errElems = [];
+            var error = false;
 
             event.preventDefault();
             event.stopPropagation();
@@ -322,10 +338,10 @@
                 $(document).unbind('click');
             }
             // Get usdl info
-            if (usdl && ($('#usdl-doc').length > 0)) {
+            if (this.usdl && ($('#usdl-doc').length > 0)) {
                 var rep = $('#repositories').val();
-                offeringInfo.offering_description = usdl;
-                offeringInfo.repository = rep;
+                this.offeringInfo.offering_description = this.usdl;
+                this.offeringInfo.repository = rep;
             } else if ($('#pricing-select').length > 0) {
                 var description;
                 var pricing = {};
@@ -336,7 +352,8 @@
 
                 if (description == '') {
                     error = true;
-                    msg = 'The description is required';
+                    msg.push('The description is required');
+                    errElems.push($('#description'));
                 }
                 pricing.price_model = $('#pricing-select').val();
 
@@ -345,10 +362,12 @@
                     var price = $.trim($('#price-input').val());
                     if (price == '') {
                         error = true;
-                        msg = 'The price is required for a single payment model';
+                        msg.push('The price is required for a single payment model');
+                        errElems.push($('#price-input'));
                     } else if (!$.isNumeric(price)){
                         error = true;
-                        msg = 'The price must be a number';
+                        msg.push('The price must be a number');
+                        errElems.push($('#price-input'));
                     } else {
                         pricing.price = price;
                     }
@@ -356,15 +375,25 @@
                 legal.title = $.trim($('#legal-title').val());
                 legal.text = $.trim($('#legal-text').val());
 
+                if (legal.title && !legal.text) {
+                    error = true;
+                    msg.push('A legal clause needs both title and text');
+                    errElems.push($('#legal-text'));
+                }
+                if (legal.text && !legal.title) {
+                    error = true;
+                    msg.push('A legal clause needs both title and text');
+                    errElems.push($('#legal-title'));
+                }
                 // Include the info
-                offeringInfo.offering_info = {
+                this.offeringInfo.offering_info = {
                     'description': description,
                     'pricing': pricing
                 }
-                offeringInfo.repository = rep;
+                this.offeringInfo.repository = rep;
                 // Include the legal info if conpleted
                 if (legal.title && legal.text) {
-                    offeringInfo.offering_info.legal = legal
+                    this.offeringInfo.offering_info.legal = legal
                 }
             } else {
                 var usdlLink = $.trim($('#usdl-url').val());
@@ -374,30 +403,32 @@
                     var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
                     if (!urlReg.test(usdlLink)) {
                         error = true;
-                        msg = 'Invalid URL format';
+                        msg.push('Invalid URL format');
+                        errElems.push($('#usdl-url'))
                     } else {
-                        offeringInfo.description_url = usdlLink;
+                        this.offeringInfo.description_url = usdlLink;
                     }
                 } else {
                     error = true;
-                    msg = 'USDL info is missing'
+                    msg.push('USDL info is missing')
+                    errElems.push($('#usdl-url'))
                 }
             }
 
             // If the USDL is loaded go to the final step, application selection
             if (!error) {
-                var userForm = new BindResourcesForm({});
-                userForm.getUserResources(showResourcesForm, offeringInfo.open);
+                userForm = new BindResourcesForm({});
+                userForm.getUserResources(this.showResourcesForm.bind(this), this.offeringInfo.open);
             } else {
-                MessageManager.showAlertError('Error', msg, $('#error-message'));
+                fillErrorMessage(msg, errElems);
             }
-        });
+        }.bind(this));
     };
 
     /**
      * Displays the form for the selection of resources
      */
-    var showResourcesForm = function showResourcesForm(resources) {
+    CreateOfferingForm.prototype.showResourcesForm = function showResourcesForm(resources) {
         $('.modal-body').empty();
         $('.modal-footer').empty()
 
@@ -443,53 +474,85 @@
                     })
                 }
             }
-            offeringInfo.resources = resSelected;
+            this.offeringInfo.resources = resSelected;
 
-            makeCreateOfferingRequest();
-        }).appendTo('.modal-footer');
+            this.makeCreateOfferingRequest();
+        }.bind(this)).appendTo('.modal-footer');
     };
 
+    CreateOfferingForm.prototype.includeContents = function includeContents() {
+        var repositoryClient = new ServerClient('', 'REPOSITORY_COLLECTION');
+        // Get repositories
+        repositoryClient.get(this.fillMainInfo.bind(this), {});
+    }
+
+    var fillErrorMessage = function fillErrorMessage(msg, errElems) {
+        for (var i = 0; i < errElems.length; i++) {
+            errElems[i].parent().parent().addClass('error');
+        }
+        MessageManager.showAlertError('Error', '', $('#error-message'));
+        // Build message content
+        $('.alert-error').append(msg[0]);
+        for (var i = 1; i < msg.length; i++) {
+            $('.alert-error').append('<br>');
+            $('.alert-error').append(msg[i]);
+        }
+        $('.alert-error').removeClass('span8');
+        $('.alert-error').bind('closed', function() {
+            $('.error').removeClass('error');
+        })
+    }
+
+    var typeCheckHandler = function typeCheckHandler(regex, errMsg, container) {
+        var name = $.trim(container.val());
+        var nameReg = new RegExp(regex);
+        if (name && !nameReg.test(name)) {
+            error = true;
+
+            msg = [errMsg];
+            errElems = [container];
+            fillErrorMessage(msg, errElems);
+        } else {
+            container.parent().parent().removeClass('error');
+            $('.alert-error').alert('close');
+        }
+    }
+
+    var versionCheckHandler = function versionCheckHandler() {
+        var inter = setInterval(function() {
+            typeCheckHandler(/^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$/, 'Invalid version format', $('[name="app-version"]'));
+            $('[name="app-version"]').on('change paste keyup', versionCheckHandler);
+            clearInterval(inter);
+        }, 300);
+        $('[name="app-version"]').off();
+    }
     /**
      * Displays the form for providing the basic info of the offering
      */
-    showCreateAppForm = function showCreateAppForm(repositories) {
+    CreateOfferingForm.prototype.fillMainInfo = function fillMainInfo(repositories) {
         var i, repLength = repositories.length;
-
-        // Reset params
-        screenShots = [];
-        usdl = null;
-        logo = [];
-        offeringInfo = {};
-        logoFailure = false;
-        screenFailure = false;
 
         if (repLength == 0) {
             var msg = 'No repositories registered';
             MessageManager.showMessage('Error', msg);
             return
         }
-        // Creates the modal
-        MessageManager.showMessage('Create new offering', '');
-
-        // Creates the form
-        $.template('formTemplate', $('#create_off_form_template'));
-        $.tmpl('formTemplate', {}).appendTo('.modal-body');
 
         // Create the listeners
         $('#img-logo').change(function(event) {
-            handleImageFileSelection(event, 'logo');
-        });
+            handleImageFileSelection(this, event, 'logo');
+        }.bind(this));
 
         $('#screen-shots').change(function(event) {
-            handleImageFileSelection(event, 'screenshots');
-        });
+            handleImageFileSelection(this, event, 'screenshots');
+        }.bind(this));
 
         $('#notification-help').popover({'trigger': 'manual'});
 
-        $('#notification-help').click(helpHandler);
+        $('#notification-help').click(helpHandler.bind(this));
 
         $('#open-help').popover({'trigger': 'manual'});
-        $('#open-help').click(helpHandler);
+        $('#open-help').click(helpHandler.bind(this));
 
         $('[name="notify-select"]').change(function() {
            if ($(this).val() == 'new') {
@@ -505,13 +568,23 @@
             $('.popover').remove();
         });
 
+        // Set listeners to check inputs when writing
+        $('[name="app-name"]').on('change paste keyup', function() {
+            typeCheckHandler(/^[\w\s-]+$/, 'Invalid name format: Unsupported character', $(this));
+        });
+
+        $('[name="app-version"]').on('change paste keyup', versionCheckHandler);
+
         $('.modal-footer > .btn').text('Next');
         $('.modal-footer > .btn').click(function(event) {
-            var name, version;
-            var msg, error = false;
+            var name, version, errElems = [];
+            var msg = [];
+            var error = false;
 
             event.preventDefault();
             event.stopPropagation();
+
+            $('.error').removeClass('error');
 
             if ($('#notification-help').prop('displayed')) {
                 $('#notification-help').popover('hide');
@@ -530,17 +603,21 @@
             name = $.trim($('[name="app-name"]').val());
             version = $.trim($('[name="app-version"]').val());
 
-            if (!name || !version || !logo.length) {
+            if (!name || !version || !this.logo.length) {
                 error = true;
-                msg = 'Missing required field(s):';
+                var msgMiss = 'Missing required field(s):';
                 if (!name) {
-                    msg += ' Name';
+                    msgMiss += ' Name';
+                    errElems.push($('[name="app-name"]'));
                 }
                 if(!version) {
-                    msg += ' Version';
+                    msgMiss += ' Version';
+                    errElems.push($('[name="app-version"]'));
                 }
-                if(!logo.length) {
-                    msg += ' Logo';
+                if(!this.logo.length) {
+                    msgMiss += ' Logo';
+                    errElems.push($('#img-logo'));
+                    msg.push(msgMiss)
                 }
             }
 
@@ -549,7 +626,9 @@
                 var nameReg = new RegExp(/^[\w\s-]+$/);
                 if (!nameReg.test(name)) {
                     error = true;
-                    msg = 'Invalid name format: Unsupported character';
+
+                    msg.push('Invalid name format: Unsupported character');
+                    errElems.push($('[name="app-name"]'));
                 }
             }
 
@@ -558,20 +637,25 @@
                 var versReg = new RegExp(/^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$/);
                 if (!versReg.test(version)) {
                     error = true;
-                    msg = 'Invalid version format';
+
+                    msg.push('Invalid version format');
+                    errElems.push($('[name="app-version"]'));
                 }
             }
-
             // Check failures in image loading
-            if (logoFailure) {
+            if (this.logoFailure) {
                 error = true;
-                msg = 'The provided logo is not valid: Unsupported character in file name';
+
+                msg.push('The provided logo is not valid: Unsupported character in file name');
+                errElems.push($('#img-logo'));
             }
 
             // Check failures in image loading
-            if (screenFailure) {
+            if (this.screenFailure) {
                 error = true;
-                msg = 'Invalid screenshot(s): Unsupported character in file name';
+
+                msg.push('Invalid screenshot(s): Unsupported character in file name');
+                errElems.push($('#screen-shots'));
             }
 
             // Get the notification URL
@@ -579,28 +663,40 @@
                 var not_url = $.trim($('#notify').val());
                 if (not_url == '') {
                     error = true;
-                    msg = 'Missing notification URL';
+
+                    msg.push('Missing notification URL');
+                    errElems.push($('#notify'));
                 }
-                offeringInfo.notification_url = not_url;
+                var nameReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+                if (!nameReg.test(not_url)) {
+                    error = true;
+
+                    msg.push('Invalid notification URL format');
+                    errElems.push($('#notify'));
+                } else {
+                    this.offeringInfo.notification_url = not_url;
+                }
             } else if ($('#not-opt-1').prop('checked')) {
-                offeringInfo.notification_url = 'default';
+                this.offeringInfo.notification_url = 'default';
             } else if (!$('#not-opt-3').prop('checked')) {
                 error = true;
-                msg = 'Select and option for notification URL';
+
+                msg.push('Select an option for notification URL');
+                errElems.push($('.radio'));
             }
 
             // Check if the offering is an open offering
-            offeringInfo.open = $('#open-offering').prop('checked');
+            this.offeringInfo.open = $('#open-offering').prop('checked');
 
             // If the fields are properly filled, display the next form
             if (!error) {
-                offeringInfo.name = name;
-                offeringInfo.version = version;
-                showUSDLForm(repositories);
+                this.offeringInfo.name = name;
+                this.offeringInfo.version = version;
+                this.showUSDLForm(repositories);
             } else {
-                MessageManager.showAlertError('Error', msg, $('#error-message'));
+                fillErrorMessage(msg, errElems)
             }
-        });
+        }.bind(this));
     };
 
 })();
