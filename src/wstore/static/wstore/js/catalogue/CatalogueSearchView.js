@@ -43,7 +43,7 @@
             } else {
                 var msg = 'Your search has not produced any results'; 
                 if (!this.searchParams.searching) {
-                    msg = "Your don't have any offering in this category";
+                    msg = "You don't have any offering in this category";
                 }
                 MessageManager.showAlertInfo('No offerings', msg, $('.offerings-container'));
                 $('.offerings-container .alert-info').removeClass('span8');
