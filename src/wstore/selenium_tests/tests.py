@@ -26,9 +26,7 @@ import shutil
 import rdflib
 import time
 
-from mock import MagicMock
 from nose_parameterized import parameterized
-from threading import Timer
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -39,7 +37,6 @@ from wstore.selenium_tests.testcase import WStoreSeleniumTestCase
 from wstore.offerings.offerings_management import _create_basic_usdl
 from wstore.models import Offering, Purchase
 from wstore.social.tagging.tag_manager import TagManager
-from wstore.repository_adaptor import repositoryAdaptor
 from wstore.selenium_tests.test_server import TestServer
 
 
