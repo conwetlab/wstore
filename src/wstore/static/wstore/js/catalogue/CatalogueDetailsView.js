@@ -411,9 +411,12 @@
 
     CatalogueDetailsView.prototype.paintLegalClauses = function paintLegalClauses (clauses, dom) {
         if (clauses.length > 0) {
-            $('<h3></h3>').text('Clauses').appendTo('.clauses');
             $.template('legalClausesTemplate', $('#legal_clauses_template'));
-            $.tmpl('legalClausesTemplate', clauses).appendTo(dom);
+            for (var i = 0; i < clauses.length; i++) {
+                var clause = $.tmpl('legalClausesTemplate', clauses[i]).appendTo(dom);
+                var repText = clause.find('p').text().split('\n').join('<br />');
+                clause.find('p')[0].innerHTML = repText;
+            }
         }
     };
 
