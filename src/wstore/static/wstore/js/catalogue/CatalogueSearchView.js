@@ -150,7 +150,7 @@
                 $('#catalogue-title').text('Provided');
             } else {
                 this.query = '&filter=purchased';
-                $('#catalogue-title').text('Purchased');
+                $('#catalogue-title').text('Acquired');
             }
         }
 
