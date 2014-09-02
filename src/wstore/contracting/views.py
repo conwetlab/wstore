@@ -127,7 +127,8 @@ class PurchaseFormCollection(Resource):
         # Create the context
         context = {
             'offering_info': mark_safe(json.dumps(offering_info)),
-            'oil': settings.OILAUTH
+            'oil': settings.OILAUTH,
+            'portal': settings.PORTALINSTANCE
         }
 
         # Return the form to purchase the offering

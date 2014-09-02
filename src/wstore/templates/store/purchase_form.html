@@ -2,7 +2,10 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <title>W-Store</title>
+        <title>FI-WARE Store</title>
+        <meta charset="UTF-8">
+        <link rel="icon" href="{{ STATIC_URL }}assets/ico/favicon.ico" type="image/x-icon"/>
+        <link rel="shortcut icon" href="{{ STATIC_URL }}assets/ico/favicon.ico" type="image/x-icon"/>
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/aplication.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap-responsive.css" />
@@ -10,6 +13,7 @@
         <link href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/js/google-code-prettify/prettify.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/store.css" />
         <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/fonts/fonts.css" />
         {% if oil %}
             <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}oil/css/wstore/wstore.css" />
@@ -25,6 +29,8 @@
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script> 
         <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/Client.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ScrollPagination.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserProfile.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/PurchaseForm.js"></script>
@@ -35,6 +41,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/RemotePurchaseForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/store/DownloadResourcesForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CommentForm.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/ReviewPainter.js"></script>
 
         <script type="text/x-jquery-tmpl" id="footer_template">{% include "footer_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="modal_template">{% include "modal_template.html" %}</script>
@@ -52,28 +59,49 @@
         <script type="text/x-jquery-tmpl" id="int_param_template">{% include "catalogue/int_param_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="purchase_form_template">{% include "store/purchase_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="terms_and_conditions_template">{% include "store/terms_and_conditions_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="reviews_template">{% include "catalogue/reviews_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="comment_template">{% include "catalogue/comment_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="credit_card_template">{% include "store/credit_card_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="alert_error_template">{% include "alert_error_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="yes_no_window_template">{% include "yes_no_window_template.html" %}</script>
+
+        {% include "oil/header_imports.html" %}
     </head>
     <body>
-        <div class="container-fluid">
-            <div class="row-fluid">
-                <div>
-                    {% if oil %}
-                        <img id="logo" src="{{ STATIC_URL }}oil/img/header-logo.png" />
-                    {% else %}
-                        <img id="logo" src="{{ STATIC_URL }}assets/img/logo.png" />
+        <div>
+            <div id="oil-bar">
+                <header id="oil-nav" class="navbar"
+                    {% if not portal %}
+                    style="box-shadow: 0px 4px 8px rgba(50, 51, 51, 0.15);"
                     {% endif %}
-                </div>
-                <div class="store_title">
-                    <span>FI-</span>WARE
-                    <h2>WStore</h2>
-                </div>
-            </div>
-            <div class="row-fluid title_wrapper">
-                Store
+                 >
+                     <div class="logo-header">
+                     {% if not portal %}
+                         <a href=" {{ main }}" class="logo-header">
+                             <img alt="FI-WARE" class="logo" src="{{ STATIC_URL }}oil/img/header-logo.png">
+                         </a>
+                     {% endif %}
+                     <a href="{{ main }}" class="brand">
+                     {% if not portal %}
+                         <div class="store_title">
+                             <span>FI-</span>WARE
+                             <h2>WStore</h2>
+                          </div>
+                          <div id="title-shadow"></div>
+                     {% else %}
+                         <img alt="FI-WARE" class="logo portal-brand" src="{{ STATIC_URL }}oil/img/Fi-lab.png">
+                     {% endif %}
+                     </a>
+                     </div>
+                     <ul class="nav pull-right">
+                         <li>
+                             <a href="#">
+                                 <img class="oil-usr-icon" src="{{ STATIC_URL }}oil/img/user.png">
+                                 <span id="oil-usr" class="name">{{ user.userprofile.complete_name }}</span>
+                             </a>
+                         </li>
+                     </ul>    
+                 </header>
             </div>
         </div>
         <div class="container-fluid">
@@ -82,5 +110,6 @@
             <div class="row-fluid" id="remote-container">
             </div>
         </div>
+        {% include "footer_template.html" %}
     </body>
 </html>

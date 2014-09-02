@@ -23,9 +23,10 @@
     notifyPurchaseEnd = function notifyPurchaseEnd(response) {
         // The window has been opened from an external source
         $('#back').remove();
-        $('<input></input>').attr('id', 'back').addClass('btn btn-blue').attr('type', 'button').attr('value', 'End purchase').click(function() {
+        $('<input></input>').attr('id', 'back').addClass('btn btn-danger').attr('type', 'button').attr('value', 'End purchase').click(function() {
             window.location = response.client_redirection_uri;
-        }).appendTo('[class="nav nav-tabs"]');
+        }).prependTo('#remote-container');
+        $('#back').css('position', 'absolute').css('top', '51px').css('right', '180px');
     };
 
     getPriceStr = function getPriceStr(pricing) {
@@ -90,8 +91,6 @@
 
         // Remove unnecessary buttons and listeners
         $('#main-action').remove();
-        $('h2:contains(Advanced operations)').remove();
-        $('#advanced-op').remove();
         $('#back').remove();
 
         // Display purchase form
@@ -105,22 +104,11 @@
         });
     }
 
-    setFooter = function setFooter() {
-        // Append the terms and conditions bar
-        // Check if the bar is included
-        if ($('footer').length > 0) {
-            $('footer').remove();
-        }
-        // Create the new footer
-        $.template('footerTemplate', $('#footer_template'));
-        $.tmpl('footerTemplate').appendTo('body');
-        $('footer').css('position', 'absolute').css('top', ($(document).height() - 30) + 'px');
-    }
-
-    $(window).resize(setFooter);
+    closeMenuPainter = function closeMenuPainter() {
+    };
 
     $(document).ready(function() {
         USERPROFILE = new UserProfile();
-        USERPROFILE.fillUserInfo()
+        USERPROFILE.fillUserInfo(refreshView);
     })
 })();
