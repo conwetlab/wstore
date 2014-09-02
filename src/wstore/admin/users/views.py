@@ -270,9 +270,6 @@ class UserProfileEntry(Resource):
     @supported_request_mime_types(('application/json',))
     def update(self, request, username):
 
-        if settings.OILAUTH:
-            return build_response(request, 403, 'User profiles cannot be updated when using external authentication')
-
         if not request.user.is_staff and not request.user.username == username:
             return build_response(request, 403, 'Forbidden')
 
