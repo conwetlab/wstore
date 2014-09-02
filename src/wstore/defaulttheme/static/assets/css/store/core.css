@@ -1146,3 +1146,7 @@ footer {
 .error :-ms-input-placeholder { /* Internet Explorer 10+ */
     color: rgb(185, 74, 72);
 }
+
+.input-long {
+  width: 300px;
+}

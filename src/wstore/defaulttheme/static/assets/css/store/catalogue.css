@@ -17,10 +17,10 @@
 
 .catalogue-form {
   position: fixed;
-  top: 51px;
+  top: 50px;
   right: 0;
   height: 40px;
-  width: 635px;
+  width: 660px;
 }
 
 #provider-options {
@@ -136,3 +136,4 @@
 .res-det-title {
   margin-bottom: 0;
 }
+
