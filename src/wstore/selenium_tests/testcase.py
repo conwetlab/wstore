@@ -21,6 +21,9 @@
 from __future__ import unicode_literals
 
 import os
+import json
+import time
+import urllib2
 from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -29,6 +32,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from django.test import TestCase
 from django.conf import settings
 from django.test.testcases import LiveServerTestCase
+
+from wstore.store_commons.utils.method_request import MethodRequest
+from wstore.selenium_tests.test_server import TestServer
+
 
 class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
 
@@ -67,6 +74,44 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
 
         # Click login
         self.driver.find_element_by_css_selector('#login-form button').click()
+
+    def oauth2_login(self, username='admin'):
+        from wstore.selenium_tests.tests import TESTING_PORT
+        self.driver.get(self.live_server_url + '/oauth2/auth?response_type=code&client_id=test_app&redirect_uri=http://localhost:' + unicode(TESTING_PORT))
+
+        self.login(username)
+
+        self.driver.find_element_by_class_name('btn-blue').click()
+        time.sleep(1)
+
+        # Get authorization code
+        while self._server.call_received() < 1:
+            pass
+
+        code = self._server.get_path().split('=')[1]
+
+        # Get access token
+        opener = urllib2.build_opener()
+
+        url = self.live_server_url + '/oauth2/token'
+
+        data = 'client_id=test_app'
+        data += '&client_secret=secret'
+        data += '&grant_type=authorization_code'
+        data += '&code=' + code
+        data += '&redirect_uri=' + 'http://localhost:' + unicode(TESTING_PORT)
+
+        headers = {
+            'content-type': 'application/form-url-encoded',
+        }
+        request = MethodRequest('POST', url, data, headers)
+
+        response = opener.open(request)
+
+        token = json.loads(response.read())['access_token']
+
+        return token
+
 
     def logout(self):
         self.driver.find_element_by_class_name('arrow-down-settings').click()

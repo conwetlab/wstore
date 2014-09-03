@@ -21,3 +21,26 @@
 PORTALINSTANCE = False
 OILAUTH = False
 SITE_ID = "515ab0738e05ac20b622888b"
+
+INSTALLED_APPS = (
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.admin',
+    'django_mongodb_engine',
+    'djangotoolbox',
+    'wstore',
+    'wstore.defaulttheme',
+    'wstore.charging_engine',
+    'wstore.store_commons',
+    'wstore.social.tagging',
+    'wstore.selenium_tests',
+    'django_crontab',
+    'django_nose',
+    'social_auth',
+    'wstore.registration',
+    'wstore.oauth2provider'
+)
