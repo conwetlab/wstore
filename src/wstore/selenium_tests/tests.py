@@ -25,12 +25,14 @@ import json
 import shutil
 import rdflib
 import time
+import urllib2
 
 from nose_parameterized import parameterized
 
 from django.conf import settings
 from django.contrib.auth.models import User
 
+from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils.testing import save_indexes, restore_indexes, save_tags, restore_tags
 from wstore.search.search_engine import SearchEngine
 from wstore.selenium_tests.testcase import WStoreSeleniumTestCase
@@ -266,6 +268,7 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
         # Start the testing server
         self._server = TestServer()
         self._server.set_port(TESTING_PORT)
+        self._server.set_max_request(1)
         self._server.start()
         _fill_provider_role('provider')
         WStoreSeleniumTestCase.setUp(self)
@@ -273,8 +276,9 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
     def tearDown(self):
         # If the server is still waiting for a call make a
         # fake call in order to terminate it
-        if not self._server.call_received():
+        if self._server.call_received() < self._server.max_request:
             from urllib2 import urlopen
+            self._server.set_max_request(0)
             try:
                 url = 'http://localhost:' + unicode(TESTING_PORT)
                 urlopen(url)
@@ -335,6 +339,78 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
         # Bind
         # Publish
 
+
+class PurchaseTestCase(WStoreSeleniumTestCase):
+    tags = ("selenium", )
+
+    def __init__(self, methodName='runTest'):
+        WStoreSeleniumTestCase.__init__(self, methodName=methodName)
+        self.fixtures.extend(['basic_offerings.json', 'oauth_info.json'])
+
+    def setUp(self):
+        # Start the testing server
+        self._server = TestServer()
+        self._server.set_port(TESTING_PORT)
+        self._server.set_max_request(1)
+        self._server.start()
+        # Load USDL info
+        offering1_info = {
+            'base_uri': 'http://localhost:8081',
+            'image_url': '/media/provider__test_offering1__1.0/image.png',
+            'name': 'test_offering1',
+            'description': 'test',
+            'pricing': {
+                'price_model': 'free'
+            }
+        }
+        _fill_offering_description('21000aba8e05ac2115f022ff', offering1_info, 'provider')
+        WStoreSeleniumTestCase.setUp(self)
+
+    def tearDown(self):
+        if self._server.call_received() < self._server.max_request:
+            from urllib2 import urlopen
+            self._server.set_max_request(0)
+            try:
+                url = 'http://localhost:' + unicode(TESTING_PORT)
+                urlopen(url)
+            except:
+                pass
+
+        WStoreSeleniumTestCase.tearDown(self)
+
+    def test_remote_purchase_form(self):
+        token = self.oauth2_login()
+
+        # Make API request to initiate the process
+        opener = urllib2.build_opener()
+        url = self.live_server_url + '/api/contracting/form'
+
+        data = {
+            'offering': {
+                'organization': 'provider',
+                'name': 'test_offering1',
+                'version': '1.1'
+            },
+            'redirect_uri': 'http://localhost:' + unicode(TESTING_PORT) + '/test_redirect.html'
+        }
+
+        headers = {
+            'content-type': 'application/json; charset=utf-8',
+            'Authorization': 'Bearer ' + token
+        }
+        request = MethodRequest('POST', url, json.dumps(data), headers)
+
+        response = opener.open(request)
+
+        # Redirect browser to the remote purchase form
+        form_url = json.loads(response.read())['url']
+        self.driver.get(form_url)
+
+        # Fill purchase form
+        # Open resources modal
+        # End the purchase
+        # Check redirection
+    
 class ResourceManagementTestCase(WStoreSeleniumTestCase):
 
     def __init__(self, methodName='runTest'):
