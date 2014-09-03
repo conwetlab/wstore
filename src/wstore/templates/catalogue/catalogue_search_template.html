@@ -1,14 +1,13 @@
 <div id="provider-options" />
 <div class="catalogue-form">
     <form class="form form-horizontal catalogue-elem">
-        <select id="sorting">
-            <option value="">Sort by</option>
-            <option value="popularity">Popularity</option>
-            <option value="name">Name</option>
-            <option value="date">Date</option>
-        </select>
-        <div class="input-append">
-            <input type="text" id="cat-search-input" class="input-long" placeholder="Search"/><a class="btn btn-blue" id="cat-search"><i class="icon-search"></i></a><input type="button" class="btn btn-basic" value="All" id="cat-all"></input>
+        <div class="input-prepend input-append">
+            <a class="btn btn-basic" data-toggle="dropdown"><i class="icon-sort-by-attributes"></i></a><input type="text" id="cat-search-input" class="input-long" placeholder="Search"/><a class="btn btn-blue" id="cat-search"><i class="icon-search"></i></a><a class="btn btn-basic" id="cat-all">All</a>
+            <ul class="dropdown-menu" style="top: 25px;">
+                <li><a id="sort-pop">Popularity</a></li>
+                <li><a id="sort-name">Name</a></li>
+                <li><a id="sort-date">Date</a></li>
+            </ul>
         </div>
     </form>
 </div>

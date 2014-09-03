@@ -94,7 +94,7 @@
     };
 
     StoreSearchView.prototype.paintSearchView = function paintSearchView() {
-        var ret;
+        var ret, dropdown;
 
         // Check if the main page template has been destroyed and 
         // create it again if needed
@@ -110,9 +110,26 @@
         $.template('storeSearchTemplate', $('#store_search_template'));
         $.tmpl('storeSearchTemplate', {'title': this.title}).appendTo('#store-container');
         ret = $('#store-return');
+        $('#sorting').removeClass('hide');
         ret.click(paintHomePage);
 
         calculatePositions();
+    };
+
+    var sortingHandler = function sortingHandler(self, value, nrows) {
+        var query = self.query;
+        if (!query) {
+            query = '';
+        }
+
+        if (value != '') {
+           query += '&sort=' + value;
+        }
+        $('.search-container').empty();
+        self.pagination.removeListeners();
+        self.pagination.createListeners();
+        self.pagination.configurePaginationParams(320, nrows, query);
+        self.pagination.getNextPage();
     };
 
     /**
@@ -126,20 +143,27 @@
         offset = $('.search-scroll-cont').offset().top;
         nrows = Math.floor((($(window).height() - offset)/167) + 1);
 
-        // Set listener for sorting select
-        $('#sorting').change((function(self, endPoint) {
+        // Set listener for sorting
+        $('#sort-pop').off();
+        $('#sort-pop').click(function(self, value) {
             return function() {
-                var query = '';
-                if ($('#sorting').val() != '') {
-                    query = '&sort=' + $('#sorting').val();
-                }
-                $('.search-container').empty();
-                self.pagination.removeListeners();
-                self.pagination.createListeners();
-                self.pagination.configurePaginationParams(320, nrows, query);
-                self.pagination.getNextPage();
+                sortingHandler(self, value, nrows);
             };
-        })(this, this.calculatedEndp));
+        }(this, 'popularity'));
+
+        $('#sort-name').off();
+        $('#sort-name').click(function(self, value) {
+            return function() {
+                sortingHandler(self, value, nrows);
+            };
+        }(this, 'name'));
+
+        $('#sort-date').off();
+        $('#sort-date').click(function(self, value) {
+            return function() {
+                sortingHandler(self, value, nrows);
+            };
+        }(this, 'date'));
 
         this.pagination.setElemSpace(0);
         this.pagination.configurePaginationParams(320, nrows);

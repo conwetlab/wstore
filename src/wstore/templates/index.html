@@ -144,8 +144,13 @@
             </div>
             <div class="fluid-row" id="store-search">
                 <form class="form form-horizontal">
-                    <div class="input-append">
-                        <input type="text" class="input-long" id="text-search" placeholder="Search" /><a type="button" class="btn btn-blue" id="search"><i class="icon-search"></i></a><input type="button" class="btn btn-basic" id="all" value="All" />
+                    <div class="input-prepend input-append">
+                        <a class="btn btn-basic hide" data-toggle="dropdown" id="sorting"><i class="icon-sort-by-attributes"></i></a><input type="text" class="input-long" id="text-search" placeholder="Search" /><a class="btn btn-blue" id="search"><i class="icon-search"></i></a><a class="btn btn-basic" id="all">All</a>
+                        <ul class="dropdown-menu" style="top: 25px;">
+                            <li><a id="sort-pop">Popularity</a></li>
+                            <li><a id="sort-name">Name</a></li>
+                            <li><a id="sort-date">Date</a></li>
+                        </ul>
                     </div>
                 </form>
             </div>

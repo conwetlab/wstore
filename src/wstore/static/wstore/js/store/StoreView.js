@@ -283,6 +283,7 @@
         $.template('homePageTemplate', $('#home_page_template'));
         $.tmpl('homePageTemplate',  {}).appendTo('#home-container');
 
+        $('#sorting').addClass('hide');
         // Bind menu handlers
         if (!mpainter)  {
             mpainter = new MenuPainter(setServiceHandler, setDataHandler, setWidgetHandler);

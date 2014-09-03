@@ -141,6 +141,18 @@
         notifyEvent();
     };
 
+    var sortingHandler = function sortingHandler(self, value, nrows) {
+        var query = self.query;
+        if (value != '') {
+            query += '&sort=' + value;
+        }
+        $('.offerings-container').empty();
+        self.pagination.removeListeners();
+        self.pagination.createListeners();
+        self.pagination.configurePaginationParams(320, nrows, query);
+        self.pagination.getNextPage();
+    };
+
     CatalogueSearchView.prototype.initializeComponents = function initializeComponents(type) {
         var offset, nrows;
 
@@ -159,20 +171,24 @@
         offset = $('.offerings-scroll-container').offset().top;
         nrows = Math.floor((($(window).height() - offset)/167) + 1);
 
-        // Set listener for sorting select
-        $('#sorting').change((function(self, endPoint) {
+        // Set listener for sorting
+        $('#sort-pop').click(function(self, value) {
             return function() {
-                var query = self.query;
-                if ($('#sorting').val() != '') {
-                    query += '&sort=' + $('#sorting').val();
-                }
-                $('.offerings-container').empty();
-                self.pagination.removeListeners();
-                self.pagination.createListeners();
-                self.pagination.configurePaginationParams(320, nrows, query);
-                self.pagination.getNextPage();
+                sortingHandler(self, value, nrows);
             };
-        })(this, this.calculatedEndp));
+        }(this, 'popularity'));
+
+        $('#sort-name').click(function(self, value) {
+            return function() {
+                sortingHandler(self, value, nrows);
+            };
+        }(this, 'name'));
+
+        $('#sort-date').click(function(self, value) {
+            return function() {
+                sortingHandler(self, value, nrows);
+            };
+        }(this, 'date'));
 
         this.pagination.setElemSpace(0);
         this.pagination.configurePaginationParams(320, nrows, this.query);
