@@ -74,7 +74,8 @@ class WstoreAuthorizationProvider(AuthorizationProvider):
 
     def from_authorization_code(self, client_id, code, scope):
         try:
-            code = Code.objects.get(client__client_id=client_id, scope=scope, code=code)
+            client = Application.objects.get(client_id=client_id)
+            code = Code.objects.get(client=client, scope=scope, code=code)
         except:
             return None
 
