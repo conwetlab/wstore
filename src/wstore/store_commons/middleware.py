@@ -127,6 +127,8 @@ def get_api_user(request):
 
     import json
     import urllib2
+    from django.conf import settings
+    from wstore.oauth2provider.models import Token
     from django.contrib.auth.models import User, AnonymousUser
     from wstore.social_auth_backend import FIWARE_USER_DATA_URL, fill_internal_user_info, FiwareBackend
     from wstore.store_commons.utils.method_request import MethodRequest
@@ -136,95 +138,101 @@ def get_api_user(request):
 
     # If using the idM to authenticate users, validate the token
 
-    opener = urllib2.build_opener()
-    url = FIWARE_USER_DATA_URL + '?access_token=' + token
-    request = MethodRequest('GET', url)
+    if settings.OILAUTH:
+        opener = urllib2.build_opener()
+        url = FIWARE_USER_DATA_URL + '?access_token=' + token
+        request = MethodRequest('GET', url)
 
-    try:
-        new_user = False
-        response = opener.open(request)
-        user_info = json.loads(response.read())
-        # Try to get an internal user
         try:
-            user = User.objects.get(username=user_info['nickName'])
-        except:
-            # The user is valid but she has never accessed wstore so
-            # internal models should be created
-            from social_auth.backends.pipeline.user import get_username
-            from social_auth.backends.pipeline.user import create_user
-            from social_auth.backends.pipeline.social import associate_user
-            from social_auth.backends.pipeline.social import load_extra_data
-
-            # The request is from a new user
-            new_user = True
-
-            # Get the internal username to be used
-            details = {
-                'username': user_info['nickName'],
-                'email': user_info['email'],
-                'fullname': user_info['displayName']
-            }
-            username = get_username(details)
-
-            # Create user structure
-            auth_user = create_user('', details, '', user_info['actorId'], username['username'])
-
-            # associate user with social user
-            social_user = associate_user(FiwareBackend, auth_user['user'], user_info['actorId'])
-
-            # Load  user extra data
-            request = {
-                'access_token': token
-            }
-            load_extra_data(FiwareBackend, details, request, user_info['actorId'], social_user['user'], social_user=social_user['social_user'])
-
-            # Refresh user info
-            user = User.objects.get(username=user_info['nickName'])
-
-        # If it is a new user the auth info contained in the userprofile is not valid
-        if not new_user:
-            # The user has been validated but the user info is not valid since the
-            # used token belongs to an external application
-
-            # Get FiPay token for the user
-            token = user.userprofile.access_token
-
-            # Get valid user info for Fipay
-            url = FIWARE_USER_DATA_URL + '?access_token=' + token
-            request = MethodRequest('GET', url)
-
+            new_user = False
+            response = opener.open(request)
+            user_info = json.loads(response.read())
+            # Try to get an internal user
             try:
-                response = opener.open(request)
-                user_info = json.loads(response.read())
-            except Exception, e:
+                user = User.objects.get(username=user_info['nickName'])
+            except:
+                # The user is valid but she has never accessed wstore so
+                # internal models should be created
+                from social_auth.backends.pipeline.user import get_username
+                from social_auth.backends.pipeline.user import create_user
+                from social_auth.backends.pipeline.social import associate_user
+                from social_auth.backends.pipeline.social import load_extra_data
 
-                if e.code == 401:
-                    # The access token may expired, try to refresh it
-                    social = user.social_auth.filter(provider='fiware')[0]
-                    social.refresh_token()
+                # The request is from a new user
+                new_user = True
 
-                    # Try to get user info with the new access token
-                    social = user.social_auth.filter(provider='fiware')[0]
-                    new_credentials = social.extra_data
+                # Get the internal username to be used
+                details = {
+                    'username': user_info['nickName'],
+                    'email': user_info['email'],
+                    'fullname': user_info['displayName']
+                }
+                username = get_username(details)
 
-                    user.userprofile.access_token = new_credentials['access_token']
-                    user.userprofile.refresh_token = new_credentials['refresh_token']
-                    user.userprofile.save()
+                # Create user structure
+                auth_user = create_user('', details, '', user_info['actorId'], username['username'])
 
-                    token = user.userprofile.access_token
-                    url = FIWARE_USER_DATA_URL + '?access_token=' + token
-                    request = MethodRequest('GET', url)
+                # associate user with social user
+                social_user = associate_user(FiwareBackend, auth_user['user'], user_info['actorId'])
+
+                # Load  user extra data
+                request = {
+                    'access_token': token
+                }
+                load_extra_data(FiwareBackend, details, request, user_info['actorId'], social_user['user'], social_user=social_user['social_user'])
+
+                # Refresh user info
+                user = User.objects.get(username=user_info['nickName'])
+
+            # If it is a new user the auth info contained in the userprofile is not valid
+            if not new_user:
+                # The user has been validated but the user info is not valid since the
+                # used token belongs to an external application
+
+                # Get FiPay token for the user
+                token = user.userprofile.access_token
+
+                # Get valid user info for Fipay
+                url = FIWARE_USER_DATA_URL + '?access_token=' + token
+                request = MethodRequest('GET', url)
+
+                try:
                     response = opener.open(request)
                     user_info = json.loads(response.read())
-                else:
-                    raise(e)
+                except Exception, e:
 
-            user_info['access_token'] = token
-            user_info['refresh_token'] = user.userprofile.refresh_token
-            fill_internal_user_info((), response=user_info, user=user)
+                    if e.code == 401:
+                        # The access token may expired, try to refresh it
+                        social = user.social_auth.filter(provider='fiware')[0]
+                        social.refresh_token()
 
-    except Exception, e:
-        user = AnonymousUser()
+                        # Try to get user info with the new access token
+                        social = user.social_auth.filter(provider='fiware')[0]
+                        new_credentials = social.extra_data
+
+                        user.userprofile.access_token = new_credentials['access_token']
+                        user.userprofile.refresh_token = new_credentials['refresh_token']
+                        user.userprofile.save()
+
+                        token = user.userprofile.access_token
+                        url = FIWARE_USER_DATA_URL + '?access_token=' + token
+                        request = MethodRequest('GET', url)
+                        response = opener.open(request)
+                        user_info = json.loads(response.read())
+                    else:
+                        raise(e)
+
+                user_info['access_token'] = token
+                user_info['refresh_token'] = user.userprofile.refresh_token
+                fill_internal_user_info((), response=user_info, user=user)
+
+        except Exception, e:
+            user = AnonymousUser()
+    else:
+        try:
+            user = Token.objects.get(token=token).user
+        except:
+            user = AnonymousUser()
 
     return user
 
