@@ -536,12 +536,19 @@
                 var res = resources[i];
                 var found = false;
                 var j = 0;
+                var templ;
 
                 res.number = i;
                 $.template('resourceTemplate', $('#resource_template'));
-                $.tmpl('resourceTemplate', res).appendTo('#sel-resources').on('hover', function(e) {
-                    $(e.target).popover('show');
+                templ = $.tmpl('resourceTemplate', res).appendTo('#sel-resources').click(function() {
+                    var check = $(this).find('input[type="checkbox"]');
+                    if (check.prop('checked')) {
+                        check.prop('checked', false);
+                    } else {
+                        check.prop('checked', true);
+                    }
                 });
+                templ.find('.label').remove();
             }
         } else {
             var msg = "You don't have any resource registered. Press accept to create the offering without resources (You can bind resources later, before publishing the offering).";

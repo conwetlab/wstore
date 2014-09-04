@@ -143,9 +143,16 @@
             templ = $.tmpl('resourceTemplate', res).
                 appendTo('#resources');
 
-            templ.find('.label').addClass(labels[res.state]);
-
             if (!this.viewOnly) {
+                templ.find('.label').remove();
+                templ.click(function() {
+                    var check = $(this).find('input[type="checkbox"]');
+                    if (check.prop('checked')) {
+                        check.prop('checked', false);
+                    } else {
+                        check.prop('checked', true);
+                    }
+                });
                 // Checks if the resource is already bound to the offering
                 offeringRes = this.offeringElem.getResources()
                 while(!found && j < offeringRes.length) {
@@ -157,6 +164,7 @@
                 }
             } else {
                 // In the visualization mode it should be possible to expand resource info
+                templ.find('.label').addClass(labels[res.state]);
                 templ.click(function (self, resource) {
                     var resDetails = new ResourceDetailsPainter(resource, self);
                     return function () {
