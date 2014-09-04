@@ -1,8 +1,10 @@
 
 <div class="resource">
-    <input type="checkbox" id="check-${number}"></input>
-    <p class="res-title"><b class="color-resource">Name:</b> ${name}<div class="res-gradient res-title-gradient"></div></p>
-    <p><b class="color-resource">Version:</b> ${version}</p>
+    <div class="resource-header">
+        <input type="checkbox" id="check-${number}"></input>
+        <h3 class="res-title">${name}</h3><div class="res-gradient res-title-gradient"></div></p><span class="label">${state}</span>
+        <p class="res-version">${version}</p>
+    </div>
     <div class="res-gradient res-desc-gradient"></div>
-    <p><b class="color-resource">Description:</b> ${description}</p>
+    <p class="res-description">${description}</p>
 </div>

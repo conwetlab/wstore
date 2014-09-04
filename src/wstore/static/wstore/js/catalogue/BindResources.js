@@ -118,6 +118,12 @@
     BindResourcesForm.prototype.paintResources = function paintResources (resources) {
         this.resources = resources;
 
+        var labels = {
+            'deleted': 'label-important',
+            'used': 'label-info',
+            'created': ''
+        }
+
         // Check if there is any resource
         if (!resources.length) {
             var msg = "You don't have any resource registered";
@@ -136,6 +142,8 @@
             $.template('resourceTemplate', $('#resource_template'));
             templ = $.tmpl('resourceTemplate', res).
                 appendTo('#resources');
+
+            templ.find('.label').addClass(labels[res.state]);
 
             if (!this.viewOnly) {
                 // Checks if the resource is already bound to the offering
