@@ -445,17 +445,19 @@
                 var j = 0;
                 var templ;
 
-                res.number = i;
-                $.template('resourceTemplate', $('#resource_template'));
-                templ = $.tmpl('resourceTemplate', res).appendTo('#sel-resources').click(function() {
-                    var check = $(this).find('input[type="checkbox"]');
-                    if (check.prop('checked')) {
-                        check.prop('checked', false);
-                    } else {
-                        check.prop('checked', true);
-                    }
-                });
-                templ.find('.label').remove();
+                if (res.state != 'deleted') {
+                    res.number = i;
+                    $.template('resourceTemplate', $('#resource_template'));
+                    templ = $.tmpl('resourceTemplate', res).appendTo('#sel-resources').click(function() {
+                        var check = $(this).find('input[type="checkbox"]');
+                        if (check.prop('checked')) {
+                            check.prop('checked', false);
+                        } else {
+                            check.prop('checked', true);
+                        }
+                    });
+                    templ.find('.label').remove();
+                }
             }
         } else {
             var msg = "You don't have any resource registered. Press accept to create the offering without resources (You can bind resources later, before publishing the offering).";

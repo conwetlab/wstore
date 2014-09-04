@@ -144,6 +144,12 @@
                 appendTo('#resources');
 
             if (!this.viewOnly) {
+                // Deleted resources are not displayed in the binding form
+                if (res.state == 'deleted') {
+                    templ.remove();
+                    continue;
+                }
+
                 templ.find('.label').remove();
                 templ.click(function() {
                     var check = $(this).find('input[type="checkbox"]');
