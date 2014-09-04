@@ -915,6 +915,7 @@ footer {
   left: 0px;
   box-shadow: 5px 4px 8px rgba(50, 51, 51, 0.15);
   z-index: 6;
+  overflow: hidden;
 }
 
 .left-bar .icon-th-list {
