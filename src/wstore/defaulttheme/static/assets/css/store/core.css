@@ -328,7 +328,7 @@ h2 {
 
 .menu-offering-row .label {
     position: absolute;
-    top: 31px;
+    top: 20px;
 }
 
 #off-desc {
@@ -346,6 +346,7 @@ h2 {
     width: 192px;
     overflow: hidden;
     white-space: nowrap;
+    left: 10px;
 }
 
 .mini-off-price {
@@ -363,6 +364,14 @@ h2 {
     width: 80px;
 }
 
+.mini-offering-header {
+  width: 296px;
+  height: 58px;
+  background-color: rgb(235, 235, 235);
+  margin-left: -10px;
+  margin-top: -10px;
+}
+
 .txt-gradient {
   background: -webkit-linear-gradient(left, rgba(255, 255, 255, 0), rgb(255, 255, 255));
   background: linear-gradient(to right, rgba(255, 255, 255, 0), rgb(255, 255, 255));
@@ -374,6 +383,11 @@ h2 {
   transition: background linear 0.2s;
   -moz-transition: background linear 0.2s; /* Firefox 4 */
   -webkit-transition: background linear 0.2s;
+}
+
+.gradient-grey {
+  background: -webkit-linear-gradient(left, rgba(235, 235, 235, 0), rgb(235, 235, 235)) !important;
+  background: linear-gradient(to right, rgba(235, 235, 235, 0), rgb(235, 235, 235)) !important;
 }
 
 .menu-offering-row >.txt-gradient {

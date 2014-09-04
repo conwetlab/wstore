@@ -4,8 +4,8 @@
  * This file is part of WStore.
  *
  * WStore is free software: you can redistribute it and/or modify
- * it under the terms of the European Union Public Licence (EUPL) 
- * as published by the European Commission, either version 1.1 
+ * it under the terms of the European Union Public Licence (EUPL)
+ * as published by the European Commission, either version 1.1
  * of the License, or (at your option) any later version.
  *
  * WStore is distributed in the hope that it will be useful,
@@ -14,7 +14,7 @@
  * European Union Public Licence for more details.
  *
  * You should have received a copy of the European Union Public Licence
- * along with WStore.  
+ * along with WStore.
  * If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
  */
 
@@ -123,84 +123,7 @@
         }
 
         for (var i = 0; i < data.length; i++) {
-            var offering_elem = new OfferingElement(data[i]);
-            var offDetailsView = new CatalogueDetailsView(offering_elem, action, '#home-container');
-            var labelClass = "label";
-            var labelValue = offering_elem.getState();
-            var stars, templ, priceStr = 'Open';
-
-            // Append Price and button if necessary
-            $.template('miniOfferingTemplate', $('#mini_offering_template'));
-            templ = $.tmpl('miniOfferingTemplate', {
-                'name': offering_elem.getName(),
-                'organization': offering_elem.getOrganization(),
-                'logo': offering_elem.getLogo(),
-                'description': offering_elem.getShortDescription()
-            }).click((function(off) {
-                return function() {
-                    off.showView();
-                }
-            })(offDetailsView));
-
-            fillStarsRating(offering_elem.getRating(), templ.find('.stars-container'));
-
-            if (!offering_elem.isOpen()) {
-                priceStr = getPriceStr(offering_elem.getPricing());
-            } else {
-                templ.addClass('open-offering');
-            }
-            // Append button
-            if ((USERPROFILE.getCurrentOrganization() != offering_elem.getOrganization()) 
-                    && (labelValue == 'published') && !offering_elem.isOpen()) {
-                var padding = '18px';
-                var text = priceStr;
-                var buttonClass = "btn btn-success";
-
-                if (priceStr != 'Free') {
-                    padding = '13px';
-                    buttonClass = "btn btn-blue";
-                }
-
-                if (priceStr == 'View pricing') {
-                    text = 'Purchase';
-                }
-                $('<button></button>').addClass(buttonClass + ' mini-off-btn').text(text).click((function(off) {
-                    return function() {
-                        off.showView();
-                        off.mainAction('Purchase');
-                    }
-                })(offDetailsView)).css('padding-left', padding).appendTo(templ.find('.offering-meta'));
-            } else {
-                var span = $('<span></span>').addClass('mini-off-price').text(priceStr);
-                if (priceStr == 'Free' || priceStr == 'Open') {
-                    span.css('color', 'green');
-                }
-                span.appendTo(templ.find('.offering-meta'));
-            }
-
-            if (labelValue == 'rated' && offering_elem.isOpen()) {
-                labelValue = 'published';
-            }
-
-            if (labelValue != 'published') {
-                var label = $('<span></span>');
-                if (labelValue == 'purchased' || labelValue == 'rated') {
-                    labelClass += " label-success";
-                    labelValue = 'purchased';
-                } else if (labelValue == 'deleted') {
-                    labelClass += " label-important";
-                }
-
-                if (labelValue == 'purchased') {
-                    labelValue = 'acquired';
-                }
-                label.addClass(labelClass).text(labelValue);
-                templ.find('.off-org-name').before(label);
-                templ.find('.off-org-name').css('width', '126px')
-                templ.find('.off-org-name').css('left', '68px');
-            }
-
-            templ.appendTo(container)
+            paintMenuOffering(new OfferingElement(data[i]), container, action, '#home-container');
         }
         if (!evntAllowed) {
             evntAllowed = true;

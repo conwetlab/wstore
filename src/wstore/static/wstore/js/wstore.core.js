@@ -1,5 +1,102 @@
+/*
+ * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ *
+ * This file is part of WStore.
+ *
+ * WStore is free software: you can redistribute it and/or modify
+ * it under the terms of the European Union Public Licence (EUPL)
+ * as published by the European Commission, either version 1.1
+ * of the License, or (at your option) any later version.
+ *
+ * WStore is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * European Union Public Licence for more details.
+ *
+ * You should have received a copy of the European Union Public Licence
+ * along with WStore.
+ * If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
+ */
+
 (function () {
-  
+
+    paintMenuOffering = function paintMenuOffering(offeringElem, container, action, detailsContainer) {
+        var offDetailsView = new CatalogueDetailsView(offeringElem, action, detailsContainer);
+        var labelClass = "label";
+        var labelValue = offeringElem.getState();
+        var stars, templ, priceStr = 'Open';
+
+        // Append Price and button if necessary
+        $.template('miniOfferingTemplate', $('#mini_offering_template'));
+        templ = $.tmpl('miniOfferingTemplate', {
+            'name': offeringElem.getName(),
+            'organization': offeringElem.getOrganization(),
+            'logo': offeringElem.getLogo(),
+            'description': offeringElem.getShortDescription()
+        }).click((function(off) {
+            return function() {
+                off.showView();
+            }
+        })(offDetailsView));
+
+        fillStarsRating(offeringElem.getRating(), templ.find('.stars-container'));
+
+        if (!offeringElem.isOpen()) {
+            priceStr = getPriceStr(offeringElem.getPricing());
+        } else {
+            templ.addClass('open-offering');
+        }
+        // Append button if needed
+        if ((USERPROFILE.getCurrentOrganization() != offeringElem.getOrganization()) 
+                && (labelValue == 'published') && !offeringElem.isOpen()) {
+            var padding = '18px';
+            var text = priceStr;
+            var buttonClass = "btn btn-success";
+
+            if (priceStr != 'Free') {
+                padding = '13px';
+                buttonClass = "btn btn-blue";
+            }
+
+            if (priceStr == 'View pricing') {
+                text = 'Purchase';
+            }
+            $('<button></button>').addClass(buttonClass + ' mini-off-btn').text(text).click((function(off) {
+                return function() {
+                    off.showView();
+                    off.mainAction('Purchase');
+                }
+            })(offDetailsView)).css('padding-left', padding).appendTo(templ.find('.offering-meta'));
+        } else {
+            if (labelValue == 'rated' && offeringElem.isOpen()) {
+                labelValue = 'published';
+            }
+
+            if (labelValue != 'published') {
+                var label = $('<span></span>');
+                if (labelValue == 'purchased' || labelValue == 'rated') {
+                    labelClass += " label-success";
+                    labelValue = 'purchased';
+                } else if (labelValue == 'deleted') {
+                    labelClass += " label-important";
+                }
+
+                if (labelValue == 'purchased') {
+                    labelValue = 'acquired';
+                }
+                label.addClass(labelClass).text(labelValue);
+                label.appendTo(templ.find('.offering-meta'));
+            } else {
+                var span = $('<span></span>').addClass('mini-off-price').text(priceStr);
+                if (priceStr == 'Free' || priceStr == 'Open') {
+                    span.css('color', 'green');
+                }
+                span.appendTo(templ.find('.offering-meta'));
+            }
+        }
+
+        templ.appendTo(container)
+    };
   /**
    *
    */
