@@ -236,6 +236,11 @@
             $('#catalogue-title').css('left', scrollContPos.toString() + 'px');
 
         }
+        if ($(window).width() < 900) {
+            $('.left-bar').addClass('hidden');
+        } else {
+            $('.left-bar').removeClass('hidden');
+        }
     }
 
     $(window).resize(calculatePositions);

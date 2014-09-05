@@ -177,3 +177,16 @@
   background-color: rgb(235, 235, 235);
 }
 
+@media all and (max-width: 980px) {
+  #catalogue-container {
+     position: absolute;
+     left: 0;
+     top: -170px;
+  }
+}
+
+@media all and (max-width: 900px) {
+  .offerings-container {
+     margin-left: -304px;
+  }
+}
