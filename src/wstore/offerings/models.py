@@ -58,6 +58,9 @@ class Offering(models.Model):
         """
         return self.owner_admin_user == user
 
+    def __unicode__(self):
+        return self.name
+
     class Meta:
         app_label = 'wstore'
         unique_together = ('name', 'owner_organization', 'version')
@@ -99,6 +102,9 @@ class Resource(models.Model):
             url = urljoin(cnt.site.domain, self.resource_path)
 
         return url
+
+    def __unicode__(self):
+        return self.name
 
     class Meta:
         app_label = 'wstore'
