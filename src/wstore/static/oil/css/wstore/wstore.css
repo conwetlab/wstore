@@ -5,7 +5,8 @@
 #provider-options {
   position: absolute;
   top: 51px;
-  left: 1236px;
+  left: auto;
+  right: 505px;
 }
 
 .logo-header .brand {
