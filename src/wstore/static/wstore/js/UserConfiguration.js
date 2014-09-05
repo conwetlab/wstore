@@ -43,7 +43,7 @@
     /**
      * UserConfForm is a subclass of ModalForm
      */
-    UserConfForm.prototype = new ModalForm('Configuration',  '#user_conf_template');
+    UserConfForm.prototype = new ModalForm('Settings',  '#user_conf_template');
 
     UserConfForm.prototype.constructor = UserConfForm;
 
