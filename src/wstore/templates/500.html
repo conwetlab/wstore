@@ -1,0 +1,75 @@
+{% load i18n %}
+<html>
+  <head>
+     <title>FIWARE Store</title>
+     <meta charset="UTF-8">
+        <link rel="icon" href="/static/assets/ico/favicon.ico" type="image/x-icon"/>
+        <link rel="shortcut icon" href="/static/assets/ico/favicon.ico" type="image/x-icon"/>
+        <link rel="stylesheet" type="text/css" href="/static/assets/css/aplication.css" />
+        <link rel="stylesheet" type="text/css" href="/static/assets/css/bootstrap.css" />
+        <link rel="stylesheet" type="text/css" href="/static/assets/css/bootstrap-responsive.css" />
+        <link rel="stylesheet" type="text/css" href="/static/assets/css/docs.css" />
+        <link href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="/static/assets/js/google-code-prettify/prettify.css" />
+        <link rel="stylesheet" type="text/css" href="/static/assets/css/store/core.css" />
+        <link rel="stylesheet" type="text/css" href="/static/assets/css/store/store.css" />
+        <link rel="stylesheet" type="text/css" href="/static/assets/fonts/fonts.css" />
+        <link href="/static/oil/css/header/header.css" rel="stylesheet">
+    
+        <link href="/static/oil/css/header_signed-in/header_signed-in.css" rel="stylesheet">
+
+        <link href="/static/oil/css/icons&fonts/fonts/fonts.css" rel="stylesheet">
+        <link href="/static/oil/css/icons&fonts/icons/icons.css" rel="stylesheet">
+  </head>
+  <body>
+     <div id="oil-bar">
+        <header id="oil-nav" class="navbar"
+    style="box-shadow: 0px 4px 8px rgba(50, 51, 51, 0.15);"
+    >
+      <nav class="navbar-inner">
+
+        <div class="logo-header">
+          <a href=" {{ main }}" class="logo-header">
+                <img alt="FI-WARE" class="logo" src="/static/oil/img/header-logo.png">
+          </a>
+          <a href="" class="brand">
+            <div class="store_title">
+                <span>FI-</span>WARE
+                <h2>WStore</h2>
+            </div>
+            <div id="title-shadow"></div>
+          </a>
+        </div>
+      </nav>
+    </header>
+     </div>
+     </div class="err-page-container" style="
+         width: 100%;">
+         <div class="centered-info" style="
+             width: 430px;
+             position: relative;
+             left: 50%;
+             margin-left: -215px;
+             top: 150px;
+             border: 1px solid rgb(205, 206, 209);
+             padding: 10px;
+             border-radius: 4px;
+             height: 120px;
+             overflow: hidden">
+             <div style="
+                 width: 440px;
+                 height: 55px;
+                 margin-left: -10px;
+                 margin-top: -10px;
+                 background-color: rgb(235, 235, 235);
+                 padding-top: 10px;
+                 padding-left: 10px;
+             "> 
+                 <h1>Internal Server Error</h1>
+             </div>
+             <p style="margin-top: 10px;">Sorry, but the requested page is unavailable due to a server hiccup.</p>
+             <p>Our engineers have been notified, so check back later.</p>
+         </div>
+     <div>
+  </body>
+</html>
