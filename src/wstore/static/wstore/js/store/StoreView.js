@@ -246,8 +246,14 @@
         var position;
         var filabInt = $('#oil-nav').length > 0;
 
+        $('.search-fixed').removeClass('search-fixed');
+
         if ($('.search-container').length > 0) {
             var offset, scrollContPos;
+            // Set class for fixing positions if needed
+            if ($(window).width() < 981) {
+                $('#store-container').addClass('search-fixed');
+            }
             // Refresh the search view in order to adapt the page length
             // to the new window length.
             if (evnt && evntAllowed) {
@@ -272,6 +278,11 @@
             storeWidth = $(window).width() - $('#container-rated-newest').offset().left;
             $('#container-rated-newest').css('height', offsetStore.toString() + 'px');
             $('#container-rated-newest').css('width', storeWidth.toString() + 'px');
+        }
+        if ($(window).width() < 900) {
+            $('.left-bar').addClass('hidden');
+        } else {
+            $('.left-bar').removeClass('hidden');
         }
     }
 

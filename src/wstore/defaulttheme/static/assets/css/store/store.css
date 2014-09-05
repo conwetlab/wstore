@@ -117,6 +117,38 @@
   }
 }
 
+@media all and (max-width: 980px) {
+   .search-fixed {
+     position: absolute;
+     top: -170px;
+     left: 0;
+   }
+}
+
+@media all and (max-width: 900px) {
+    .search-fixed {
+     position: absolute;
+     top: -170px;
+     left: 0;
+   }
+   
+  #top-rated-container {
+    margin-left: -304px;
+  }
+
+  #newest-container {
+    margin-left: -304px;
+  }
+
+  .home-pg-title {
+    margin-left: -304px;
+  }
+
+  .search-container {
+     margin-left: -291px !important;
+  }
+}
+
 .store-menu .icon-gears {
   font-size: 20px;
   position: relative;
@@ -163,6 +195,7 @@
      width: 960px;
      margin-left: -375px;
   }
+
 }
 
 @media all and (max-width: 1211px) {

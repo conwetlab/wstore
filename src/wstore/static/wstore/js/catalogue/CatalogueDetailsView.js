@@ -252,6 +252,13 @@
         var offset;
         var width;
 
+        if ($('.detailed-info').length) {
+            $('.search-fixed').removeClass('search-fixed');
+            if ($(window).width() < 980) {
+                $('#home-container').addClass('search-fixed');
+            }
+        }
+
         // Calculate tabs width
         $('.detailed-info').css('width', ($(window).width() - position.left) + 'px');
 
