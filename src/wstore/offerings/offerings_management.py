@@ -185,6 +185,8 @@ def _get_purchased_offerings(user, db, pagination=None, sort=None):
 
         if skip < len(user_purchased):
             user_purchased = user_purchased[skip:(skip + limit)]
+        else:
+            user_purchased = []
 
     return user_purchased
 
