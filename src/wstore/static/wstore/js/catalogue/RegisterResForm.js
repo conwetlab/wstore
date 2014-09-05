@@ -25,7 +25,9 @@
 
     ResourceCreator.prototype.makeRequest = function makeRequest(evnt) {
         var name, version, link, contentType, request = {};
-        var msg, error = false;
+        var msg = '';
+        var errFields = [];
+        var error = false;
 
         evnt.preventDefault();
         evnt.stopPropagation();
@@ -37,26 +39,31 @@
 
         if (!name || !version) {
             error = true;
-            msg = 'Missing required field(s):';
+            msg += 'Missing required field(s):';
             if (!name) {
                 msg += ' Name';
+                errFields.push($(this.msgId + ' [name="res-name"]'));
             }
             if (!version) {
                 msg += ' Version';
+                errFields.push($(this.msgId + ' [name="res-version"]'));
             }
+            msg += '<br/>'
         }
 
         // Check name format
         var nameReg = new RegExp(/^[\w\s-]+$/);
         if (name && !nameReg.test(name)) {
             error = true;
-            msg = 'Invalid name format: Unsupported character';
+            msg += 'Invalid name format: Unsupported character <br/>';
+            errFields.push($(this.msgId + ' [name="res-name"]'));
         }
 
         var versReg = new RegExp(/^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$/);
         if (version && !versReg.test(version)) {
             error = true;
-            msg = 'Invalid version format';
+            msg += 'Invalid version format <br />';
+            errFields.push($(this.msgId + ' [name="res-version"]'));
         }
         request.content_type = contentType
         request.name = name;
@@ -68,12 +75,14 @@
             this.loadResource(request);
         } catch(err) {
             error = true;
-            msg = err;
+            msg += err + '<br />';
+            errFields.push($(this.msgId + ' [name="files"]'));
         }
 
-        if (!error && !request.content && !request.link) {
+        if (!request.content && !request.link) {
             error = true;
-            msg = "You have not provided a resource";
+            msg += "You have not provided a resource <br/>";
+            errFields.push($(this.msgId + ' [name="files"]'));
         }
 
         if (!error) {
@@ -82,8 +91,18 @@
                 MessageManager.showMessage('Created', 'The resource has been registered');
             }.bind(this));
         } else {
-            MessageManager.showAlertError('Error', msg, $(this.msgId + ' #error-container'));
-            $('.alert-error').removeClass('span8');
+            var span;
+            MessageManager.showAlertError('Error', '', $(this.msgId + ' #error-container'));
+            span = $('<span></span>').appendTo('.alert-error');
+            span[0].innerHTML = msg;
+            $('.alert-error').removeClass('span8').on('close', function() {
+                $('.error').removeClass('error');
+            });
+
+            // Mark error fields
+            for (var i = 0; i < errFields.length; i++) {
+                errFields[i].parent().parent().addClass('error');
+            }
         }
 
     };
@@ -100,7 +119,6 @@
 
     ResourceUpdater.prototype.makeRequest = function makeRequest(evnt) {
         var request = {};
-        var error = false;
         var resourceId = {
             'provider': ORGANIZATION,
             'name': this.resourceInfo.name,
@@ -129,30 +147,25 @@
             }
         }
 
-        if (!error) {
-            this.client.update(request, function (response) {
-                $(this.msgId).modal('hide');
-            }.bind(this), resourceId, function(xhr) {
+        this.client.update(request, function (response) {
+            $(this.msgId).modal('hide');
+        }.bind(this), resourceId, function(xhr) {
 
-                $(this.msgId).off('hidden');
+            $(this.msgId).off('hidden');
 
-                $(this.msgId).modal('hide');
+            $(this.msgId).modal('hide');
 
-                // Remove modal
-                $(this.msgId).remove();
-                var resp = xhr.responseText;
-                var msg = JSON.parse(resp).message;
+            // Remove modal
+            $(this.msgId).remove();
+            var resp = xhr.responseText;
+            var msg = JSON.parse(resp).message;
 
-                // Show new modal
-                MessageManager.showMessage('Error', msg, $('#new-container'));
-                $(this.msgId).off('hidden');
-                $(this.msgId).on('hidden', this.caller.showModal.bind(this.caller));
+            // Show new modal
+            MessageManager.showMessage('Error', msg, $('#new-container'));
+            $(this.msgId).off('hidden');
+            $(this.msgId).on('hidden', this.caller.showModal.bind(this.caller));
 
-            }.bind(this));
-        } else {
-            MessageManager.showAlertError('Error', msg, $(this.msgId + ' #error-container'));
-            $('.alert-error').removeClass('span8');
-        }
+        }.bind(this));
     };
 
     ResourceUpdater.prototype.fillResourceInfo = function fillResourceInfo() {
@@ -189,7 +202,9 @@
     };
 
     ResourceUpgrader.prototype.makeRequest = function makeRequest(evnt) {
-        var msg, error = false;
+        var msg = '';
+        var error = false;
+        var errFields = [];
         var request = {};
         var resourceId = {
             'provider': ORGANIZATION,
@@ -204,14 +219,16 @@
         // validate version value
         if (!version) {
             error = true;
-            msg = 'Missing required field: Version';
+            msg += 'Missing required field: Version <br />';
+            errFields.push($(this.msgId + ' [name="res-version"]'));
         }
 
         if (!error) {
             var versReg = new RegExp(/^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$/);
             if (version && !versReg.test(version)) {
                 error = true;
-                msg = 'Invalid version format';
+                msg += 'Invalid version format <br />';
+                errFields.push($(this.msgId + ' [name="res-version"]'));
             }
         }
 
@@ -223,13 +240,15 @@
                 this.loadResource(request);
             } catch(err) {
                 error = true;
-                msg = err;
+                msg += err + '<br />';
+                errFields.push($(this.msgId + ' [name="files"]'));
             }
         }
 
         if (!error && !request.content && !request.link) {
             error = true;
-            msg = "You have not provided a resource";
+            msg += "You have not provided a resource <br />";
+            errFields.push($(this.msgId + ' [name="files"]'));
         }
 
         // Make server request
@@ -253,8 +272,18 @@
 
             }.bind(this));
         } else {
-            MessageManager.showAlertError('Error', msg, $(this.msgId + ' #error-container'));
-            $('.alert-error').removeClass('span8');
+            var span;
+            MessageManager.showAlertError('Error', '', $(this.msgId + ' #error-container'));
+            span = $('<span></span>').appendTo('.alert-error');
+            span[0].innerHTML = msg;
+            $('.alert-error').removeClass('span8').on('close', function() {
+                $('.error').removeClass('error');
+            });
+
+            // Mark error fields
+            for (var i = 0; i < errFields.length; i++) {
+                errFields[i].parent().parent().addClass('error');
+            }
         }
     };
 
