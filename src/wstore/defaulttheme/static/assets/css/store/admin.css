@@ -34,3 +34,21 @@
 #admin-err-cont > .alert {
   width: 100%;
 }
+
+@media all and (max-width: 1100px) {
+  #admin-container {
+    width: 700px;
+    margin-left: -350px;
+  }
+}
+
+@media all and (max-width: 980px) {
+  .admin-element {
+    top: -70px;
+  }
+
+  .return-button {
+    top: -119px;
+  }
+}
+
