@@ -237,9 +237,14 @@
 
         }
         if ($(window).width() < 900) {
-            $('.left-bar').addClass('hidden');
+            // Change provider options button
+            $('#provider-options .btn').text(' ');
+            $('#provider-options .btn').append('<i class="icon-cloud-upload"></i>').
+               append(' <i class="icon-caret-down"></i>');
         } else {
-            $('.left-bar').removeClass('hidden');
+            // Change provider options button
+            $('#provider-options .btn .icon-cloud-upload').remove();
+            $('#provider-options .btn').text('Provider options ').append('<i class="icon-caret-down"></i>');
         }
     }
 

@@ -279,11 +279,6 @@
             $('#container-rated-newest').css('height', offsetStore.toString() + 'px');
             $('#container-rated-newest').css('width', storeWidth.toString() + 'px');
         }
-        if ($(window).width() < 900) {
-            $('.left-bar').addClass('hidden');
-        } else {
-            $('.left-bar').removeClass('hidden');
-        }
     }
 
     $(window).resize(calculatePositions);
