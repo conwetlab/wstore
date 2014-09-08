@@ -1,0 +1,13 @@
+[
+    {
+        "pk": "61000bba8e05ac2dddddddd",
+        "model": "oauth2provider.application",
+        "fields": {
+            "client_secret": "secret",
+            "redirect_uri": "http://localhost:8989",
+            "client_id": "test_app",
+            "name": "test_app",
+            "home_url": "http://localhost:8989"
+        }
+    }
+]
