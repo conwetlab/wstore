@@ -8,7 +8,7 @@ h2 {
 }
 
 #back {
-  z-index: 3;
+  z-index: 6;
 }
 
 .dropdown-menu>li>a:hover {
@@ -164,9 +164,10 @@ h2 {
 }
 
 .return-button {
-  position: absolute;
+  position: fixed;
   top: 51px;
   left: 238px;
+  z-index: 6;
 }
 
 #title-shadow {
@@ -960,12 +961,14 @@ footer {
   left: 0;
   background-color: rgb(255, 255, 255);
   box-shadow: 0px 0px 1px rgba(50, 51, 51, 0.15);
+  z-index:5;
 }
 
 .details-advanced-op {
-  position: absolute;
+  position: fixed;
   top: 51px;
   right: 20px;
+  z-index: 6;
 }
 
 /* Menu style */
@@ -1175,3 +1178,11 @@ footer {
   }
 }
 
+footer {
+  width: 100%;
+  background-color: rgb(255,255,255);
+}
+
+header {
+  z-index: 6 !important;
+}

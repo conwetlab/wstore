@@ -235,10 +235,8 @@
         $(window).resize(this.calculatePositions.bind(this));
 
         // Form for comment and rate the offering
-        //if (this.offeringElement.getComments().length) {
-            this.reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'), this);
-            this.reviewPainter.paint();
-        //}
+        this.reviewPainter = new ReviewPainter(this.offeringElement, $('#review-container'), this);
+        this.reviewPainter.paint();
         closeMenuPainter();
     };
 
@@ -259,14 +257,11 @@
             }
         }
 
-        // Calculate tabs width
-        $('.detailed-info').css('width', ($(window).width() - position.left) + 'px');
-
-        offset = $(window).height() - $('.tab-content').offset().top - 30;
-        width = $(window).width() - $('.tab-content').offset().left -10;
-        $('.tab-content').css('height', offset.toString() + 'px');
+        width = $(window).width() - $('.tab-content').offset().left - 20;
         $('.tab-content').css('width', width.toString() + 'px');
 
+        // Calculate tabs width
+        $('.detailed-info').css('width', ($(window).width() - position.left) + 'px');
         if ('reviewPainter' in this) {
             this.reviewPainter.checkExpand();
         }

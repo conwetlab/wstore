@@ -46,17 +46,13 @@
      * Handler of th exapnd button to unexpand
      */
     var resizeHandlerDecrease = function resizeHandlerDecrease(self) {
-        $('.tab-content').stop();
+        $(document).stop();
 
         $('.btn-resize').removeAttr('style');
-        $('.tab-content').animate({
-            scrollTop: self.prevScrollPos
-        }, 1500, function() {
-            $('#comments').removeAttr('style');
-            this.scrollPag.removeListeners();
-            $('#comments').empty();
-            this.scrollPag.getNextPage();
-        }.bind(self));
+        $('#comments').removeAttr('style');
+        self.scrollPag.removeListeners();
+        $('#comments').empty();
+        self.scrollPag.getNextPage();
 
         $('.btn-resize').empty();
         $('.btn-resize').append('<i class="icon-plus"></i>  View More');
@@ -74,14 +70,7 @@
         var found = false;
 
         self.scrollPag.createListeners();
-
-        self.prevScrollPos = $('.tab-content').scrollTop();
         $('#comments').css('height', 'auto');
-        $('.tab-content').stop();
-
-        $('.tab-content').animate({
-            scrollTop: $('.tab-content').scrollTop() + 100
-        }, 1500);
 
         $('.btn-resize').empty();
         $('.btn-resize').append('<i class="icon-minus"></i>  View Less');
@@ -99,14 +88,14 @@
      */
     ReviewPainter.prototype.scrollHandler = function scrollHandler(evnt) {
         if (this.extended) {
-            if (($('.btn-resize').offset().top <= $('h2:contains(Reviews)').offset().top)){
+            if ($('.btn-resize').offset().top  <= $('h2:contains(Reviews)').offset().top){
                 $('.btn-resize').removeAttr('style');
-            } else if (($('.btn-resize').offset().top <= $('.tab-content').offset().top + 30)
+            } else if (($('.btn-resize').offset().top <= $('#options-bar').offset().top + 50)
                     && !$('.btn-resize').attr('style')) {
 
                 var rightPos = ($(window).width() - ($('.btn-resize').offset().left + $('.btn-resize').outerWidth()));
                 $('.btn-resize').css('right', rightPos);
-                $('.btn-resize').css('top', $('.tab-content').offset().top + 30);
+                $('.btn-resize').css('top', '100px');
                 $('.btn-resize').css('position', 'fixed');
             }
         }
@@ -117,7 +106,7 @@
      */
     ReviewPainter.prototype.setListeners = function setListeners() {
         // Create scroll pagination
-        this.scrollPag = new ScrollPagination($('.tab-content'), $('#main-tab'), this.paintComments.bind(this), this.client, this.scrollHandler.bind(this), $('#comments'));
+        this.scrollPag = new ScrollPagination($(document), $('#main-tab'), this.paintComments.bind(this), this.client, this.scrollHandler.bind(this), $('#comments'));
         this.scrollPag.configurePaginationParams(360, 3);
 
         // Show review button if needed
