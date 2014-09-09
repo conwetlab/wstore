@@ -636,7 +636,9 @@
 
         if (repLength == 0) {
             var msg = 'No repositories registered';
-            MessageManager.showMessage('Error', msg);
+            $('.modal-header h2').text('Error');
+            $('.modal-body').empty();
+            $('.modal-body').append('<p>' + msg + '</p>');
             return
         }
 
