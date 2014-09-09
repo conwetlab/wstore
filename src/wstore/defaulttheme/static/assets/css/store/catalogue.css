@@ -21,14 +21,12 @@
   right: 0;
   height: 40px;
   width: 486px;
-  z-index: 6;
 }
 
 #provider-options {
   position: absolute;
   top: 51px;
   left: 240px;
-  z-index: 6;
 }
 
 .offerings-scroll-container {
