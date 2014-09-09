@@ -45,9 +45,9 @@ For instructions on how to install WStore manually, without using any script, ha
 
 Note that the installation script installs only django and python dependencies; moreover, it uses a virtualenv for installing these dependencies, so it is needed to activate it before running WStore.
 
-<pre>
-$ source <wstore_path>/src/virtenv/bin/activate
-</pre>
+
+    $ source <wstore_path>/src/virtenv/bin/activate
+
 
 ### Troubleshooting
 
@@ -94,12 +94,12 @@ the creation of a default Site model. To create the default site, open WStore sh
 
 Create the Site model including the information of the domain where WStore is going to run. 
 
-<pre>
-In [1]: from django.contrib.sites.models import Site
 
-In [2]: Site.objects.create(name='local', domain='http://localhost:8000')
-Out[2]: <Site: http://localhost:8000>
-</pre>
+    In [1]: from django.contrib.sites.models import Site
+
+    In [2]: Site.objects.create(name='local', domain='http://localhost:8000')
+    Out[2]: <Site: http://localhost:8000>
+
 
 Get the default site id:
 
@@ -162,27 +162,21 @@ system has started to be used may cause unexpected behaviours.
 It is possible to delegate the authentication of users to the FI-WARE Identity 
 Management system on a FI-WARE instance. View FI-LAB info in:
 
-* http://lab.fi-ware.eu
+* http://lab.fi-ware.org
 
 To do that, the first step is setting up the OILAUTH setting
 to True (Note that this is the default value).
 
     OILAUTH=True
 
-Then configure the authentication endpoints in the file social\_auth\_backend.py:
+Then configure the authentication endpoint in filling the setting:
 
-<pre>
-FIWARE_AUTHORIZATION_URL = 'https://fiware_idm_url/authorize'
-FIWARE_ACCESS_TOKEN_URL = 'https://fiware_idm_url/token'
-FIWARE_USER_DATA_URL = 'https://fiware_url_idm/user'
-FIWARE_NOTIFICATION_URL = 'https://fiware_idm_url/purchases'
-FIWARE_APPLICATIONS_URL = 'https://fiware_idm_url/applications.json'
-</pre>
+    FIWARE_IDM_ENDPOINT='https://fiware_endpoint'
 
 Next, register WStore as an application in the identity management portal, to do that
 WStore uses the following URL as as callback URL for OAuth2 authentication:
 
-    <host_wstore>/complete/fiware 
+    <host_wstore>/complete/fiware/
 
 Once you have registered your WStore instance, get OAuth2 credentials needed for the 
 authenticacion of your application. You will need to create some roles in your 
@@ -282,7 +276,7 @@ if you choose to deploy WStore in Apache, the libapache2-mod-wsgi module must be
 
 Then you have to populate the wsgi.py file:
 
-<pre>
+```python
  import os
  import sys
  path = 'path_to_wstore/src'
@@ -291,13 +285,12 @@ Then you have to populate the wsgi.py file:
  os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
  import django.core.handlers.wsgi
  application = django.core.handlers.wsgi.WSGIHandler()
-</pre>
+```
 
 If you are running WStore using a virtualenv environment (for example if you have installed the 
 dependencies using the provided script) your wsgi.py file sholud have the following structure:
 
-<pre>
-
+```python
 import os
 import sys
 import site
@@ -315,7 +308,7 @@ execfile(activate_env, dict(__file__=activate_env))
 
 import django.core.handlers.wsgi
 application = django.core.handlers.wsgi.WSGIHandler()
-</pre>
+```
 
 Please, pay attention that you set the right path to the wtore/src directory. 
 
