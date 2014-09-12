@@ -62,6 +62,7 @@ class FiwareBackend(OAuthBackend):
     # Default extra data to store
     EXTRA_DATA = [
         ('nickName', 'username'),
+        ('actorId', 'uid'),
     ]
 
     def get_user_id(self, details, response):
@@ -191,6 +192,7 @@ def fill_internal_user_info(*arg, **kwargs):
             if role['name'] == 'Owner':
                 if not kwargs['user'].pk in org_model.managers:
                     org_model.managers.append(kwargs['user'].pk)
+                    org_model.save()
             elif role['name'] == FIWARE_PROVIDER_ROLE:
                 org_roles.append('provider')
             elif role['name'] == FIWARE_CUSTOMER_ROLE:
