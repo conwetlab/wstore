@@ -24,7 +24,7 @@ from urlparse import urljoin
 
 from django.conf import settings
 from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
-from wstore.models import Offering, Repository
+from wstore.models import Offering, Repository, Resource
 
 
 def rollback(provider, profile, json_data, msg):
@@ -59,6 +59,13 @@ def rollback(provider, profile, json_data, msg):
         if 'offering_description' in json_data:
             remove = True
             url = offering.description_url
+
+        # Check if the offering has been bound
+        if len(offering.resources):
+            for res in offering.resources:
+                re = Resource.objects.get(pk=unicode(res))
+                re.offerings.remove(offering.pk)
+                re.save()
 
         offering.delete()
     else:
