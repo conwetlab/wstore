@@ -134,7 +134,10 @@ def get_api_user(request):
     from wstore.store_commons.utils.method_request import MethodRequest
 
     # Get access_token from the request
-    token = request.META['HTTP_AUTHORIZATION'].split(' ', 1)[1]
+    try:
+        token = request.META['HTTP_AUTHORIZATION'].split(' ', 1)[1]
+    except:
+        return AnonymousUser()
 
     # If using the idM to authenticate users, validate the token
 
