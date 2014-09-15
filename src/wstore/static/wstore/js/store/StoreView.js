@@ -142,7 +142,7 @@
         if ($('.detailed-info').length) {
             $('#home-container').empty()
         }
-        searchView.setTitle('Datasets');
+        searchView.setTitle('Data');
         searchView.initSearchView('SEARCH_TAG_ENTRY', 'dataset');
     };
 
