@@ -43,6 +43,7 @@ MAIN_PORTAL_URL = "http://lab.fi-ware.org/"
 CLOUD_PORTAL_URL = "http://cloud.lab.fi-ware.org/"
 MASHUP_PORTAL_URL = "http://mashup.lab.fi-ware.org/"
 ACCOUNT_PORTAL_URL = "https://account.lab.fi-ware.org/"
+DATA_PORTAL_URL = "https://data.lab.fi-ware.org/"
 
 def _load_home_context(request):
     context = {
@@ -56,6 +57,7 @@ def _load_home_context(request):
         context['cloud'] = CLOUD_PORTAL_URL
         context['mashup'] = MASHUP_PORTAL_URL
         context['account'] = ACCOUNT_PORTAL_URL
+        context['data'] = DATA_PORTAL_URL
 
     return context
 
@@ -137,6 +139,7 @@ def admin(request):
             context['cloud'] = CLOUD_PORTAL_URL
             context['mashup'] = MASHUP_PORTAL_URL
             context['account'] = ACCOUNT_PORTAL_URL
+            context['data'] = DATA_PORTAL_URL
 
         return render(request, 'admin/admin.html', context)
     else:
@@ -160,6 +163,7 @@ def catalogue(request):
         context['cloud'] = CLOUD_PORTAL_URL
         context['mashup'] = MASHUP_PORTAL_URL
         context['account'] = ACCOUNT_PORTAL_URL
+        context['data'] = DATA_PORTAL_URL
 
     return render(request, 'catalogue/catalogue.html', context)
 
@@ -181,6 +185,7 @@ def organization(request):
             context['cloud'] = CLOUD_PORTAL_URL
             context['mashup'] = MASHUP_PORTAL_URL
             context['account'] = ACCOUNT_PORTAL_URL
+            context['data'] = DATA_PORTAL_URL
 
         return render(request, 'organizations/organization_template.html', context)
     else:
