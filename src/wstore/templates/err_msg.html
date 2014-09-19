@@ -1,0 +1,51 @@
+{% load i18n %}
+<html>
+  <head>
+     <title>FIWARE Store</title>
+     <meta charset="UTF-8">
+        <link rel="icon" href="{{ STATIC_URL }}assets/ico/favicon.ico" type="image/x-icon"/>
+        <link rel="shortcut icon" href="{{ STATIC_URL }}assets/ico/favicon.ico" type="image/x-icon"/>
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/aplication.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/bootstrap-responsive.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/docs.css" />
+        <link href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/js/google-code-prettify/prettify.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/core.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/css/store/store.css" />
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/fonts/fonts.css" />
+     {% include "oil/header_imports.html" %}
+  </head>
+  <body>
+     <div id="oil-bar">
+        {% include "oil/header.html" %}
+     </div>
+     </div class="err-page-container" style="
+         width: 100%;">
+         <div class="centered-info" style="
+             width: 430px;
+             position: relative;
+             left: 50%;
+             margin-left: -215px;
+             top: 150px;
+             border: 1px solid rgb(205, 206, 209);
+             padding: 10px;
+             border-radius: 4px;
+             height: 120px;
+             overflow: hidden">
+             <div style="
+                 width: 440px;
+                 height: 55px;
+                 margin-left: -10px;
+                 margin-top: -10px;
+                 background-color: rgb(235, 235, 235);
+                 padding-top: 10px;
+                 padding-left: 10px;
+             "> 
+                 <h1>{{ title }}</h1>
+             </div>
+             <p style="margin-top: 10px;">{% blocktrans %} {{ message }} {% endblocktrans %}</p>
+         </div>
+     <div>
+  </body>
+</html>

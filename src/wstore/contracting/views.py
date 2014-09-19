@@ -96,10 +96,16 @@ class PurchaseFormCollection(Resource):
     def read(self, request):
 
         # Get the token
-        token = request.GET.get('ID')
+        token = request.GET.get('ID', '')
 
         site = get_current_site(request)
         context = Context.objects.get(site=site)
+
+        if not token in context.user_refs:
+            return render(request, 'err_msg.html', {
+                'title': 'Token not found',
+                'message': 'The used token for identifying the purchase is not valid or has expired.'
+            })
 
         info = context.user_refs[token]
 
@@ -115,12 +121,19 @@ class PurchaseFormCollection(Resource):
         try:
             offering = Offering.objects.get(pk=id_)
         except:
-            return build_response(request, 404, 'Not found')
+            return render(request, 'err_msg.html', {
+                'title': 'Offering not found',
+                'message': 'The requested offering does not exists.'
+            })
+
         offering_info = get_offering_info(offering, user)
 
         # Check that the offering can be purchased
         if offering.state != 'published':
-            return build_response(request, 400, 'The offering cannot be purchased')
+            return render(request, 'err_msg.html', {
+                'title': 'Error',
+                'message': 'The offering cannot be acquired'
+            })
 
         from django.conf import settings
 
