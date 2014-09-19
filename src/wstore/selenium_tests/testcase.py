@@ -233,3 +233,9 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
             if te.text == tag:
                 te.click()
                 break
+
+    def fill_tax_address(self, tax):
+        self.driver.find_element_by_id('street').send_keys(tax['street'])
+        self.driver.find_element_by_id('postal').send_keys(tax['postal'])
+        self.driver.find_element_by_id('city').send_keys(tax['city'])
+        self.driver.find_element_by_id('country').send_keys(tax['country'])

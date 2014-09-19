@@ -352,7 +352,7 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         # Start the testing server
         self._server = TestServer()
         self._server.set_port(TESTING_PORT)
-        self._server.set_max_request(1)
+        self._server.set_max_request(2)
         self._server.start()
         # Load USDL info
         offering1_info = {
@@ -377,6 +377,15 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
             except:
                 pass
 
+        # Remove bills if needed
+        for p in Purchase.objects.all():
+            for bill in p.bill:
+                path = os.path.join(settings.BASEDIR, bill[1:])
+                try:
+                    os.remove(path)
+                except:
+                    pass
+
         WStoreSeleniumTestCase.tearDown(self)
 
     def test_remote_purchase_form(self):
@@ -392,7 +401,7 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
                 'name': 'test_offering1',
                 'version': '1.1'
             },
-            'redirect_uri': 'http://localhost:' + unicode(TESTING_PORT) + '/test_redirect.html'
+            'redirect_uri': 'http://localhost:' + unicode(TESTING_PORT)
         }
 
         headers = {
@@ -408,9 +417,24 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         self.driver.get(form_url)
 
         # Fill purchase form
-        # Open resources modal
+        time.sleep(1)
+        self.fill_tax_address({
+            'street': 'fake street',
+            'postal': '12345',
+            'city': 'fake city',
+            'country': 'Spain'
+        })
+
+        self.driver.find_element_by_css_selector('.modal-footer .btn-basic').click()
+        time.sleep(1)
+
         # End the purchase
+        self.driver.find_element_by_class_name('btn-danger').click()
+
         # Check redirection
+        time.sleep(1)
+        expected_url = 'http://localhost:' + unicode(TESTING_PORT) + '/'
+        self.assertEquals(self.driver.current_url, expected_url)
     
 class ResourceManagementTestCase(WStoreSeleniumTestCase):
 
