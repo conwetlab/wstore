@@ -397,6 +397,39 @@ OFFERING_NO_USDL = {
     }
 }
 
+OFFERING_NO_IMAGE = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+OFFERING_IMAGE_INVALID = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': '',
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
+OFFERING_IMAGE_MISSING = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+    },
+    'offering_description': {
+        'content_type': 'application/rdf+xml',
+        'data': ''
+    }
+}
+
 OFFERING_USDL_DATA_INVALID = {
     'name': 'test_offering',
     'version': '1.0',
@@ -407,6 +440,23 @@ OFFERING_USDL_DATA_INVALID = {
     },
     'related_images': [],
     'offering_info': {
+        'pricing': {
+            'price_model': 'free'
+        }
+    }
+}
+
+OFFERING_USDL_DATA_INVALID_1 = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_info': {
+        'description': '',
         'pricing': {
             'price_model': 'free'
         }
@@ -610,7 +660,11 @@ class OfferingCreationTestCase(TestCase):
         (OFFERING_NOTIFY_URL_INVALID, None, _fill_basic_images, ValueError, "Invalid notification URL format: It doesn't seem to be an URL"),
         (OFFERING_URL, None, _fill_existing_url, ValueError, 'The provided USDL description is already registered'),
         (OFFERING_NO_USDL, None, _fill_image, Exception, 'No USDL description provided'),
-        (OFFERING_USDL_DATA_INVALID, None, _fill_image, Exception, 'Invalid USDL info')
+        (OFFERING_NO_IMAGE, None, None, ValueError, 'Missing required field: Logo'),
+        (OFFERING_IMAGE_MISSING, None, None, ValueError, 'Missing required field in image'),
+        (OFFERING_IMAGE_INVALID, None, None, TypeError, 'Invalid image type'),
+        (OFFERING_USDL_DATA_INVALID, None, _fill_image, ValueError, 'Invalid USDL info'),
+        (OFFERING_USDL_DATA_INVALID_1, None, _fill_image, ValueError, 'Description field cannot be empty in offering info')
     ])
     def test_offering_creation(self, offering_data, expected_data, data_filler=None, err_type=None, err_msg=None):
 

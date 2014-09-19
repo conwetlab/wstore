@@ -410,7 +410,17 @@ def create_offering(provider, json_data):
     dir_name = organization.name + '__' + data['name'] + '__' + data['version']
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
     os.makedirs(path)
+
+    if not 'image' in json_data:
+        raise ValueError('Missing required field: Logo')
+
+    if not isinstance(json_data['image'], dict):
+        raise TypeError('Invalid image type')
+
     image = json_data['image']
+
+    if not 'name' in image or not 'data' in image:
+        raise ValueError('Missing required field in image')
 
     # Save the application image or logo
     f = open(os.path.join(path, image['name']), "wb")
@@ -471,7 +481,10 @@ def create_offering(provider, json_data):
 
         # Validate USDL info
         if not 'description' in json_data['offering_info'] or not 'pricing' in json_data['offering_info']:
-            raise Exception('Invalid USDL info')
+            raise ValueError('Invalid USDL info')
+
+        if not json_data['offering_info']['description']:
+            raise ValueError('Description field cannot be empty in offering info')
 
         offering_info = json_data['offering_info']
         offering_info['image_url'] = data['image_url']
