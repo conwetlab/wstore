@@ -330,6 +330,7 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
         time.sleep(1)
         self.driver.find_element_by_css_selector('.modal-footer > .btn').click()  # Accept
 
+        time.sleep(1)
         self.click_second_cat()
         self._check_container('offerings-container', ['test_offering'])
         
