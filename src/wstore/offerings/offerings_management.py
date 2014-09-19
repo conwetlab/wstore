@@ -47,6 +47,7 @@ from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.url import is_valid_url
+from wstore.social.tagging.tag_manager import TagManager
 
 
 def get_offering_info(offering, user):
@@ -739,26 +740,30 @@ def publish_offering(offering, data):
 
 def _remove_offering(offering, se):
     # If the offering has media files delete them
-        dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
-        path = os.path.join(settings.MEDIA_ROOT, dir_name)
-        files = os.listdir(path)
+    dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
+    path = os.path.join(settings.MEDIA_ROOT, dir_name)
+    files = os.listdir(path)
 
-        for f in files:
-            file_path = os.path.join(path, f)
-            os.remove(file_path)
+    for f in files:
+        file_path = os.path.join(path, f)
+        os.remove(file_path)
 
-        os.rmdir(path)
+    os.rmdir(path)
 
-        # Remove the search index
-        se.remove_index(offering)
+    # Remove the search index
+    se.remove_index(offering)
 
-        # Remove the offering pk from the bound resources
-        for res in offering.resources:
-            resource = Resource.objects.get(pk=unicode(res))
-            resource.offerings.remove(offering.pk)
-            resource.save()
+    # Remove the offering ID from the tag indexes
+    tm = TagManager()
+    tm.delete_tag(offering)
 
-        offering.delete()
+    # Remove the offering pk from the bound resources
+    for res in offering.resources:
+        resource = Resource.objects.get(pk=unicode(res))
+        resource.offerings.remove(offering.pk)
+        resource.save()
+
+    offering.delete()
 
 def delete_offering(offering):
     # If the offering has been purchased it is not deleted

@@ -21,6 +21,7 @@
 import os
 import json
 import types
+import shutil
 from decimal import Decimal
 from mock import MagicMock
 from nose_parameterized import parameterized
@@ -148,11 +149,21 @@ class TagManagementTestCase(TestCase):
 
     def tearDown(self):
         if os.path.exists(self._path):
-            for f in os.listdir(self._path):
-                file_path = os.path.join(self._path, f)
-                os.remove(file_path)
-            os.rmdir(self._path)
+            shutil.rmtree(self._path)
         reload(tag_manager)
+
+    def _create_index_dir(self):
+        # Create indexes
+        os.makedirs(self._path)
+        # Create schema
+        schema = Schema(id=ID(stored=True, unique=True), tags=KEYWORD(stored=True), named_tags=KEYWORD(stored=True))
+        # Create index
+        index = create_in(self._path, schema)
+        index_writer = index.writer()
+        index_writer.add_document(id=unicode('11111'), tags=unicode('test1 test2'), named_tags=unicode('test1 test2'))
+        index_writer.add_document(id=unicode('22222'), tags=unicode('test1 test3 test4'), named_tags=unicode('test1 test3 test4'))
+        index_writer.add_document(id=unicode('33333'), tags=unicode('test2 test5 test6'), named_tags=unicode('test2 test5 test6'))
+        index_writer.commit()
 
     @parameterized.expand([
         (False, '1111111111', ['test1', 'test2']),
@@ -203,19 +214,8 @@ class TagManagementTestCase(TestCase):
             }
             return id_field[pk]
 
+        self._create_index_dir()
         tag_manager.Offering.objects.get = get_mock
-
-        # Create indexes
-        os.makedirs(self._path)
-        # Create schema
-        schema = Schema(id=ID(stored=True, unique=True), tags=KEYWORD(stored=True), named_tags=KEYWORD(stored=True))
-        # Create index
-        index = create_in(self._path, schema)
-        index_writer = index.writer()
-        index_writer.add_document(id=unicode('11111'), tags=unicode('test1 test2'), named_tags=unicode('test1 test2'))
-        index_writer.add_document(id=unicode('22222'), tags=unicode('test1 test3 test4'), named_tags=unicode('test1 test3 test4'))
-        index_writer.add_document(id=unicode('33333'), tags=unicode('test2 test5 test6'), named_tags=unicode('test2 test5 test6'))
-        index_writer.commit()
 
         tm = tag_manager.TagManager(self._path)
         offerings = tm.search_by_tag('test1')
@@ -224,6 +224,44 @@ class TagManagementTestCase(TestCase):
         self.assertTrue('offering1' in offerings)
         self.assertTrue('offering2' in offerings)
 
+    @parameterized.expand([
+        ('', '11111'),
+        ('not_indexes', '11111','Indexes has not been created', 'wstore/test/ix'),
+        ('not_offering', '44444','Document for the given offering does not exists')
+    ])
+    def test_delete_tag_document(self, name, pk, err_msg=None, ix_path=None):
+        # Create mock
+        offering = MagicMock()
+        offering.pk = pk
+
+        # Create indexes
+        self._create_index_dir()
+
+        path = self._path
+        if ix_path:
+            from django.conf import settings
+            path = os.path.join(settings.BASEDIR, ix_path)
+
+        # Build the tag manager
+        tm = tag_manager.TagManager(path)
+
+        error = None
+        try:
+            tm.delete_tag(offering)
+        except Exception as e:
+            error = e
+
+        # Check response
+        if not err_msg:
+            self.assertEquals(error, None)
+            # Check that the index does not exists
+            index = open_dir(self._path)
+            with index.searcher() as searcher:
+                query = QueryParser('id', index.schema).parse(unicode(offering.pk))
+                self.assertEquals(len(searcher.search(query)), 0)
+        else:
+            self.assertTrue(isinstance(error, ValueError))
+            self.assertEquals(unicode(error), err_msg)
 
 class TagViewTestCase(TestCase):
 

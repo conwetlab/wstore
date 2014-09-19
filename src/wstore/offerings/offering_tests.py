@@ -1541,6 +1541,10 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
         offerings_management.SearchEngine.return_value = self.se_object
 
+        self.tag_mock = MagicMock()
+        offerings_management.TagManager = MagicMock()
+        offerings_management.TagManager.return_value = self.tag_mock
+
     def tearDown(self):
         reload(offerings_management)
         TestCase.tearDown(self)
@@ -1573,6 +1577,7 @@ class OfferingDeletionTestCase(TestCase):
         if side_effect:
             side_effect(self, offering)
 
+        # Call the tested method
         error = None
         try:
             offerings_management.delete_offering(offering)
@@ -1580,11 +1585,14 @@ class OfferingDeletionTestCase(TestCase):
             error = e
 
         if not err_type:
+            # Not error expected
             self.assertEquals(error, None)
 
             if deleted:
+                # Check index calls if the offering must have been deleted
                 self.assertEquals(len(Offering.objects.filter(name=offering_name)), 0)
                 self.se_object.remove_index.assert_called_with(offering)
+                self.tag_mock.delete_tag.assert_called_with(offering)
                 if del_resources:
                     self.res_obj.offerings.remove.assert_called_with(pk)
             else:

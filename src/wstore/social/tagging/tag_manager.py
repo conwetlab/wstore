@@ -82,6 +82,24 @@ class TagManager():
 
             index_writer.commit()
 
+    def delete_tag(self, offering):
+        # Check if the index exists
+        if not os.path.exists(self._index_path) or os.listdir(self._index_path) == []:
+            raise ValueError('Indexes has not been created')
+
+        index = open_dir(self._index_path)
+
+        # Get the document
+        with index.searcher() as searcher:
+            query = QueryParser('id', index.schema).parse(unicode(offering.pk))
+
+            index_writer = index.writer()
+            if not len(searcher.search(query)):
+                raise ValueError('Document for the given offering does not exists')
+
+            index_writer.delete_by_term('id', unicode(offering.pk))
+            index_writer.commit()
+
     def count_offerings(self, tag):
         # Count offerings
         return len(self.get_index_doc_by_tag(tag))
