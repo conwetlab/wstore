@@ -26,7 +26,7 @@
         $('<input></input>').attr('id', 'back').addClass('btn btn-danger').attr('type', 'button').attr('value', 'End purchase').click(function() {
             window.location = response.client_redirection_uri;
         }).prependTo('#remote-container');
-        $('#back').css('position', 'absolute').css('top', '51px').css('right', '180px');
+        $('#back').css('position', 'fixed').css('top', '51px').css('right', '180px');
     };
 
     getPriceStr = function getPriceStr(pricing) {
