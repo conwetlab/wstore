@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import os
 import json
 import types
@@ -270,11 +272,13 @@ class TagViewTestCase(TestCase):
         # Create request factory
         self.factory = RequestFactory()
         # Create testing user
-        self.user = User.objects.create_user(
+        self.user = User.objects.create(
             username='test_user',
-            email='',
-            password='passwd'
+            email='a@b.com',
+            first_name='test',
+            last_name='user'
         )
+        self.user.set_password('passwd')
 
     def tearDown(self):
         reload(views)
