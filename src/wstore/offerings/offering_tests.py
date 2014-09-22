@@ -34,6 +34,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.test.utils import override_settings
 
 from wstore.offerings import offerings_management
 from wstore.store_commons.utils.usdlParser import USDLParser
@@ -795,6 +796,8 @@ class RemoveMock():
     def assertCall(self, path):
         assert path in self.calls
 
+
+@override_settings(OILAUTH=True)
 class OfferingUpdateTestCase(TestCase):
 
     tags = ('update',)
