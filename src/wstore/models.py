@@ -164,7 +164,10 @@ def create_user_profile(sender, instance, created, **kwargs):
             profile.complete_name = instance.first_name + ' ' + instance.last_name
             profile.save()
 
-    ResourceBrowser.add_resource('user', resource=instance)
+    # User search is only used for organization view that is
+    # not needed when using external authentication
+    if not settings.OILAUTH:
+        ResourceBrowser.add_resource('user', resource=instance)
 
 
 def create_context(sender, instance, created, **kwargs):
