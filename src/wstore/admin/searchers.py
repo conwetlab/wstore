@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import os
 
 from django.conf import settings
@@ -126,12 +128,12 @@ class ResourceBrowser(object):
     def _build_user_fields(self, resource):
 
         fields = {
-            'pk': '%s' % resource.pk,
-            'full_name': '%s %s' % (resource.first_name, resource.last_name),
-            'username': '%s' % resource.username,
-            'email': '%s' % resource.email,
-            'content': '%s %s %s %s' % (resource.first_name, resource.last_name,
-                resource.username, resource.email.split('@', 1)[0]),
+            'pk': '%s' % unicode(resource.pk),
+            'full_name': '%s %s' % (unicode(resource.first_name), unicode(resource.last_name)),
+            'username': '%s' % unicode(resource.username),
+            'email': '%s' % unicode(resource.email),
+            'content': '%s %s %s %s' % (unicode(resource.first_name), unicode(resource.last_name),
+                unicode(resource.username), unicode(resource.email.split('@', 1)[0])),
         }
 
         return fields
