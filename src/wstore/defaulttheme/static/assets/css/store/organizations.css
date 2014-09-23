@@ -222,3 +222,19 @@ label.checkbox {
   margin-left: 225px;
 }
 
+.store-menu .icon-group {
+  font-size: 20px;
+  position: relative;
+  top: 9px;
+  left: 9px;
+  color: rgb(255,255,255);
+}
+
+.store-menu .icon-desktop {
+  font-size: 22px;
+  position: relative;
+  top: -30px;
+  left: 8px;
+  color: rgb(0, 45, 103);
+}
+
