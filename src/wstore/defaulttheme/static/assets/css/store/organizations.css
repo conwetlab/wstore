@@ -113,6 +113,7 @@ label.checkbox {
   border-bottom-right-radius: 4px;
   padding: 10px 10px;
   padding-bottom: 8px;
+  background-color: rgb(255, 255, 255);
 }
 
 .panel .panel-body form:last-child {
@@ -132,9 +133,11 @@ label.checkbox {
 }
 
 .panel.panel-default .panel-heading {
-  background-color: #f3f3ff;
+  background-color: rgb(235, 235, 235);
   color: #002b67;
   font-weight: bold;
+  font-family: NeoTech;
+  font-size: 16px;
 }
 
 .panel.panel-default .panel-heading .panel-options i:hover {
