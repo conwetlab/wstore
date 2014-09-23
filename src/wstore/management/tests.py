@@ -104,6 +104,9 @@ class CreateIndexesTestCase(TestCase):
         if not input_:
             args.append('--no-input')
 
+        if side_effect:
+            side_effect(self)
+
         call_command('createindexes', *args, **opts)
 
         if completed:
@@ -115,3 +118,11 @@ class CreateIndexesTestCase(TestCase):
             createindexes.rmtree.assert_called_once_with(index_path, True)
 
             self.se_inst.create_index.assert_calls(self.offerings, True)
+        else:
+            called = True
+            try:
+                createindexes.rmtree.assert_any_call()
+            except:
+                called = False
+
+            self.assertFalse(called)
