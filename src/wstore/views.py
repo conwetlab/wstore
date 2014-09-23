@@ -174,7 +174,6 @@ def organization(request):
         profile = UserProfile.objects.get(user=request.user)
         context = {
             'roles': profile.get_current_roles(),
-            'usdl_editor': settings.USDL_EDITOR_URL,
 	        'organization': profile.current_organization.name,
             'oil': settings.OILAUTH,
             'portal': settings.PORTALINSTANCE

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>FI-WARE Store</title>
+    <title>FIWARE Store</title>
     <link rel="shortcut icon" href="{{ STATIC_URL }}assets/ico/favicon.ico" />
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Comfortaa|Open+Sans">
@@ -14,7 +14,12 @@
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/fonts/fonts.css" />
     
     {% block extra_textCSS %}{% endblock %}
-    
+
+    <script type="text/javascript">
+        USERNAME = "{{ user.username }}";
+        ORGANIZATION = "{{ organization }}";
+        INITIAL_PAGE = "organization";
+    </script>
     <script type="text/x-jquery-tmpl" id="user_conf_template">{% include "user_conf_template.html" %}</script>
     <script type="text/x-jquery-tmpl" id="user_info_conf_template">{% include "user_info_conf_template.html" %}</script>
     <script type="text/x-jquery-tmpl" id="org_info_conf_template">{% include "org_info_conf_template.html" %}</script>
@@ -32,12 +37,11 @@
     <script type="text/x-jquery-tmpl" id="alert_info_template">{% include "alert_info_template.html" %}</script>
     <script type="text/x-jquery-tmpl" id="orgs_users_template">{% include "admin/orgs_users_template.html" %}</script>
 
-    {% if portal %}
-      <link rel="stylesheet" href="{{ STATIC_URL }}oil/css/wstore/wstore.css">
+    {% if oil and portal %}
       <script type="text/javascript" src="{{ account }}assets/signOut.js"></script>
     {% endif %}
-    
-    <script type="text/javascript">USERNAME = "{{ user.username }}";</script>
+
+    <link rel="stylesheet" href="{{ STATIC_URL }}oil/css/wstore/wstore.css">
     <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.8.2.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script>
@@ -50,66 +54,22 @@
     <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/admin/OrganizationUsersForm.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/organizations/PageManager.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/Loader.js"></script>
     
     {% block extra_textJS %}{% endblock %}
+    {% include "oil/header_imports.html" %}
   </head>
   <body>
     <div id="wrapper">
-    {% if portal %}
       <div id="oil-bar">
         {% include "oil/header.html" %}
       </div>
-    {% endif %}
-    <div class="container-fluid bread-container">
-    <div class="row-fluid">
-      {% if not portal %}
-        <div>
-          <img id="logo" src="{{ STATIC_URL }}assets/img/logo.png" />
-        </div>
-        <div class="store_title">
-          <span>FI-</span>WARE
-          <h2>WStore</h2>
-        </div>
-      {% endif %}
-      <div class="navigation">
-        <ul class="nav nav-pills main-menu">
-          <li><a href="/">Store</a></li>
-          <li><a href="/catalogue">Catalogue</a></li>
-          {% if user.is_staff %}
-            <li><a href="/administration">Administration</a></li>
-          {% else %}
-            <li class="active"><a href="/organization">Organization</a></li>
-          {% endif %}
-        </ul>
-        {% if not portal %}
-          <div class="btn btn-blue float-right dropdown">
-            <div href="#" class="dropdown-toggle" data-toggle="dropdown">
-              <i class="icon-user icon-white"></i>
-              <span id="user-name">{{ user.username }}</span>
-              <b class="caret"></b>
-            </div>
-            <ul id="settings-menu" class="dropdown-menu">
-              <li><a id="conf-link">Configuration</a></li>
-              <li><a href="/logout">Logout</a></li>
-            </ul>
-          </div>
-        {% endif %}
-      </div><!-- /.navigation -->
-    </div><!-- /.row-fluid -->
-    <div class="row-fluid title_wrapper"><span>Organizations</span>
-    </div><!-- /.row-fluid -->
-    </div><!-- /.container-fluid -->
+    <div id="options-bar">
+    </div>
     {% block container %}{% endblock %}
     </div><!-- /#wrapper -->
-    <footer>
-      <div>
-        2014 &copy;
-        <a href="http://fi-ware.eu">FI-WARE</a>
-        Usage of FI-LAB services subject to acceptance of
-        <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Terms_and_Conditions">Terms and conditions</a>
-        and
-        <a href="http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Personal_Data_Protection_Policy">Personal Data Protection Policy</a>
-      </div>
-  </footer>
+    <div id="loading" class="hide"></div>
+    {% include "footer_template.html" %}
   </body>
 </html>

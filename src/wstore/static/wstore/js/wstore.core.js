@@ -152,7 +152,7 @@
     context = context || {}; // Optional
     
     // Create the alert message
-    $message = $('<div>').addClass('alert alert-'+type);
+    $message = $('<div>').addClass('alert alert-'+type + ' alert-block fade in');
     
     // Add className
     if (context['className']) {
