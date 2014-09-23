@@ -189,7 +189,7 @@ class Command(BaseCommand):
         # Create final settings file including site_id
         settings_content = template.render(Context(settings))
 
-        # Create intermediate settings file
+        # Create final settings file
         f = codecs.open(os.path.join(django.conf.settings.BASEDIR, 'settings.py'), "wb", 'utf-8')
         f.seek(0)
         f.write(settings_content)
