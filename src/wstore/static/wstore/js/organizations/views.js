@@ -516,11 +516,21 @@
       return false;
     });
   };
-  
+
+  OrganizationsPanels.prototype.setWidth = function setWidth() {
+      var width = $(window).width() - 255;
+      if (width > 0) {
+          $('.organizations').css('width', width + 'px');
+      }
+  };
+
   organizationsTemplate = new OrganizationsPanels('organizations');
   
   paintOrganizationsView = function paintOrganizationsView() {
+    var mpainter = new MenuPainter();
     organizationsTemplate.initView();
+    organizationsTemplate.setWidth();
+    $(window).resize(organizationsTemplate.setWidth);
   };
   
 })();

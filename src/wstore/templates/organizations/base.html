@@ -46,6 +46,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.cookie.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}assets/js/bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MenuPainter.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/EndpointManager.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MessageManager.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/Client.js"></script>
@@ -66,6 +67,9 @@
         {% include "oil/header.html" %}
       </div>
     <div id="options-bar">
+    </div>
+    <div class="left-bar">
+       {% include "organizations/org_menu_template.html" %}
     </div>
     {% block container %}{% endblock %}
     </div><!-- /#wrapper -->
