@@ -664,17 +664,17 @@
    */
   OrganizationForm.prototype.buildContext = function buildContext() {
     var context = {}, nFilled = 0, nFields = 0;
-    
+
     context.name = this.data.name;
     context.notification_url = this.data.notification_url;
-    
+
     for (var i in this.data.tax_address) {
       if (this.data.tax_address[i] != "") {
         nFilled += 1;
       }
       nFields += 1;
     }
-    
+
     if (nFilled > 0 && nFilled == nFields) {
       context.tax_address = {};
       context.tax_address.street = this.data.tax_address.tax_street;
@@ -682,17 +682,17 @@
       context.tax_address.city = this.data.tax_address.tax_city;
       context.tax_address.country = this.data.tax_address.tax_country;
     }
-    
+
     nFilled = 0;
     nFields = 0;
-    
+
     for (var i in this.data.payment_form) {
       if (this.data.payment_form[i] != "") {
         nFilled += 1;
       }
       nFields += 1;
     }
-    
+
     if (nFilled > 0 && nFilled == nFields) {
       context.payment_info = {};
       context.payment_info.type = this.data.payment_form.card_type;
@@ -701,7 +701,10 @@
       context.payment_info.expire_month = this.data.payment_form.card_expiry_month;
       context.payment_info.expire_year = this.data.payment_form.card_expiry_year;
     }
-    
+
+    // Include field for identifying the user view
+    // for the creation of organization
+    context.is_user = true;
     return context;
   };
   

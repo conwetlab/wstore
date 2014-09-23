@@ -74,7 +74,7 @@ class OrganizationCollection(Resource):
     @authentication_required
     @supported_request_mime_types(('application/json',))
     def create(self, request):
-        
+
         if not request.user.is_active:
             return build_response(request, 403, 'Forbidden')
 
@@ -127,8 +127,15 @@ class OrganizationCollection(Resource):
                 private=False
             )
 
-            # Include the new user
-            if not request.user.is_staff:
+            user_included = False
+            if not request.user.is_staff or (request.user.is_staff and 'is_user' in \
+            data and data['is_user'] == True):
+                user_included = True
+
+            # Include the new user, if the user is not admin include the user
+            # If the user is an admin, include it depending on if she has created
+            # the organization as an user
+            if user_included:
                 user = User.objects.get(username=request.user.username)
                 organization = Organization.objects.get(name=data['name'])
                 user.userprofile.organizations.append({

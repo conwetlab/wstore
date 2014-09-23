@@ -434,7 +434,7 @@
         if (self.methods.views.registrationView(form)) {
           self.initView();
           $('#alert-message').show();
-          WStore.messages.showSuccessMessage('The <strong>'+form.data.name+'</strong> organization was created successfully.', true);
+          WStore.messages.showSuccessMessage('The <strong>' + form.data.name + '</strong> organization was created successfully.', true);
         }
         return false;
       });
