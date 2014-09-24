@@ -183,7 +183,7 @@ class CreateTagIndexesTestCase(IndexTestCase):
         IndexTestCase.manager_assertion(self)
 
     @parameterized.expand([
-        ('no_input',),
+        ('no_input', False),
         ('interactive',),
         ('inter_inv', True, IndexTestCase._invalid_option),
         ('canceled', True, IndexTestCase._canceled, False)
