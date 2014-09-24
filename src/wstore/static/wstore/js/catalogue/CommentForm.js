@@ -31,9 +31,9 @@
         }
 
         // Check the length of the comment
-        if (!error && comment.length > 200) {
+        if (!error && comment.length > 1000) {
             error = true;
-            msg = 'The comment cannot contain more than 200 characters';
+            msg = 'The comment cannot contain more than 1000 characters';
         }
 
         // If the fields are correctly filled make the request

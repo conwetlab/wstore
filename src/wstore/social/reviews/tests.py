@@ -88,7 +88,7 @@ REVIEW_TITLE_INV_LENGHT = {
 
 REVIEW_COMMENT_INV_LENGHT = {
     'title': 'An example review',
-    'comment': 'This is an example review comment for testing with more than 200 characters used for testing invalid length errors. This is an example review comment for testing with more than 200 characters used for testing invalid length errors. ',
+    'comment': 'This is an example review comment for testing with more than 1000 characters used for testing invalid length errors. This is an example review comment for testing with more than 200 characters used for testing invalid length errors. This is an example review comment for testing with more than 1000 characters used for testing invalid length errors. This is an example review comment for testing with more than 200 characters used for testing invalid length errors. This is an example review comment for testing with more than 1000 characters used for testing invalid length errors. This is an example review comment for testing with more than 200 characters used for testing invalid length errors. This is an example review comment for testing with more than 1000 characters used for testing invalid length errors. This is an example review comment for testing with more than 200 characters used for testing invalid length errors. This is an example review comment for testing with more than 1000 characters used for testing invalid length errors. This is an example review comment for testing with more than 200 characters used for testing invalid length errors. ',
     'rating': 3
 }
 
@@ -276,7 +276,7 @@ class ReviewTestCase(TestCase):
         (REVIEW_COMMENT_INV_TYPE, None, None, False, TypeError, 'Invalid comment format'),
         (REVIEW_RATING_INV_TYPE, None, None, False, TypeError, 'Invalid rating format'),
         (REVIEW_TITLE_INV_LENGHT, None, None, False, ValueError, 'The title cannot contain more than 60 characters'),
-        (REVIEW_COMMENT_INV_LENGHT, None, None, False, ValueError, 'The comment cannot contain more than 200 characters'),
+        (REVIEW_COMMENT_INV_LENGHT, None, None, False, ValueError, 'The comment cannot contain more than 1000 characters'),
         (REVIEW_INVALID_RATING, None, None, False, ValueError, 'Rating must be an integer between 0 and 5'),
     ])
     def test_create_review(self, review, exp_rating, side_effect=None, org_comment=False, err_type=None, err_msg=None):

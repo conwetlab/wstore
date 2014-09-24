@@ -56,8 +56,8 @@ class ReviewManager():
         if not exception and len(review_data['title']) > 60:
             exception = ValueError('The title cannot contain more than 60 characters')
 
-        if not exception and len(review_data['comment']) > 200:
-            exception = ValueError('The comment cannot contain more than 200 characters')
+        if not exception and len(review_data['comment']) > 1000:
+            exception = ValueError('The comment cannot contain more than 1000 characters')
 
         if not exception and not isinstance(review_data['rating'], int):
             exception = TypeError('Invalid rating format')
