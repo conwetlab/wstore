@@ -139,12 +139,63 @@
         }
 
     }
+
+    /**
+     * Check if the current user is owner of a review
+     */
+    var isReviewer = function isReviewer(self, review) {
+        var isOwner = false;
+        if (USERPROFILE.getCurrentOrganization() === review.organization &&
+                (USERPROFILE.getUsername() === review.user || ORGANIZATIONPROFILE.isManager())) {
+            isOwner = true;
+        }
+        return isOwner;
+    };
+
+    var editHandler = function editHandler(review) {
+        // Build a comment form
+        var commentForm = new CommentForm(this.offeringElement, this.callerObj, {
+            'id': review.id,
+            'rating': review.rating,
+            'title': review.title,
+            'comment': review.comment
+        });
+        commentForm.paintCommentForm();
+    };
+
+    var deleteHandler = function deleteHandler(review) {
+    };
+
+    /**
+     * Build the options of a selected review
+     */
+    var buildOptions = function buildOptions(self, review, domElem) {
+        // Check if the user is owner of the offering
+        if (USERPROFILE.isOwner(self.offeringElement)) {
+        } else if(isReviewer(self, review)) { // Check if the user is the reviewer of the offering
+            // Include reviewer options
+            var container = domElem.find('.comment-options');
+            container.addClass('hide');
+            var edit = $('<a class="btn btn-blue"><i class="icon-edit"></i></a>').click(editHandler.bind(self, review));
+            var del = $('<a class="btn btn-blue"><i class="icon-trash"></i></a>').click(deleteHandler.bind(self, review));
+            container.append(edit);
+            container.append(del);
+        }
+    };
+
     /**
      * Paint comments
      * @param comments, list with the comments to be painted
      */
     ReviewPainter.prototype.paintComments = function paintComments(comments) {
         this.checkExpand();
+
+        var closeSelected = function(elems) {
+            elems.removeAttr('style');
+            elems.removeClass('comment-selected');
+            elems.find('.txt-gradient').removeClass('hide');
+            elems.find('.comment-options').addClass('hide');
+        };
 
         // Paint comments
         for (var i = 0; i < comments.length; i++) {
@@ -160,16 +211,14 @@
             }).click(function(self) {
                 return function() {
                     if ($(this).attr('style')) {
-                        $(this).removeAttr('style');
-                        $(this).removeClass('comment-selected');
+                        closeSelected($(this));
                         if (!self.extended) {
                             setTimeout(function() {
                                 $('#comments').removeAttr('style');
                             }, 1000);
                         }
-                        $(this).find('.txt-gradient').removeClass('hide');
                     } else {
-                        $(this).parent().find('.comment-selected').removeAttr('style').removeClass('comment-selected');
+                        closeSelected($(this).parent().find('.comment-selected'));
                         // Calculate text height
                         var size = $(this).find('p').height() + 80;
                         $(this).css('height', size + 'px');
@@ -178,9 +227,13 @@
                             $('#comments').css('height', 'auto');
                         };
                         $(this).find('.txt-gradient').addClass('hide');
+                        $(this).find('.comment-options').removeClass('hide');
                     }
                 };
             }(this));
+
+            // Build the different options for the review
+            buildOptions(this, comments[i], templ);
 
             fillStarsRating(comments[i].rating, templ.find('.comment-rating'));
             templ.appendTo('#comments');

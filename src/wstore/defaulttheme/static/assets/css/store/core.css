@@ -1211,6 +1211,17 @@ header {
   float: right;
 }
 
+.comment-entry .btn {
+  width: 0px;
+  padding-left: 11px;
+  margin-right: 5px;
+}
+
+.comment-options {
+  float: right;
+  margin-top: -18px;
+}
+
 .gradient-grey-low {
   background: -webkit-linear-gradient(left, rgba(252, 252, 252, 0), rgb(252, 252, 252)) !important;
   background: linear-gradient(to right, rgba(252, 252, 252, 0), rgb(252, 252, 252)) !important;

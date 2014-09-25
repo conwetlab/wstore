@@ -93,7 +93,8 @@ class ReviewManager():
 
         if not owner:
             # Check if the user can update the review
-            if not user == rev.user or not user.userprofile.current_organization == rev.organization:
+            if not user.userprofile.current_organization == rev.organization or (not user == rev.user and \
+            not user.pk in user.userprofile.current_organization.managers):
                 raise PermissionDenied('The user cannot update the current review')
         else:
             #Check if the user is the owner of the reviewed offering
