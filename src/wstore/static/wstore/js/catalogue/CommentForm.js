@@ -1,18 +1,41 @@
+/*
+ * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ *
+ * This file is part of WStore.
+ *
+ * WStore is free software: you can redistribute it and/or modify
+ * it under the terms of the European Union Public Licence (EUPL)
+ * as published by the European Commission, either version 1.1
+ * of the License, or (at your option) any later version.
+ *
+ * WStore is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * European Union Public Licence for more details.
+ *
+ * You should have received a copy of the European Union Public Licence
+ * along with WStore.
+ * If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
+ */
+
 (function() {
 
-    var rating = 0;
-    var caller;
+    CommentForm = function CommentForm(offeringElement, callerObj) {
+        this.offeringElement = offeringElement;
+        this.callerObj = callerObj;
+        this.rating = 0;
+    }
 
-    var makeCreateCommentRequest = function makeCreateCommentRequest(offElement) {
+    CommentForm.prototype.makeCreateCommentRequest = function makeCreateCommentRequest() {
         var csrfToken = $.cookie('csrftoken');
         var title, comment, request = {};
         var error = false;
         var msg;
 
         var offeringContext = {
-            'organization': offElement.getOrganization(),
-            'name': offElement.getName(),
-            'version': offElement.getVersion()
+            'organization': this.offeringElement.getOrganization(),
+            'name': this.offeringElement.getName(),
+            'version': this.offeringElement.getVersion()
         };
 
         title = $.trim($('#comment-title').val());
@@ -38,45 +61,31 @@
 
         // If the fields are correctly filled make the request
         if (!error) {
+            var client = new ServerClient('REVIEW_COLLECTION', '');
+
             request.title = title;
             request.comment = comment;
             request.rating = rating;
 
-            $('#loading').removeClass('hide');  // Loading view when waiting for requests
-            $('#loading').css('height', $(window).height() + 'px');
-            $('#message').modal('hide');
-            $.ajax({
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                },
-                type: "POST",
-                url: EndpointManager.getEndpoint('REVIEW_COLLECTION', offeringContext),
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify(request),
-                success: function (response) {
-                    $('#loading').addClass('hide');
-                    $('#message').modal('hide');
-                    caller.refreshAndUpdateDetailsView();
-                },
-                error: function (xhr) {
-                    $('#loading').addClass('hide');
-                    var resp = xhr.responseText;
-                    var msg = JSON.parse(resp).message;
-                    $('#message').modal('hide');
-                    MessageManager.showMessage('Error', msg);
-                }
+            client.create(request, function() {
+                $('#message').modal('hide');
+                this.callerObj.refreshAndUpdateDetailsView();
+            }.bind(this), offeringContext, function() {
+                var resp = xhr.responseText;
+                var msg = JSON.parse(resp).message;
+                $('#message').modal('hide');
+                MessageManager.showMessage('Error', msg);
             });
+
         } else {
             MessageManager.showAlertError('Error', msg, $('#error-message'));
         }
     };
 
-    paintCommentForm = function painCommentForm(offElement, callerObj) {
+    CommentForm.prototype.paintCommentForm = function painCommentForm() {
         var stars;
 
-        caller = callerObj;
-        MessageManager.showMessage('Comment', '');
+        MessageManager.showMessage('Review', '');
 
         $('<div></div>').attr('id', 'error-message').appendTo('.modal-body');
         $('<div></div>').addClass('clear').appendTo('.modal-body');
@@ -139,8 +148,8 @@
         $('.modal-footer > .btn').click(function(evt) {
             evt.stopPropagation();
             evt.preventDefault();
-            makeCreateCommentRequest(offElement);
-        });
+            this.makeCreateCommentRequest();
+        }.bind(this));
     };
 
 })();

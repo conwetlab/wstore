@@ -114,7 +114,8 @@
             (this.offeringElement.getState() == 'published' && this.offeringElement.isOpen())) {
 
             $('#comment-btn').removeClass('hide').click((function() {
-                paintCommentForm(this.offeringElement, this.callerObj);
+                var commentForm = new CommentForm(this.offeringElement, this.callerObj);
+                commentForm.paintCommentForm();
             }).bind(this));
         }
         // Set expand listener
