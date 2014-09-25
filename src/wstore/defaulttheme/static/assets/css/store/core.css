@@ -857,12 +857,13 @@ a.tag {
 }
 
 .comment-entry {
-  width: 360px;
-  height: 140px;
+  width: 350px;
+  height: 130px;
   display: inline;
   float: left;
   margin: 15px;
   overflow: hidden;
+  padding: 10px;
 }
 
 .comment-entry .icon-reply {
@@ -1185,5 +1186,33 @@ footer {
 
 header {
   z-index: 6 !important;
+}
+
+.comment-entry:hover {
+  cursor: pointer;
+}
+
+.comment-entry {
+  -webkit-transition: height 1s; /* For Safari 3.1 to 6.0 */
+  transition: height 1s
+}
+
+.comment-selected {
+  background-color: rgb(255, 255, 255);
+  box-shadow: 4px 5px 8px rgba(50, 51, 51, 0.15);
+}
+
+.comment-entry .txt-gradient {
+  height: 20px;
+  width: 55px;
+  position: relative;
+  top: 119px;
+  left: 15px;
+  float: right;
+}
+
+.gradient-grey-low {
+  background: -webkit-linear-gradient(left, rgba(252, 252, 252, 0), rgb(252, 252, 252)) !important;
+  background: linear-gradient(to right, rgba(252, 252, 252, 0), rgb(252, 252, 252)) !important;
 }
 

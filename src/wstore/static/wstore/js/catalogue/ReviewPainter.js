@@ -156,7 +156,30 @@
                 'timestamp': comments[i].timestamp.split(' ')[0],
                 'title': comments[i].title,
                 'comment': comments[i].comment
-            });
+            }).click(function(self) {
+                return function() {
+                    if ($(this).attr('style')) {
+                        $(this).removeAttr('style');
+                        $(this).removeClass('comment-selected');
+                        if (!self.extended) {
+                            setTimeout(function() {
+                                $('#comments').removeAttr('style');
+                            }, 1000);
+                        }
+                        $(this).find('.txt-gradient').removeClass('hide');
+                    } else {
+                        $(this).parent().find('.comment-selected').removeAttr('style').removeClass('comment-selected');
+                        // Calculate text height
+                        var size = $(this).find('p').height() + 80;
+                        $(this).css('height', size + 'px');
+                        $(this).addClass('comment-selected');
+                        if (!self.extended) {
+                            $('#comments').css('height', 'auto');
+                        };
+                        $(this).find('.txt-gradient').addClass('hide');
+                    }
+                };
+            }(this));
 
             fillStarsRating(comments[i].rating, templ.find('.comment-rating'));
             templ.appendTo('#comments');
