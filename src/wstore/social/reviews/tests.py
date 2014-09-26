@@ -468,18 +468,69 @@ class ReviewTestCase(TestCase):
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(error), err_msg)
 
-    def test_remove_review(self):
+    def _check_user_rev_del(self):
+        self.assertEquals(self.offering.rating, 4.0)
+        self.assertEquals(len(self.user.userprofile.rated_offerings), 0)
+        self.user.userprofile.save.assert_called_once_with()
+
+    def _check_user_org_rev_del(self):
+        self.assertEquals(self.offering.rating, 0)
+        self.assertEquals(len(self.offering.comments), 0)
+        self.assertEquals(len(self.org.rated_offerings), 0)
+        self.org.save.assert_called_once_with()
+
+    def _check_user_org_manager_rev_del(self):
+        self.assertEquals(self.offering.rating, 4.0)
+        self.assertEquals(len(self.offering.comments), 3)
+        self.assertEquals(len(self.org.rated_offerings), 0)
+        self.org.save.assert_called_once_with()
+
+    def _last_review(self, rev):
+        self.offering.comments = ['333333']
+        self.user.userprofile.is_user_org.return_value = False
+        self.org.name = 'test_organization'
+        self.org.rated_offerings = [{
+            'user': self.user.pk,
+            'offering': self.offering.pk
+        }]
+
+    def _manager_del(self, rev):
+        rev.user = MagicMock()
+        rev.user.username = 'test_user2'
+        rev.user.pk = 'tu2pk'
+        rev.user.userprofile.current_organization = self.org
+        rev.user.userprofile.is_user_org.return_value = False
+        self.org.managers = [self.user.pk]
+        self.org.rated_offerings = [{
+            'user': rev.user.pk,
+            'offering': self.offering.pk
+        }]
+        self.org.name = 'test_organization'
+
+    @parameterized.expand([
+        ('usr', _check_user_rev_del),
+        ('usr_org_last_rev', _check_user_org_rev_del, _last_review),
+        ('manager', _check_user_org_manager_rev_del, _manager_del)
+    ])
+    def test_remove_review(self, name, user_check, side_effect=None):
         # Create Mocks
+        #if name == 'manager':
+        #    import ipdb; ipdb.set_trace()
+
         rev_object = MagicMock()
         rev_object.pk = '333333'
         rev_object.user = self.user
         rev_object.organization = self.org
+        self.user.userprofile.rated_offerings = [self.offering.pk]
         self.offering.rating = 3.75
         self.offering.comments = ['333333', '444444', '555555', '666666']
         rev_object.offering = self.offering
         rev_object.rating = 3
         review_manager.Review = MagicMock()
         review_manager.Review.objects.get.return_value = rev_object
+
+        if side_effect:
+            side_effect(self, rev_object)
 
         error = False
         try:
@@ -491,10 +542,11 @@ class ReviewTestCase(TestCase):
         # Check result
         self.assertFalse(error)
         self.assertFalse('333333' in self.offering)
-        self.assertEquals(self.offering.rating, 4.0)
 
         self.offering.save.assert_called_once_with()
         rev_object.delete.assert_called_once_with()
+        # Check user or organization models
+        user_check(self)
 
     @parameterized.expand([
         (RESPONSE, '999999'),

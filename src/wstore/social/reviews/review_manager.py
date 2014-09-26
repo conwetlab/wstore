@@ -256,18 +256,30 @@ class ReviewManager():
         # Update top rated offerings
         self._update_top_rated()
 
+    def _remove_review_from_org(self, user, offering, org):
+        old_rate = None
+        for rate in org.rated_offerings:
+            if rate['user'] == user.pk and rate['offering'] == offering.pk:
+                old_rate = rate
+                break
+        org.rated_offerings.remove(old_rate)
+        org.save()
+
     def remove_review(self, user, review):
         """
         Removes a given review
         """
-
         rev = self._get_and_validate_review(user, review)
 
         # Remove review from offering
         rev.offering.comments.remove(review)
 
         # Update offering rating
-        rev.offering.rating = ((rev.offering.rating * (len(rev.offering.comments) + 1)) - rev.rating) / len(rev.offering.comments)
+        if len(rev.offering.comments):
+            rev.offering.rating = ((rev.offering.rating * (len(rev.offering.comments) + 1)) - rev.rating) / len(rev.offering.comments)
+        else:
+            rev.offering.rating = 0
+
         rev.offering.save()
 
         # Update offering indexes
@@ -280,6 +292,17 @@ class ReviewManager():
 
         # Update top rated offerings
         self._update_top_rated()
+
+        # Update user info to allow her to create a new review
+        if rev.user == user:
+            # Check if is a private review or an organization review
+            if user.userprofile.is_user_org():
+                user.userprofile.rated_offerings.remove(rev.offering.pk)
+                user.userprofile.save()
+            else:
+                self._remove_review_from_org(user, rev.offering, user.userprofile.current_organization)
+        else:
+            self._remove_review_from_org(rev.user, rev.offering, rev.organization)
 
         rev.delete()
 
