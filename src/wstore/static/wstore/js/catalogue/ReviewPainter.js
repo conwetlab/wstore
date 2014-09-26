@@ -164,6 +164,17 @@
     };
 
     var deleteHandler = function deleteHandler(review) {
+        var msg = 'Are you sure that you want to remove your review';
+        MessageManager.showYesNoWindow(msg, function() {
+            var client = new ServerClient('REVIEW_ENTRY', '');
+            context = {
+                'review': review.id,
+                'organization': this.offeringElement.getOrganization(),
+                'name': this.offeringElement.getName(),
+                'version': this.offeringElement.getVersion()
+            }
+            client.remove(this.callerObj.refreshAndUpdateDetailsView.bind(this.callerObj), context);
+        }.bind(this), 'Remove');
     };
 
     /**
