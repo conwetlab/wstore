@@ -28,6 +28,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.test.utils import override_settings
 
 from wstore.admin.users import views
 from wstore.store_commons.utils import http
@@ -555,6 +556,7 @@ class UserEntryTestCase(TestCase):
                                 self.assertTrue(self.request.user.is_staff)
 
 
+@override_settings(OILAUTH=False)
 class UserSearchTestCase(TestCase):
 
     tags = ('user-search',)
@@ -562,7 +564,6 @@ class UserSearchTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
 
-        from django.conf import settings
         from django.core.urlresolvers import reverse
         from tempfile import mkdtemp
 
@@ -613,7 +614,6 @@ class UserSearchTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        from django.conf import settings
         from shutil import rmtree
 
         # Clear the directory temporal
