@@ -40,6 +40,7 @@ from wstore.offerings.offerings_management import _create_basic_usdl
 from wstore.models import Offering, Purchase
 from wstore.social.tagging.tag_manager import TagManager
 from wstore.selenium_tests.test_server import TestServer
+import unittest
 
 
 TESTING_PORT = 8989
@@ -102,7 +103,7 @@ def _create_tags():
     tm.update_tags(offering2, ['dataset', 'tag'])
     tm.update_tags(offering3, ['widget'])
 
-
+@unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class BasicSearchTestCase(WStoreSeleniumTestCase):
 
     tags = ('selenium', )
@@ -255,7 +256,7 @@ class BasicSearchTestCase(WStoreSeleniumTestCase):
 class AdministrationTestCase(WStoreSeleniumTestCase):
     pass
 
-
+@unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class OfferingManagementTestCase(WStoreSeleniumTestCase):
 
     tags = ('selenium',)
@@ -340,7 +341,7 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
         # Bind
         # Publish
 
-
+@unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class PurchaseTestCase(WStoreSeleniumTestCase):
     tags = ("selenium", )
 
@@ -435,7 +436,8 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         time.sleep(1)
         expected_url = 'http://localhost:' + unicode(TESTING_PORT) + '/'
         self.assertEquals(self.driver.current_url, expected_url)
-    
+
+@unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class ResourceManagementTestCase(WStoreSeleniumTestCase):
 
     def __init__(self, methodName='runTest'):

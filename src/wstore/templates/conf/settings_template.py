@@ -93,7 +93,6 @@ INSTALLED_APPS = (
     'wstore.charging_engine',
     'wstore.store_commons',
     'wstore.social.tagging',
-    'wstore.selenium_tests',
     'django_crontab',
     'django_nose',
     'social_auth',
