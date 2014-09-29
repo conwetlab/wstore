@@ -55,7 +55,7 @@ The installation of lxml using pip can fail. This may occur because lxml headers
 compilation are missing, to avoid this problem you can install them manually before
 installing lxml itself by executing:
 
-    $ apt-get install libxslt1-dev
+    $ apt-get install libxml2-dev libxslt-dev python-dev lib32z1-dev
 
 Configuration
 -------------
