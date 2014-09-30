@@ -838,7 +838,7 @@ class ChargingEngine:
         except HTTPError as e:
             # Check if it is needed to refresh the access token
             if e.code == 401:
-                rss.refresh_token()
+                rss._refresh_token()
                 exp_manager.set_credentials(rss.access_token)
                 try:
                     exp_manager.check_balance(charge, actor)
@@ -886,7 +886,7 @@ class ChargingEngine:
         except HTTPError as e:
             # Check if it is needed to refresh the access token
             if e.code == 401:
-                rss.refresh_token()
+                rss._refresh_token()
                 exp_manager.set_credentials(rss.access_token)
                 exp_manager.update_balance(charge, actor)
             # Check if the error is due to an insufficient balance
