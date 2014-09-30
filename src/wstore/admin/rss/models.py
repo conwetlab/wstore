@@ -38,7 +38,7 @@ class RSS(models.Model):
     class Meta:
         app_label = 'wstore'
 
-    def refresh_token(self):
+    def _refresh_token(self):
         """
         Refresh the access token used for accessing the RSS
         """
