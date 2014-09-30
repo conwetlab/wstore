@@ -30,6 +30,8 @@ from django.conf import settings
 from wstore.store_commons.utils import http
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock, decorator_mock_callable
 from wstore.admin.rss import views
+from wstore.admin.rss import models
+from wstore import models as wstore_models
 
 
 class ExpenditureMock():
@@ -571,3 +573,61 @@ class RSSViewTestCase(TestCase):
         self.assertEquals(response.status_code, resp[0])
         self.assertEquals(val['message'], resp[1])
         self.assertEquals(val['result'], resp[2])
+
+
+class RSSModelTestCase(TestCase):
+
+    tags = ('rss-model',)
+    def setUp(self):
+        # Create RSS entry
+        self.rss = models.RSS.objects.create(
+            name='test_rss',
+            host='http://testhost.com',
+        )
+        self.rss.access_token = 'aaaaa'
+        self.rss.refresh_token = 'bbbbb'
+        self.rss.save()
+
+        # Mock userprofile
+        self.old_usr = wstore_models.UserProfile
+
+        self.userprofile = MagicMock()
+        cred = {
+            'access_token': '11111',
+            'refresh_token': '22222'
+        }
+        self.social = MagicMock()
+        self.social.extra_data = cred
+
+        self.usr_obj = MagicMock()
+        self.usr_obj.user.social_auth.filter.return_value = [self.social]
+        self.userprofile.objects.get.return_value = self.usr_obj
+
+        wstore_models.UserProfile = self.userprofile
+        TestCase.setUp(self)
+
+    def tearDown(self):
+        wstore_models.UserProfile = self.old_usr
+        TestCase.tearDown(self)
+
+    def test_refresh_token(self):
+
+        # Call refresh_token method
+        error = False
+        try:
+            self.rss._refresh_token()
+        except:
+            error = True
+
+        self.assertFalse(error)
+
+        # Check calls
+        self.userprofile.objects.get.assert_called_once_with(access_token='aaaaa')
+        self.social.refresh_token.assert_called_once_with()
+
+        self.assertEquals(self.usr_obj.access_token, '11111')
+        self.assertEquals(self.usr_obj.refresh_token, '22222')
+        self.usr_obj.save.assert_called_with()
+
+        self.rss = models.RSS.objects.get(name='test_rss')
+        self.assertEquals(self.rss.access_token, '11111')
