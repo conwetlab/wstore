@@ -130,6 +130,10 @@
     Loader.prototype.readyHandler = function readyHandler() {
         var userForm;
 
+        if (checkCookie(window.cookieName) != window.cookieValue) {
+            createDiv();
+        }
+
         USERPROFILE = new UserProfile()
         USERPROFILE.fillUserInfo(this.checkOrg.bind(this));
 

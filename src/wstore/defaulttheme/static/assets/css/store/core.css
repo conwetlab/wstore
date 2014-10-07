@@ -1182,6 +1182,11 @@ footer {
 footer {
   width: 100%;
   background-color: rgb(255,255,255);
+  text-align: center;
+  font-size:13px;
+  color: rgb(140, 140, 140);
+  padding-bottom: 10px;
+  font-family: OpenSans, Verdana, sans-serif;
 }
 
 header {
