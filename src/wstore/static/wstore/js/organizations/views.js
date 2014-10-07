@@ -287,8 +287,6 @@
             .append(WStore.components.displayIconEdit()),
           $('<a>').addClass('pnl_orgusr').attr('title', 'Add User')
             .append(WStore.components.displayIconUser()),
-          $('<a>').addClass('mdl-delete').attr('title', 'Delete')
-            .append(WStore.components.displayIconDelete())
         ],
         close: $('<a>').addClass('pnl_unit-close').attr('title', 'Close')
           .append(WStore.components.displayIconClose()),
@@ -309,21 +307,6 @@
         $panel.find('.panel-heading').find('.active').removeClass('active');
         self.usersPanel($panel.find('.panel-body'), data, $(this));
       }
-      return false;
-    });
-    
-    $('.mdl-delete').click(function () {
-      WStore.modals.showDeleteModal({
-        title: 'Delete this organization',
-        content: $('<span>')
-          .append('Once you delete the <strong>'+name+'</strong> organization, there is no going back. Are you sure you want to proceed?'),
-      }, 'unit-delete');
-      $('#unit-delete').click(function (event) {
-        self.initView();
-        WStore.messages.showSuccessMessage('The <strong>'+name+'</strong> organization was removed successfully.', true);
-        $('.modal').modal('hide');
-        return false;
-      });
       return false;
     });
     
