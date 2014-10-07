@@ -528,6 +528,7 @@
   
   paintOrganizationsView = function paintOrganizationsView() {
     var mpainter = new MenuPainter();
+    mpainter.setState('first');
     organizationsTemplate.initView();
     organizationsTemplate.setWidth();
     $(window).resize(organizationsTemplate.setWidth);
