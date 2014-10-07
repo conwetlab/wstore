@@ -107,7 +107,7 @@
     
     $container
       .empty()
-      .append(form.displayForm($('#organization_form_template'), $('#id_tmpl_pf_fields'), $('#id_tmpl_ta_fields')))
+      .append(form.displayForm($('#organization_form_template'), $('#id_tmpl_ta_fields')))
       .find('.form-options').append(
         $('<span>').addClass('span6'),
         WStore.components.buildFormOption('pnl_edit-close', 'Cancel', 3, false),
@@ -268,15 +268,6 @@
       $container.find('#id_org_inf_tax_city').append(data.tax_address.tax_city);
       $container.find('#id_org_inf_tax_country').append(data.tax_address.tax_country);
     }
-    
-    if (data['payment_form']) {
-      $container.find('#id_org_inf_card_type').append(data.payment_form.card_type);
-      $container.find('#id_org_inf_card_number').append(data.payment_form.card_number);
-      $container.find('#id_org_inf_card_code').append(data.payment_form.card_code);
-      $container.find('#id_org_inf_card_expiry_month').append(data.payment_form.card_expiry_month);
-      $container.find('#id_org_inf_card_expiry_year').append(data.payment_form.card_expiry_year);
-    }
-    
   };
   
   /**
@@ -365,7 +356,7 @@
     
     $panel
       .find('.panel-body')
-      .append(form.displayForm($('#organization_form_template'), $('#id_tmpl_pf_fields'), $('#id_tmpl_ta_fields')));
+      .append(form.displayForm($('#organization_form_template'), $('#id_tmpl_ta_fields')));
     
     $panel
       .find('.form-options').append(
@@ -412,7 +403,7 @@
     
     $panel
       .find('.panel-body')
-      .append(form.displayForm($('#organization_form_template'), $('#id_tmpl_pf_fields'), $('#id_tmpl_ta_fields')));
+      .append(form.displayForm($('#organization_form_template'), $('#id_tmpl_ta_fields')));
     
     $panel
       .find('.form-options').append(

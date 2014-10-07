@@ -711,15 +711,12 @@
   /**
    * displayForm method
    */
-  OrganizationForm.prototype.displayForm = function displayForm($templateID, $pfTemplateID, $taTemplateID) {
+  OrganizationForm.prototype.displayForm = function displayForm($templateID, $taTemplateID) {
     var currentDate = new Date(), $form, $formFields, $expiryYear;
     
     // Create the form template
     $.template('organization_form', $templateID);
     $formFields = $.tmpl('organization_form');
-    
-    // Add the payment-form form template
-    $.template('pf_form', $pfTemplateID);
     
     // Add the tax-address form template
     $.template('ta_fields', $taTemplateID);
@@ -727,14 +724,7 @@
     // Build the default form
     $form = buildFormDefault();
     $form.find('.form-fields').append($formFields);
-    $form.find('#id_org_pf_fields').append($.tmpl('pf_form'));
     $form.find('#id_org_ta_fields').append($.tmpl('ta_fields'));
-    
-    // Create options of expiry year field
-    $expiryYear = $form.find(this.fields.card_expiry_year);
-    for (var i = currentDate.getFullYear(); i <= currentDate.getFullYear() + 10; i++) {
-      $('<option>').val(i.toString()).append(i.toString()).appendTo($expiryYear);
-    }
     
     // Fill the organization fields
     $form.find(this.fields.name).val(this.data.name);
@@ -743,11 +733,6 @@
     // Fill the tax-address fields
     for (var i in this.data.tax_address) {
       $form.find(this.fields[i]).val(this.data.tax_address[i]);
-    }
-    
-    // Fill the payment-form fields
-    for (var i in this.data.payment_form) {
-      $form.find(this.fields[i]).val(this.data.payment_form[i]);
     }
     
     // Add id
@@ -912,15 +897,15 @@
    */
   OrganizationUserForm.prototype.displayForm = function displayForm($templateID) {
     var $form, $formFields;
-    
+
     // Create the form template
     $.template('organization_user_form', $templateID);
     $formFields = $.tmpl('organization_user_form');
-    
+
     // Build the default form
     $form = buildFormDefault();
     $form.attr('id', this.formID).find('.form-fields').append($formFields);
-    
+
     return $form;
   };
   
@@ -928,14 +913,14 @@
    * getData method
    */
   OrganizationUserForm.prototype.getData = function getData() {
-    
+
     // Update the data of the fields
     this.data.username = $.trim($(this.fields.username).val());
-    
+
     for (var i in this.data.roles) {
       this.data.roles[i] = $(this.fields[i]).prop('checked');
     }
-    
+
     return this.data;
   };
   
@@ -996,16 +981,6 @@
         tax_postcode: data['tax_address']['postal'],
         tax_city: data['tax_address']['city'],
         tax_country: data['tax_address']['country'],
-      };
-    }
-    
-    if (data['payment_info']) {
-      newData.payment_form = {
-        card_type: data['payment_info']['type'],
-        card_number: data['payment_info']['number'],
-        card_code: data['payment_info']['cvv2'],
-        card_expiry_month: data['payment_info']['expire_month'],
-        card_expiry_year: data['payment_info']['expire_year'],
       };
     }
     
