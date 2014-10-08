@@ -323,6 +323,11 @@ class OrganizationEntryTestCase(TestCase):
             self.assertEquals(body_response['result'], 'error')
 
 
+BASIC_ORGANIZATION = {
+    'name': 'test_org1',
+    'notification_url': 'http://notificationurl.com'
+}
+
 class OrganizationCollectionTestCase(TestCase):
 
     tags = ('org-admin',)
@@ -442,6 +447,9 @@ class OrganizationCollectionTestCase(TestCase):
         org = MagicMock()
         views.Organization.objects.filter.return_value = [org]
 
+    def _not_active(self):
+        self.request.user.is_active = False
+
     @parameterized.expand([
     ({
         'name': 'test_org1',
@@ -460,22 +468,16 @@ class OrganizationCollectionTestCase(TestCase):
             'cvv2': '111'
         }
     }, (201, 'Created', 'correct'), True, _not_found),
-    ({
-        'name': 'test_org1',
-        'notification_url': 'http://notificationurl.com'
-    }, (201, 'Created', 'correct')),
-    ({
-        'invalid_name': 'test_org1',
-        'notification_url': 'http://notificationurl.com'
+    (BASIC_ORGANIZATION, (201, 'Created', 'correct')),
+    ({ 
+       'notification_url': 'http://notificationurl.com'
     }, (400, 'Invalid JSON content', 'error'), False),
+    (BASIC_ORGANIZATION, (400, 'The test_org1 organization is already registered.', 'error'), False, _found),
     ({
-        'name': 'test_org1',
-        'notification_url': 'http://notificationurl.com'
-    }, (400, 'The test_org1 organization is already registered.', 'error'), False, _found),
-    ({
-        'name': 'test_org1',
-        'notification_url': 'http:notificationurl.com'
-    }, (400, 'Enter a valid URL', 'error'), False , _not_found)
+       'name': 'test_org1',
+       'notification_url': 'http:notificationurl.com'
+    }, (400, 'Enter a valid URL', 'error'), False , _not_found),
+    (BASIC_ORGANIZATION, (403, 'The user has not been activated', 'error'), False , _not_active),
     ])
     def test_organization_creation(self, data, exp_resp, created=True, side_effect=None):
 

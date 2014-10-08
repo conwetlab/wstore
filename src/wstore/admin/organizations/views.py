@@ -76,7 +76,7 @@ class OrganizationCollection(Resource):
     def create(self, request):
 
         if not request.user.is_active:
-            return build_response(request, 403, 'Forbidden')
+            return build_response(request, 403, 'The user has not been activated')
 
         try:
             data = json.loads(request.raw_post_data)
