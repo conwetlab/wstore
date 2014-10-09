@@ -66,55 +66,6 @@
   font-size: 30px;
 }
 
-.res-hover {
-  border-color: rgba(82, 168, 236, 0.8);
-  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-}
-
-.res-gradient {
-  background: -webkit-linear-gradient(left, rgba(255, 255, 255, 0), rgb(255, 255, 255));
-  background: linear-gradient(to right, rgba(255, 255, 255, 0), rgb(255, 255, 255));
-  transition: background linear 0.2s;
-  -moz-transition: background linear 0.2s; /* Firefox 4 */
-  -webkit-transition: background linear 0.2s;
-  float: right;
-}
-
-.res-title-gradient {
-  float: right;
-  width: 40px;
-  height: 20px;
-  position: relative;
-  top: -39px;
-  left: -58px;
-  background: -webkit-linear-gradient(left, rgba(235, 235, 235, 0), rgb(235, 235, 235)) !important;
-  background: linear-gradient(to right, rgba(235, 235, 235, 0), rgb(235, 235, 235)) !important;
-}
-
-.res-desc-gradient {
-  position: relative;
-  width: 50px;
-  height: 20px;
-  top: 46px;
-  left: 79px;
-  z-index: 3;
-}
-
-.res-title {
-  white-space: nowrap;
-  overflow: hidden;
-  width: 164px;
-  margin-top: -2px;
-  height: 17px;
-  font-family: NeoTech;
-  color: rgb(0, 43, 103);
-  font-size: 16px;
-  padding-top: 12px;
-  padding-left: 10px;
-}
-
 #open-help {
   position: relative;
   top: 4px;
@@ -147,34 +98,6 @@
 
 .res-det-title {
   margin-bottom: 0;
-}
-
-.resource .label {
-  position: relative;
-  top: -37px;
-  left: 30px;
-  float: right;
-}
-
-.res-version {
-  margin-top: -20px;
-  padding-left: 8px;
-}
-
-.res-description {
-  width: 100%;
-  height: 53px;
-  overflow: hidden;
-  position: relative;
-  top: -11px;
-}
-
-.resource-header {
-  width: 231px;
-  margin-left: -10px;
-  margin-top: -10px;
-  height: 50px;
-  background-color: rgb(235, 235, 235);
 }
 
 @media all and (max-width: 980px) {
