@@ -159,6 +159,13 @@
                         check.prop('checked', true);
                     }
                 });
+                templ.find('input[type="checkbox"]').click(function(e) {
+                    if ($(this).prop('checked')) {
+                        $(this).prop('checked', false);
+                    } else {
+                        $(this).prop('checked', true);
+                    }
+                });
                 // Checks if the resource is already bound to the offering
                 offeringRes = this.offeringElem.getResources()
                 while(!found && j < offeringRes.length) {
