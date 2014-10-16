@@ -20,7 +20,7 @@ In order to have WStore up and running the following software is required. This 
 * paypalpy 
 * django-crontab
 * django-social-auth
-* wkhtml2pdf
+* wkhtmltopdf
 
 Installation
 ------------
@@ -28,20 +28,20 @@ Installation
 ### Installing basic dependencies
 
 
-The Web Server, MongoDB, wkhtml2pdf, python and pip itself can be installed using the 
+The Web Server, MongoDB, wkhtmltopdf, python and pip itself can be installed using the 
 package management tools provided by your operating system or using the available installers.
 
-These packages are available for Linux and Mac OS so WStore should work in those systems. However, the current version of WStore and its installer / installation guide have been tested under Ubuntu 12.04, Ubuntu 13.10, Ububtu 14.04, CentOS 6.3 and CentOS 6.5. THESE ARE THEREFORE CONSIDERED AS THE SUPPORTED OPERATIVE SYSTEMS. 
+These packages are available for Linux and Mac OS so WStore should work in those systems. However, the current version of WStore and its installer / installation guide have been tested under Ubuntu 12.04, Ubuntu 13.10, Ubuntu 14.04, CentOS 6.3 and CentOS 6.5. THESE ARE THEREFORE CONSIDERED AS THE SUPPORTED OPERATIVE SYSTEMS. 
 
 **NOTE:** CentOS 6 uses Python 2.6 in the system, since WStore needs Python 2.7 is strongly recommended to use an Ubuntu/Debian distribution.
 
 In order to facilitate the installation of the basic dependencies the script *resolve-basic-dep.sh* has been provided. This script will install the needed packages for both Ubuntu/Debian and CentOS 6 systems. For CentOS systems this script will install Python 2.7 and its tools, without replacing the system Python, making them avalailable as python2.7, pip2.7 and vitualenv2.7.
 
-**NOTE:** The script *resolve-basic-dep.sh* may replace some of your system packages, so if you have software with common dependencies. you may want to manually resolve WStore dependencies.
+**NOTE:** The script *resolve-basic-dep.sh* may replace some of your system packages, so if you have software with common dependencies. you may want to manually resolve WStore basic dependencies.
 
 To execute the script run the following command
 
-    $sudo ./resolve-basic-dep.sh 
+    $ sudo ./resolve-basic-dep.sh 
 
 #### Debian/Ubuntu
 
@@ -146,7 +146,7 @@ $ apt-get install libxml2-dev libxslt1-dev zlib1g-dev python-dev
 $ yum install libxml2-devel libxslt-devel zlib-devel python-devel
 </pre>
 
-You can execute the script setup.sh to perform the complete installation. Please note that this script should be run as an user not as root (neither sudo). Executing the script as root will cause python and dajngo packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS. 
+You can execute the script setup.sh to perform the complete installation. Please note that this script should be run as an user not as root (neither sudo). Executing the script as root will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS. 
 
     $ ./setup.sh
 
@@ -254,11 +254,94 @@ If you don't want the wizard to start when the script is executed, you must run 
 $ ./setup.sh --noinput
 </pre>
 
+### Manually resolving python dependencies
+
+In case you do not want to use the script *setup.sh*, Python and Django dependencies can be easily installed using [http://www.pip-installer.org/en/latest/installing.html pip]
+
+It is sugested to create a virtualenv where install Python and Django dependencies.
+
+    $ virtualenv-2.7 src/virtenv
+
+or, if virtualenv-2.7 is not available
+
+    $ virtualenv src/virtenv
+
+
+Then it is needed to activate the virtual env
+
+    $ source src/virtenv/bin/activate
+
+
+To install *rdflib*, *lxml*, and *pymongo*
+
+    $ pip install lxml "rdflib>=3.2.0" pymongo 
+
+**NOTE**: See http://lxml.de/installation.html#installation if in trouble installing lxml. You probably have to install the following packages:
+
+
+<pre>
+# Ubuntu/Debian
+$ apt-get install libxml2-dev libxslt1-dev zlib1g-dev python-dev
+
+#CentOS/RedHat
+$ yum install libxml2-devel libxslt-devel zlib-devel python-devel
+</pre>
+
+WStore requires the *Django nonrel* framework ready to work with *MongoDB*. To install this framework in its version 1.4 as well as *djangotoolbox* and *django_mongodb_engine* for this version use the following commands:
+
+<pre>
+$ pip install https://github.com/django-nonrel/django/archive/nonrel-1.4.zip
+</pre>
+
+<pre>
+$ pip install https://github.com/django-nonrel/djangotoolbox/archive/toolbox-1.4.zip
+</pre>
+
+<pre>
+$ pip install https://github.com/django-nonrel/mongodb-engine/archive/mongodb-engine-1.4-beta.zip
+</pre>
+
+To install the *rdflib* plugin for json-ld format use the following command:
+
+<pre>
+$ pip install https://github.com/RDFLib/rdflib-jsonld/archive/master.zip
+</pre>
+
+
+To install the PayPal module *paypalpy* use the following command:
+
+<pre>
+$ pip install https://github.com/conwetlab/paypalpy/archive/master.zip
+</pre>
+
+
+WStore uses some plugins for django, to install them use the following commands:
+
+<pre>
+$ pip install nose django-nose
+</pre>
+
+<pre>
+$ pip install django-social-auth
+</pre>
+
+<pre>
+$ pip install django-crontab
+</pre>
+
+<pre>
+$ pip install whoosh
+</pre>
+
+## Configuration
+
+Note that if the script has been used to resolve WStore python dependencies, they have been installed in a virtual environment that must be activated before running any configuration command (*python manage.py {command}*). To activate the virtualenv execute the following command from the installation directory.
+
+    $ source src/virtenv/bin/activate 
+
 ### Database Configuration
 
-The preliminary configuration of the database connection is included in settings.py and is 
-ready to work using MongoDB in the default host and port, with a database called wstore\_db, 
-and without security. To modify the database connection configuration edit the DATABASES setting:
+The preliminary configuration of the database connection is included in *settings.py* and is ready to work using MongoDB in the default host and port, with a database called wstore_db, and without security. To modify the database connection configuration edit the *DATABASES* setting:
 
 <pre>
 DATABASES = {
@@ -274,39 +357,40 @@ DATABASES = {
 }
 </pre>
 
-Using this setting is possible to change the database name and the test database name, 
-include an user and password, and specify the host and port of MongoDB.
+Using this setting is possible to change the database name and the test database name, include an user and password, and specify the host and port of MongoDB.
 
-**Note**: The engine field cannot be changed, since WStore only works with MongoDB.
+**NOTE:** The engine field cannot be changed, since WStore only works with MongoDB.
+
+The name of the instance is included in the *STORE_NAME* setting:
+
+<pre>
+STORE_NAME = 'WStore' 
+</pre>
 
 ### Creating the deafult site
 
-WStore (and any software using django\_mongodb\_engine and django sites framework) requires 
-the creation of a default Site model. To create the default site, open WStore shell:
+WStore (and any software using django_mongodb_engine and django sites framework) requires the creation of a default ''Site'' model. To create the default site execute the following command including a site name and the site domain where your instance is going to run:
 
-    $ python manage.py shell
-
-Create the Site model including the information of the domain where WStore is going to run. 
-
-
-    In [1]: from django.contrib.sites.models import Site
-
-    In [2]: Site.objects.create(name='local', domain='http://localhost:8000')
-    Out[2]: <Site: http://localhost:8000>
-
+<pre>
+$ python manage.py createsite site_name http://host:port 
+</pre>
 
 Get the default site id:
 
-    $ python manage.py tellsiteid
+<pre>
+$ python manage.py tellsiteid
+</pre>
 
-Include the site id in settings.py updating the SITE\_ID setting:
+Include the site id in ''settings.py'' updating the ''SITE_ID'' setting
 
-    SITE_ID = u'515ab0738e05ac20b622888b'
+<pre>
+SITE_ID = u'515ab0738e05ac20b622888b'
+</pre>
  
 ### PayPal Credentials Configuration
 
 WStore uses PayPal to perform chargings. In order to receive the payments, it is 
-necessary to include the credentials of a Business PayPal account in the settings.py 
+necessary to include the credentials of a Business PayPal account in the *src/wstore/charging_engine/payment_client/paypal_client.py* 
 file. In this file is also possible to configure the endpoints used by PayPal, 
 this settings contain by default the testing sandbox endpoints.
 
@@ -342,6 +426,24 @@ It is also possible to show current jobs or remove jobs using the commands:
  
     $ python manage.py crontab remove
 
+### Email configuration
+
+WStore uses some email configuration for sending notifications. To configure the source email used by WStore for sending notifications include the following settings:
+
+<pre>
+WSTOREMAILUSER = 'email_user'
+WSTOREMAIL = 'wstore_email'
+WSTOREMAILPASS = 'wstore_email_passwd'
+SMTPSERVER = 'email_smtp_server'
+</pre>
+
+It is also possible to configure a provider notification email. This email will be used by WStore as the destination email when an user requests the provider role. To set this email, include it in the *WSTOREPROVIDERREQUEST* setting:
+
+<pre>
+WSTOREPROVIDERREQUEST = 'provider_requ_email'
+</pre>
+
+
 ### Authentication method Configuration
 
 WStore allows two different methods for the authentication of users. The 
@@ -356,7 +458,7 @@ system has started to be used may cause unexpected behaviours.
 It is possible to delegate the authentication of users to the FI-WARE Identity 
 Management system on a FI-WARE instance. View FI-LAB info in:
 
-* http://lab.fi-ware.org
+* http://help.lab.fi-ware.org
 
 To do that, the first step is setting up the OILAUTH setting
 to True (Note that this is the default value).
@@ -376,7 +478,7 @@ Once you have registered your WStore instance, get OAuth2 credentials needed for
 authenticacion of your application. You will need to create some roles in your 
 application, one for offering provider, other for offering customer, and a role for developers. This roles 
 will be used in the organizations with access to your WStore instance in order to grant
-organization user the corresponding rights for purchasing and creating offerings for a 
+organization users the corresponding rights for purchasing and creating offerings for a 
 complete organization. To include the name you have specified for that roles, you have 
 to fill the following settings in social\_auth\_backend.py:
 
@@ -438,9 +540,9 @@ Make sure that the directories wstore\_path/src/media, wstore\_path/src/media/re
 wstore\_path/src/media/bills, wstore\_path/src/wstore/search/indexes  exist, and that the 
 server has sufficient permissions to write on them. To do so use the following commands: 
 
-    # chgrp -R www-data  wstore_path/src/media wstore_path/src/wstore/search/indexes
+    # chgrp -R www-data  <wstore_path>/src/media <wstore_path>/src/wstore/search/indexes <wstore_path>/src/wstore/social/indexes
 
-    # chmod g+wrX -R <wstore_path>/src/media wstore_path/src/wstore/search/indexes
+    # chmod g+wrX -R <wstore_path>/src/media <wstore_path>/src/wstore/search/indexes <wstore_path>/src/wstore/social/indexes
 
 it is possible to collect all static files in WStore in a single directory using the 
 following command and answering yes when asked.
@@ -453,7 +555,13 @@ Running WStore
 ### Running WStore using the Django internal web server
 
 Be aware that this way of running WStore should be used for evaluation purposes.
-Do not use it in a production environment. To start WStore, type the following command: 
+Do not use it in a production environment.
+
+**NOTE:** Since the installation scripts create a virtualenv to install the dependencies, you must activate virtualenv before running the runserver command if you have installed and configured the Store using these scripts. To do so, you must run the following command (in the src folder):
+
+    $ source virtenv/bin/activate
+
+To start WStore, type the following command:
 
     $ python manage.py runserver 0.0.0.0:8000
 
