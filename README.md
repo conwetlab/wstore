@@ -4,11 +4,11 @@ README
 Requirements
 ------------
 
-In order to have WStore up and running the following software is required
+In order to have WStore up and running the following software is required. This section describes all the requirements of a basic WStore installation. However, these dependencies are not meant to be installed manually in this step, as they will be installed throughout the documentation
 
 * A Web Server (i.e Apache)
 * MongoDB
-* Python 2.5, 2.6 or 2.7. Python 3 and other versions are not supported. 
+* Python 2.7. Python 3 and other versions are not supported. 
 * Django nonrel 1.3 or 1.4
 * djangotoolbox 
 * django\_mongodb\_engine
@@ -25,40 +25,234 @@ In order to have WStore up and running the following software is required
 Installation
 ------------
 
+### Installing basic dependencies
+
+
 The Web Server, MongoDB, wkhtml2pdf, python and pip itself can be installed using the 
 package management tools provided by your operating system or using the available installers.
 
-In order to install python and django dependences you can execute the script setup.sh.
-This script will create a virtual environment for the project with the corresponding
-packages, resolve all needed python and django dependences, and execute a complete test in order to ensure that 
-WStore is correctly installed. To use this script you need virtualenv2.7 and python 2.7.
+These packages are available for Linux and Mac OS so WStore should work in those systems. However, the current version of WStore and its installer / installation guide have been tested under Ubuntu 12.04, Ubuntu 13.10, Ububtu 14.04, CentOS 6.3 and CentOS 6.5. THESE ARE THEREFORE CONSIDERED AS THE SUPPORTED OPERATIVE SYSTEMS. 
 
-WStore uses wkhtml2pdf for the creation of invoices, this software requires an X Server to work. If 
-you do not have one, WStore will try to run Xvfb on the display :98. To install Xvfb use the following
-command.
+**NOTE:** CentOS 6 uses Python 2.6 in the system, since WStore needs Python 2.7 is strongly recommended to use an Ubuntu/Debian distribution.
 
-    $ apt-get install xvfb
+In order to facilitate the installation of the basic dependencies the script *resolve-basic-dep.sh* has been provided. This script will install the needed packages for both Ubuntu/Debian and CentOS 6 systems. For CentOS systems this script will install Python 2.7 and its tools, without replacing the system Python, making them avalailable as python2.7, pip2.7 and vitualenv2.7.
 
-For instructions on how to install WStore manually, without using any script, have a look at:
+**NOTE:** The script *resolve-basic-dep.sh* may replace some of your system packages, so if you have software with common dependencies. you may want to manually resolve WStore dependencies.
 
-* http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/Store\_-\_W-Store\_-\_Installation\_and\_Administration\_Guide
+To execute the script run the following command
 
-Note that the installation script installs only django and python dependencies; moreover, it uses a virtualenv for installing these dependencies, so it is needed to activate it before running WStore.
+    $sudo ./resolve-basic-dep.sh 
+
+#### Debian/Ubuntu
+
+To install Python and pip
+
+    # apt-get install python python-pip
+
+To install MongoDB
+
+    # apt-get install mongodb
+
+To install wkhtmltopdf
+
+    # apt-get install wkhtmltopdf
 
 
-    $ source <wstore_path>/src/virtenv/bin/activate
+#### CentOS/RedHat
+
+As mentioned above, CentOS systems include Python 2.6. Replacing this Python version with Python 2.7 may break the system, so it should be installed separately.
+
+To install Python 2.7, you need to resolve some development dependencies
+
+<pre>
+# yum groupinstall "Development tools"
+# yum install zlib-devel
+# yum install bzip2-devel
+# yum install openssl-devel
+# yum install ncurses-devel
+</pre>
+
+The next step is to download and compile Python 2.7
+
+<pre>
+# cd /opt
+# wget --no-check-certificate https://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
+# tar xf Python-2.7.6.tar.xz
+# cd Python-2.7.6
+# ./configure --prefix=/usr/local
+# make && make altinstall
+</pre>
+
+Finally, install Python 2.7 setup tools
+
+<pre>
+# cd /opt
+# wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
+# /usr/local/bin/python2.7 ez_setup.py
+# /usr/local/bin/easy_install-2.7 pip
+ 
+# ln -s /usr/local/bin/python2.7 /usr/bin/python2.7
+# ln -s /usr/local/bin/pip2.7 /usr/bin/pip2.7
+</pre>
+
+Now, Python 2.7 and its pip are available as python2.7 and pip2.7
+
+MongoDB is included in the official MongoDB downloads repositories. Once the related repositories has been included (see http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fedora-linux/ ) install MongoDB with the command
+
+    # yum install -y mongodb-org
+
+To install wkhtmltopdf get the related rpm for your system from http://wkhtmltopdf.org/downloads.html and install the package. For example, version 0.12.1 for a 64 bits architecture: 
+
+<pre>
+# wget http://downloads.sourceforge.net/project/wkhtmltopdf/0.12.1/wkhtmltox-0.12.1_linux-centos6-amd64.rpm
+# rpm -ivh wkhtmltox-0.12.1_linux-centos6-amd64.rpm
+</pre>
 
 
-### Troubleshooting
 
-The installation of lxml using pip can fail. This may occur because lxml headers for
-compilation are missing, to avoid this problem you can install them manually before
-installing lxml itself by executing:
+### Installing WStore using scripts
 
-    $ apt-get install libxslt1-dev
+Once basic dependencies have been resolved, it is possible to install python and Django dependencies using the provided scripts. However, before launching the installation script you should be aware of some aspects:
 
-Configuration
--------------
+**NOTE:** If have used the script *resolve-basic-dep.sh* to resolve the basic dependencies you do not need to install the following packages, since they are already installed.
+
+* This script will create a virtual environment for the project with the corresponding packages, resolve all needed python and django dependencies (This script does not install the basic dependencies such as MongoDB, python, etc), and execute a complete test in order to ensure that WStore is correctly installed. To use this script you need virtualenv2.7 and python 2.7. 
+
+<pre>
+# Ubuntu/Debian
+$ pip install virtualenv
+
+#CentOS/RedHat (Suposing you have installed Python 2.7 following the previous instructions)
+$ pip2.7 install virtualenv
+</pre>
+
+* WStore uses wkhtmltopdf for creating invoices. This software requires an X Server to work. If you do not have one, WStore will try to run Xvfb on the display :98. To install Xvfb use the following command. 
+
+<pre>
+# Ubuntu/Debian
+$ apt-get install xvfb
+
+#CentOS/RedHat
+$ yum install Xvfb
+</pre>
+
+* It is possible that the setup.sh script fails while installing lxml. See http://lxml.de/installation.html#installation if in trouble installing lxml. You probably have to install the following packages. 
+
+<pre>
+# Ubuntu/Debian
+$ apt-get install libxml2-dev libxslt1-dev zlib1g-dev python-dev
+
+#CentOS/RedHat
+$ yum install libxml2-devel libxslt-devel zlib-devel python-devel
+</pre>
+
+You can execute the script setup.sh to perform the complete installation. Please note that this script should be run as an user not as root (neither sudo). Executing the script as root will cause python and dajngo packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS. 
+
+    $ ./setup.sh
+
+Be aware os having MongoDB up and running before executing the script. If MongoDB fails when starting you may need to configure the smallfiles option (see http://docs.mongodb.org/manual/reference/configuration-options/).
+
+<pre>
+# Ubuntu/Debian
+$ service mongodb start
+
+# CentOS/RedHat
+$ service mongod start
+</pre>
+
+The setup.sh script will also offers you a wizard to ease the configuration process. This wizard will generate the settings.py file for you, so if you follow the wizard, you can avoid following the Configuration section (unless you want to introduce some specific configuration). However, it is highly recommended to read the Configuration section for a better understanding of the parameters. To use this wizard, just type 'y' when asked:
+
+<pre>
+Do you want to create an initial configuration? [y/n]:
+y
+</pre>
+
+First, you will be required a database name. You can introduce the name that you want:
+
+<pre>
+Include a database name: 
+wstore_db
+</pre>
+
+Then, you should include a site name. This value is up to you:
+
+<pre>
+Include a site name: 
+store 
+</pre>
+
+After that, the script will ask you the domain where the Store is to going run. You must introduce a valid domain because otherwise the Store won't run.
+
+<pre>
+Include a site domain: 
+http://host:port
+</pre>
+
+Later, you will be required to introduce the name of your store instance. You are free to introduce any name that you want. This will be the name used to register your WStore instance in external components such as the Marketplace:
+
+<pre>
+Include a name for your instance: 
+FI-WARE
+</pre>
+
+Then, the script will ask you for a basic e-mail configuration. If you don't want to provide a mail configuration, just type 'n' when asked.
+
+<pre>
+Do you want to include email configuration? [y/n]: 
+<y/n>
+</pre>
+
+If you choose to include the mail configuration, you will be asked for a SMTP server, a mail address, a mail user, and the password associated to that user. This mail configuration will be used as the source address for notifications sent by email. You will be also asked for a requests mail that will be used as the destination mail for user requests asking for the provider role:
+
+<pre>
+Include email smtp server endpoint: 
+{YOUR_SMPT_SERVER}
+Include WStore email: 
+{YOUR_EMAIL_ADDRESS}
+Include WStore email user: 
+{USER_NAME}
+Include WStore email password: 
+{PASSWORD}
+Include WStore provider requests email: 
+{REQUEST_MAIL}
+</pre>
+
+Finally, you must choose the authentication method. You have two possible options: use (1) an identity manager or (2) the Django Authentication System.
+
+<pre>
+Select authentication method: 
+1) Identity manager
+2) WStore
+</pre>
+
+If you choose the identity manager option, you will be asked for the identity manager endpoint, and the basic OAuth2 configuration (Client ID and Client Secret). You can avoid to introduce the basic OAuth2 configuration if you don't have the credentials at that moment. However, in order to start the Store, you need to introduce this information in the settings.py file as explained in the Configuration section. Note that for using this authentication method you must have registered your WStore instance in the identity Manager using the Callback URL explained in the configuration section of this document.
+
+<pre>
+Include Identity manager endpoint:
+{IDM_END_POINT}
+Do you want to include OAuth2 configuration? [y/n]: 
+y
+Include Client id: 
+{CLIENT_ID}
+Include client secret:
+{CLIENT_SECRET}
+</pre>
+
+In you choose the Django Authentication System and you don't have a superuser in the selected database, you will be asked to create a new superuser in order to be able to manage the Store.
+
+<pre>
+Would you like to create one now? (yes/no): yes
+Username (leave blank to use 'basic'): {USERNAME}
+E-mail address: {MAIL_ADDR}
+Password: {PASS}
+Password (again): {PASS} 
+</pre>
+
+If you don't want the wizard to start when the script is executed, you must run the script as follow:
+
+<pre>
+$ ./setup.sh --noinput
+</pre>
 
 ### Database Configuration
 
@@ -356,5 +550,4 @@ Open API specification:
 User and Programmer Guide:
 
 * http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/Store\_-\_W-Store\_-\_User\_and\_Programmer\_Guide
-
 
