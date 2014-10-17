@@ -133,7 +133,7 @@ $ pip2.7 install virtualenv
 $ apt-get install xvfb
 
 #CentOS/RedHat
-$ yum install Xvfb
+$ yum install xorg-x11-server-Xvfb
 </pre>
 
 * It is possible that the setup.sh script fails while installing lxml. See http://lxml.de/installation.html#installation if in trouble installing lxml. You probably have to install the following packages. 

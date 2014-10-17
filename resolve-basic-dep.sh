@@ -100,6 +100,8 @@ enabled=1" > /etc/yum.repos.d/mongodb.repo
         rpm -ivh wkhtmltox-0.12.1_linux-centos6-i386.rpm
     fi
 
+    yum install xorg-x11-server-Xvfb
+
     # Install virtualenv
     pip2.7 install virtualenv
     cd $WORKSPACE
