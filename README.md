@@ -43,6 +43,8 @@ To execute the script run the following command
 
     $ sudo ./resolve-basic-dep.sh 
 
+Following, you can find how to resolve WStore basic dependencies if you do not want to use the script.
+
 #### Debian/Ubuntu
 
 To install Python and pip
@@ -114,7 +116,7 @@ To install wkhtmltopdf get the related rpm for your system from http://wkhtmltop
 
 Once basic dependencies have been resolved, it is possible to install python and Django dependencies using the provided scripts. However, before launching the installation script you should be aware of some aspects:
 
-**NOTE:** If have used the script *resolve-basic-dep.sh* to resolve the basic dependencies you do not need to install the following packages, since they are already installed.
+**NOTE:** If you have used the script *resolve-basic-dep.sh* to resolve the basic dependencies you do not need to install the following packages, since they are already installed.
 
 * This script will create a virtual environment for the project with the corresponding packages, resolve all needed python and django dependencies (This script does not install the basic dependencies such as MongoDB, python, etc), and execute a complete test in order to ensure that WStore is correctly installed. To use this script you need virtualenv2.7 and python 2.7. 
 
@@ -653,9 +655,9 @@ Extra documentation
 
 Open API specification:
 
-* http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/Storei\_Open\_API\_RESTful\_Specification
+* https://forge.fi-ware.org/plugins/mediawiki/wiki/fiware/index.php/Store_Open_RESTful_API_Specification
 
 User and Programmer Guide:
 
-* http://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/Store\_-\_W-Store\_-\_User\_and\_Programmer\_Guide
+* https://forge.fi-ware.org/plugins/mediawiki/wiki/fiware/index.php/Store_-_W-Store_-_User_and_Programmer_Guide
 
