@@ -33,7 +33,9 @@ package management tools provided by your operating system or using the availabl
 
 These packages are available for Linux and Mac OS so WStore should work in those systems. However, the current version of WStore and its installer / installation guide have been tested under Ubuntu 12.04, Ubuntu 13.10, Ubuntu 14.04, CentOS 6.3 and CentOS 6.5. THESE ARE THEREFORE CONSIDERED AS THE SUPPORTED OPERATIVE SYSTEMS. 
 
-**NOTE:** CentOS 6 uses Python 2.6 in the system, since WStore needs Python 2.7 is strongly recommended to use an Ubuntu/Debian distribution.
+**NOTE:** WStore needs Python 2.7 to work; however, CentOS 6 uses Python 2.6 in the system. Although it is possible to install WStore in CentOS 6 (as explained before), it is strongly recommended to use an Ubuntu/Debian distribution.
+
+#### Installing basic dependecies using the script
 
 In order to facilitate the installation of the basic dependencies the script *resolve-basic-dep.sh* has been provided. This script will install the needed packages for both Ubuntu/Debian and CentOS 6 systems. For CentOS systems this script will install Python 2.7 and its tools, without replacing the system Python, making them avalailable as python2.7, pip2.7 and vitualenv2.7.
 
@@ -43,9 +45,11 @@ To execute the script run the following command
 
     $ sudo ./resolve-basic-dep.sh 
 
-Following, you can find how to resolve WStore basic dependencies if you do not want to use the script.
+#### Manually resolving basic dependencies
 
-#### Debian/Ubuntu
+Following, you can find how to resolve WStore basic dependencies if you do not want to use the script. Be aware that some commands require to be executed as root.
+
+##### Debian/Ubuntu
 
 To install Python and pip
 
@@ -60,7 +64,7 @@ To install wkhtmltopdf
     # apt-get install wkhtmltopdf
 
 
-#### CentOS/RedHat
+##### CentOS/RedHat
 
 As mentioned above, CentOS systems include Python 2.6. Replacing this Python version with Python 2.7 may break the system, so it should be installed separately.
 
@@ -110,15 +114,13 @@ To install wkhtmltopdf get the related rpm for your system from http://wkhtmltop
 # rpm -ivh wkhtmltox-0.12.1_linux-centos6-amd64.rpm
 </pre>
 
+#### Resolving extra dependencies
 
-
-### Installing WStore using scripts
-
-Once basic dependencies have been resolved, it is possible to install python and Django dependencies using the provided scripts. However, before launching the installation script you should be aware of some aspects:
+Once basic dependencies have been resolved, it is possible to install python and Django dependencies using the provided scripts (As explained in the next section). However, before launching the installation script you should be aware of some aspects:
 
 **NOTE:** If you have used the script *resolve-basic-dep.sh* to resolve the basic dependencies you do not need to install the following packages, since they are already installed.
 
-* This script will create a virtual environment for the project with the corresponding packages, resolve all needed python and django dependencies (This script does not install the basic dependencies such as MongoDB, python, etc), and execute a complete test in order to ensure that WStore is correctly installed. To use this script you need virtualenv2.7 and python 2.7. 
+* The script used to resolve python dependencies will create a virtual environment for the project with the corresponding packages, so to use this script you need virtualenv2.7 and python 2.7. 
 
 <pre>
 # Ubuntu/Debian
@@ -148,7 +150,13 @@ $ apt-get install libxml2-dev libxslt1-dev zlib1g-dev python-dev
 $ yum install libxml2-devel libxslt-devel zlib-devel python-devel
 </pre>
 
-You can execute the script setup.sh to perform the complete installation. Please note that this script should be run as an user not as root (neither sudo). Executing the script as root will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS. 
+### Installing WStore
+
+#### Installing WStore using scripts
+
+To install WStore the script *setup.sh* has been provided. This script resolve all needed python and django dependencies (This script does not install the basic dependencies such as MongoDB, python, etc), and execute a complete test in order to ensure that WStore is correctly installed.
+
+You can execute the script *setup.sh* to perform the complete installation. Please note that this script should be run as an user not as root (neither sudo). Executing the script as root will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS.
 
     $ ./setup.sh
 
@@ -256,9 +264,9 @@ If you don't want the wizard to start when the script is executed, you must run 
 $ ./setup.sh --noinput
 </pre>
 
-### Manually resolving python dependencies
+#### Manually resolving python dependencies
 
-In case you do not want to use the script *setup.sh*, Python and Django dependencies can be easily installed using [http://www.pip-installer.org/en/latest/installing.html pip]
+In case you do not want to use the script *setup.sh*, Python and Django dependencies can be easily installed pip. Note that if you do not use the provided script, you will need to configure WStore manually as explained in the following section.
 
 It is sugested to create a virtualenv where install Python and Django dependencies.
 
@@ -547,7 +555,7 @@ server has sufficient permissions to write on them. To do so use the following c
     # chmod g+wrX -R <wstore_path>/src/media <wstore_path>/src/wstore/search/indexes <wstore_path>/src/wstore/social/indexes
 
 it is possible to collect all static files in WStore in a single directory using the 
-following command and answering yes when asked.
+following command and answering yes when asked. Be aware of activating the virtualenv if needed as explained in the previous sections.
 
     $ python manage.py collectstatic
 
