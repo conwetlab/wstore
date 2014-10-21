@@ -37,7 +37,7 @@ These packages are available for Linux and Mac OS so WStore should work in those
 
 #### Installing basic dependecies using the script
 
-In order to facilitate the installation of the basic dependencies the script *resolve-basic-dep.sh* has been provided. This script will install the needed packages for both Ubuntu/Debian and CentOS 6 systems. For CentOS systems this script will install Python 2.7 and its tools, without replacing the system Python, making them avalailable as python2.7, pip2.7 and vitualenv2.7.
+In order to facilitate the installation of the basic dependencies the script *resolve-basic-dep.sh* has been provided. This script will install the needed packages for both Ubuntu/Debian and CentOS 6 systems. For CentOS systems, this script will install Python 2.7 and its tools, without replacing the system Python, making them avalailable as python2.7, pip2.7 and vitualenv2.7.
 
 **NOTE:** The script *resolve-basic-dep.sh* may replace some of your system packages, so if you have software with common dependencies. you may want to manually resolve WStore basic dependencies.
 
@@ -348,6 +348,8 @@ $ pip install whoosh
 Note that if the script has been used to resolve WStore python dependencies, they have been installed in a virtual environment that must be activated before running any configuration command (*python manage.py {command}*). To activate the virtualenv execute the following command from the installation directory.
 
     $ source src/virtenv/bin/activate 
+
+Moreover, if you have followed the configuration wizard of the *setup.sh* script you can skip this section. However, it is highly recomended to read it in order to understand the different configuration settings.
 
 ### Database Configuration
 
