@@ -583,10 +583,32 @@ is the name or IP address of the computer on which WStore is installed.
 
 ### Integrating WStore with Apache
 
-if you choose to deploy WStore in Apache, the libapache2-mod-wsgi module must be installed 
-(and so does Apache!). To do so, type the following command: 
+If you choose to deploy WStore in Apache, the *libapache2-mod-wsgi* module must be installed 
+(and so does Apache!). To do so, type the following command in Ubuntu/Debian: 
 
-    $ apt-get install apache2 libapache2-mod-wsgi
+    # apt-get install apache2 libapache2-mod-wsgi
+
+In CentOS 6 systems apache can be installed as
+
+    # yum install -y httpd
+
+In the case of *mod_wsgi* in CentOS 6, it is not possible to directly use the existing package. As explained in previous sections CentOS 6 relies in Python 2.6 to work, while WStore uses Python 2.7. For this reason when mod_wsgi is installed using yum, it uses Python 2.6, causing WStore not working properly over Apache.
+
+To install mod_wsgi using python 2.7 (It suposes that you have installed Python 2.7 as explained in the *Installing basic dependencies* section) use the following commands (For version 4.3.0 of mod_wsgi):
+
+<pre>
+    # yum install -y httpd-devel
+    # wget https://github.com/GrahamDumpleton/mod_wsgi/archive/4.3.0.zip
+    # unzip 4.3.0.zip
+    # cd mod_wsgi-4.3.0/
+    # ./configure --with-python=/usr/local/bin/python2.7
+    # make install
+    # chmod 755 /usr/lib64/httpd/modules/mod_wsgi.so
+</pre>
+
+Finally, turn on mod_wsgi in apache by creating the file */etc/httpd/conf.d/wsgi.conf* and including:
+
+    LoadModule wsgi_module modules/mod_wsgi.so
 
 Then you have to populate the wsgi.py file:
 
