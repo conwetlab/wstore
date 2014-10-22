@@ -57,8 +57,11 @@ elif [[  $DIST == "rhel" ]]; then
     wget --no-check-certificate https://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
     tar xf Python-2.7.6.tar.xz
     cd Python-2.7.6
-    ./configure --prefix=/usr/local
+    ./configure --prefix=/usr/local --enable-shared
     make && make altinstall
+
+    echo "\n/usr/local/lib" >> /etc/ld.so.conf
+    /sbin/ldconfig
 
     # Install python 2.7 setup tools
     cd /opt
