@@ -167,7 +167,7 @@ $ yum install libxml2-devel libxslt-devel zlib-devel python-devel
 
 To install WStore the script *setup.sh* has been provided. This script resolve all needed python and django dependencies (This script does not install the basic dependencies such as MongoDB, python, etc), and execute a complete test in order to ensure that WStore is correctly installed.
 
-You can execute the script *setup.sh* to perform the complete installation. Please note that this script should be run as an user not as root (neither sudo). Executing the script as root will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS.
+You can execute the script *setup.sh* to perform the complete installation. **Please note that this script should be run as an user (no root permissions are needed, although root user is allowed) without using sudo.** Executing the script using sudo will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS.
 
     $ ./setup.sh
 
