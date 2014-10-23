@@ -85,9 +85,20 @@ The next step is to download and compile Python 2.7
 # wget --no-check-certificate https://www.python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
 # tar xf Python-2.7.6.tar.xz
 # cd Python-2.7.6
-# ./configure --prefix=/usr/local
+# ./configure --prefix=/usr/local --enable-shared
 # make && make altinstall
 </pre>
+
+Then, include the line */usr/local/lib* at the end of the file */etc/ld.so.conf*, in a CentOS 6.5 it shoud be similar to:
+
+<pre>
+include ld.so.conf.d/*.conf
+/usr/local/lib
+</pre>
+
+To finish with Python 2.7 installation execute the following command:
+
+    # /sbin/ldconfig
 
 Finally, install Python 2.7 setup tools
 
