@@ -561,11 +561,13 @@ Final Steps
 
 Make sure that the directories wstore\_path/src/media, wstore\_path/src/media/resources, 
 wstore\_path/src/media/bills, wstore\_path/src/wstore/search/indexes  exist, and that the 
-server has sufficient permissions to write on them. To do so use the following commands: 
+server has sufficient permissions to write on them. For example, the following commands give permissions to apache user in a Debian/Ubuntu system: 
 
     # chgrp -R www-data  <wstore_path>/src/media <wstore_path>/src/wstore/search/indexes <wstore_path>/src/wstore/social/indexes
 
     # chmod g+wrX -R <wstore_path>/src/media <wstore_path>/src/wstore/search/indexes <wstore_path>/src/wstore/social/indexes
+
+**Note:** In a CentOS system  the commands are similar but using *apache* instead of *www-data* as group.
 
 it is possible to collect all static files in WStore in a single directory using the 
 following command and answering yes when asked. Be aware of activating the virtualenv if needed as explained in the previous sections.
@@ -660,14 +662,14 @@ application = django.core.handlers.wsgi.WSGIHandler()
 Please, pay attention that you set the right path to the wtore/src directory. 
 
 Finally, add the following lines in the main virtualhost to the Apache's 
-sites-available configuration file, usually located in /etc/apache2/sites-available/default:
+sites-available configuration file, usually located in /etc/apache2/sites-available/default in an Ubuntu/Debian system:
 
     <VirtualHost *:80>
             ...
             ### WStore ###
             WSGIScriptAlias / <path_to_django_wsgi>
             WSGIPassAuthorization On
-            Alias /static <path_to_wstore>/src/static>
+            Alias /static <path_to_wstore>/src/static
             <Location "/static">
                     SetHandler None
                     <IfModule mod_expires.c>
@@ -689,9 +691,30 @@ sites-available configuration file, usually located in /etc/apache2/sites-availa
 Again, pay special attention to the paths to the django wsgi file and the 
 path\_to\_wstore/src/static directory. 
 
+In a CentOS system you may need to create the *sites-enabled* and *sites-available* directories and include them in apache configuration. To do that follow the next steps:
+
+<pre>
+# cd /etc/httpd/
+# mkdir sites-available
+# mkdir sites-enabled
+</pre>
+
+Then edit */etc/httpd/conf/httpd.conf* file and include the following lines at the end of the file
+
+<pre>
+NameVirtualHost *:80
+Include /etc/httpd/sites-enabled/
+</pre>
+
 Once you have the site enabled, restart Apache
 
+<pre>
+    # Ubuntu/Debian
     # service apache2 restart
+
+    # CentOS/RedHat
+    # service httpd restart
+</pre>
 
 Extra documentation
 -------------------
