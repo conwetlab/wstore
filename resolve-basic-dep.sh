@@ -60,7 +60,7 @@ elif [[  $DIST == "rhel" ]]; then
     ./configure --prefix=/usr/local --enable-shared
     make && make altinstall
 
-    echo "\n/usr/local/lib" >> /etc/ld.so.conf
+    echo "/usr/local/lib" >> /etc/ld.so.conf
     /sbin/ldconfig
 
     # Install python 2.7 setup tools
