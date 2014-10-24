@@ -89,7 +89,7 @@ The next step is to download and compile Python 2.7
 # make && make altinstall
 </pre>
 
-Then, include the line */usr/local/lib* at the end of the file */etc/ld.so.conf*, in a CentOS 6.5 it shoud be similar to:
+Then, include the line */usr/local/lib* at the end of the file */etc/ld.so.conf*, In a CentOS 6.5 it shoud be similar to:
 
 <pre>
 include ld.so.conf.d/*.conf
@@ -167,7 +167,7 @@ $ yum install libxml2-devel libxslt-devel zlib-devel python-devel
 
 To install WStore the script *setup.sh* has been provided. This script resolve all needed python and django dependencies (This script does not install the basic dependencies such as MongoDB, python, etc), and execute a complete test in order to ensure that WStore is correctly installed.
 
-You can execute the script *setup.sh* to perform the complete installation. **Please note that this script should be run as an user (no root permissions are needed, although root user is allowed) without using sudo.** Executing the script using sudo will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS.
+You can execute the script *setup.sh* to perform the complete installation. **Please note that this script should be run as an user without using sudo.(no root permissions are needed, although root user is allowed).** Executing the script using sudo will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS.
 
     $ ./setup.sh
 
@@ -610,13 +610,13 @@ In the case of *mod_wsgi* in CentOS 6, it is not possible to directly use the ex
 To install mod_wsgi using python 2.7 (It suposes that you have installed Python 2.7 as explained in the *Installing basic dependencies* section) use the following commands (For version 4.3.0 of mod_wsgi):
 
 <pre>
-    # yum install -y httpd-devel
-    # wget https://github.com/GrahamDumpleton/mod_wsgi/archive/4.3.0.zip
-    # unzip 4.3.0.zip
-    # cd mod_wsgi-4.3.0/
-    # ./configure --with-python=/usr/local/bin/python2.7
-    # make install
-    # chmod 755 /usr/lib64/httpd/modules/mod_wsgi.so
+# yum install -y httpd-devel
+# wget https://github.com/GrahamDumpleton/mod_wsgi/archive/4.3.0.zip
+# unzip 4.3.0.zip
+# cd mod_wsgi-4.3.0/
+# ./configure --with-python=/usr/local/bin/python2.7
+# make install
+# chmod 755 /usr/lib64/httpd/modules/mod_wsgi.so
 </pre>
 
 Finally, turn on mod_wsgi in apache by creating the file */etc/httpd/conf.d/wsgi.conf* and including:
@@ -661,8 +661,34 @@ application = django.core.handlers.wsgi.WSGIHandler()
 
 Please, pay attention that you set the right path to the wtore/src directory. 
 
-Finally, add the following lines in the main virtualhost to the Apache's 
-sites-available configuration file, usually located in /etc/apache2/sites-available/default in an Ubuntu/Debian system:
+The next step consist on creating the virtualhost for WStore. To do that, it is possible to modify the default site configuration file (located in */etc/apache2/sites-available/* in an Ubuntu/Debian system or in */etc/httpd/sites-available* in a CentOS/RedHat system) or  create a new site configuration file (i.e wstore.conf).
+
+In a CentOS system you may need to create the *sites-enabled* and *sites-available* directories and include them in the apache configuration. To do that follow the next steps:
+
+<pre>
+# cd /etc/httpd/
+# mkdir sites-available
+# mkdir sites-enabled
+</pre>
+
+Then edit */etc/httpd/conf/httpd.conf* file and include the following lines at the end of the file
+
+<pre>
+NameVirtualHost *:80
+Include /etc/httpd/sites-enabled/
+</pre>
+
+Once you have the site enabled, restart Apache
+
+<pre>
+# Ubuntu/Debian
+# service apache2 restart
+
+# CentOS/RedHat
+# service httpd restart
+</pre>
+
+To configure WStore virtualhost add the following lines to the site configuration file:
 
     <VirtualHost *:80>
             ...
@@ -689,32 +715,26 @@ sites-available configuration file, usually located in /etc/apache2/sites-availa
     </VirtualHost>
 
 Again, pay special attention to the paths to the django wsgi file and the 
-path\_to\_wstore/src/static directory. 
+path\_to\_wstore/src/static directory.
 
-In a CentOS system you may need to create the *sites-enabled* and *sites-available* directories and include them in apache configuration. To do that follow the next steps:
+Moreover, it is important that the apache user (www-data in Ubuntu/Debian, apache in CentOS/RedHat) could access the directory where WStore is deployed. Be aware of configuring the directory permissions so this user can access wstore directory and go through the previous directories in the path (x permission).
 
-<pre>
-# cd /etc/httpd/
-# mkdir sites-available
-# mkdir sites-enabled
-</pre>
+Finally, depending on the version of apache you are using, you may need to explicitly allow the access to the directory where WStore is deployed in the configuration of the virtualhost. To do that, add the following lines to your virtualhost:
 
-Then edit */etc/httpd/conf/httpd.conf* file and include the following lines at the end of the file
+Apache version < 2.4
 
-<pre>
-NameVirtualHost *:80
-Include /etc/httpd/sites-enabled/
-</pre>
+    <Directory /path/to/wstore/src>
+        Order deny,allow
+        Allow from all
+    </Directory>
 
-Once you have the site enabled, restart Apache
+Apache version 2.4+
 
-<pre>
-    # Ubuntu/Debian
-    # service apache2 restart
-
-    # CentOS/RedHat
-    # service httpd restart
-</pre>
+    <Directory /path/to/wstore/src>
+        Order deny,allow
+        Allow from all
+        Require all granted
+    </Directory>
 
 Extra documentation
 -------------------
