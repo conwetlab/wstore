@@ -112,7 +112,7 @@ class MarketAdaptorTestCase(TestCase):
 
     def test_authentication(self):
 
-        marketplace = 'http://authentication_marketplace/'
+        marketplace = 'http://authentication_marketplace/FiwareMarketplace/v1/'
         fake_urllib = FakeUrllib2()
 
         marketadaptor.urllib2 = fake_urllib
@@ -130,7 +130,7 @@ class MarketAdaptorTestCase(TestCase):
 
     def test_authentcation_error(self):
 
-        marketplace = 'http://authentication_error/'
+        marketplace = 'http://authentication_error/FiwareMarketplace/v1/'
         fake_urllib = FakeUrllib2()
 
         marketadaptor.urllib2 = fake_urllib
