@@ -731,8 +731,6 @@ Apache version < 2.4
 Apache version 2.4+
 
     <Directory /path/to/wstore/src>
-        Order deny,allow
-        Allow from all
         Require all granted
     </Directory>
 
