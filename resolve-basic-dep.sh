@@ -109,7 +109,8 @@ enabled=1" > /etc/yum.repos.d/mongodb.repo
     pip2.7 install virtualenv
     cd $WORKSPACE
 else
-    echo "Your system is not supported by this script" 1&>2
+    echo "Your system is not supported by this script. This script supports Ubuntu/Debian and CentOS"
+    echo "Tested under: Ubuntu 12.04, Ubuntu 13.10, Ubuntu 14.04, CentOS 6.3, CentOS 6.5"
     exit 1
 fi
 
