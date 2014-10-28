@@ -39,7 +39,7 @@ These packages are available for Linux and Mac OS so WStore should work in those
 
 In order to facilitate the installation of the basic dependencies the script *resolve-basic-dep.sh* has been provided. This script will install the needed packages for both Ubuntu/Debian and CentOS 6 systems. For CentOS systems, this script will install Python 2.7 and its tools, without replacing the system Python, making them avalailable as python2.7, pip2.7 and vitualenv2.7.
 
-**NOTE:** The script *resolve-basic-dep.sh* may replace some of your system packages, so if you have software with common dependencies. you may want to manually resolve WStore basic dependencies.
+**NOTE:** The script *resolve-basic-dep.sh* may replace some of your system packages, so if you have software with common dependencies you may want to manually resolve WStore basic dependencies.
 
 To execute the script run the following command
 
@@ -169,10 +169,6 @@ To install WStore the script *setup.sh* has been provided. This script resolve a
 
 Be aware os having MongoDB up and running before executing the script. If MongoDB fails when starting you may need to configure the smallfiles option (see http://docs.mongodb.org/manual/reference/configuration-options/).
 
-You can execute the script *setup.sh* to perform the complete installation. **Please note that this script should be run as an user without using sudo.(no root permissions are needed, although root user is allowed).** Executing the script using sudo will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS.
-
-    $ ./setup.sh
-
 <pre>
 # Ubuntu/Debian
 $ service mongodb start
@@ -180,6 +176,11 @@ $ service mongodb start
 # CentOS/RedHat
 $ service mongod start
 </pre>
+
+You can execute the script *setup.sh* to perform the complete installation. **Please note that this script should be run as an user without using sudo (no root permissions are needed, although root user is allowed).** Executing the script using sudo will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS.
+
+    $ ./setup.sh
+
 
 The setup.sh script will also offers you a wizard to ease the configuration process. This wizard will generate the settings.py file for you, so if you follow the wizard, you can avoid following the Configuration section (unless you want to introduce some specific configuration). However, it is highly recommended to read the Configuration section for a better understanding of the parameters. To use this wizard, just type 'y' when asked:
 
