@@ -44,7 +44,9 @@ class MarketAdaptor(object):
         # submit field is required
         credentials = urlencode({'j_username': self._user, 'j_password': self._passwd, 'submit': 'Submit'})
         headers = {'content-type': 'application/x-www-form-urlencoded'}
-        request = MethodRequest("POST", urljoin(self._marketplace_uri, "/FiwareMarketplace/j_spring_security_check"), credentials, headers)
+
+        market_path = urlparse(self._marketplace_uri)[2].split('/')[1]
+        request = MethodRequest("POST", urljoin(self._marketplace_uri, "/" + market_path + "/j_spring_security_check"), credentials, headers)
 
         parsed_url = None
         try:

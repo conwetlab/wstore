@@ -14,7 +14,22 @@ fi
 
 # Activate Virtualenv
 cd $WORKSPACE/src
-virtualenv-2.7 virtenv
+
+# Check if virtualenv is installed
+set +e
+hash virtualenv-2.7 &> /dev/null
+VIRT27=true
+if [ $? -eq 1 ]; then
+    VIRT27=false
+fi
+set -e
+
+if [ !$VIRT27 ]; then
+    virtualenv virtenv
+else
+    virtualenv-2.7 virtenv
+fi
+
 source virtenv/bin/activate
 
 $WORKSPACE/python-dep-install.sh

@@ -6,4 +6,9 @@ if [[ -z "$DISPLAY" ]]; then
     export DISPLAY=":98"
 fi
 
-/usr/bin/wkhtmltopdf "$1" "$2"
+/usr/local/bin/wkhtmltopdf "$1" "$2"
+
+if [ $? -ne 0 ]; then
+    /usr/bin/wkhtmltopdf "$1" "$2"
+fi
+
