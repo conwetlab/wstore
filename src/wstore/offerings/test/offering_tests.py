@@ -336,6 +336,7 @@ class OfferingCreationTestCase(TestCase):
         (OFFERING_USDL_DATA_INVALID_4, None, _fill_image, ValueError, 'Invalid USDL info: The pricing field must define a pricing model'),
         (OFFERING_USDL_DATA_INVALID_5, None, _fill_image, ValueError, 'Invalid USDL info: Missing price for single payment model'),
         (OFFERING_USDL_DATA_INVALID_6, None, _fill_image, ValueError, 'Invalid USDL info: Price cannot be empty in single payment models'),
+        (OFFERING_USDL_DATA_INVALID_7, None, _fill_image, ValueError, 'Invalid USDL info: Invalid pricing model'),
     ])
     def test_offering_creation(self, offering_data, expected_data, data_filler=None, err_type=None, err_msg=None):
 

@@ -449,3 +449,21 @@ OFFERING_USDL_DATA_INVALID_6 = {
         }
     }
 }
+
+OFFERING_USDL_DATA_INVALID_7 = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_info': {
+        'description': 'Test usdl description',
+        'pricing': {
+            'price_model': 'pay_per_use',
+            'price': 5
+        }
+    }
+}
