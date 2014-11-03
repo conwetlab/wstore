@@ -1273,6 +1273,12 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.TagManager = MagicMock()
         offerings_management.TagManager.return_value = self.tag_mock
 
+        offerings_management.Context = MagicMock()
+        self.context_obj = MagicMock()
+        self.context_obj.newest = []
+        self.context_obj.top_rated = []
+        offerings_management.Context.objects.all.return_value = [self.context_obj]
+
     def tearDown(self):
         reload(offerings_management)
         TestCase.tearDown(self)
@@ -1280,6 +1286,18 @@ class OfferingDeletionTestCase(TestCase):
     def _deleted(self, offering):
         offering.state = 'deleted'
         offering.save()
+
+    def _open_offering(self, offering):
+        offering.open = True
+        offering.save()
+
+    def _latest_top(self, offering):
+        self.context_obj.newest = [offering.pk, 'primary1', 'primary2', 'primary3']
+        self.context_obj.top_rated = [offering.pk, 'primary1', 'primary2', 'primary3', 'primary4', 'primary5', 'primary6', 'primary7']
+
+    def _top_latest(self, offering):
+        self.context_obj.newest = [offering.pk, 'primary1', 'primary2', 'primary3', 'primary4', 'primary5', 'primary6', 'primary7']
+        self.context_obj.top_rated = [offering.pk, 'primary1', 'primary2', 'primary3']
 
     def _add_resources(self, offering):
         # Mock resources
@@ -1295,6 +1313,9 @@ class OfferingDeletionTestCase(TestCase):
         ('uploaded_resources', 'test_offering', True, True, _add_resources),
         ('published', 'test_offering2'),
         ('published_market', 'test_offering3'),
+        ('published_open', 'test_offering3', True, False, _open_offering),
+        ('published_newest', 'test_offering3', False, False, _latest_top),
+        ('published_toprated', 'test_offering3', False, False, _top_latest),
         ('deleted', 'test_offering3', False, False, _deleted, PermissionDenied, 'The offering is already deleted'),
     ])
     def test_delete_offering(self, name, offering_name, deleted=False, del_resources=False, side_effect=None, err_type=None, err_msg=None):
@@ -1316,6 +1337,9 @@ class OfferingDeletionTestCase(TestCase):
             # Not error expected
             self.assertEquals(error, None)
 
+            # Assert no included in the context lists
+            self.assertFalse(offering.pk in self.context_obj.newest)
+            self.assertFalse(offering.pk in self.context_obj.top_rated)
             if deleted:
                 # Check index calls if the offering must have been deleted
                 self.assertEquals(len(Offering.objects.filter(name=offering_name)), 0)
