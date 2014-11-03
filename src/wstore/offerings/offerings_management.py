@@ -334,6 +334,38 @@ def _create_basic_usdl(usdl_info):
     return usdl
 
 
+def _validate_offering_info(offering_info):
+    # Validate USDL mandatory fields
+    if not 'description' in offering_info or not 'pricing' in offering_info:
+        raise ValueError('Invalid USDL info: Missing a required field')
+
+    # Validate that description field is not empty
+    if not offering_info['description']:
+        raise ValueError('Invalid USDL info: Description field cannot be empty')
+
+    # Validate legal fields
+    if 'legal' in offering_info:
+        if not 'title' in offering_info['legal'] or not 'text' in offering_info['legal']:
+            raise ValueError('Invalid USDL info: Title and text fields are required if providing legal info')
+
+        if not offering_info['legal']['title'] or not offering_info['legal']['text']:
+            raise ValueError('Invalid USDL info: Title and text fields cannot be empty in legal info')
+
+    # Validate pricing fields
+    if not 'price_model' in offering_info['pricing']:
+        raise ValueError('Invalid USDL info: The pricing field must define a pricing model')
+
+    if offering_info['pricing']['price_model'] != 'free' and offering_info['pricing']['price_model'] != 'single_payment':
+        raise ValueError('Invalid USDL info: Invalid pricing model')
+
+    if offering_info['pricing']['price_model'] == 'single_payment':
+        if not 'price' in offering_info['pricing']:
+            raise ValueError('Invalid USDL info: Missing price for single payment model')
+
+        if not offering_info['pricing']['price']:
+            raise ValueError('Invalid USDL info: Price cannot be empty in single payment models')
+
+
 # Creates a new offering including the media files and
 # the repository uploads
 @OfferingRollback
@@ -479,12 +511,7 @@ def create_offering(provider, json_data):
     # If the USDL is going to be created
     elif 'offering_info' in json_data:
 
-        # Validate USDL info
-        if not 'description' in json_data['offering_info'] or not 'pricing' in json_data['offering_info']:
-            raise ValueError('Invalid USDL info')
-
-        if not json_data['offering_info']['description']:
-            raise ValueError('Description field cannot be empty in offering info')
+        _validate_offering_info(json_data['offering_info'])
 
         offering_info = json_data['offering_info']
         offering_info['image_url'] = data['image_url']
