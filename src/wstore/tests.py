@@ -18,8 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
-from wstore.offerings.offering_tests import *
-from wstore.offerings.resource_tests import *
+from wstore.offerings.test.offering_tests import *
+from wstore.offerings.test.resource_tests import *
 from wstore.admin.markets.tests import *
 from wstore.admin.repositories.tests import *
 from wstore.contracting.tests import *
