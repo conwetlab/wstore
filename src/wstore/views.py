@@ -39,7 +39,7 @@ from wstore.models import Purchase, Resource, Offering
 from wstore.offerings.offerings_management import get_offering_info
 
 
-MAIN_PORTAL_URL = "http://lab.fi-ware.org/"
+MAIN_PORTAL_URL = "http://help.lab.fi-ware.org/"
 CLOUD_PORTAL_URL = "http://cloud.lab.fi-ware.org/"
 MASHUP_PORTAL_URL = "http://mashup.lab.fi-ware.org/"
 ACCOUNT_PORTAL_URL = "https://account.lab.fi-ware.org/"
