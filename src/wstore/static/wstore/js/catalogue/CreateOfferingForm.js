@@ -235,7 +235,7 @@
         $('#upload-help').attr('data-content', helpMsg);
         $('#usdl-container').empty();
         cg = $('<div class="control-group"></div>').appendTo('#usdl-container')
-        $('<label></label>').text('USDL URL').appendTo(cg);
+        $('<label></label>').text('USDL URL*').appendTo(cg);
         ctrls = $('<div class="controls"></div>').appendTo(cg);
         $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo(ctrls);
     };
