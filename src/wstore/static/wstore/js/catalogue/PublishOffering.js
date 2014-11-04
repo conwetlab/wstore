@@ -28,7 +28,7 @@
         request.marketplaces = [];
 
         for (var i = 0; i < markets.length; i++) {
-            if($('#' + markets[i].name).prop('checked')) {
+            if($('#' + markets[i].name.replace(' ', '-') + i).prop('checked')) {
                 request.marketplaces.push(markets[i].name);
             }
         };
@@ -70,7 +70,7 @@
             formContent = $('<div></div>');
 
             for (var i = 0; i < markets.length; i++) {
-                $('<input></input>').attr('type', 'checkbox').attr('value', markets[i].name).attr('id', markets[i].name).appendTo(formContent);
+                $('<input></input>').attr('type', 'checkbox').attr('value', markets[i].name).attr('id',markets[i].name.replace(' ', '-') + i).appendTo(formContent);
                 $('<label></label>').attr('for', markets[i].name).text(markets[i].name).appendTo(formContent);
                 $('<label></label>').text(markets[i].host).appendTo(formContent);
             };
