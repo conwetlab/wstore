@@ -229,7 +229,7 @@ class TagManagementTestCase(TestCase):
     @parameterized.expand([
         ('', '11111'),
         ('not_indexes', '11111','Indexes has not been created', 'wstore/test/ix'),
-        ('not_offering', '44444','Document for the given offering does not exists')
+        ('not_offering', '44444','No tag indexes has been created for the given offering')
     ])
     def test_delete_tag_document(self, name, pk, err_msg=None, ix_path=None):
         # Create mock

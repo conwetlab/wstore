@@ -1322,6 +1322,8 @@ class OfferingDeletionTestCase(TestCase):
 
         # Get offering
         offering = Offering.objects.get(name=offering_name)
+        tagged = len(offering.tags) > 0
+
         pk = offering.pk
         if side_effect:
             side_effect(self, offering)
@@ -1344,7 +1346,10 @@ class OfferingDeletionTestCase(TestCase):
                 # Check index calls if the offering must have been deleted
                 self.assertEquals(len(Offering.objects.filter(name=offering_name)), 0)
                 self.se_object.remove_index.assert_called_with(offering)
-                self.tag_mock.delete_tag.assert_called_with(offering)
+                if tagged:
+                    self.tag_mock.delete_tag.assert_called_with(offering)
+                else:
+                    self.assertEquals(self.tag_mock.delete_tag.call_count, 0)
                 if del_resources:
                     self.res_obj.offerings.remove.assert_called_with(pk)
             else:

@@ -331,7 +331,7 @@ class UpdateIndexTestCase(TestCase):
         (_update_rated, '61000aba8e05ac2115111111', QUERY_RATED),
         (_update_content, '61000aba8e05ac2115166666', QUERY_CONTENT),
         (_update_purchased, '61000aba8e05ac2115122222', QUERY_PURCH, True),
-        (_remove_index, '', None, False, Exception, 'The index does not exists')
+        (_remove_index, '', None, False, Exception, 'The index does not exist')
     ])
     def test_update_index(self, update_method, offering, query_, owned=False, err_type=None, err_msg=None):
 

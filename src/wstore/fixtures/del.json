@@ -50,7 +50,7 @@
             "marketplaces": [],
             "rating": "0",
             "comments": [],
-            "tags": [],
+            "tags": ["tag1", "tag2"],
             "image_url": "/media/test_organization__test_offering1__1.0/image.png",
             "related_images": [],
             "description_url": "http://testrepository.com/v1/rep/storeOfferingsCollection/test_organization__test_offering__1.0",
