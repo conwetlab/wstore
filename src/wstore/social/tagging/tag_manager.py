@@ -95,7 +95,7 @@ class TagManager():
 
             index_writer = index.writer()
             if not len(searcher.search(query)):
-                raise ValueError('Document for the given offering does not exists')
+                raise ValueError('No tag indexes has been created for the given offering')
 
             index_writer.delete_by_term('id', unicode(offering.pk))
             index_writer.commit()

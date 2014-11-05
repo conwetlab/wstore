@@ -782,20 +782,27 @@ def _remove_offering(offering, se):
     # If the offering has media files delete them
     dir_name = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
-    files = os.listdir(path)
 
-    for f in files:
-        file_path = os.path.join(path, f)
-        os.remove(file_path)
+    try:
+        files = os.listdir(path)
 
-    os.rmdir(path)
+        for f in files:
+            file_path = os.path.join(path, f)
+            os.remove(file_path)
+
+        os.rmdir(path)
+    except OSError as e:
+        # An OS error means that offering files
+        # does not exist so continue with the deletion
+        pass
 
     # Remove the search index
     se.remove_index(offering)
 
     # Remove the offering ID from the tag indexes
-    tm = TagManager()
-    tm.delete_tag(offering)
+    if len(offering.tags):
+        tm = TagManager()
+        tm.delete_tag(offering)
 
     # Remove the offering pk from the bound resources
     for res in offering.resources:

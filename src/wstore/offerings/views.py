@@ -215,7 +215,7 @@ class OfferingEntry(Resource):
         try:
             delete_offering(offering)
         except Exception, e:
-            return build_response(request, 400, e.message)
+            return build_response(request, 400, unicode(e))
 
         return build_response(request, 204, 'No content')
 
