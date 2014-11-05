@@ -123,7 +123,7 @@ class SearchEngine():
         """
 
         if not os.path.exists(self._index_path) or os.listdir(self._index_path) == []:
-            raise Exception('The index does not exists')
+            raise Exception('The index does not exist')
 
         index = open_dir(self._index_path)
 
@@ -156,7 +156,7 @@ class SearchEngine():
         Remove the document associated with an offering
         """
         if not os.path.exists(self._index_path) or os.listdir(self._index_path) == []:
-            raise Exception('The index does not exists')
+            raise Exception('The index does not exist')
 
         index = open_dir(self._index_path)
         index_writer = index.writer()
