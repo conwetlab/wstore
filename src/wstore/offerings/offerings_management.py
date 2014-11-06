@@ -754,9 +754,21 @@ def update_offering(offering, data):
 
 def publish_offering(offering, data):
 
-    for market in data['marketplaces']:
+    # Validate data
+    if not 'marketplaces' in data:
+        raise ValueError('Publication error: missing required field, marketplaces')
 
-        m = Marketplace.objects.get(name=market)
+    # Validate the state of the offering
+    if not offering.state == 'uploaded':
+        raise PermissionDenied('Publication error: The offering ' + offering.name + ' ' + offering.version +' cannot be published')
+
+    # Publish the offering in the selected marketplaces
+    for market in data['marketplaces']:
+        try:
+            m = Marketplace.objects.get(name=market)
+        except:
+            raise ValueError('Publication error: The marketplace ' + market + ' does not exist')
+
         market_adaptor = MarketAdaptor(m.host)
         info = {
             'name': offering.name,

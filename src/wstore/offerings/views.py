@@ -248,7 +248,7 @@ class PublishEntry(Resource):
             except HTTPError:
                 return build_response(request, 502, 'Bad gateway')
             except Exception, e:
-                return build_response(request, 400, e.message)
+                return build_response(request, 400, unicode(e))
 
         # Append the new offering to the newest list
         site = get_current_site(request)
