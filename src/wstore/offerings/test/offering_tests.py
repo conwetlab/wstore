@@ -1070,71 +1070,46 @@ class OfferingPublicationTestCase(TestCase):
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
 
-    def test_basic_publication(self):
-        data = {
+    @parameterized.expand([
+        ('basic', {
             'marketplaces': []
-        }
-        offering = Offering.objects.get(name='test_offering1')
-        offerings_management.publish_offering(offering, data)
-
-        offering = Offering.objects.get(name='test_offering1')
-        self.assertEqual(offering.state, 'published')
-        self.se_object.update_index.assert_called_with(offering)
-
-    def test_publication_marketplace(self):
-        data = {
+        }),
+        ('marketplace', {
             'marketplaces': ['test_market']
-        }
-        offering = Offering.objects.get(name='test_offering1')
-        offerings_management.publish_offering(offering, data)
-
-        offering = Offering.objects.get(name='test_offering1')
-        self.assertEqual(offering.state, 'published')
-        self.assertEqual(len(offering.marketplaces), 1)
-        market = Marketplace.objects.get(pk=offering.marketplaces[0])
-        self.assertEqual(market.name, 'test_market')
-        self.se_object.update_index.assert_called_with(offering)
-
-    def test_publication_not_existing_marketplace(self):
-        data = {
-            'marketplaces': ['test_marketplace']
-        }
-        offering = Offering.objects.get(name='test_offering1')
-        error = False
-        try:
-            offerings_management.publish_offering(offering, data)
-        except:
-            error = True
-
-        self.assertTrue(error)
-
-    def test_publication_some_marketplaces(self):
-        data = {
+        }),
+        ('multiple_market', {
             'marketplaces': ['test_market', 'test_market2']
-        }
-        offering = Offering.objects.get(name='test_offering1')
-        offerings_management.publish_offering(offering, data)
-
-        offering = Offering.objects.get(name='test_offering1')
-        self.assertEqual(offering.state, 'published')
-        self.assertEqual(len(offering.marketplaces), 2)
-        market = Marketplace.objects.get(pk=offering.marketplaces[0])
-        self.assertEqual(market.name, 'test_market')
-        market = Marketplace.objects.get(pk=offering.marketplaces[1])
-        self.assertEqual(market.name, 'test_market2')
-
-    def test_publication_invalid_JSON(self):
-        data = {
+        }),
+        ('not_existing', {
+            'marketplaces': ['test_marketplace']
+        }, True),
+        ('invalid', {
             'marketpla': ['test_market']
-        }
+        }, True)
+    ])
+    def test_offering_publication(self, name, data, error=False):
         offering = Offering.objects.get(name='test_offering1')
-        error = False
+
+        error_found = False
         try:
             offerings_management.publish_offering(offering, data)
         except:
-            error = True
+            error_found = True
 
-        self.assertTrue(error)
+        self.assertEquals(error_found, error)
+        if not error:
+            offering = Offering.objects.get(name='test_offering1')
+            self.assertEqual(offering.state, 'published')
+
+            self.assertEquals(len(offering.marketplaces), len(data['marketplaces']))
+
+            for m_id in offering.marketplaces:
+                market = Marketplace.objects.get(pk=m_id)
+                self.assertTrue(market.name in data['marketplaces'])
+
+            self.se_object.update_index.assert_called_with(offering)
+        else:
+            self.assertEquals(offering.state, 'uploaded')
 
 
 class OfferingBindingTestCase(TestCase):
