@@ -1074,6 +1074,11 @@ class OfferingPublicationTestCase(TestCase):
         offering.state = 'published'
         offering.save()
 
+    def _open(self, offering):
+        offering.open = True
+        offering.resources = []
+        offering.save()
+
     @parameterized.expand([
         ('basic', {
             'marketplaces': []
@@ -1092,7 +1097,10 @@ class OfferingPublicationTestCase(TestCase):
         }, None, ValueError, 'Publication error: missing required field, marketplaces'),
         ('invalid_state', {
             'marketplaces': []
-        }, _published, PermissionDenied, 'Publication error: The offering test_offering1 1.0 cannot be published')
+        }, _published, PermissionDenied, 'Publication error: The offering test_offering1 1.0 cannot be published'),
+        ('open_without_assets', {
+            'marketplaces': []
+        }, _open, PermissionDenied, 'Publication error: Open offerings cannot be published if they do not contain at least a digital asset (resource or application)')
     ])
     def test_offering_publication(self, name, data, side_effect=None, err_type=None, err_msg=None):
         offering = Offering.objects.get(name='test_offering1')

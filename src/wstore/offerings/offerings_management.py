@@ -762,6 +762,12 @@ def publish_offering(offering, data):
     if not offering.state == 'uploaded':
         raise PermissionDenied('Publication error: The offering ' + offering.name + ' ' + offering.version +' cannot be published')
 
+    # Validate the offering has enough content to be published
+    # Open offerings cannot be published in they do not contain
+    # digital assets (applications or resources)
+    if offering.open and not len(offering.resources) and not len(offering.applications):
+        raise PermissionDenied('Publication error: Open offerings cannot be published if they do not contain at least a digital asset (resource or application)')
+
     # Publish the offering in the selected marketplaces
     for market in data['marketplaces']:
         try:
