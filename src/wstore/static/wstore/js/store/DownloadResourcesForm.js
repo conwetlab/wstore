@@ -47,18 +47,19 @@
 
         }
         // Show resources
-        $('<h2></h2>').text('Resources').appendTo('.modal-body');
-        for (var i = 0; i < resources.length; i++) {
-            var p = $('<p></p>');
-            $('<a></a>').text(resources[i].name).click((function(res) {
-                return function () {
-                    window.open(res.link);
-                };
-            })(resources[i])).appendTo(p);
-            p.appendTo('.modal-body');
+        if (resources.length > 0) {
+            $('<h2></h2>').text('Resources').appendTo('.modal-body');
+            for (var i = 0; i < resources.length; i++) {
+                var p = $('<p></p>');
+                $('<a></a>').text(resources[i].name).click((function(res) {
+                    return function () {
+                        window.open(res.link);
+                    };
+                })(resources[i])).appendTo(p);
+                p.appendTo('.modal-body');
 
+            }
         }
-
     };
 
 })(); 
