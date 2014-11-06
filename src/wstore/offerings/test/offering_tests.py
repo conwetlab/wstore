@@ -1070,6 +1070,10 @@ class OfferingPublicationTestCase(TestCase):
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
 
+    def _published(self, offering):
+        offering.state = 'published'
+        offering.save()
+
     @parameterized.expand([
         ('basic', {
             'marketplaces': []
@@ -1082,22 +1086,29 @@ class OfferingPublicationTestCase(TestCase):
         }),
         ('not_existing', {
             'marketplaces': ['test_marketplace']
-        }, True),
+        }, None, ValueError, 'Publication error: The marketplace test_marketplace does not exist'),
         ('invalid', {
             'marketpla': ['test_market']
-        }, True)
+        }, None, ValueError, 'Publication error: missing required field, marketplaces'),
+        ('invalid_state', {
+            'marketplaces': []
+        }, _published, PermissionDenied, 'Publication error: The offering test_offering1 1.0 cannot be published')
     ])
-    def test_offering_publication(self, name, data, error=False):
+    def test_offering_publication(self, name, data, side_effect=None, err_type=None, err_msg=None):
         offering = Offering.objects.get(name='test_offering1')
 
-        error_found = False
+        if side_effect:
+            side_effect(self, offering)
+
+        error_found = None
         try:
             offerings_management.publish_offering(offering, data)
-        except:
-            error_found = True
+        except Exception as e:
+            error_found = e
 
-        self.assertEquals(error_found, error)
-        if not error:
+        if not err_type:
+            self.assertEquals(error_found, None)
+
             offering = Offering.objects.get(name='test_offering1')
             self.assertEqual(offering.state, 'published')
 
@@ -1109,7 +1120,8 @@ class OfferingPublicationTestCase(TestCase):
 
             self.se_object.update_index.assert_called_with(offering)
         else:
-            self.assertEquals(offering.state, 'uploaded')
+            self.assertTrue(isinstance(error_found, err_type))
+            self.assertEquals(unicode(error_found), err_msg)
 
 
 class OfferingBindingTestCase(TestCase):
