@@ -109,7 +109,7 @@ class OrganizationCollection(Resource):
             payment_info = {}
             if 'payment_info' in data:
                 if not is_valid_credit_card(data['payment_info']['number']):
-                    raise Exception()
+                    raise Exception('Invalid credit card info')
 
                 payment_info = {
                     'type': data['payment_info']['type'],
@@ -136,7 +136,7 @@ class OrganizationCollection(Resource):
             # If the user is an admin, include it depending on if she has created
             # the organization as an user
             if user_included:
-                user = User.objects.get(username=request.user.username)
+                user = request.user
                 organization = Organization.objects.get(name=data['name'])
                 user.userprofile.organizations.append({
                     'organization': organization.pk,
