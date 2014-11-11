@@ -18,6 +18,8 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import json
 from mock import MagicMock
 from nose_parameterized import parameterized
@@ -391,9 +393,15 @@ class OrganizationCollectionTestCase(TestCase):
         # Create request mock
         self.request = MagicMock()
         self.request.user.is_staff = True
+        self.request.user.pk = '54321'
+        self.request.user.userprofile.organizations = []
 
         # Create organization object mock
         views.Organization = MagicMock()
+        self.created_org = MagicMock()
+        self.created_org.managers = []
+        self.created_org.pk = "12345"
+        views.Organization.objects.get.return_value = self.created_org
 
     @parameterized.expand([
     ({
@@ -450,6 +458,9 @@ class OrganizationCollectionTestCase(TestCase):
     def _not_active(self):
         self.request.user.is_active = False
 
+    def _revoke_staff(self):
+        self.request.user.is_staff = False
+
     @parameterized.expand([
     ({
         'name': 'test_org1',
@@ -469,6 +480,12 @@ class OrganizationCollectionTestCase(TestCase):
         }
     }, (201, 'Created', 'correct'), True, _not_found),
     (BASIC_ORGANIZATION, (201, 'Created', 'correct')),
+    ({
+      'name': 'test_org1'
+      }, (201, 'Created', 'correct')),
+    ({
+      'name': 'test_org1'
+      }, (201, 'Created', 'correct'), True, _revoke_staff, True),
     ({ 
        'notification_url': 'http://notificationurl.com'
     }, (400, 'Invalid JSON content', 'error'), False),
@@ -478,9 +495,24 @@ class OrganizationCollectionTestCase(TestCase):
        'notification_url': 'http:notificationurl.com'
     }, (400, 'Enter a valid URL', 'error'), False , _not_found),
     (BASIC_ORGANIZATION, (403, 'The user has not been activated', 'error'), False , _not_active),
+    ({
+      'name': 'test_org1%&',
+      'notification_url': 'http://notification.com'
+      }, (400, 'Enter a valid name.', 'error'), False),
+    ({
+      'name': 'test_org1',
+      'payment_info': {
+            'number': 'invalid',
+            'type': 'visa',
+            'expire_year': '2018',
+            'expire_month': '5',
+            'cvv2': '111'
+        }
+      }, (400, 'Invalid credit card info', 'error'), False),
     ])
-    def test_organization_creation(self, data, exp_resp, created=True, side_effect=None):
+    def test_organization_creation(self, data, exp_resp, created=True, side_effect=None, user_included=False):
 
+        #import ipdb; ipdb.set_trace()
         # Load request data
         self.request.raw_post_data = json.dumps(data)
 
@@ -509,16 +541,29 @@ class OrganizationCollectionTestCase(TestCase):
             if 'payment_info' in data:
                 pay = data['payment_info']
 
-            views.Organization.objects.create.assert_called_with(
+            if not 'notification_url' in data:
+                data['notification_url'] = ''
+
+            views.Organization.objects.create.assert_called_once_with(
                 name=data['name'],
                 notification_url=data['notification_url'],
                 tax_address=tax,
                 payment_info=pay,
                 private=False
             )
-
-    def _revoke_staff(self):
-        self.request.user.is_staff = False
+            # Check if the user has beed included in the organization
+            if user_included:
+                # Check if the user has beed included in the organization
+                self.assertEquals(len(self.request.user.userprofile.organizations), 1)
+                self.assertEquals(self.request.user.userprofile.organizations[0], {
+                    'organization': self.created_org.pk,
+                    'roles': []
+                })
+                views.Organization.objects.get.assert_called_once_with(name=data['name'])
+                self.assertEquals(len(self.created_org.managers), 1)
+                self.assertEquals(self.created_org.managers[0], self.request.user.pk)
+            else:
+                self.assertEquals(len(self.request.user.userprofile.organizations), 0)
 
     @parameterized.expand([
     (False, ),
