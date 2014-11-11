@@ -430,7 +430,7 @@ def create_offering(provider, json_data):
         if json_data['notification_url'] == 'default':
             notification_url = organization.notification_url
             if not notification_url:
-                raise ValueError('No default URL defined for the organization')
+                raise ValueError('There is not a default notification URL defined for the organization ' + organization.name + '. To configure a default notification URL provide it in the settings menu')
         else:
             # Check the notification URL
             if not is_valid_url(json_data['notification_url']):
