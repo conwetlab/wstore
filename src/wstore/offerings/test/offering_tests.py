@@ -322,7 +322,7 @@ class OfferingCreationTestCase(TestCase):
         (OFFERING_INVALID_JSON, None, _fill_basic_images, ValueError, 'Missing required fields'),
         (BASIC_OFFERING, None, _fill_image_err, Exception, 'Malformed USDL'),
         (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering already exists'),
-        (OFFERING_NOTIFY_DEFAULT, None, _fill_basic_images, ValueError, 'No default URL defined for the organization'),
+        (OFFERING_NOTIFY_DEFAULT, None, _fill_basic_images, ValueError, 'There is not a default notification URL defined for the organization test_organization. To configure a default notification URL provide it in the settings menu'),
         (OFFERING_NOTIFY_URL_INVALID, None, _fill_basic_images, ValueError, "Invalid notification URL format: It doesn't seem to be an URL"),
         (OFFERING_URL, None, _fill_existing_url, ValueError, 'The provided USDL description is already registered'),
         (OFFERING_NO_USDL, None, _fill_image, Exception, 'No USDL description provided'),
