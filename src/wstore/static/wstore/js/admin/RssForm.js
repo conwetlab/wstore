@@ -214,12 +214,11 @@
      */
     RssForm.prototype.currencyHandler = function currencyHandler(currencies) {
         var def;
-        var currs = currencies.allowed_currencies;
         // Create currency select
-        for (var i = 0; i < currs.length; i++) {
-            $('<option></option>').text(currs[i].currency).attr('value', currs[i].currency).appendTo('#currency');
-            if (currs[i]['default']) {
-                def = currs[i].currency;
+        for (var i = 0; i < currencies.length; i++) {
+            $('<option></option>').text(currencies[i].currency).attr('value', currencies[i].currency).appendTo('#currency');
+            if (currencies[i]['default']) {
+                def = currencies[i].currency;
             }
         }
         // Set default value
