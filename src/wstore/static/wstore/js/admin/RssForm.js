@@ -110,7 +110,7 @@
                             validation.errFields = [$('#perTransaction').parent().parent()];
                         } else {
                             validation.msg += ' and invalid expenditure limit';
-                            validation.errFields.push($('#rss-name').parent().parent());
+                            validation.errFields.push($('#perTransaction').parent().parent());
                         }
                         invalid = true;
                     } else {
@@ -128,6 +128,52 @@
                 validation.data.limits.currency = $('#currency').val();
             }
             
+        }
+        // Get default models
+        if (validation.valid) {
+            var i = 0;
+            var models = ['single-payment', 'subscription', 'use'];
+            var invalid = false;
+            var filled = 0;
+
+            while (i < models.length && !invalid) {
+                // Check if the field has been filled
+                if ($.trim($('#' + models[i]).val())) {
+                    var percent = $.trim($('#' + models[i]).val());
+
+                    if (!$.isNumeric(percent) || ($.isNumeric(percent) && (parseFloat(percent) > 100 || parseFloat(percent) < 0))) {
+                        if (validation.valid) {
+                            validation.valid = false;
+                            validation.msg = 'Invalid revenue model: Models must be a number between 0 and 100';
+                            validation.errFields = [$('#' + models[i]).parent().parent()];
+                        } else {
+                            validation.msg += ' and invalid revenue model: Models must be a number between 0 and 100';
+                            validation.errFields = [$('#' + models[i]).parent().parent()];
+                        }
+                    } else {
+                        if (!validation.data.models) {
+                            validation.data.models = [];
+                        }
+                        validation.data.models.push({
+                            'class': models[i],
+                            'percentage': percent
+                        });
+                    }
+                    // Increment the number of filled fields
+                    filled++;
+                }
+                i++;
+            }
+            if (filled > 0 && filled != 3) {
+                if (validation.valid) {
+                    validation.valid = false;
+                    validation.msg = 'All the revenue models are required';
+                    validation.errFields = [$('#use').parent().parent()];
+                } else {
+                    validation.msg += ' and all the revenue models are required';
+                    validation.errFields = [$('#use').parent().parent()];
+                }
+            }
         }
         return validation;
     };
