@@ -32,7 +32,9 @@ from wstore.store_commons.utils.http import build_response, supported_request_mi
 authentication_required, identity_manager_required
 from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
 from wstore.rss_adaptor.model_manager import ModelManager
+from wstore.rss_adaptor.utils.rss_errors import get_error_message
 from wstore.models import RSS, Context
+from django.contrib.messages.api import get_messages
 
 
 def _make_expenditure_request(manager, method, user):
@@ -73,13 +75,13 @@ def _make_expenditure_request(manager, method, user):
         else:
             error = True
             code = 502
-            msg = 'The RSS has failed creating the expenditure limits'
+            msg = get_error_message(json.loads(e.read())['exceptionId'])
 
     # Not an HTTP error
     except Exception as e:
         error = True
         code = 400
-        msg = e.message
+        msg = unicode(e)
 
     return (error, code, msg)
 
