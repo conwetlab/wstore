@@ -223,7 +223,7 @@
 
         // Append RSSs
         for (var i = 0; i < rss.length; i++) {
-            var editIcon;
+            var editIcon, extLink, td1 = $('<td></td>'), td2 = $('<td></td>');
 
             var template = $.tmpl('elementTemplate', {
                 'name': rss[i].name,
@@ -235,9 +235,18 @@
                 return function() {
                     self.fillRSSInfo(rssEntry);
                 };
-            })(this, rss[i]));
+            })(this, rss[i])).appendTo(td1);
 
-            template.find('#elem-info').after(editIcon);
+            template.find('#elem-info').after(td1);
+
+            // Include RSS redirect button
+            extLink = $('<i></i>').addClass('icon-external-link').click((function(self, rssEntry) {
+                return function() {
+                    window.open(rssEntry.host + '/fiware-rss/settlement/settlement.html','_blank');
+                };
+            })(this, rss[i])).appendTo(td2);
+
+            template.find('#elem-info').after(td2);
 
             // Include delete listener
             template.find('.delete').click((function(self, rssEntry) {
