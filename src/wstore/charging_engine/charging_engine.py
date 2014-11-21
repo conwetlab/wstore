@@ -966,6 +966,8 @@ class ChargingEngine:
             contract.pending_sdrs = []
             # Generate the invoice
             self._generate_invoice(price, accounting, 'use')
+            related_model['charges'] = accounting['charges']
+            related_model['deductions'] = accounting['deductions']
 
         # The contract is saved before the CDR creation to prevent
         # that a transmission error in RSS request causes the
