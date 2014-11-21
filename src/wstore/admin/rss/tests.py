@@ -222,7 +222,7 @@ class RSSViewTestCase(TestCase):
         'limits': {
             'currency': 'EUR'
         }
-    }, False, (400, 'Invalid JSON content', 'error'), False, {}),
+    }, False, (400, 'RSS creation error: Missing a required field', 'error'), False, {}),
     ({
         'name': 'testrss',
         'host': 'http://rss.test.com/'
@@ -230,15 +230,15 @@ class RSSViewTestCase(TestCase):
     ({
         'name': 'testrss$',
         'host': 'http://rss.test.com/'
-    }, False, (400, 'Invalid name format', 'error'), False, {}),
+    }, False, (400, 'RSS creation error: Invalid name format', 'error'), False, {}),
     ({
         'name': 'testrss',
         'host': 'invalid_host'
-    }, False, (400, 'Invalid URL format', 'error'), False, {}),
+    }, False, (400, 'RSS creation error: Invalid URL format', 'error'), False, {}),
     ({
         'name': 'testrss',
         'host': 'http://rss.test.com/'
-    }, False, (400, 'Invalid JSON content', 'error'), False, {}, _existing_rss),
+    }, False, (409, 'RSS creation error: The RSS instance already exists', 'error'), False, {}, _existing_rss),
     ({
         'name': 'testrss',
         'host': 'http://rss.test.com/',
