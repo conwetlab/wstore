@@ -19,13 +19,29 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 from django.db import models
-from djangotoolbox.fields import ListField, DictField
+from djangotoolbox.fields import ListField, DictField, EmbeddedModelField
 
+
+class RevenueModel(models.Model):
+    """
+    This model is used to store revenue sharing models used
+    by the Revenue Sharing and Settlement system
+    """
+    revenue_class = models.CharField(max_length=50)
+    percentage = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __unicode__(self):
+        return self.revenue_class + ' ' + unicode(self.percentage)
 
 class RSS(models.Model):
+    """
+    This model is used to store the needed information to interact 
+    with Revenue Sharing and Settlement system instances
+    """
     name = models.CharField(max_length=50)
     host = models.CharField(max_length=500)
     expenditure_limits = DictField()
+    revenue_models = ListField(EmbeddedModelField(RevenueModel))
     correlation_number = models.IntegerField(default=0)
     pending_cdrs = ListField()
     in_use = models.BooleanField(default=False)

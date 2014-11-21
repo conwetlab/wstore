@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 
 import json
 from urllib2 import HTTPError
+from decimal import Decimal
 
 from django.http import HttpResponse
 
@@ -33,7 +34,7 @@ authentication_required, identity_manager_required
 from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
 from wstore.rss_adaptor.model_manager import ModelManager
 from wstore.rss_adaptor.utils.rss_errors import get_error_message
-from wstore.models import RSS, Context
+from wstore.models import RSS, RevenueModel, Context
 from django.contrib.messages.api import get_messages
 
 
@@ -167,7 +168,8 @@ class RSSCollection(Resource):
             response.append({
                 'name': rss.name,
                 'host': rss.host,
-                'limits': rss.expenditure_limits
+                'limits': rss.expenditure_limits,
+                'models': [{'class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss.revenue_models]
             })
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
@@ -184,20 +186,20 @@ class RSSCollection(Resource):
         data = json.loads(request.raw_post_data)
 
         if not 'name' in data or not 'host':
-            return build_response(request, 400, 'Invalid JSON content')
+            return build_response(request, 400, 'RSS creation error: Missing a required field')
 
         # Check name regex
         if not is_valid_id(data['name']):
-            return build_response(request, 400, 'Invalid name format')
+            return build_response(request, 400, 'RSS creation error: Invalid name format')
 
         # Check url regex
         if not is_valid_url(data['host']):
-            return build_response(request, 400, 'Invalid URL format')
+            return build_response(request, 400, 'RSS creation error: Invalid URL format')
 
         # Check if the information provided is not already registered
         if len(RSS.objects.filter(name=data['name'])) > 0 or \
         len(RSS.objects.filter(host=data['host'])) > 0:
-            return build_response(request, 400, 'Invalid JSON content')
+            return build_response(request, 409, 'RSS creation error: The RSS instance already exists')
 
         limits = {}
         cont = Context.objects.all()[0]
@@ -239,18 +241,27 @@ class RSSCollection(Resource):
                 'percentage': 30.0
             }]
 
+        # Build revenue models
+        db_revenue_models = [] 
+        for model in sharing_models:
+            db_revenue_models.append(RevenueModel(
+                revenue_class=model['class'],
+                percentage=Decimal(model['percentage'])
+            ))
+
         # Create the new entry
         rss = RSS.objects.create(
             name=data['name'],
             host=data['host'],
-            expenditure_limits=limits)
+            expenditure_limits=limits,
+            revenue_models=db_revenue_models
+        )
 
         exp_manager = ExpenditureManager(rss, request.user.userprofile.access_token)
         # Create default expenditure limits
         call_result = _make_rss_request(exp_manager, exp_manager.set_provider_limit, request.user)
 
         if call_result[0]:
-            # Remove created RSS entry
             rss.delete()
             # Return error response
             return build_response(request, call_result[1], call_result[2])
@@ -291,7 +302,8 @@ class RSSEntry(Resource):
             response = {
                 'name': rss_model.name,
                 'host': rss_model.host,
-                'limits': rss_model.expenditure_limits
+                'limits': rss_model.expenditure_limits,
+                'models': [{'class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss.revenue_models]
             }
         except:
             return build_response(request, 400, 'Invalid request')
