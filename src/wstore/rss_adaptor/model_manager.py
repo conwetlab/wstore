@@ -32,7 +32,11 @@ class ModelManager(RSSManager):
     def __init__(self, rss, credentials):
         RSSManager.__init__(self, rss, credentials)
 
-    def create_revenue_model(self, model_info, provider=None):
+    def _manage_rs_model(self, provider, model_info, method):
+        """
+        Private method that performs revenue sharing model actions involving
+        sending the rs model to the Revenue Sharing and Settlement system
+        """
         # If the provider is not specified use default provider
         if not provider:
             provider = settings.STORE_NAME.lower()
@@ -50,7 +54,7 @@ class ModelManager(RSSManager):
         if not isinstance(model_info['percentage'], float):
             raise TypeError('Invalid type for percentage field')
 
-        if model_info['percentage'] < 9 or model_info['percentage'] > 100:
+        if model_info['percentage'] < 0 or model_info['percentage'] > 100:
             raise ValueError('The percentage must be a number between 0 and 100')
 
         # Build revenue sharing model
@@ -64,7 +68,32 @@ class ModelManager(RSSManager):
         endpoint = urljoin(self._rss.host, '/fiware-rss/rss/rsModelsMgmt')
 
         # Make the request
-        self._make_request('POST', endpoint, rs_model)
+        self._make_request(method, endpoint, rs_model)
+        self._refresh_rss()
+
+    def create_revenue_model(self, model_info, provider=None):
+        """
+        Creates a revenue sharing model in the Revenue Sharing and
+        Settlement system
+        """
+        self._manage_rs_model(provider, model_info, 'POST')
+
+    def update_revenue_model(self, model_info, provider=None):
+        """
+        Updates a revenue sharing model in the Revenue Sharing and
+        Settlement system
+        """
+        self._manage_rs_model(provider, model_info, 'PUT')
+
+    def delete_provider_models(self, provider=None):
+        if not provider:
+            provider = settings.STORE_NAME.lower()
+
+        # Build the url
+        endpoint = urljoin(self._rss.host, '/fiware-rss/rss/rsModelsMgmt?appProviderId=' + provider)
+
+        # Make the request
+        self._make_request('DELETE', endpoint)
         self._refresh_rss()
 
     def get_revenue_models(self, provider=None):

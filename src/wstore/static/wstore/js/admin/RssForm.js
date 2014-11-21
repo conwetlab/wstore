@@ -182,7 +182,7 @@
      * Display the RSS form and fill the RSS entry info for updating
      */
     RssForm.prototype.fillRSSInfo = function fillRSSInfo(rss) {
-        var limits;
+        var limits, models;
 
         // Paint the form
         this.paintForm();
@@ -205,6 +205,13 @@
         if (limits.monthly) {
             $('#monthly').val(limits.monthly);
         }
+
+        // Fill models
+        models = rss.models;
+        for (var i = 0; i < models.length; i++) {
+            $('#' + models[i].revenue_class).val(models[i].percentage);
+        }
+
         // Change register button by an update button
         $('#elem-submit').val('Update').unbind('click').click((function(evnt) {
             evnt.preventDefault();

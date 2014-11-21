@@ -121,6 +121,7 @@ def _check_revenue_models(models):
     """
     Check the revenue sharing models provided in the request
     """
+
     fixed_models = []
     found_models = []
     for model in models:
@@ -135,12 +136,10 @@ def _check_revenue_models(models):
             found_models.append(model['class'])
 
         # Check percentage type
-        if not isinstance(model['percentage'], float) and not isinstance(model['percentage'], int)\
-        and ((isinstance(model['percentage'], unicode) or isinstance(model['percentage'], str))\
-        and not model['percentage'].isdigit()):
-            raise TypeError('Invalid revenue sharing model: Invalid percentage type')
-        else:
+        try:
             model['percentage'] = float(model['percentage'])
+        except:
+            raise TypeError('Invalid revenue sharing model: Invalid percentage type')
 
         # Check percentage value
         if model['percentage'] < 0 or model['percentage'] > 100:
@@ -169,7 +168,7 @@ class RSSCollection(Resource):
                 'name': rss.name,
                 'host': rss.host,
                 'limits': rss.expenditure_limits,
-                'models': [{'class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss.revenue_models]
+                'models': [{'revenue_class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss.revenue_models]
             })
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
@@ -303,7 +302,7 @@ class RSSEntry(Resource):
                 'name': rss_model.name,
                 'host': rss_model.host,
                 'limits': rss_model.expenditure_limits,
-                'models': [{'class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss.revenue_models]
+                'models': [{'revenue_class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss.revenue_models]
             }
         except:
             return build_response(request, 400, 'Invalid request')
@@ -330,6 +329,13 @@ class RSSEntry(Resource):
         if call_result[0]:
             return build_response(request, call_result[1], call_result[2])
 
+        # Delete rs models
+        model_manager = ModelManager(rss_model, request.user.userprofile.access_token)
+        call_result = _make_rss_request(model_manager, model_manager.delete_provider_models, request.user)
+
+        if call_result[0]:
+            return build_response(request, call_result[1], call_result[2])
+
         # Delete rss model
         rss_model.delete()
         return build_response(request, 204, 'No content')
@@ -341,7 +347,6 @@ class RSSEntry(Resource):
         """
         Makes a partial update, only name, limits and default selection
         """
-
         # Check if the user is staff
         if not request.user.is_staff:
             return build_response(request, 403, 'Forbidden')
@@ -378,6 +383,14 @@ class RSSEntry(Resource):
         if 'limits' in data:
             limits = _check_limits(data['limits'])
 
+        sharing_models = []
+        if 'models' in data:
+            try:
+                sharing_models = _check_revenue_models(data['models'])
+            except Exception as e:
+                return build_response(request, 400, unicode(e))
+
+        # Update expenditure limits
         if limits:
             old_limits = rss_model.expenditure_limits
             rss_model.expenditure_limits = limits
@@ -390,6 +403,28 @@ class RSSEntry(Resource):
                 # Reset expenditure limits
                 rss_model.expenditure_limits = old_limits
                 return build_response(request, call_result[1], call_result[2])
+
+        # Update revenue sharing models
+        if len(sharing_models):
+            rss_model.revenue_models = []
+            model_manager = ModelManager(rss_model, request.user.userprofile.access_token)
+
+            # Update the models
+            for model in sharing_models:
+                revenue_model = RevenueModel(
+                    revenue_class=model['class'],
+                    percentage=Decimal(model['percentage'])
+                )
+
+                def call_model_creation():
+                    model_manager.update_revenue_model(model)
+
+                call_result = _make_rss_request(model_manager, call_model_creation, request.user)
+
+                if call_result[0]:
+                    return build_response(request, call_result[1], call_result[2])
+                else:
+                    rss_model.revenue_models.append(revenue_model)
 
         # Update credentials
         rss_model.access_token = request.user.userprofile.access_token
