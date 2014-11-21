@@ -146,7 +146,14 @@ class RSSViewTestCase(TestCase):
 
     def _rss_failure(self):
         set_mock = MagicMock()
-        set_mock.set_provider_limit.side_effect = HTTPError('http://rss.test.com', 500, 'Unauthorized', None, None)
+        http_error = HTTPError('http://rss.test.com', 500, 'Unauthorized', None, None)
+        http_error.read = MagicMock()
+        http_error.read.return_value = json.dumps({
+            'exceptionId': 'SVC1006'
+        })
+
+        set_mock.set_provider_limit.side_effect = http_error
+
         self.views.ExpenditureManager = MagicMock()
         self.views.ExpenditureManager.return_value = set_mock
 
@@ -250,7 +257,7 @@ class RSSViewTestCase(TestCase):
     ({
         'name': 'testrss',
         'host': 'http://rss.test.com/'
-    }, False, (502, 'The RSS has failed creating the expenditure limits', 'error'), False, {}, _rss_failure),
+    }, False, (502, 'The current instance of WStore is not registered in the Revenue Sharing System, so it is not possible to access RSS APIs. Please contact with the administrator of the RSS.', 'error'), False, {}, _rss_failure),
     ({
         'name': 'testrss',
         'host': 'http://rss.test.com/',
