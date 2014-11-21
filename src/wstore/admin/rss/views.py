@@ -37,7 +37,7 @@ from wstore.models import RSS, Context
 from django.contrib.messages.api import get_messages
 
 
-def _make_expenditure_request(manager, method, user):
+def _make_rss_request(manager, method, user):
     """
     Makes requests to the expenditure manager while
     manages the refresh of the access token
@@ -247,7 +247,7 @@ class RSSCollection(Resource):
 
         exp_manager = ExpenditureManager(rss, request.user.userprofile.access_token)
         # Create default expenditure limits
-        call_result = _make_expenditure_request(exp_manager, exp_manager.set_provider_limit, request.user)
+        call_result = _make_rss_request(exp_manager, exp_manager.set_provider_limit, request.user)
 
         if call_result[0]:
             # Remove created RSS entry
@@ -263,7 +263,7 @@ class RSSCollection(Resource):
             def call_model_creation():
                 model_manager.create_revenue_model(model)
 
-            call_result = _make_expenditure_request(model_manager, call_model_creation, request.user)
+            call_result = _make_rss_request(model_manager, call_model_creation, request.user)
 
             if call_result[0] and not model_created:
                 rss.delete()
@@ -313,7 +313,7 @@ class RSSEntry(Resource):
 
         # Delete provider limits
         exp_manager = ExpenditureManager(rss_model, request.user.userprofile.access_token)
-        call_result = _make_expenditure_request(exp_manager, exp_manager.delete_provider_limit, request.user)
+        call_result = _make_rss_request(exp_manager, exp_manager.delete_provider_limit, request.user)
 
         if call_result[0]:
             return build_response(request, call_result[1], call_result[2])
@@ -372,7 +372,7 @@ class RSSEntry(Resource):
             rss_model.save()
             # Make the update request
             exp_manager = ExpenditureManager(rss_model, request.user.userprofile.access_token)
-            call_result = _make_expenditure_request(exp_manager, exp_manager.set_provider_limit, request.user)
+            call_result = _make_rss_request(exp_manager, exp_manager.set_provider_limit, request.user)
 
             if call_result[0]:
                 # Reset expenditure limits

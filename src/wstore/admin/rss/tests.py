@@ -383,7 +383,7 @@ class RSSViewTestCase(TestCase):
         self.request.raw_post_data = None
 
     def _make_limit_failure(self):
-        self.views._make_expenditure_request.return_value = (True, 502, 'RSS failure')
+        self.views._make_rss_request.return_value = (True, 502, 'RSS failure')
 
     @parameterized.expand([
     ({
@@ -444,8 +444,8 @@ class RSSViewTestCase(TestCase):
         self.views.ExpenditureManager = MagicMock()
         self.views.ExpenditureManager.return_value = exp_object
         # Mock _make_requests
-        self.views._make_expenditure_request = MagicMock()
-        self.views._make_expenditure_request.return_value = (False, None, None)
+        self.views._make_rss_request = MagicMock()
+        self.views._make_rss_request.return_value = (False, None, None)
 
         self.views._check_limits = MagicMock()
         self.views._check_limits.return_value = {
@@ -470,7 +470,7 @@ class RSSViewTestCase(TestCase):
         if not error and 'limits' in data:
             # Check calls
             self.views._check_limits.assert_called_with(data['limits'])
-            self.views._make_expenditure_request.assert_called_with(exp_object, exp_object.set_provider_limit, self.user)
+            self.views._make_rss_request.assert_called_with(exp_object, exp_object.set_provider_limit, self.user)
 
     def test_rss_retrieving(self):
         # Create mocks
@@ -560,8 +560,8 @@ class RSSViewTestCase(TestCase):
     ])
     def test_rss_deletion(self, name, resp, side_effect=None):
         # create mocks
-        self.views._make_expenditure_request = MagicMock()
-        self.views._make_expenditure_request.return_value = (False, None, None)
+        self.views._make_rss_request = MagicMock()
+        self.views._make_rss_request.return_value = (False, None, None)
 
         exp_man = MagicMock()
         self.views.ExpenditureManager = MagicMock()
