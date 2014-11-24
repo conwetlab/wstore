@@ -20,6 +20,7 @@
 
 import json
 import types
+from decimal import Decimal
 from mock import MagicMock
 from nose_parameterized import parameterized
 from urllib2 import HTTPError
@@ -156,6 +157,29 @@ class RSSViewTestCase(TestCase):
 
         self.views.ExpenditureManager = MagicMock()
         self.views.ExpenditureManager.return_value = set_mock
+
+    def _generate_models(self, revenue_models=None):
+        result = []
+
+        if not revenue_models:
+            revenue_models = [{
+                'class': 'single-payment',
+                'percentage': '10'
+            }, {
+                'class': 'subscription',
+                'percentage': 20
+            }, {
+                'class': 'use',
+                'percentage': '30.00'
+            }]
+
+        # Build the expected revenue models
+        for model in revenue_models:
+            result.append(models.RevenueModel(
+                revenue_class=model['class'],
+                percentage=Decimal(model['percentage'])
+            ))
+        return result
 
     @parameterized.expand([
     ({
@@ -370,7 +394,12 @@ class RSSViewTestCase(TestCase):
         # have been created
         if created:
             # Check rss call
-            self.views.RSS.objects.create.assert_called_with(name=data['name'], host=data['host'], expenditure_limits=expected_request)
+            model_info = None
+            if 'models' in data:
+                model_info = data['models']
+
+            revenue_model = self._generate_models(model_info)
+            self.views.RSS.objects.create.assert_called_with(name=data['name'], host=data['host'], expenditure_limits=expected_request, revenue_models=revenue_model)
             self.assertEquals(self.rss_object.access_token, self.user.userprofile.access_token)
         else:
             self.views.RSS.objects.delete.assert_called_once()
@@ -517,6 +546,7 @@ class RSSViewTestCase(TestCase):
     (True,)
     ])
     def test_rss_retrieving_entry(self, failure):
+
         # Create mocks
         if not failure:
             rss_1 = MagicMock()
