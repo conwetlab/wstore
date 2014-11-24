@@ -123,7 +123,7 @@ class PayPalConfirmation(Resource):
             # build the payment client
             client = payment_client(purchase)
             client.end_redirection_payment(token, payer_id)
-        
+
             charging_engine = ChargingEngine(purchase)
             accounting = None
             if 'accounting' in pending_info:
@@ -136,7 +136,7 @@ class PayPalConfirmation(Resource):
                 'title': 'Payment Canceled',
                 'message': 'Your payment has been canceled. An error occurs or the timeout has finished, if you want to acquire the offering purchase it again in WStore.'
             }
-            return render(request, 'store/paypal_template.html', context)
+            return render(request, 'err_msg.html', context)
 
         # Check if is the first payment
         if len(purchase.contract.charges) == 1:
@@ -164,7 +164,7 @@ class PayPalConfirmation(Resource):
             'title': 'Payment Confirmed',
             'message': 'Your payment has been received. To download the resources and the invoice go to the offering details page.'
         }
-        return render(request, 'store/paypal_template.html', context)
+        return render(request, 'err_msg.html', context)
 
 
 class PayPalCancelation(Resource):
@@ -193,4 +193,4 @@ class PayPalCancelation(Resource):
             'title': 'Payment Canceled',
             'message': 'Your payment has been canceled. If you want to acquire the offering purchase it again in WStore.'
         }
-        return render(request, 'store/paypal_template.html', context)
+        return render(request, 'err_msg.html', context)
