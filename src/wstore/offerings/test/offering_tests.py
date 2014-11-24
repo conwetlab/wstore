@@ -911,6 +911,12 @@ class OfferingPaginationTestCase(TestCase):
         offerings_management.USDLParser = FakeUsdlParser
         super(OfferingPaginationTestCase, cls).setUpClass()
 
+    def _check_offerings(self, off_list, expected):
+        self.assertEquals(len(off_list), len(expected))
+
+        for off in off_list:
+            self.assertTrue(off['name'] in expected)
+
     def test_basic_retrieving_pagination(self):
 
         pagination = {
@@ -928,11 +934,7 @@ class OfferingPaginationTestCase(TestCase):
         user.userprofile.save()
         offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
 
-        self.assertEqual(len(offerings), 3)
-
-        self.assertEqual(offerings[0]['name'], 'test_offering1')
-        self.assertEqual(offerings[1]['name'], 'test_offering2')
-        self.assertEqual(offerings[2]['name'], 'test_offering3')
+        self._check_offerings(offerings, ['test_offering1', 'test_offering2', 'test_offering3'])
 
         pagination = {
             'skip': '4',
@@ -941,13 +943,7 @@ class OfferingPaginationTestCase(TestCase):
 
         offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
 
-        self.assertEqual(len(offerings), 5)
-
-        self.assertEqual(offerings[0]['name'], 'test_offering4')
-        self.assertEqual(offerings[1]['name'], 'test_offering5')
-        self.assertEqual(offerings[2]['name'], 'test_offering6')
-        self.assertEqual(offerings[3]['name'], 'test_offering7')
-        self.assertEqual(offerings[4]['name'], 'test_offering8')
+        self._check_offerings(offerings, ['test_offering4', 'test_offering5', 'test_offering6', 'test_offering7', 'test_offering8'])
 
     def test_retrieving_pagination_half_page(self):
 
@@ -966,11 +962,7 @@ class OfferingPaginationTestCase(TestCase):
         user.userprofile.save()
         offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination, sort='name')
 
-        self.assertEqual(len(offerings), 3)
-
-        self.assertEqual(offerings[0]['name'], 'test_offering7')
-        self.assertEqual(offerings[1]['name'], 'test_offering8')
-        self.assertEqual(offerings[2]['name'], 'test_offering9')
+        self._check_offerings(offerings, ['test_offering7', 'test_offering8', 'test_offering9'])
 
     def test_retrieving_pagination_invalid_limit(self):
         pagination = {
