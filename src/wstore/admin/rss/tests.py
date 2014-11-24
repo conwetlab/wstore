@@ -181,6 +181,11 @@ class RSSViewTestCase(TestCase):
             ))
         return result
 
+    def _model_failure(self):
+        model_obj = MagicMock(name="ModelManager")
+        model_obj.create_revenue_model.side_effect = Exception('The RSS has failed creating the models')
+        views.ModelManager.return_value = model_obj
+
     @parameterized.expand([
     ({
         'name': 'testrss',
@@ -274,6 +279,10 @@ class RSSViewTestCase(TestCase):
         'name': 'testrss',
         'host': 'http://rss.test.com/'
     }, False, (401, "You don't have access to the RSS instance requested", 'error'), False, {}, _unauthorized),
+    ({
+        'name': 'testrss',
+        'host': 'http://rss.test.com/'
+    }, False, (400, "The RSS has failed creating the models", 'error'), False, {}, _model_failure),
     ({
         'name': 'testrss',
         'host': 'http://rss.test.com/'
