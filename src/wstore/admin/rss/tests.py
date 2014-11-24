@@ -21,7 +21,7 @@
 import json
 import types
 from decimal import Decimal
-from mock import MagicMock
+from mock import MagicMock, call
 from nose_parameterized import parameterized
 from urllib2 import HTTPError
 
@@ -431,6 +431,23 @@ class RSSViewTestCase(TestCase):
             'weekly': 100.0
         }
     }, (200, 'OK', 'correct'), False),
+    ({
+        'name': 'test',
+        'limits': {
+            'currency': 'EUR',
+            'weekly': 100.0
+        },
+        'models': [{
+            'class': 'single-payment',
+            'percentage': 20
+        }, {
+            'class': 'subscription',
+            'percentage': 30
+        }, {
+            'class': 'use',
+            'percentage': 50
+        }]
+    }, (200, 'OK', 'correct'), False),
     ({}, (200, 'OK', 'correct'), False),
     ({
         'name': 'test',
@@ -481,6 +498,24 @@ class RSSViewTestCase(TestCase):
         exp_object.set_provider_limit = MagicMock()
         self.views.ExpenditureManager = MagicMock()
         self.views.ExpenditureManager.return_value = exp_object
+
+        if 'models' in data:
+            # Mock model manager
+            model_obj = MagicMock()
+            self.views.ModelManager = MagicMock(name="ModelManager")
+            self.views.ModelManager.return_value = model_obj
+            self.views._check_revenue_models = MagicMock()
+            self.views._check_revenue_models.return_value = [{
+                'class': 'single-payment',
+                'percentage': 20.0
+            }, {
+                'class': 'subscription',
+                'percentage': 30.0
+            }, {
+                'class': 'use',
+                'percentage': 50.0
+            }]
+
         # Mock _make_requests
         self.views._make_rss_request = MagicMock()
         self.views._make_rss_request.return_value = (False, None, None)
@@ -505,10 +540,18 @@ class RSSViewTestCase(TestCase):
         self.assertEquals(val['message'], resp[1])
         self.assertEquals(val['result'], resp[2])
 
-        if not error and 'limits' in data:
-            # Check calls
-            self.views._check_limits.assert_called_with(data['limits'])
-            self.views._make_rss_request.assert_called_with(exp_object, exp_object.set_provider_limit, self.user)
+        if not error:
+            calls = 0
+            if 'limits' in data:
+                # Check calls
+                self.views._check_limits.assert_called_with(data['limits'])
+                calls = calls + 1
+
+            if 'models' in data:
+                self.views._check_revenue_models.assert_called_with(data['models'])
+                calls = calls + len(data['models'])
+
+            self.assertEquals(self.views._make_rss_request.call_count, calls)
 
     def test_rss_retrieving(self):
         # Create mocks
