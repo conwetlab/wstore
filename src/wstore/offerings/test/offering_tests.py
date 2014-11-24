@@ -868,37 +868,53 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
 
         offerings = offerings_management.get_offerings(user)
         self.assertEqual(len(offerings), 3)
-        self.assertEqual(offerings[0]['name'], 'test_offering1')
-        self.assertEqual(offerings[0]['version'], '1.0')
-        self.assertEqual(offerings[0]['state'], 'purchased')
-        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
-        components = offerings[0]['offering_description']['pricing']['price_plans'][0]['price_components']
-        self.assertEqual(components[0]['title'], 'price component 1')
-        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
-        self.assertEqual(components[1]['title'], 'price component 2')
-        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
+        found = 0
 
-        self.assertEqual(offerings[1]['name'], 'test_offering2')
-        self.assertEqual(offerings[1]['version'], '1.1')
-        self.assertEqual(offerings[1]['state'], 'purchased')
-        self.assertEqual(offerings[1]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[1]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[1]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
-        components = offerings[1]['offering_description']['pricing']['price_plans'][0]['price_components']
-        self.assertEqual(components[0]['title'], 'price component 1')
-        self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
-        self.assertEqual(components[1]['title'], 'price component 2')
-        self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
+        for off in offerings:
+            if off['name'] == 'test_offering1':
+                self.assertEqual(off['name'], 'test_offering1')
+                self.assertEqual(off['version'], '1.0')
+                self.assertEqual(off['state'], 'purchased')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
+                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
+                for comp in components:
+                    if comp['title'] == 'price component 1':
+                        self.assertEqual(comp['title'], 'price component 1')
+                        self.assertEqual(comp['renovation_date'], '1990-02-05 17:06:46')
+                    else:
+                        self.assertEqual(comp['title'], 'price component 2')
+                        self.assertEqual(comp['renovation_date'], '1990-02-05 17:06:46')
+                found = found + 1
 
-        self.assertEqual(offerings[2]['name'], 'test_offering3')
-        self.assertEqual(offerings[2]['version'], '1.0')
-        self.assertEqual(offerings[2]['state'], 'published')
-        self.assertEqual(offerings[2]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[2]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[2]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
+            elif off['name'] == 'test_offering2':
+                self.assertEqual(off['name'], 'test_offering2')
+                self.assertEqual(off['version'], '1.1')
+                self.assertEqual(off['state'], 'purchased')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
+                for comp in components:
+                    if comp['title'] == 'price component 1':
+                        self.assertEqual(comp['title'], 'price component 1')
+                        self.assertEqual(comp['renovation_date'], '1990-02-05 17:06:46')
+                    else:
+                        self.assertEqual(comp['title'], 'price component 2')
+                        self.assertEqual(comp['renovation_date'], '1990-02-05 17:06:46')
+                found = found + 1
 
+            elif off['name'] == 'test_offering3':
+                self.assertEqual(off['name'], 'test_offering3')
+                self.assertEqual(off['version'], '1.0')
+                self.assertEqual(off['state'], 'published')
+                self.assertEqual(off['owner_organization'], 'test_organization')
+                self.assertEqual(off['owner_admin_user_id'], 'test_user')
+                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
+                found = found + 1
+
+        self.assertEquals(found, 3)
 
 class OfferingPaginationTestCase(TestCase):
 
