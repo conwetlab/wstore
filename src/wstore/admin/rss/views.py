@@ -302,7 +302,7 @@ class RSSEntry(Resource):
                 'name': rss_model.name,
                 'host': rss_model.host,
                 'limits': rss_model.expenditure_limits,
-                'models': [{'revenue_class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss.revenue_models]
+                'models': [{'revenue_class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss_model.revenue_models]
             }
         except:
             return build_response(request, 400, 'Invalid request')
