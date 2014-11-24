@@ -248,6 +248,8 @@ class ServeMedia(API_Resource):
 
         # Protect the resources from not authorized downloads
         if dir_path.endswith('resources') :
+            if request.user.is_anonymous():
+                return build_response(request, 401, 'Unauthorized')
 
             # Check if the request user has access to the resource
             splited_name = name.split('__')
@@ -289,6 +291,9 @@ class ServeMedia(API_Resource):
                         return build_response(request, 404, 'Not found')
 
         if dir_path.endswith('bills'):
+            if request.user.is_anonymous():
+                return build_response(request, 401, 'Unauthorized')
+
             user_profile = UserProfile.objects.get(user=request.user)
             purchase = Purchase.objects.get(ref=name[:24])
 
