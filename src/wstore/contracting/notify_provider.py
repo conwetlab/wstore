@@ -20,6 +20,7 @@
 
 import json
 import urllib2
+import requests
 
 from django.conf import settings
 
@@ -72,12 +73,8 @@ def notify_provider(purchase):
         body = json.dumps(data)
         headers = {'Content-type': 'application/json'}
 
-        request = MethodRequest('POST', notification_url, body, headers)
-
-        opener = urllib2.build_opener()
-
         try:
-            response = opener.open(request)
+            requests.post(notification_url, data=body, headers=headers, cert=(settings.NOTIF_CERT_FILE, settings.NOTIF_CERT_KEY_FILE))
         except:
             pass
 

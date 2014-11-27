@@ -229,3 +229,6 @@ CLIENTS = {
 PAYMENT_CLIENT = CLIENTS[PAYMENT_METHOD]
 
 RESOURCE_INDEX_DIR = path.join(BASEDIR, path.join('wstore', path.join('admin', 'indexes')))
+
+NOTIF_CERT_FILE = None
+NOTIF_CERT_KEY_FILE = None

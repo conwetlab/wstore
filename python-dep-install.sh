@@ -13,3 +13,4 @@ pip install django-social-auth
 pip install django-crontab
 pip install Whoosh
 pip install Stemming
+pip install requests
