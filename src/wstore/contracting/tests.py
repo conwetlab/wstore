@@ -686,19 +686,31 @@ class ProviderNotificationTestCase(TestCase):
     def test_provider_notification(self):
 
         settings.OILAUTH = False
+        notify_provider.requests = MagicMock(name="requests")
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
+
+        expected_data = {
+            'offering':  {
+                'name': 'test_offering',
+                'organization': 'test_organization',
+                'version': '1.0'
+            },
+            'customer': 'test_organization1',
+            'reference': '61005aba8e05ac2115f022f0',
+             "resources": [{
+                "url": "http://antares.ls.fi.upm.es:8000/media/resources/test_user__test_resource__1.0",
+                "version": "1.0",
+                "name": "test_resource",
+                "content_type": ""
+            }]
+        }
+
+        headers = {
+            'Content-type': 'application/json'
+        }
         notify_provider.notify_provider(purchase)
 
-        opener = self._urllib._opener
-
-        content = json.loads(opener._body)
-
-        self.assertEqual(content['offering']['name'], 'test_offering')
-        self.assertEqual(content['offering']['organization'], 'test_organization')
-        self.assertEqual(content['offering']['version'], '1.0')
-
-        self.assertEqual(content['customer'], 'test_organization1')
-        self.assertEqual(content['reference'], '61005aba8e05ac2115f022f0')
+        notify_provider.requests.post.assert_called_with(purchase.offering.notification_url, data=json.dumps(expected_data), headers=headers, cert=(settings.NOTIF_CERT_FILE, settings.NOTIF_CERT_KEY_FILE))
 
     def test_identity_manager_notification(self):
 
