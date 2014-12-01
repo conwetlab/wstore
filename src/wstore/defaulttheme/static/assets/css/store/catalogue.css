@@ -15,6 +15,14 @@
   color: rgb(0, 45, 103);
 }
 
+.store-menu .icon-trash {
+  font-size: 20px;
+  position: relative;
+  top: -30px;
+  left: 11px;
+  color: rgb(255,255,255);
+}
+
 .catalogue-form {
   position: fixed;
   top: 51px;

@@ -89,20 +89,20 @@
             searchView.initSearchView('OFFERING_COLLECTION', 'purchased');
     }
 
-    var providedHandler = function providedHandler() {
+    var providerHandlers = function providerHandlers (tab) {
      // Check if details view
         if ($('.detailed-info').length) {
             $('#catalogue-container').empty();
             createCatalogueContents();
         }
 
-        currentView = 'provided';
+        currentView = tab;
 
         if (USERPROFILE.getCurrentRoles().indexOf('provider') != -1) {
-            searchView.initSearchView('OFFERING_COLLECTION', 'provided');
+            searchView.initSearchView('OFFERING_COLLECTION', tab);
         } else {
             // Build the non-provider view
-            var msg;
+            var msg, title = 'Provided';
             if (USERPROFILE.getCurrentOrganization() == USERPROFILE.getUsername()) {
                 msg = "You don't have the provider role. To request the role please click ";
                 if (USERPROFILE.providerRequested()) {
@@ -111,7 +111,13 @@
             } else {
                 msg = "You don't have the provider role for the current organization. Ask an organization manager to request the role";
             }
-            $('#catalogue-title').text('Provided');
+
+            if (tab === 'deleted') {
+                title = 'Deleted';
+            }
+
+            $('#catalogue-title').text(title);
+
             MessageManager.showAlertInfo('Unauthorized', msg, $('.offerings-container'));
             $('.offerings-container .alert-info').removeClass('span8');
 
@@ -124,6 +130,20 @@
                 }).appendTo('.alert-info');
             }
         }
+    };
+
+    /**
+     * Handler for provided offerings tab
+     */
+    var providedHandler = function providedHandler() {
+        providerHandlers('provided');
+    };
+
+    /**
+     * Handler for deleted offerings tab
+     */
+    var deletedHandler = function deletedHandler() {
+        providerHandlers('deleted');
     };
 
     closeMenuPainter = function closeMenuPainter() {
@@ -195,7 +215,7 @@
 
         // Create menu
         if (!mpainter) {
-            mpainter = new MenuPainter(purchasedHandler, providedHandler);
+            mpainter = new MenuPainter(purchasedHandler, providedHandler, deletedHandler);
             mpainter.setState('first');
         }
 

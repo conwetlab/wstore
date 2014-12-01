@@ -88,9 +88,12 @@
             if (type == 'provided') {
                 this.query = '&filter=provided&state=all';
                 $('#catalogue-title').text('Provided');
-            } else {
+            } else if(type == 'purchased') {
                 this.query = '&filter=purchased';
                 $('#catalogue-title').text('Acquired');
+            } else {
+                this.query = '&filter=provided&state=deleted';
+                $('#catalogue-title').text('Deleted');
             }
         }
 
