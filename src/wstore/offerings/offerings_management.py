@@ -226,9 +226,10 @@ def get_offerings(user, filter_='published', owned=False, pagination=None, sort=
 
         if  filter_ == 'uploaded':
             query['state'] = 'uploaded'
-
         elif  filter_ == 'published':
             query['state'] = 'published'
+        elif filter_ == 'deleted':
+            query['state'] = 'deleted'
 
         prov_offerings = offerings.find(query).sort(sorting, order)
 
