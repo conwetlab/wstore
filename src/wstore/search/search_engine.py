@@ -183,14 +183,24 @@ class SearchEngine():
 
             # If an state has been defined filter the result
             if state:
-                if state == 'all':  # All user owned offerings
-                    filter_ = query.Term('owner', unicode(user.userprofile.current_organization.pk))
-                elif state == 'purchased':  # Purchased offerings
+                # Validate state
+                for st in state:
+                    if not st in ['purchased', 'uploaded', 'deleted', 'published']:
+                        raise ValueError('Invalid state')
+
+                if 'purchased' in state:
                     filter_ = query.Term('purchaser', user.userprofile.current_organization.pk)
-                elif state == 'uploaded' or state == 'deleted':  # Uploaded or deleted offerings owned by the user
-                    filter_ = query.Term('state', state) & query.Term('owner', unicode(user.userprofile.current_organization.pk))
                 else:
-                    raise ValueError('Invalid state')
+                    filter_ = query.Term('owner', unicode(user.userprofile.current_organization.pk))
+
+                    state_filter = None
+                    for st in state:
+                        if not state_filter:
+                            state_filter = query.Term('state', st)
+                        else:
+                            state_filter = state_filter | query.Term('state', st)
+
+                    filter_ = filter_ & state_filter
             else:
                 # If state is not included the default behaviour is returning
                 # published offerings

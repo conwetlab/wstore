@@ -51,9 +51,22 @@ class SearchEntry(Resource):
         limit = request.GET.get('limit', None)
         sort = request.GET.get('sort', None)
 
+        state = request.GET.get('state', None)
+        if state:
+            if state == 'ALL':
+                state = ['uploaded', 'published', 'deleted']
+            else:
+                state = state.split(',')
+
         # Check the filter value
         if filter_ and filter_ != 'published' and filter_ != 'provided' and filter_ != 'purchased':
             return build_response(request, 400, 'Invalid filter')
+
+        if state and filter_ != 'provided':
+            return build_response(request, 400, 'Invalid filters')
+
+        if filter_ == 'provider' and not state:
+            return build_response(request, 400, 'Invalid filters')
 
         count = False
         pagination = None
@@ -78,22 +91,14 @@ class SearchEntry(Resource):
                 if sort != 'date' and sort != 'popularity' and sort != 'name':
                     return build_response(request, 400, 'Invalid sorting')
 
-        if not filter_:
+        if not filter_ or filter_ == 'published':
             response = search_engine.full_text_search(request.user, text, count=count, pagination=pagination, sort=sort)
 
         elif filter_ == 'provided':
-
-            state = request.GET.get('state', 'all')
-            # Check the state value
-            if state != 'all' and state != 'uploaded'\
-            and state != 'published' and state != 'deleted':
-
-                return build_response(request, 400, 'Invalid state')
-
             response = search_engine.full_text_search(request.user, text, state=state, count=count, pagination=pagination, sort=sort)
 
         elif filter_ == 'purchased':
-            response = search_engine.full_text_search(request.user, text, state='purchased', count=count, pagination=pagination, sort=sort)
+            response = search_engine.full_text_search(request.user, text, state=['purchased'], count=count, pagination=pagination, sort=sort)
 
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
