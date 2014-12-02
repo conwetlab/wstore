@@ -784,7 +784,7 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         super(PurchasedOfferingRetrievingTestCase, cls).setUpClass()
 
     @parameterized.expand([
-        ('customer_purchased', 'purchased', [], 
+        ('customer_purchased', 'purchased', [],
          [('11000aba8e05ac2115f022f9', 'purchased'), ('21000aba8e05ac2115f022ff', 'purchased')]),
         ('published', 'published', [],
          [('11000aba8e05ac2115f022f9', 'purchased'), ('21000aba8e05ac2115f022ff', 'purchased'), ('31000aba8e05ac2115f022f0', 'published')])
@@ -846,41 +846,31 @@ class OfferingPaginationTestCase(TestCase):
         for off in off_list:
             self.assertTrue(off['name'] in expected)
 
-    def test_basic_retrieving_pagination(self):
-
-        pagination = {
+    @parameterized.expand([
+        ('basic', {
             'skip': '1',
             'limit': '3'
-        }
-
-        user = User.objects.get(username='test_user')
-        org = Organization.objects.get(name='test_organization')
-        user.userprofile.current_organization = org
-        user.userprofile.organizations.append({
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        })
-        user.userprofile.save()
-        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
-
-        self._check_offerings(offerings, ['test_offering1', 'test_offering2', 'test_offering3'])
-
-        pagination = {
+        }, ['test_offering1', 'test_offering2', 'test_offering3']),
+        ('basic_2', {
             'skip': '4',
             'limit': '5'
-        }
-
-        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
-
-        self._check_offerings(offerings, ['test_offering4', 'test_offering5', 'test_offering6', 'test_offering7', 'test_offering8'])
-
-    def test_retrieving_pagination_half_page(self):
-
-        pagination = {
+        },  ['test_offering4', 'test_offering5', 'test_offering6', 'test_offering7', 'test_offering8']),
+        ('half_page', {
             'skip': '8',
             'limit': '10'
-        }
+        }, ['test_offering7', 'test_offering8', 'test_offering9'], 'name'),
+        ('invalid_limit', {
+            'skip': '1',
+            'limit': '-2'
+        }, [], None, ValueError, 'Invalid pagination limits'),
+        ('invalid_start', {
+            'skip': '-4',
+            'limit': '2'
+        }, [], None, ValueError, 'Invalid pagination limits')
+    ])
+    def test_retrieving_pagination(self, name, pagination, expected_offerings, sort=None, err_type=None, err_msg=None):
 
+        # Build user info
         user = User.objects.get(username='test_user')
         org = Organization.objects.get(name='test_organization')
         user.userprofile.current_organization = org
@@ -889,49 +879,19 @@ class OfferingPaginationTestCase(TestCase):
             'roles': ['customer', 'provider']
         })
         user.userprofile.save()
-        offerings = offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination, sort='name')
 
-        self._check_offerings(offerings, ['test_offering7', 'test_offering8', 'test_offering9'])
-
-    def test_retrieving_pagination_invalid_limit(self):
-        pagination = {
-            'skip': '1',
-            'limit': '-2'
-        }
-
-        user = User.objects.get(username='test_user')
-
-        error = False
-        msg = None
-
+        error = None
         try:
-            offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
-        except Exception, e:
-            error = True
-            msg = e.message
+            offerings = offerings_management.get_offerings(user, filter_='provided', state=['uploaded', 'published', 'deleted'], pagination=pagination, sort=sort)
+        except Exception as e:
+            error = e
 
-        self.assertTrue(error)
-        self.assertEqual(msg, 'Invalid pagination limits')
-
-    def test_retrieving_pagination_invalid_start(self):
-        pagination = {
-            'skip': '-4',
-            'limit': '2'
-        }
-
-        user = User.objects.get(username='test_user')
-
-        error = False
-        msg = None
-
-        try:
-            offerings_management.get_offerings(user, filter_='all', owned=True, pagination=pagination)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, 'Invalid pagination limits')
+        if not err_type:
+            self.assertEquals(error, None)
+            self._check_offerings(offerings, expected_offerings)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(error), err_msg)
 
 
 class PurchasedOfferingPaginationTestCase(TestCase):
@@ -964,7 +924,7 @@ class PurchasedOfferingPaginationTestCase(TestCase):
         })
         profile.save()
 
-        offerings = offerings_management.get_offerings(user, filter_='purchased', owned=True, pagination=pagination, sort='name')
+        offerings = offerings_management.get_offerings(user, filter_='purchased', state=[], pagination=pagination, sort='name')
 
         self.assertEqual(len(offerings), 2)
 

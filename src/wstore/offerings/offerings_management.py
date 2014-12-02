@@ -198,7 +198,7 @@ def get_offerings(user, filter_='published', state=None, pagination=None, sort=N
     allowed_states = ['uploaded', 'published', 'deleted']
 
     if pagination and (not int(pagination['skip']) > 0 or not int(pagination['limit']) > 0):
-        raise Exception('Invalid pagination limits')
+        raise ValueError('Invalid pagination limits')
 
     # Validate states
     if state:
