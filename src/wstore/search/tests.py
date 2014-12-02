@@ -212,10 +212,10 @@ class FullTextSearchTestCase(TestCase):
         ({}, None, None, False, {'start': 'a1', 'limit': 2}, None, TypeError, 'Invalid pagination params type'),
         ({}, None, None, False, {'start': 0, 'limit': 2}, None, ValueError, 'Start param must be higher than 0'),
         ({}, None, None, False, {'start': 1, 'limit': -2}, None, ValueError, 'Limit param must be positive'),
-        (RESULT_ALL, None, 'all',),
-        (RESULT_PURCHASED, None, 'purchased', False, None, 'popularity'),
-        (RESULT_UPLOADED, None, 'uploaded', False, {'start': 1, 'limit': 1}, 'date'),
-        (RESULT_DELETED, None, 'deleted', False, {'start': 1, 'limit': 1}, 'name'),
+        (RESULT_ALL, None, ['uploaded', 'published', 'deleted'],),
+        (RESULT_PURCHASED, None, ['purchased'], False, None, 'popularity'),
+        (RESULT_UPLOADED, None, ['uploaded'], False, {'start': 1, 'limit': 1}, 'date'),
+        (RESULT_DELETED, None, ['deleted'], False, {'start': 1, 'limit': 1}, 'name'),
         (RESULT_PUBLISHED, None, None, False, None, 'name'),
         (RESULT_COUNT, None, None, True)
     ])
