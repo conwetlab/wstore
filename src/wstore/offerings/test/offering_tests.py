@@ -783,7 +783,13 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         offerings_management.USDLParser = FakeUsdlParser
         super(PurchasedOfferingRetrievingTestCase, cls).setUpClass()
 
-    def test_get_customer_purchased_offerings(self):
+    @parameterized.expand([
+        ('customer_purchased', 'purchased', [], 
+         [('11000aba8e05ac2115f022f9', 'purchased'), ('21000aba8e05ac2115f022ff', 'purchased')]),
+        ('published', 'published', [],
+         [('11000aba8e05ac2115f022f9', 'purchased'), ('21000aba8e05ac2115f022ff', 'purchased'), ('31000aba8e05ac2115f022f0', 'published')])
+    ])
+    def test_purchased_offerings_retrieving(self, name, filter_, states, expected_offerings):
 
         user = User.objects.get(username='test_user2')
         profile = UserProfile.objects.get(user=user)
@@ -798,103 +804,30 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
         })
         profile.save()
 
-        offerings = offerings_management.get_offerings(user, 'purchased', owned=True)
+        offerings = offerings_management.get_offerings(user, filter_, states)
+        self.assertEqual(len(offerings), len(expected_offerings))
 
-        self.assertEqual(len(offerings), 2)
-        for off in offerings:
-            if off['name'] == 'test_offering1':
-                self.assertEqual(off['name'], 'test_offering1')
-                self.assertEqual(off['version'], '1.0')
-                self.assertEqual(off['state'], 'purchased')
-                self.assertEqual(off['owner_organization'], 'test_organization')
-                self.assertEqual(off['owner_admin_user_id'], 'test_user')
-                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
-                self.assertEqual(len(off['bill']), 1)
-                self.assertEqual(off['bill'][0], '/media/bills/61005aba8e05ac2115f022f0.pdf')
-                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
-                self.assertEqual(components[0]['title'], 'price component 1')
-                self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
-                self.assertEqual(components[1]['title'], 'price component 2')
-                self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
-            else:
+        validated = 0
 
-                self.assertEqual(off['name'], 'test_offering2')
-                self.assertEqual(off['version'], '1.1')
-                self.assertEqual(off['state'], 'purchased')
-                self.assertEqual(off['owner_organization'], 'test_organization')
-                self.assertEqual(off['owner_admin_user_id'], 'test_user')
-                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
-                self.assertEqual(len(off['bill']), 1)
-                self.assertEqual(off['bill'][0], '/media/bills/61006aba8e05ac2115f022f0.pdf')
-                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
-                self.assertEqual(components[0]['title'], 'price component 1')
-                self.assertEqual(components[0]['renovation_date'], '1990-02-05 17:06:46')
-                self.assertEqual(components[1]['title'], 'price component 2')
-                self.assertEqual(components[1]['renovation_date'], '1990-02-05 17:06:46')
+        # Check offering content
+        for exp, state in expected_offerings:
+            off = Offering.objects.get(pk=exp)
 
-    def test_get_published_offerings(self):
-        user = User.objects.get(username='test_user2')
-        profile = UserProfile.objects.get(user=user)
-        profile.offerings_purchased = ['11000aba8e05ac2115f022f9']
-        org = Organization.objects.get(name='test_organization1')
-        org.offerings_purchased = ['21000aba8e05ac2115f022ff', '11000aba8e05ac2115f022f9']
-        org.save()
-        profile.current_organization = org
-        profile.organizations.append({
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        })
-        profile.save()
+            for off_info in offerings:
+                if off.name == off_info['name']:
+                    self.assertEqual(off_info['name'], off.name)
+                    self.assertEqual(off_info['version'], off.version)
+                    self.assertEqual(off_info['state'], state)
+                    self.assertEqual(off_info['owner_organization'], off.owner_organization.name)
+                    self.assertEqual(off_info['owner_admin_user_id'], off.owner_admin_user.username)
+                    self.assertEqual(off_info['description_url'], off.description_url)
 
-        offerings = offerings_management.get_offerings(user)
-        self.assertEqual(len(offerings), 3)
-        found = 0
+                    if len(off.resources):
+                        self.assertEquals(len(off.resources), len(off_info['resources']))
 
-        for off in offerings:
-            if off['name'] == 'test_offering1':
-                self.assertEqual(off['name'], 'test_offering1')
-                self.assertEqual(off['version'], '1.0')
-                self.assertEqual(off['state'], 'purchased')
-                self.assertEqual(off['owner_organization'], 'test_organization')
-                self.assertEqual(off['owner_admin_user_id'], 'test_user')
-                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
-                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
-                for comp in components:
-                    if comp['title'] == 'price component 1':
-                        self.assertEqual(comp['title'], 'price component 1')
-                        self.assertEqual(comp['renovation_date'], '1990-02-05 17:06:46')
-                    else:
-                        self.assertEqual(comp['title'], 'price component 2')
-                        self.assertEqual(comp['renovation_date'], '1990-02-05 17:06:46')
-                found = found + 1
+                    validated = validated + 1
 
-            elif off['name'] == 'test_offering2':
-                self.assertEqual(off['name'], 'test_offering2')
-                self.assertEqual(off['version'], '1.1')
-                self.assertEqual(off['state'], 'purchased')
-                self.assertEqual(off['owner_organization'], 'test_organization')
-                self.assertEqual(off['owner_admin_user_id'], 'test_user')
-                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
-                components = off['offering_description']['pricing']['price_plans'][0]['price_components']
-                for comp in components:
-                    if comp['title'] == 'price component 1':
-                        self.assertEqual(comp['title'], 'price component 1')
-                        self.assertEqual(comp['renovation_date'], '1990-02-05 17:06:46')
-                    else:
-                        self.assertEqual(comp['title'], 'price component 2')
-                        self.assertEqual(comp['renovation_date'], '1990-02-05 17:06:46')
-                found = found + 1
-
-            elif off['name'] == 'test_offering3':
-                self.assertEqual(off['name'], 'test_offering3')
-                self.assertEqual(off['version'], '1.0')
-                self.assertEqual(off['state'], 'published')
-                self.assertEqual(off['owner_organization'], 'test_organization')
-                self.assertEqual(off['owner_admin_user_id'], 'test_user')
-                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
-                found = found + 1
-
-        self.assertEquals(found, 3)
+        self.assertEquals(validated, len(expected_offerings))
 
 class OfferingPaginationTestCase(TestCase):
 
