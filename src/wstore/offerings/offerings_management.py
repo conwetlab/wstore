@@ -269,6 +269,9 @@ def count_offerings(user, filter_='published', state=None):
 
     # Validate states
     if state:
+        if filter_ != 'provided':
+            raise ValueError('Invalid filter: states are not allowed for filter ' + filter_)
+
         for st in state:
             if not st in ['uploaded', 'published', 'deleted']:
                 raise ValueError('Invalid state: ' + st)
@@ -281,6 +284,7 @@ def count_offerings(user, filter_='published', state=None):
         count = Offering.objects.filter(owner_admin_user=user, state__in=state, owner_organization=current_org).count()
 
     elif filter_ == 'purchased':
+        current_org = user.userprofile.current_organization
         count = len(current_org.offerings_purchased)
         if user.userprofile.is_user_org():
             count += len(user.userprofile.offerings_purchased)
