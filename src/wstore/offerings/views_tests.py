@@ -95,7 +95,7 @@ class OfferingCollectionTestCase(TestCase):
         response = offering_collection.read(request)
 
         # Check correct call
-        views.get_offerings.assert_called_once_with(self.user, sort=None)
+        views.get_offerings.assert_called_once_with(self.user, u'published', None, sort=None, pagination=None)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
@@ -120,7 +120,7 @@ class OfferingCollectionTestCase(TestCase):
         response = offering_collection.read(request)
 
         # Check correct call
-        views.get_offerings.assert_called_once_with(self.user, None, sort=None, owned=True)
+        views.get_offerings.assert_called_once_with(self.user, 'provided', None, sort=None, pagination=None)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
@@ -144,7 +144,7 @@ class OfferingCollectionTestCase(TestCase):
         response = offering_collection.read(request)
 
         # Check correct call
-        views.get_offerings.assert_called_once_with(self.user, 'purchased', sort=None, owned=True)
+        views.get_offerings.assert_called_once_with(self.user, 'purchased', None, sort=None, pagination=None)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
@@ -173,7 +173,7 @@ class OfferingCollectionTestCase(TestCase):
         response = offering_collection.read(request)
 
         # Check correct call
-        views.count_offerings.assert_called_once_with(self.user)
+        views.count_offerings.assert_called_once_with(self.user, 'published', None)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
@@ -193,7 +193,7 @@ class OfferingCollectionTestCase(TestCase):
         response = offering_collection.read(request)
 
         # Check correct call
-        views.count_offerings.assert_called_once_with(self.user, None, owned=True)
+        views.count_offerings.assert_called_once_with(self.user, 'provided', None)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
@@ -212,7 +212,7 @@ class OfferingCollectionTestCase(TestCase):
         response = offering_collection.read(request)
 
         # Check correct call
-        views.count_offerings.assert_called_once_with(self.user, 'purchased', owned=True)
+        views.count_offerings.assert_called_once_with(self.user, 'purchased', None)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/JSON; charset=UTF-8')
