@@ -193,15 +193,23 @@ def _get_purchased_offerings(user, db, pagination=None, sort=None):
 
 
 # Gets a set of offerings depending on filter value
-def get_offerings(user, filter_='published', owned=False, pagination=None, sort=None):
+def get_offerings(user, filter_='published', state=None, pagination=None, sort=None):
+
+    allowed_states = ['uploaded', 'published', 'deleted']
 
     if pagination and (not int(pagination['skip']) > 0 or not int(pagination['limit']) > 0):
         raise Exception('Invalid pagination limits')
 
+    # Validate states
+    if state:
+        for st in state:
+            if not st in allowed_states:
+                raise ValueError('Invalid state: ' + st)
+
     # Set sorting values
     order = -1
     if sort == None or sort == 'date':
-        if not owned and  filter_ == 'published':
+        if filter_ == 'published' or filter_ == 'purchased':
             sorting = 'publication_date'
         else:
             sorting = 'creation_date'
@@ -218,31 +226,26 @@ def get_offerings(user, filter_='published', owned=False, pagination=None, sort=
     offerings = db.wstore_offering
 
     # Pagination: define the first element and the number of elements
-    if owned and filter_ != 'purchased':
+    if filter_ == 'provided':
         current_organization = user.userprofile.current_organization
         query = {
-            'owner_organization_id': ObjectId(current_organization.id)
+            'owner_organization_id': ObjectId(current_organization.id),
+            'state': { '$in': state }
         }
-
-        if  filter_ == 'uploaded':
-            query['state'] = 'uploaded'
-        elif  filter_ == 'published':
-            query['state'] = 'published'
-        elif filter_ == 'deleted':
-            query['state'] = 'deleted'
 
         prov_offerings = offerings.find(query).sort(sorting, order)
 
-    elif owned and filter_ == 'purchased':
+    elif filter_ == 'purchased':
         if pagination:
             prov_offerings = _get_purchased_offerings(user, db, pagination, sort=sorting)
             pagination = None
         else:
             prov_offerings = _get_purchased_offerings(user, db, sort=sorting)
 
-    else:
-        if  filter_ == 'published':
+    elif  filter_ == 'published':
             prov_offerings = offerings.find({'state': 'published'}).sort(sorting, order)
+    else:
+        raise ValueError('Invalid filter: ' + filter_)
 
     if pagination:
         prov_offerings = prov_offerings.skip(int(pagination['skip']) - 1).limit(int(pagination['limit']))
@@ -262,29 +265,30 @@ def get_offerings(user, filter_='published', owned=False, pagination=None, sort=
     return result
 
 
-def count_offerings(user, filter_='published', owned=False):
+def count_offerings(user, filter_='published', state=None):
 
-    if owned:
+    # Validate states
+    if state:
+        for st in state:
+            if not st in ['uploaded', 'published', 'deleted']:
+                raise ValueError('Invalid state: ' + st)
+
+    if filter_ == 'provided':
+        if not state:
+            raise ValueError('The state is needed for provided filter')
+
         current_org = user.userprofile.current_organization
+        count = Offering.objects.filter(owner_admin_user=user, state__in=state, owner_organization=current_org).count()
 
-        # If the current organization is not the user organization
-        # get only the offerings owned by that organization
-        if  filter_ == 'uploaded' or filter_ == 'published':
-            count = Offering.objects.filter(owner_admin_user=user, state=filter_, owner_organization=current_org).count()
-        elif filter_ == 'all':
-            count = Offering.objects.filter(owner_admin_user=user, owner_organization=current_org).count()
-        elif filter_ == 'purchased':
-            count = len(current_org.offerings_purchased)
-            if user.userprofile.is_user_org():
-                count += len(user.userprofile.offerings_purchased)
-        else:
-            raise ValueError('Filter not allowed')
+    elif filter_ == 'purchased':
+        count = len(current_org.offerings_purchased)
+        if user.userprofile.is_user_org():
+            count += len(user.userprofile.offerings_purchased)
 
+    elif  filter_ == 'published':
+        count = Offering.objects.filter(state='published').count()
     else:
-        if  filter_ == 'published':
-            count = Offering.objects.filter(state='published').count()
-        else:
-            raise ValueError('Filter not allowed')
+        raise ValueError('Invalid filter: ' + filter_)
 
     return {'number': count}
 

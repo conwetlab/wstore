@@ -97,45 +97,33 @@ class OfferingCollection(Resource):
             action = request.GET.get('action', None)
             sort = request.GET.get('sort', None)
 
+            state = request.GET.get('state', None)
+            start = request.GET.get('start', None)
+            limit = request.GET.get('limit', None)
+
+            if state:
+                if state == 'ALL':
+                    state = ['uploaded', 'published', 'deleted']
+                else:
+                    state = state.split(',')
+
             # Check sorting values
             if sort != None:
                 if sort != 'date' and sort != 'popularity' and sort != 'name':
-                    return build_response(request, 400, 'Invalid sorting')
+                    return build_response(request, 400, 'Invalid query string: Invalid sorting')
 
-            pagination = {
-                'skip': request.GET.get('start', None),
-                'limit': request.GET.get('limit', None)
-            }
+            # Build pagination
+            pagination = None
+            if start and limit:
+                pagination = {
+                    'skip': start,
+                    'limit': limit
+                }
 
             if action != 'count':
-                if pagination['skip'] and pagination['limit']:
-                    if filter_ == 'provided':
-                        result = get_offerings(user, request.GET.get('state'), owned=True, pagination=pagination, sort=sort)
-
-                    elif filter_ == 'published':
-                        result = get_offerings(user, pagination=pagination, sort=sort)
-
-                    elif filter_ == 'purchased':
-                        result = get_offerings(user, 'purchased', owned=True, pagination=pagination, sort=sort)
-                else:
-                    if filter_ == 'provided':
-                        result = get_offerings(user, request.GET.get('state'), owned=True, sort=sort)
-
-                    elif filter_ == 'published':
-                        result = get_offerings(user, sort=sort)
-
-                    elif filter_ == 'purchased':
-                        result = get_offerings(user, 'purchased', owned=True, sort=sort)
-
+                result = get_offerings(user, filter_, state, pagination=pagination, sort=sort)
             else:
-                if filter_ == 'provided':
-                    result = count_offerings(user, request.GET.get('state'), owned=True)
-
-                elif filter_ == 'published':
-                    result = count_offerings(user)
-
-                elif filter_ == 'purchased':
-                    result = count_offerings(user, 'purchased', owned=True)
+                result = count_offerings(user, filter_, state)
 
         except Exception as e:
             return build_response(request, 400, unicode(e))

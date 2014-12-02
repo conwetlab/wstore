@@ -86,7 +86,7 @@
 
         if (type) {
             if (type == 'provided') {
-                this.query = '&filter=provided&state=all';
+                this.query = '&filter=provided&state=uploaded,published';
                 $('#catalogue-title').text('Provided');
             } else if(type == 'purchased') {
                 this.query = '&filter=purchased';
