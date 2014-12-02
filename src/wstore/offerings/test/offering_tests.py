@@ -697,44 +697,26 @@ class OfferingRetrievingTestCase(TestCase):
         offerings_management.USDLParser = FakeUsdlParser
         super(OfferingRetrievingTestCase, cls).setUpClass()
 
-    def test_get_all_provider_offerings(self):
-        user = User.objects.get(username='test_user')
+    def _all_user(self, user):
         user_org = Organization.objects.get(name=user.username)
-
         for off in Offering.objects.all():
             off.owner_organization = user_org
             off.save()
 
-        offerings = offerings_management.get_offerings(user, 'all', owned=True)
-        self.assertEqual(len(offerings), 3)
-
-        # Check published offering
-        for off in offerings:
-            if off['name'] == 'test_offering3':
-                self.assertEqual(off['name'], 'test_offering3')
-                self.assertEqual(off['version'], '1.0')
-                self.assertEqual(off['state'], 'published')
-                self.assertEqual(off['owner_organization'], 'test_user')
-                self.assertEqual(off['owner_admin_user_id'], 'test_user')
-                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
-
-                self.assertEqual(len(off['resources']), 1)
-                resource = off['resources'][0]
-
-                self.assertEqual(resource['name'], 'test_resource')
-                self.assertEqual(resource['description'], 'Example resource')
-
-    def test_get_all_provider_offerings_org(self):
-        user = User.objects.get(username='test_user')
-        user_org = Organization.objects.get(name=user.username)
-
+    def _add_org(self, user):
         org = Organization.objects.get(name='test_organization')
+
         user.userprofile.current_organization = org
         user.userprofile.organizations.append({
             'organization': org.pk,
             'roles': ['customer', 'provider']
         })
         user.userprofile.save()
+
+    def _provider_offerings(self, user):
+        user_org = Organization.objects.get(name=user.username)
+
+        self._add_org(user)
 
         off1 = Offering.objects.get(name='test_offering1')
         off1.owner_organization = user_org
@@ -744,52 +726,50 @@ class OfferingRetrievingTestCase(TestCase):
         off2.owner_organization = user_org
         off2.save()
 
-        offerings = offerings_management.get_offerings(user, 'all', owned=True)
-        self.assertEqual(len(offerings), 1)
-
-        # Check published offering
-        self.assertEqual(offerings[0]['name'], 'test_offering3')
-        self.assertEqual(offerings[0]['version'], '1.0')
-        self.assertEqual(offerings[0]['state'], 'published')
-        self.assertEqual(offerings[0]['owner_organization'], 'test_organization')
-        self.assertEqual(offerings[0]['owner_admin_user_id'], 'test_user')
-        self.assertEqual(offerings[0]['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0')
-
-        self.assertEqual(len(offerings[0]['resources']), 1)
-        resource = offerings[0]['resources'][0]
-
-        self.assertEqual(resource['name'], 'test_resource')
-        self.assertEqual(resource['description'], 'Example resource')
-
-    def test_get_provider_uploaded_offerings(self):
-
+    @parameterized.expand([
+        ('all_provider', 'provided',
+         ['uploaded', 'published', 'deleted'],
+         ['11000aba8e05ac2115f022f9', '21000aba8e05ac2115f022ff', '31000aba8e05ac2115f022f0'],
+         _all_user),
+        ('all_provider_org', 'provided',
+         ['uploaded', 'published', 'deleted'],
+         ['31000aba8e05ac2115f022f0'], _provider_offerings),
+        ('uploaded', 'provided', ['uploaded'],
+         ['11000aba8e05ac2115f022f9', '21000aba8e05ac2115f022ff'], _add_org)
+    ])
+    def test_provider_offerings_retrieving(self, name, filter_, states, expected_offerings, side_effect=None):
+        # Get user profile
         user = User.objects.get(username='test_user')
-        org = Organization.objects.get(name='test_organization')
-        user.userprofile.current_organization = org
-        user.userprofile.organizations.append({
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        })
-        user.userprofile.save()
 
-        offerings = offerings_management.get_offerings(user, 'uploaded', owned=True)
-        self.assertEqual(len(offerings), 2)
+        # Call the side effect if needed
+        if side_effect:
+            side_effect(self, user)
 
-        for off in offerings:
-            if off['name'] == 'test_offering1':
-                self.assertEqual(off['name'], 'test_offering1')
-                self.assertEqual(off['version'], '1.0')
-                self.assertEqual(off['state'], 'uploaded')
-                self.assertEqual(off['owner_organization'], 'test_organization')
-                self.assertEqual(off['owner_admin_user_id'], 'test_user')
-                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0')
-            else:
-                self.assertEqual(off['name'], 'test_offering2')
-                self.assertEqual(off['version'], '1.1')
-                self.assertEqual(off['state'], 'uploaded')
-                self.assertEqual(off['owner_organization'], 'test_organization')
-                self.assertEqual(off['owner_admin_user_id'], 'test_user')
-                self.assertEqual(off['description_url'], 'http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.1')
+        # Call the tested method
+        offerings = offerings_management.get_offerings(user, filter_, states)
+        self.assertEqual(len(offerings), len(expected_offerings))
+
+        validated = 0
+
+        # Check offering content
+        for exp in expected_offerings:
+            off = Offering.objects.get(pk=exp)
+
+            for off_info in offerings:
+                if off.name == off_info['name']:
+                    self.assertEqual(off_info['name'], off.name)
+                    self.assertEqual(off_info['version'], off.version)
+                    self.assertEqual(off_info['state'], off.state)
+                    self.assertEqual(off_info['owner_organization'], off.owner_organization.name)
+                    self.assertEqual(off_info['owner_admin_user_id'], off.owner_admin_user.username)
+                    self.assertEqual(off_info['description_url'], off.description_url)
+
+                    if len(off.resources):
+                        self.assertEquals(len(off.resources), len(off_info['resources']))
+
+                    validated = validated + 1
+
+        self.assertEquals(validated, len(expected_offerings))
 
 
 class PurchasedOfferingRetrievingTestCase(TestCase):
