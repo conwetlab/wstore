@@ -422,23 +422,24 @@ class OfferingCountTestCase(TestCase):
         self.user.userprofile.current_organization.offerings_purchased = ['111', '222', '333']
 
     @parameterized.expand([
-        (None, 2, True, 'uploaded'),
-        (None, 2, True, 'all'),
-        (None, 2, True, 'published'),
-        (_purchased, 3, True, 'purchased'),
-        (_user_purchased, 4, True, 'purchased'),
-        (None, 0, True, 'invalid', ValueError, 'Filter not allowed'),
-        (None, 2, False, 'published'),
-        (None, 0, False, 'uploaded', ValueError, 'Filter not allowed')
+        (None, 2, ['uploaded'], 'provided'),
+        (None, 2, ['uploaded', 'published', 'deleted'], 'provided'),
+        (None, 2, ['published'], 'provided'),
+        (_purchased, 3, [], 'purchased'),
+        (_user_purchased, 4, [], 'purchased'),
+        (None, 0, [], 'invalid', ValueError, 'Invalid filter: invalid'),
+        (None, 2, [], 'published'),
+        (None, 0, ['uploaded'], 'published', ValueError, 'Invalid filter: states are not allowed for filter published')
     ])
-    def test_count_offerings(self, side_effect, expected_count, owned, filter_, err_type=None, err_msg=None):
+    def test_count_offerings(self, side_effect, expected_count, states, filter_, err_type=None, err_msg=None):
 
         if side_effect:
             side_effect(self)
 
+        #import ipdb; ipdb.set_trace()
         error = None
         try:
-            return_value = offerings_management.count_offerings(self.user, filter_, owned)
+            return_value = offerings_management.count_offerings(self.user, filter_, states)
         except Exception as e:
             error = e
 
@@ -446,12 +447,9 @@ class OfferingCountTestCase(TestCase):
             self.assertFalse(error)
             self.assertEquals(return_value['number'], expected_count)
 
-            if owned:
-                if filter_ == 'uploaded' or filter_ == 'published':
-                    offerings_management.Offering.objects.filter.assert_called_once_with(owner_admin_user=self.user, state=filter_, owner_organization=self.org)
-                elif filter_ == 'all':
-                    offerings_management.Offering.objects.filter.assert_called_once_with(owner_admin_user=self.user, owner_organization=self.org)
-            else:
+            if filter_ == 'provided':
+                offerings_management.Offering.objects.filter.assert_called_once_with(owner_admin_user=self.user, state__in=states, owner_organization=self.org)
+            elif filter_ == 'published':
                 offerings_management.Offering.objects.filter.assert_called_once_with(state=filter_)
         else:
             self.assertTrue(isinstance(error, err_type))
