@@ -763,7 +763,7 @@ class ResourceCollectionTestCase(TestCase):
 
         if not error_msg:
             # Check correct call
-            views.get_provider_resources.assert_called_once_with(self.user, filter_=None)
+            views.get_provider_resources.assert_called_once_with(self.user, pagination=None, filter_=None)
             self.assertEquals(type(body_response), list)
             self.assertEquals(body_response, return_value)
         else:
