@@ -299,24 +299,43 @@ class ResourceRetrievingTestCase(TestCase):
     @parameterized.expand([
         ([RESOURCE_DATA1, RESOURCE_DATA2, RESOURCE_DATA3, RESOURCE_DATA4],),
         ([RESOURCE_DATA3, RESOURCE_DATA4], 'true'),
-        ([RESOURCE_DATA1, RESOURCE_DATA2], 'false')
+        ([RESOURCE_DATA1, RESOURCE_DATA2], 'false'),
+        ([RESOURCE_DATA1], None, {"start":1, "limit":1}),
+        ([RESOURCE_DATA2, RESOURCE_DATA3], None, {"start":2, "limit":2}),
+        ([RESOURCE_DATA3, RESOURCE_DATA4], None, {"start":3, "limit":8}),
+        ([], None, {"start":6}, ValueError,"Missing required parameter in pagination"),
+        ([], None, {"limit":8}, ValueError,"Missing required parameter in pagination"),
+        ([], None, {"start":0, "limit":8}, ValueError,"Invalid pagination limits"),
+        ([], None, {"start":2, "limit":0}, ValueError,"Invalid pagination limits"),
+        ([], None, {"start":6, "limit":-1}, ValueError,"Invalid pagination limits"),
+        ([], None, {"start":-6, "limit":2}, ValueError,"Invalid pagination limits"),
+        ([], None, {"start":0, "limit":0}, ValueError,"Invalid pagination limits")
     ])
-    def test_resource_retrieving(self, expected_result, filter_=None):
+    def test_resource_retrieving(self, expected_result, filter_=None, pagination=None, err_type=None, err_msg=None):
 
         # Call the method
-        error = False
+        error = None
         try:
-            result = resources_management.get_provider_resources(self.user, filter_)
+            result = resources_management.get_provider_resources(self.user, filter_, pagination)
+        except Exception as e:
+            error = e
+
+        if not err_type:
+            # Assert that no error occurs
+            self.assertEquals(error, None)
+            # Check calls
+            resources_management.Resource.objects.filter.assert_called_once_with(provider=self.org)
+            # Check result
+            self.assertEquals(result, expected_result)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
+
+    def test_resource_errors(self):
+        try:
+            result = resources_management.get_provider_resources(self.user, pagination={"no_start":1, "limit":8})
         except:
-            error = True
-
-        # Assert that no error occurs
-        self.assertFalse(error)
-
-        # Check calls
-        resources_management.Resource.objects.filter.assert_called_once_with(provider=self.org)
-        # Check result
-        self.assertEquals(result, expected_result)
+            pass
 
 
 class ResourceDeletionTestCase(TestCase):

@@ -174,9 +174,23 @@ def upgrade_resource(resource, data, file_=None):
     resource.save()
 
 
-def get_provider_resources(provider, filter_=None):
-    resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
+def get_provider_resources(provider, filter_=None, pagination=None):
+
+    if pagination and (not 'start' in pagination or not 'limit' in pagination):
+        raise ValueError('Missing required parameter in pagination')
+
+    if pagination and (not int(pagination['start']) > 0 or not int(pagination['limit']) > 0):
+        raise ValueError('Invalid pagination limits')
+
     response = []
+
+    if pagination:
+        x = pagination['start']-1
+        y = x+pagination['limit']
+        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)[x:y]
+    else:
+        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
+
     for res in resources:
         # Filter by open property if needed
         if (filter_ == 'true' and not res.open) or (filter_ == 'false' and res.open):
@@ -196,7 +210,6 @@ def get_provider_resources(provider, filter_=None):
             'link': res.get_url()
         }
         response.append(resource_info)
-
     return response
 
 
