@@ -120,12 +120,14 @@
     var onSuccessFinish = function onSuccessFinish(offeringElement, response) {
         var timer;
         //Download resources
-        if ($(window.location).attr('href').indexOf('contracting') == -1) {
-            downloadResources(response);
-        }
-        //Refresh offering details view
-        offeringElement.updateOfferingInfo(caller.update.bind(caller));
         $('#message').modal('hide');
+        //Refresh offering details view
+        offeringElement.updateOfferingInfo(function(offeringInfo) {
+            this.update(offeringInfo);
+            if ($(window.location).attr('href').indexOf('contracting') == -1) {
+                downloadResources(response);
+            }
+        }.bind(caller));
 
         timer = setInterval(function() {
 
@@ -245,11 +247,11 @@
      * @param data, Offering data
      */
     var downloadResources = function downloadResources(data) {
-        var resources = data.resources;
-        for (var i = 0; i < resources.length; i++) {
-            window.open(resources[i]);
-        }
+        // Open a window with the invoice
         window.open(data.bill[0]);
+
+        // Open the download resources modal
+        $('#main-action').click();
     };
 
     /**
