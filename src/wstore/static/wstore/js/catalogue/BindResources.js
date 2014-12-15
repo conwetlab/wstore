@@ -45,23 +45,13 @@
      */
     BindResourcesForm.prototype.getUserResources = function getUserResources (callback, open) {
         var qstring = '';
-
         if (open) {
             qstring = '?open=true';
         }
-        $.ajax({
-            type: "GET",
-            url: EndpointManager.getEndpoint('RESOURCE_COLLECTION') + qstring,
-            dataType: 'json',
-            success: function (response) {
-                callback(response);
-            },
-            error: function (xhr) {
-                var resp = xhr.responseText;
-                var msg = JSON.parse(resp).message;
-                MessageManager.showMessage('Error', msg);
-            }
-        });
+        var url = EndpointManager.getEndpoint('RESOURCE_COLLECTION');
+        var queryString = '?start=1&limit=8'+qstring;
+        this.client = new ServerClient('',url, true);
+        this.client.get(callback,'', queryString); 
     };
 
     /**
@@ -112,11 +102,47 @@
     };
 
     /**
+     * Implements the method defined in ModalForm
+     */
+    BindResourcesForm.prototype.setListeners = function setListeners() {
+        //set scrollPagination
+        this.pagination = new ScrollPagination(
+                $('.modal-body'),
+                $('#resources'),
+                this.paintResources.bind(this),
+                this.client,
+                function(){}
+            );
+        this.pagination.setElemSpace(0);
+        this.pagination.configurePaginationParams(233, 2);
+
+        // Remove possible listeners existing in the scroll
+        this.pagination.removeListeners();
+        this.pagination.createListeners();
+        //set the next page on 4.
+        this.pagination.setNextPage(5);
+    };
+
+
+    /**
      * Paints the resources
      * @param resources Resources to be painted
      */
     BindResourcesForm.prototype.paintResources = function paintResources (resources) {
-        this.resources = resources;
+        if(this.resources === undefined){
+            this.resources = resources;  
+            if(!this.viewOnly) {
+            // Set listener
+            $('.modal-footer > .btn').click((function () {
+                this.bindResources();
+            }).bind(this));
+        }  
+        }
+        else{
+            this.resources=this.resources.concat(resources);
+        }
+        
+
 
         var labels = {
             'deleted': 'label-important',
@@ -138,7 +164,9 @@
             var found = false;
             var templ, j = 0;
 
-            res.number = i;
+            var index = (this.resources.length-resources.length) + i;
+
+            res.number = index;
             $.template('resourceTemplate', $('#resource_template'));
             templ = $.tmpl('resourceTemplate', res).
                 appendTo('#resources');
@@ -171,7 +199,7 @@
                 while(!found && j < offeringRes.length) {
                     if (res.name == offeringRes[j].name && res.version == offeringRes[j].version) {
                         found = true;
-                        $('#check-' + i).prop('checked', true);
+                        $('#check-' + index).prop('checked', true);
                     }
                     j++;
                 }
@@ -187,12 +215,7 @@
             }
         }
 
-        if(!this.viewOnly) {
-            // Set listener
-            $('.modal-footer > .btn').click((function () {
-                this.bindResources();
-            }).bind(this));
-        } else {
+        if(this.viewOnly){
             $('[type="checkbox"]').remove();
         }
     };

@@ -144,6 +144,11 @@
         }
     };
 
+
+    ScrollPagination.prototype.setNextPage = function setNextPage(pageNum) {
+        this.nextPage = pageNum;
+    };
+
     /**
      * Creates scroll listeners
      */

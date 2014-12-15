@@ -739,7 +739,7 @@ class ResourceCollectionTestCase(TestCase):
         ([], _no_provider, 403, 'Forbidden'),
         ([], _call_exception, 400, 'Getting resources error')
     ])
-    def test_get_resources(self, return_value, side_effect=None, code=200, error_msg=None):
+    def test_get_resources(self, return_value, side_effect=None, code=200, error_msg=None, pagination=None):
 
         # Mock get offerings method
         resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))

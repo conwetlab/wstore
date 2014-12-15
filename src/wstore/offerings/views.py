@@ -324,6 +324,13 @@ class ResourceCollection(Resource):
     @authentication_required
     def read(self, request):
 
+        pagination = {
+            'start': request.GET.get('start', None),
+            'limit': request.GET.get('limit', None)
+        }
+        if pagination['start'] == None or pagination['limit'] == None:
+            pagination = None
+
         profile = request.user.userprofile
         filter_ = request.GET.get('open', None)
 
@@ -332,7 +339,7 @@ class ResourceCollection(Resource):
 
         if 'provider' in profile.get_current_roles():
             try:
-                response = get_provider_resources(request.user, filter_=filter_)
+                response = get_provider_resources(request.user, filter_=filter_, pagination=pagination)
             except Exception, e:
                 return build_response(request, 400, e.message)
         else:

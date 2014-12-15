@@ -185,8 +185,8 @@ def get_provider_resources(provider, filter_=None, pagination=None):
     response = []
 
     if pagination:
-        x = pagination['start']-1
-        y = x+pagination['limit']
+        x = int(pagination['start']) -1
+        y = x+int(pagination['limit'])
         resources = Resource.objects.filter(provider=provider.userprofile.current_organization)[x:y]
     else:
         resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
