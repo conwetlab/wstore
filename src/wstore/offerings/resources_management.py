@@ -34,6 +34,7 @@ from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.errors import ConflictError
+from wstore.offerings.resource_plugins.plugins.ckan_validation import validate_dataset
 
 
 def _save_resource_file(provider, name, version, file_):
@@ -103,6 +104,11 @@ def register_resource(provider, data, file_=None):
             # Check link format
             if not is_valid_url(data['link']):
                 raise ValueError('Invalid resource link format')
+
+            validation = validate_dataset(provider, data['link'])
+
+            if not validation[0]:
+                raise PermissionDenied(validation[1])
 
             resource_data['link'] = data['link']
             resource_data['content_path'] = ''
