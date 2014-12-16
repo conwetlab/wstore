@@ -26,13 +26,14 @@ import re
 from bson import ObjectId
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 
 from wstore.models import Resource, Offering
 from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.version import is_lower_version
-from django.core.exceptions import PermissionDenied
+from wstore.store_commons.errors import ConflictError
 
 
 def _save_resource_file(provider, name, version, file_):
@@ -70,7 +71,7 @@ def register_resource(provider, data, file_=None):
         existing = False
 
     if existing:
-        raise ValueError('The resource ' + data['name'] + ' already exists. Please upgrade the resource if you want to provide new content')
+        raise ConflictError('The resource ' + data['name'] + ' already exists. Please upgrade the resource if you want to provide new content')
 
     # Check contents
     if not 'name' in data or not 'version' in data or\

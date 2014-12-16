@@ -39,6 +39,7 @@ from wstore.offerings.resources_management import register_resource, get_provide
 update_resource, upgrade_resource
 from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.social.reviews.review_manager import ReviewManager
+from wstore.store_commons.errors import ConflictError
 
 
 ####################################################################################################
@@ -81,6 +82,8 @@ class OfferingCollection(Resource):
                 create_offering(user, json_data)
             except HTTPError:
                 return build_response(request, 502, 'Bad Gateway')
+            except ConflictError as e:
+                return build_response(request, 409, unicode(e))
             except Exception, e:
                 return build_response(request, 400, unicode(e))
         else:
@@ -303,19 +306,19 @@ class ResourceCollection(Resource):
 
         if 'provider' in profile.get_current_roles():
 
-            if content_type == 'application/json':
-                try:
+            try:
+                if content_type == 'application/json':
                     data = json.loads(request.raw_post_data)
                     register_resource(user, data)
-                except Exception, e:
-                    return build_response(request, 400, e.message)
-            else:
-                try:
+                else:
                     data = json.loads(request.POST['json'])
                     f = request.FILES['file']
                     register_resource(user, data, file_=f)
-                except Exception, e:
-                    return build_response(request, 400, e.message)
+
+            except ConflictError as e:
+                return build_response(request, 409, unicode(e))
+            except Exception as e:
+                return build_response(request, 400, unicode(e))
         else:
             return build_response(request, 403, "You don't have the provider role")
 

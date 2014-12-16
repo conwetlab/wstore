@@ -48,6 +48,7 @@ from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.social.tagging.tag_manager import TagManager
+from wstore.store_commons.errors import ConflictError
 
 
 def get_offering_info(offering, user):
@@ -406,7 +407,7 @@ def create_offering(provider, json_data):
         existing = False
 
     if existing:
-        raise Exception('The offering already exists')
+        raise ConflictError('The offering already exists')
 
     # Check if the version of the offering is lower than an existing one
     offerings = Offering.objects.filter(owner_organization=organization, name=data['name'])

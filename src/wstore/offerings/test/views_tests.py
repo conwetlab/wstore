@@ -33,6 +33,7 @@ from wstore.offerings import views
 from wstore.models import Offering, Organization, Context
 from django.contrib.sites.models import Site
 from social_auth.db.django_models import UserSocialAuth
+from wstore.store_commons.errors import ConflictError
 
 
 class OfferingCollectionTestCase(TestCase):
@@ -730,6 +731,9 @@ class ResourceCollectionTestCase(TestCase):
     def _creation_exception(self):
         views.register_resource.side_effect = Exception('Resource creation exception')
 
+    def _existing(self):
+        views.register_resource.side_effect = ConflictError('Resource exists')
+
     @parameterized.expand([
         ([{
             'name': 'test_resource',
@@ -776,7 +780,10 @@ class ResourceCollectionTestCase(TestCase):
         (RESOURCE_DATA, True),
         (RESOURCE_DATA, False, _no_provider, True, 403, "You don't have the provider role"),
         (RESOURCE_DATA, False, _creation_exception, True, 400, 'Resource creation exception'),
-        (RESOURCE_DATA, True, _creation_exception, True, 400, 'Resource creation exception')
+        (RESOURCE_DATA, True, _creation_exception, True, 400, 'Resource creation exception'),
+        (RESOURCE_DATA, True, _creation_exception, True, 400, 'Resource creation exception'),
+        (RESOURCE_DATA, True, _existing, True, 409, 'Resource exists')
+        
     ])
     def test_create_resource(self, data, file_=False, side_effect=None, error=False, code=201, msg='Created'):
 

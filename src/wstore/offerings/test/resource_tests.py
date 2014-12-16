@@ -33,6 +33,7 @@ from django.conf import settings
 from wstore.offerings import resources_management
 from wstore.models import Resource
 from django.core.exceptions import PermissionDenied
+from wstore.store_commons.errors import ConflictError
 
 
 __test__ = False
@@ -88,7 +89,7 @@ class ResourceRegisteringTestCase(TestCase):
             'description': '',
             'type': 'download',
             'link': 'https://existing.com/download'
-        }, _fill_provider, False, ValueError, 'The resource Existing already exists. Please upgrade the resource if you want to provide new content'),
+        }, _fill_provider, False, ConflictError, 'The resource Existing already exists. Please upgrade the resource if you want to provide new content'),
         ({
             'name': 'Invalid',
             'version': '1.0a',

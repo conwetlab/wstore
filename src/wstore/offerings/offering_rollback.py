@@ -106,5 +106,5 @@ class OfferingRollback():
             rollback(provider, provider.userprofile, json_data, 'Http error')
             raise e
         except Exception, e:
-            rollback(provider, provider.userprofile, json_data, e.message)
+            rollback(provider, provider.userprofile, json_data, unicode(e))
             raise e
