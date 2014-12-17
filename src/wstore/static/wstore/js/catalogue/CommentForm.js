@@ -68,7 +68,7 @@
         clientMethod(request, function() {
             $('#message').modal('hide');
             this.callerObj.refreshAndUpdateDetailsView();
-        }.bind(this), offeringContext, function() {
+        }.bind(this), offeringContext, function(xhr) {
             var resp = xhr.responseText;
             var msg = JSON.parse(resp).message;
             $('#message').modal('hide');

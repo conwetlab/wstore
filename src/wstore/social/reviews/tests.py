@@ -209,6 +209,7 @@ class ReviewTestCase(TestCase):
         self.offering.comments = ['333333', '444444', '555555']
         self.offering.rating = 5.0
         self.offering.open = False
+        self.offering.is_owner.return_value = False
 
         # Create user objects mock
         self.org = MagicMock()
@@ -260,11 +261,16 @@ class ReviewTestCase(TestCase):
         self._not_purchased()
         self.offering.open = True
 
+    def _owner_review(self):
+        self._open_offering()
+        self.offering.is_owner.return_value = True
+
     @parameterized.expand([
         (EXAMPLE_REVIEW, 4.5),
         (EXAMPLE_REVIEW, 4.5, _open_offering),
         (EXAMPLE_REVIEW, 3, _no_rated),
         (EXAMPLE_REVIEW, 4.5, _org_rated, True),
+        (EXAMPLE_REVIEW, None, _owner_review, False, PermissionDenied, 'You cannot review your own offering'),
         (EXAMPLE_REVIEW, None, _usr_not_allowed, False, PermissionDenied, 'You cannot review this offering again. Please update your review to provide new comments'),
         (EXAMPLE_REVIEW, None, _not_purchased, False, PermissionDenied, 'You cannot review this offering since you has not acquire it'),
         (EXAMPLE_REVIEW, None, _usr_not_allowed_org, False, PermissionDenied, 'You cannot review this offering again. Please update your review to provide new comments'),

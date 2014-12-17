@@ -115,6 +115,9 @@ class ReviewManager():
                 purchase = Purchase.objects.get(offering=offering, owner_organization=user.userprofile.current_organization)
             except:
                 raise PermissionDenied('You cannot review this offering since you has not acquire it')
+        elif offering.is_owner(user):
+            # If the offering is open, check that the user is not owner of the offering
+            raise PermissionDenied('You cannot review your own offering')
 
         # Check if the user has already review the offering.
         if (user.userprofile.is_user_org() and offering.pk in user.userprofile.rated_offerings)\

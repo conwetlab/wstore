@@ -111,7 +111,8 @@
 
         // Show review button if needed
         if (this.offeringElement.getState() == 'purchased' ||
-            (this.offeringElement.getState() == 'published' && this.offeringElement.isOpen())) {
+            (this.offeringElement.getState() == 'published' && 
+             this.offeringElement.isOpen() && !USERPROFILE.isOwner(this.offeringElement))) {
 
             $('#comment-btn').removeClass('hide').click((function() {
                 var commentForm = new CommentForm(this.offeringElement, this.callerObj);

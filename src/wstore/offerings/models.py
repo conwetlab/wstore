@@ -56,7 +56,12 @@ class Offering(models.Model):
         """
         Check if the user is the owner of the offering
         """
-        return self.owner_admin_user == user
+        owns = False
+        if user.userprofile.current_organization == self.owner_organization and \
+        (self.owner_admin_user == user or user.pk in user.userprofile.current_organization.managers):
+            owns = True
+
+        return owns
 
     def __unicode__(self):
         return self.name
