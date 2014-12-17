@@ -46,10 +46,11 @@
     BindResourcesForm.prototype.getUserResources = function getUserResources (callback, open) {
         var qstring = '';
         if (open) {
-            qstring = '?open=true';
+            qstring = '&open=true';
         }
         var url = EndpointManager.getEndpoint('RESOURCE_COLLECTION');
         var queryString = '?start=1&limit=8'+qstring;
+
         this.client = new ServerClient('',url, true);
         this.client.get(callback,'', queryString); 
     };
