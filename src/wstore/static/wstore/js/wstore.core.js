@@ -41,6 +41,10 @@
 
         fillStarsRating(offeringElem.getRating(), templ.find('.stars-container'));
 
+        if (!offeringElem.comments.length) {
+            templ.find('.stars-container').css('opacity', '0.2');
+        }
+
         if (!offeringElem.isOpen()) {
             priceStr = getPriceStr(offeringElem.getPricing());
         } else {

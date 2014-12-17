@@ -112,7 +112,10 @@
                 }
             }
         }
-        fillStarsRating(this.offeringElement.getRating(), $('#details-stars'));
+
+        if (this.offeringElement.comments.length > 0) {
+            fillStarsRating(this.offeringElement.getRating(), $('#details-stars'));
+        }
 
         // Load the main info template
         $.template('mainInfoTemplate', $('#main_info_offering_template'));
