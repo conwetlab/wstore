@@ -38,10 +38,10 @@ class RepositoryAdaptor():
 
         self._repository_url = repository_url
 
-        if not self._repository_url.endswith('/'):
-            self._repository_url += '/'
-
         if collection != None:
+            if not self._repository_url.endswith('/'):
+                self._repository_url += '/'
+
             self._collection = collection
             if not self._collection.endswith('/'):
                 self._collection += '/'
