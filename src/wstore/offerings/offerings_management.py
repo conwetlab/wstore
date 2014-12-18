@@ -496,28 +496,6 @@ def create_offering(provider, json_data):
         usdl = usdl_info['data']
         data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl_info['data'], name=offering_id)
 
-    # If the USDL is already uploaded in the repository
-    elif 'description_url' in json_data:
-
-        # Check that the link to USDL is unique since could be used to
-        # purchase offerings from Marketplace
-        usdl_info = {}
-        usdl_url = json_data['description_url']
-        off = Offering.objects.filter(description_url=usdl_url)
-
-        if len(off) != 0:
-            raise ValueError('The provided USDL description is already registered')
-
-        # Download the USDL from the repository
-        repository_adaptor = RepositoryAdaptor(usdl_url)
-        accept = "text/plain; application/rdf+xml; text/turtle; text/n3"
-
-        usdl = repository_adaptor.download(content_type=accept)
-        usdl_info['content_type'] = usdl['content_type']
-
-        usdl = usdl['data']
-        data['description_url'] = usdl_url
-
     # If the USDL is going to be created
     elif 'offering_info' in json_data:
 
@@ -669,24 +647,6 @@ def update_offering(offering, data):
         repository_adaptor.upload(usdl_info['content_type'], usdl)
         new_usdl = True
 
-    # The USDL document has changed in the repository
-    elif 'description_url' in data:
-        usdl_info = {}
-        usdl_url = data['description_url']
-
-        # Check the link
-        if usdl_url != offering.description_url:
-            raise ValueError('The provided USDL URL is not valid')
-
-        # Download new content
-        repository_adaptor = RepositoryAdaptor(usdl_url)
-        accept = "text/plain; application/rdf+xml; text/turtle; text/n3"
-        usdl = repository_adaptor.download(content_type=accept)
-
-        usdl_info['content_type'] = usdl['content_type']
-        usdl = usdl['data']
-
-        new_usdl = True
     elif 'offering_info' in data:
         usdl_info = {
             'content_type': 'application/rdf+xml'

@@ -280,15 +280,6 @@ class OfferingCreationTestCase(TestCase):
 
         return offering_data
 
-    def _fill_existing_url(self, offering_data):
-        offering_data['image']['data'] = self._image
-        self._create_offering({
-            'name': 'existing offering',
-            'version': '2.0',
-            'url': 'http://examplerep/v1/test_usdl'
-        })
-        return offering_data
-
     def _serialize(self, type_):
         graph = rdflib.Graph()
         graph.parse(data=self._usdl, format='application/rdf+xml')
@@ -309,7 +300,6 @@ class OfferingCreationTestCase(TestCase):
     @parameterized.expand([
         (BASIC_OFFERING, BASIC_EXPECTED, _fill_json),
         (OFFERING_WITH_IMAGES, EXPECTED_WITH_IMAGES, _fill_screenshots),
-        (OFFERING_URL, EXPECTED_URL, _fill_image),
         (OFFERING_BIGGER_VERSION, EXPECTED_BIGGER_VERSION, _fill_previous_version),
         (OFFERING_APPLICATIONS_RESOURCES, BASIC_EXPECTED, _fill_applications),
         (OFFERING_NOTIFY_URL, EXPECTED_NOTIFY_URL, _fill_turtle),
@@ -324,7 +314,6 @@ class OfferingCreationTestCase(TestCase):
         (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering already exists'),
         (OFFERING_NOTIFY_DEFAULT, None, _fill_basic_images, ValueError, 'There is not a default notification URL defined for the organization test_organization. To configure a default notification URL provide it in the settings menu'),
         (OFFERING_NOTIFY_URL_INVALID, None, _fill_basic_images, ValueError, "Invalid notification URL format: It doesn't seem to be an URL"),
-        (OFFERING_URL, None, _fill_existing_url, ValueError, 'The provided USDL description is already registered'),
         (OFFERING_NO_USDL, None, _fill_image, Exception, 'No USDL description provided'),
         (OFFERING_NO_IMAGE, None, None, ValueError, 'Missing required field: Logo'),
         (OFFERING_IMAGE_MISSING, None, None, ValueError, 'Missing required field in image'),
@@ -568,9 +557,6 @@ class OfferingUpdateTestCase(TestCase):
             }
         }, _fit_usdl_json),
         ({
-            'description_url':  "http://examplerep/v1/test_usdl"
-        },),
-        ({
             'image': {
                 'name': 'test_logo.png',
                 'data': 'encoded data'
@@ -594,15 +580,6 @@ class OfferingUpdateTestCase(TestCase):
             }
         },),
         ({}, _publish_offering, PermissionDenied, 'The offering cannot be edited'),
-        ({
-            'description_url': {
-                'content_type': 'application/rdf+xml',
-                'link': 'http://examplerep/v1/invalid'
-            }
-        }, None, ValueError, 'The provided USDL URL is not valid'),
-        ({
-            'description_url':  "http://examplerep/v1/test_usdl"
-        }, _invalid_usdl, ValueError, 'Invalid USDL'),
         ({
             'offering_info': {
                 'pricing': {

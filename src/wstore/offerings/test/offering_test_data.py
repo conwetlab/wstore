@@ -129,18 +129,6 @@ OFFERING_USDL_DATA_COMPLETE = {
     }
 }
 
-OFFERING_URL = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'description_url': 'http://examplerep/v1/test_usdl'
-}
-
 EXPECTED_URL = {
     'image': '/media/test_organization__test_offering__1.0/test_image.png',
     'description_url': 'http://examplerep/v1/test_usdl'
