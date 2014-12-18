@@ -331,7 +331,7 @@ class ReviewManager():
         if not exception and len(response['title']) > 60:
             exception = ValueError('Response title cannot contain more than 60 characters')
 
-        if not exception and len(response['response']) > 200:
+        if not exception and len(response['response']) > 1000:
             exception = ValueError('Response text cannot contain more than 200 characters')
 
         return exception
