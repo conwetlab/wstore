@@ -221,24 +221,6 @@
             }
             provided = true
 
-        } else if($('#usdl-url').length > 0){
-            var usdlLink = $.trim($('#usdl-url').val());
-
-            if (usdlLink == '') {
-                error = true;
-                msg = 'Missing USDL Link';
-
-            } else {
-                // Check link format
-                var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
-                if (!urlReg.test(usdlLink)) {
-                    error = true;
-                    msg = 'Invalid URL format';
-                } else {
-                    request.description_url = usdlLink;
-                    provided = true;
-                }
-            }
         }
 
         if (!error && !provided) {
@@ -305,15 +287,6 @@
         $('#usdl-doc').change(function(event) {
             handleUSDLFileSelection(event);
         });
-    };
-
-    var displayUSDLLinkForm = function displayUSDLLinkForm() {
-        var helpMsg = "Provide an URL of an USDL document uploaded in a Repository";
-        $('#warning-container').empty();
-
-        $('#upload-help').attr('data-content', helpMsg);
-        $('#usdl-container').empty();
-        $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo('#usdl-container');
     };
 
     var checkBasicUSDL = function checkBasicUSDL(offeringElement) {
@@ -417,8 +390,6 @@
                 displayUpdateUSDLInfo(offeringElement);
             } else if($(this).val() == "2") {
                 displayUploadUSDLForm();
-            } else if ($(this).val() == "3") {
-                displayUSDLLinkForm();
             } else {
                 var helpMsg = "Select the method to provide the USDL with the new info. You can provide an USDL or provide an URL pointing to an USDL. You can also manually update the info, if you created a basic USDL when you created the offering.";
                 $('#upload-help').attr('data-content', helpMsg);

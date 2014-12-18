@@ -226,21 +226,6 @@
     };
 
     /**
-     * Displays the form for providing a URL pointing to an USDL
-     */
-    CreateOfferingForm.prototype.displayUSDLLinkForm = function displayUSDLLinkForm() {
-        var helpMsg = "Provide an URL of an USDL document uploaded in a Repository";
-        var cg, ctrls;
-
-        $('#upload-help').attr('data-content', helpMsg);
-        $('#usdl-container').empty();
-        cg = $('<div class="control-group"></div>').appendTo('#usdl-container')
-        $('<label></label>').text('USDL URL*').appendTo(cg);
-        ctrls = $('<div class="controls"></div>').appendTo(cg);
-        $('<input></input>').attr('type', 'text').attr('id', 'usdl-url').attr('placeholder', 'USDL URL').appendTo(ctrls);
-    };
-
-    /**
      * Displays the form for creating a simple USDL document
      */
     CreateOfferingForm.prototype.displayCreateUSDLForm = function displayCreateUSDLForm(repositories) {
@@ -301,8 +286,6 @@
                     self.displayCreateUSDLForm(repositories);
                 } else if($(this).val() == "1") {
                     self.displayUploadUSDLForm(repositories);
-                } else if ($(this).val() == "2") {
-                    self.displayUSDLLinkForm();
                 } else {
                     $('#usdl-container').empty()
                 }
@@ -394,24 +377,6 @@
                 // Include the legal info if conpleted
                 if (legal.title && legal.text) {
                     this.offeringInfo.offering_info.legal = legal
-                }
-            } else {
-                var usdlLink = $.trim($('#usdl-url').val());
-
-                if (usdlLink) {
-                    // Check link format
-                    var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
-                    if (!urlReg.test(usdlLink)) {
-                        error = true;
-                        msg.push('Invalid URL format');
-                        errElems.push($('#usdl-url'))
-                    } else {
-                        this.offeringInfo.description_url = usdlLink;
-                    }
-                } else {
-                    error = true;
-                    msg.push('USDL info is missing')
-                    errElems.push($('#usdl-url'))
                 }
             }
 
