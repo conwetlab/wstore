@@ -669,7 +669,8 @@ h2 {
 }
 
 .comment-rating {
-    display: block;
+  float: right;
+  margin-right: -60px;
 }
 
 #timestamp {
@@ -864,13 +865,6 @@ a.tag {
   margin: 15px;
   overflow: hidden;
   padding: 10px;
-}
-
-.comment-entry .icon-reply {
-  font-size: 20px;
-  position: relative;
-  top: 0px;
-  left: 330px;
 }
 
 .comment-entry span {
@@ -1284,6 +1278,20 @@ header {
   box-shadow: 4px 5px 8px rgba(50, 51, 51, 0.15);
 }
 
+.comment-selected .comment-rating {
+  margin-right: 10px !important;
+}
+
+.comment-username {
+  width: 255px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.comment-selected .comment-username {
+  width: 184px !important;
+}
+
 .comment-entry .txt-gradient {
   height: 20px;
   width: 55px;
@@ -1301,7 +1309,7 @@ header {
 
 .comment-options {
   float: right;
-  margin-top: -18px;
+  margin-top: -4px;
 }
 
 .gradient-grey-low {

@@ -62,7 +62,7 @@ class ReviewManager():
         if not exception and not isinstance(review_data['rating'], int):
             exception = TypeError('Invalid rating format')
 
-        if not exception and not (review_data['rating'] > 0 and review_data['rating'] < 6):
+        if not exception and not (review_data['rating'] >= 0 and review_data['rating'] < 6):
             exception = ValueError('Rating must be an integer between 0 and 5')
 
         return exception
@@ -317,22 +317,22 @@ class ReviewManager():
             exception = TypeError('Invalid response type')
 
         # Validate response contents
-        if not exception and (not 'title' in response or not 'response' in response):
+        if not exception and (not 'title' in response or not 'comment' in response):
             exception = ValueError('Missing a required field in response')
 
         # Validate contents type
         if not exception and (not isinstance(response['title'], str) and not isinstance(response['title'], unicode)):
             exception = TypeError('Invalid title format')
 
-        if not exception and (not isinstance(response['response'], str) and not isinstance(response['response'], unicode)):
+        if not exception and (not isinstance(response['comment'], str) and not isinstance(response['comment'], unicode)):
             exception = TypeError('Invalid response text format')
 
         # Validate contents length
         if not exception and len(response['title']) > 60:
             exception = ValueError('Response title cannot contain more than 60 characters')
 
-        if not exception and len(response['response']) > 1000:
-            exception = ValueError('Response text cannot contain more than 200 characters')
+        if not exception and len(response['comment']) > 1000:
+            exception = ValueError('Response text cannot contain more than 1000 characters')
 
         return exception
 
@@ -354,7 +354,7 @@ class ReviewManager():
             organization=user.userprofile.current_organization,
             timestamp=datetime.now(),
             title=response['title'],
-            response=response['response']
+            response=response['comment']
         )
         rev.save()
 

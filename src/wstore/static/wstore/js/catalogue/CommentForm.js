@@ -20,17 +20,54 @@
 
 (function() {
 
+    var buildParams = function buildParams(self) {
+        var params = {
+            'title': 'Review',
+            'endpoint': 'REVIEW_COLLECTION'
+        };
+
+        var offeringContext = {
+            'organization': self.offeringElement.getOrganization(),
+            'name': self.offeringElement.getName(),
+            'version': self.offeringElement.getVersion()
+        };
+
+        // Build URL
+        if (self.reviewData) {
+
+            if (self.isReply) {
+                params.title = 'Reply';
+                params.endpoint = 'RESPONSE_ENTRY';
+            } else {
+                params.endpoint = 'REVIEW_ENTRY';
+            }
+
+            offeringContext.review = self.reviewData.id;
+        }
+
+        params.endpointContext = offeringContext;
+
+        return params;
+    };
+
     /**
      * Modal form used to create offering reviews
      * @param offeringElement object containing the offering to be reviewed
      * @param callerObj instance that creates the object, used for notifications
      * @param revData data of the review used for updates
      */
-    CommentForm = function CommentForm(offeringElement, callerObj, revData) {
+    CommentForm = function CommentForm(offeringElement, callerObj, revData, isReply) {
+        this.isReply = false;
+
+        if (isReply) {
+            this.isReply = true;
+        }
+
         this.offeringElement = offeringElement;
         this.callerObj = callerObj;
         this.rating = 0;
         this.reviewData = revData;
+        this.params = buildParams(this);
     }
 
     /**
@@ -39,23 +76,10 @@
      */
     CommentForm.prototype.makeRequest = function makeRequest(request) {
         var client;
-        var endpoint = 'REVIEW_COLLECTION';
         var clientMethod;
 
-        var offeringContext = {
-            'organization': this.offeringElement.getOrganization(),
-            'name': this.offeringElement.getName(),
-            'version': this.offeringElement.getVersion()
-        };
-
-        // Get the endpoint depending if it is a creation or an update
-        if (this.reviewData) {
-            endpoint = 'REVIEW_ENTRY';
-            offeringContext.review = this.reviewData.id;
-        }
-
         // Build the server client
-        client = new ServerClient(endpoint, '');
+        client = new ServerClient(this.params.endpoint, '');
 
         // Select method request
         if (this.reviewData) {
@@ -68,7 +92,7 @@
         clientMethod(request, function() {
             $('#message').modal('hide');
             this.callerObj.refreshAndUpdateDetailsView();
-        }.bind(this), offeringContext, function(xhr) {
+        }.bind(this), this.params.endpointContext, function(xhr) {
             var resp = xhr.responseText;
             var msg = JSON.parse(resp).message;
             $('#message').modal('hide');
@@ -110,7 +134,10 @@
         if (!error) {
             request.title = title;
             request.comment = comment;
-            request.rating = this.rating;
+
+            if (!this.isReply) {
+                request.rating = this.rating;
+            }
 
             this.makeRequest(request);
         } else {
@@ -118,20 +145,11 @@
         }
     };
 
-    /**
-     * Paint the form and includes values if making an update
-     */
-    CommentForm.prototype.paintCommentForm = function painCommentForm() {
-        var stars;
-
-        MessageManager.showMessage('Review', '');
-
-        $('<div></div>').attr('id', 'error-message').appendTo('.modal-body');
-        $('<div></div>').addClass('clear').appendTo('.modal-body');
+    var buildStarsListener = function buildStarsListeners(self) {
 
         $('<p></p>').text('Rating').appendTo('.modal-body');
 
-        stars = $('<div></div>').appendTo('.modal-body');
+        var stars = $('<div></div>').appendTo('.modal-body');
 
         // Create stars listeners for getting the rating value
         for (var i = 0; i < 5; i++) {
@@ -149,14 +167,14 @@
                         $('#star-' + k).removeClass('icon-star-empty').addClass('icon-star blue-star');
                     }
                 }
-            })(i, this));
+            })(i, self));
 
             // Listener for getting the rating value on click
             icon.click((function(pos, self) {
                 return function() {
                     self.rating = pos + 1;
                 }
-            })(i, this));
+            })(i, self));
 
             // listener for filling the stars depending on the current selected rating
             icon.mouseout((function(pos, self) {
@@ -170,11 +188,28 @@
                         $('#star-' + k).removeClass('icon-star-empty').addClass('icon-star blue-star');
                     }
                 }
-            })(i, this));
+            })(i, self));
 
             icon.appendTo(stars);
         }
 
+    };
+
+    /**
+     * Paint the form and includes values if making an update
+     */
+    CommentForm.prototype.paintCommentForm = function painCommentForm() {
+        var stars;
+
+        MessageManager.showMessage(this.params.title, '');
+
+        $('<div></div>').attr('id', 'error-message').appendTo('.modal-body');
+        $('<div></div>').addClass('clear').appendTo('.modal-body');
+
+        if (!this.isReply) {
+            buildStarsListener(this);
+        }
+        
         $('<div></div>').addClass('space clear').appendTo('.modal-body');
 
         $('<p></p>').text('Title').appendTo('.modal-body');
@@ -185,7 +220,7 @@
         $('<textarea></textarea>').attr('id', 'comment-text').appendTo('.modal-body');
 
         // Fill fields if review data has been provided
-        if (this.reviewData) {
+        if (!this.isReply && this.reviewData) {
             for (var i = 0; i < this.reviewData.rating; i++) {
                 $('#star-' + i).removeClass('icon-star-empty').addClass('icon-star blue-star');
             }

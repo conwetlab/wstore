@@ -133,11 +133,11 @@ RESULT_REVIEWS = [REVIEW1, REVIEW2, REVIEW3]
 
 RESPONSE = {
     'title': 'a valid response',
-    'response': 'text of a valid response'
+    'comment': 'text of a valid response'
 }
 
 RESPONSE_MISSING_TITLE = {
-    'response': 'a missing title response'
+    'comment': 'a missing title response'
 }
 
 RESPONSE_MISSING_RESPONSE = {
@@ -146,22 +146,22 @@ RESPONSE_MISSING_RESPONSE = {
 
 RESPONSE_INV_TITLE = {
     'title': 3,
-    'response': 'invalid title type response'
+    'comment': 'invalid title type response'
 }
 
 RESPONSE_INV_RESP = {
     'title': 'a valid title',
-    'response': 12
+    'comment': 12
 }
 
 RESPONSE_INV_LEN_TITLE = {
     'title': 'An example response title with more than 60 characters used for testing',
-    'response': 'a valid response'
+    'comment': 'a valid response'
 }
 
 RESPONSE_INV_LEN_RESP = {
     'title': 'a valid title',
-    'response': 'This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. '
+    'comment': 'This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. This is an example response comment for testing with more than 1000 characters used for testing invalid length errors. This is an example response comment for testing with more than 200 characters used for testing invalid length errors. '
 }
 
 ##########################################################################
@@ -562,7 +562,7 @@ class ReviewTestCase(TestCase):
         (RESPONSE_INV_TITLE, '999999', None, TypeError, 'Invalid title format'),
         (RESPONSE_INV_RESP, '999999', None, TypeError, 'Invalid response text format'),
         (RESPONSE_INV_LEN_TITLE, '999999', None, ValueError, 'Response title cannot contain more than 60 characters'),
-        (RESPONSE_INV_LEN_RESP, '999999', None, ValueError, 'Response text cannot contain more than 200 characters'),
+        (RESPONSE_INV_LEN_RESP, '999999', None, ValueError, 'Response text cannot contain more than 1000 characters'),
         (RESPONSE, 100, None, TypeError, 'The review id must be an string'),
         (RESPONSE, '111111', _invalid_rev, ValueError, 'Invalid review id'),
         (RESPONSE, '111111', _invalid_usr_resp, PermissionDenied, 'The user cannot respond the current review'),
@@ -605,7 +605,7 @@ class ReviewTestCase(TestCase):
                 organization=self.org,
                 timestamp=self.datetime,
                 title=response['title'],
-                response=response['response']
+                response=response['comment']
             )
         else:
             self.assertTrue(isinstance(error, err_type))

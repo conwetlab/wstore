@@ -178,18 +178,27 @@
         }.bind(this), 'Remove');
     };
 
+    var replyHandler = function replyHandler(review) {
+        var commentForm = new CommentForm(this.offeringElement, this.callerObj, {'id': review.id}, true);
+        commentForm.paintCommentForm();
+    }
+
     /**
      * Build the options of a selected review
      */
     var buildOptions = function buildOptions(self, review, domElem) {
+        var container = domElem.find('.comment-options');
+
+        container.addClass('hide');
+
         // Check if the user is owner of the offering
         if (USERPROFILE.isOwner(self.offeringElement)) {
+            var reply = $('<a rel="tooltip" title="Reply" class="btn btn-blue"><i style="margin-left: -2px;" class="icon-reply"></i></a>').click(replyHandler.bind(self, review));
+            container.append(reply);
         } else if(isReviewer(self, review)) { // Check if the user is the reviewer of the offering
             // Include reviewer options
-            var container = domElem.find('.comment-options');
-            container.addClass('hide');
-            var edit = $('<a class="btn btn-blue"><i class="icon-edit"></i></a>').click(editHandler.bind(self, review));
-            var del = $('<a class="btn btn-blue"><i class="icon-trash"></i></a>').click(deleteHandler.bind(self, review));
+            var edit = $('<a rel="tooltip" title="Edit review" class="btn btn-blue"><i class="icon-edit"></i></a>').click(editHandler.bind(self, review));
+            var del = $('<a rel="tooltip" title="Remove review" class="btn btn-blue"><i class="icon-trash"></i></a>').click(deleteHandler.bind(self, review));
             container.append(edit);
             container.append(del);
         }
@@ -209,17 +218,24 @@
             elems.find('.comment-options').addClass('hide');
         };
 
+        // Clear comments if needed
+        if (this.scrollPag.getNextPageNumber() == 2) {
+            $('#comments').empty();
+        }
+        
         // Paint comments
         for (var i = 0; i < comments.length; i++) {
             var templ;
-            var username = comments[i].user;
+            var username = comments[i].organization;
 
+            if (username != comments[i].user) {
+                username += ' (' + comments[i].user + ')';
+            }
             $.template('commentTemplate', $('#comment_template'));
             templ = $.tmpl('commentTemplate', {
                 'user': username,
                 'timestamp': comments[i].timestamp.split(' ')[0],
-                'title': comments[i].title,
-                'comment': comments[i].comment
+                'title': comments[i].title
             }).click(function(self) {
                 return function() {
                     if ($(this).attr('style')) {
@@ -243,6 +259,11 @@
                     }
                 };
             }(this));
+
+            // ---- //
+            var reviewText = templ.find('.review-text');
+            var repText = comments[i].comment.split('\n').join('<br />');
+            reviewText[0].innerHTML = repText;
 
             // Build the different options for the review
             buildOptions(this, comments[i], templ);
