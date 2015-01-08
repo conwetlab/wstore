@@ -860,7 +860,7 @@ a.tag {
 .comment-entry {
   width: 350px;
   height: 130px;
-  display: inline;
+  display: inline-block;
   float: left;
   margin: 15px;
   overflow: hidden;
@@ -1270,13 +1270,15 @@ header {
 
 .comment-entry {
   -webkit-transition: height 1s; /* For Safari 3.1 to 6.0 */
-  transition: height 1s
+  transition: height 1s;
 }
 
 .comment-selected {
   background-color: rgb(255, 255, 255);
   box-shadow: 4px 5px 8px rgba(50, 51, 51, 0.15);
 }
+
+
 
 .comment-selected .comment-rating {
   margin-right: 10px !important;
@@ -1310,6 +1312,25 @@ header {
 .comment-options {
   float: right;
   margin-top: -4px;
+}
+
+.comment-reply-dec {
+  height: 100px;
+  width: 351px;
+  float: left;
+  margin-left: -10px;
+  margin-top: 6px;
+  background-color: rgb(235, 235, 235);
+}
+
+.up-marker {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 13px solid rgba(235, 235, 235, 1);
+  position: relative;
+  top: 6px;
 }
 
 .gradient-grey-low {

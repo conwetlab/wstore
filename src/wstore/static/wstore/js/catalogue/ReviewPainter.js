@@ -192,7 +192,7 @@
         container.addClass('hide');
 
         // Check if the user is owner of the offering
-        if (USERPROFILE.isOwner(self.offeringElement)) {
+        if (USERPROFILE.isOwner(self.offeringElement) && !review.response) {
             var reply = $('<a rel="tooltip" title="Reply" class="btn btn-blue"><i style="margin-left: -2px;" class="icon-reply"></i></a>').click(replyHandler.bind(self, review));
             container.append(reply);
         } else if(isReviewer(self, review)) { // Check if the user is the reviewer of the offering
@@ -204,19 +204,96 @@
         }
     };
 
+    var buildReviewClickHandler = function buildReviewClickHandler(self, response) {
+        var closeSelected = function(elems) {
+            var responseDiv;
+            elems.removeAttr('style');
+            elems.removeClass('comment-selected');
+
+            elems.find('.comment-options').addClass('hide');
+
+            setTimeout(function() {
+                responseDiv  = elems.find('.comment-reply-dec');
+                responseDiv.css('display', 'none');
+                elems.find('.up-marker').css('display', 'none');
+                elems.find('.txt-gradient').removeClass('hide');
+            }, 1000);
+        };
+
+        return function() {
+            if ($(this).attr('style')) {
+                closeSelected($(this));
+                if (!self.extended) {
+                    setTimeout(function() {
+                        $('#comments').removeAttr('style');
+                    }, 1000);
+                }
+            } else {
+                closeSelected($(this).parent().find('.comment-selected'));
+                // Calculate text height
+                var size = $(this).find('p').height() + 80;
+
+                $(this).addClass('comment-selected');
+
+                if (response) {
+                    var responseSize;
+                    var responseDiv  = $(this).find('.comment-reply-dec');
+
+                    $(this).find('.up-marker').removeAttr('style');
+
+                    responseDiv.removeAttr('style');
+                    responseSize = responseDiv.find('p').height() + 80;
+                    responseDiv.css('height', responseSize + 'px');
+                    size += responseSize;
+                }
+
+                $(this).css('height', size + 'px');
+
+                if (!self.extended) {
+                    $('#comments').css('height', 'auto');
+                };
+                $(this).find('.txt-gradient').addClass('hide');
+                $(this).find('.comment-options').removeClass('hide');
+            }
+        };
+    };
+
+    /**
+     * Private method use to render the template of a concrete comment or
+     * reply
+     */
+    var createCommentTemplate = function createCommentTemplate (self, comment, isReply) {
+        var templ;
+        var username = comment.organization;
+
+        if (username != comment.user) {
+            username += ' (' + comment.user + ')';
+        }
+        $.template('commentTemplate', $('#comment_template'));
+        templ = $.tmpl('commentTemplate', {
+            'user': username,
+            'timestamp': comment.timestamp.split(' ')[0],
+            'title': comment.title
+        })
+
+        if (!isReply) {
+            templ.click(buildReviewClickHandler(self, comment.response));
+        }
+
+        // ---- //
+        var reviewText = templ.find('.review-text');
+        var repText = comment.comment.split('\n').join('<br />');
+        reviewText[0].innerHTML = repText;
+
+        return templ;
+    };
+
     /**
      * Paint comments
      * @param comments, list with the comments to be painted
      */
     ReviewPainter.prototype.paintComments = function paintComments(comments) {
         this.checkExpand();
-
-        var closeSelected = function(elems) {
-            elems.removeAttr('style');
-            elems.removeClass('comment-selected');
-            elems.find('.txt-gradient').removeClass('hide');
-            elems.find('.comment-options').addClass('hide');
-        };
 
         // Clear comments if needed
         if (this.scrollPag.getNextPageNumber() == 2) {
@@ -225,50 +302,26 @@
         
         // Paint comments
         for (var i = 0; i < comments.length; i++) {
-            var templ;
-            var username = comments[i].organization;
-
-            if (username != comments[i].user) {
-                username += ' (' + comments[i].user + ')';
-            }
-            $.template('commentTemplate', $('#comment_template'));
-            templ = $.tmpl('commentTemplate', {
-                'user': username,
-                'timestamp': comments[i].timestamp.split(' ')[0],
-                'title': comments[i].title
-            }).click(function(self) {
-                return function() {
-                    if ($(this).attr('style')) {
-                        closeSelected($(this));
-                        if (!self.extended) {
-                            setTimeout(function() {
-                                $('#comments').removeAttr('style');
-                            }, 1000);
-                        }
-                    } else {
-                        closeSelected($(this).parent().find('.comment-selected'));
-                        // Calculate text height
-                        var size = $(this).find('p').height() + 80;
-                        $(this).css('height', size + 'px');
-                        $(this).addClass('comment-selected');
-                        if (!self.extended) {
-                            $('#comments').css('height', 'auto');
-                        };
-                        $(this).find('.txt-gradient').addClass('hide');
-                        $(this).find('.comment-options').removeClass('hide');
-                    }
-                };
-            }(this));
-
-            // ---- //
-            var reviewText = templ.find('.review-text');
-            var repText = comments[i].comment.split('\n').join('<br />');
-            reviewText[0].innerHTML = repText;
+            var templ = createCommentTemplate(self, comments[i], false);
 
             // Build the different options for the review
             buildOptions(this, comments[i], templ);
 
             fillStarsRating(comments[i].rating, templ.find('.comment-rating'));
+
+            if (comments[i].response) {
+                var size;
+                var response = comments[i].response
+                response.comment = response.response;
+
+                var responseTempl = createCommentTemplate(this, comments[i].response, true);
+                responseTempl.addClass('comment-reply-dec').css('display', 'none');
+                responseTempl.find('.txt-gradient').remove();
+
+                var marker = $('<div class="up-marker"></div>').css('display', 'none') ;
+                templ.append(marker);
+                templ.append(responseTempl);
+            }
             templ.appendTo('#comments');
         }
     };
