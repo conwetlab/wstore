@@ -56,7 +56,7 @@
         'RESOURCE_ENTRY': '/api/offering/resources/${provider}/${name}/${version}',
         'REVIEW_COLLECTION': '/api/offering/offerings/${organization}/${name}/${version}/review',
         'REVIEW_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/review/${review}',
-        'RESPONSE_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/review/${review}/response',
+        'RESPONSE_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/review/${review}/reply',
         'USDL_ENTRY': '/api/offering/offerings/${organization}/${name}/${version}/usdl',
         'SEARCH_ENTRY': '/api/search/keyword/${text}',
         'SEARCH_TAG_ENTRY': '/api/search/tag/${text}',

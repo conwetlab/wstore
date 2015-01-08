@@ -164,24 +164,42 @@
         commentForm.paintCommentForm();
     };
 
-    var deleteHandler = function deleteHandler(review) {
-        var msg = 'Are you sure that you want to remove your review';
+    var makeDeleteRequest = function makeDeleteRequest(self, msg, endpoint, review) {
         MessageManager.showYesNoWindow(msg, function() {
-            var client = new ServerClient('REVIEW_ENTRY', '');
-            context = {
-                'review': review.id,
-                'organization': this.offeringElement.getOrganization(),
-                'name': this.offeringElement.getName(),
-                'version': this.offeringElement.getVersion()
-            }
+            var client = new ServerClient(endpoint, '');
+            var context = {
+                    'review': review.id,
+                    'organization': this.offeringElement.getOrganization(),
+                    'name': this.offeringElement.getName(),
+                    'version': this.offeringElement.getVersion()
+                };
             client.remove(this.callerObj.refreshAndUpdateDetailsView.bind(this.callerObj), context);
-        }.bind(this), 'Remove');
+        }.bind(self), 'Remove');
+    };
+
+    var deleteHandler = function deleteHandler(review) {
+        var msg = 'Are you sure that you want to remove your review?';
+        var endpoint = 'REVIEW_ENTRY';
+
+        makeDeleteRequest(this, msg, endpoint, review);
     };
 
     var replyHandler = function replyHandler(review) {
         var commentForm = new CommentForm(this.offeringElement, this.callerObj, {'id': review.id}, true);
         commentForm.paintCommentForm();
     }
+
+    var replyEditHandler = function replyEditHandler(reply) {
+        var commentForm = new CommentForm(this.offeringElement, this.callerObj, reply, true);
+        commentForm.paintCommentForm();
+    };
+
+    var replyDeleteHandler = function replyDeleteHandler(reply) {
+        var msg = 'Are you sure that you want to remove your reply?';
+        var endpoint = 'RESPONSE_ENTRY';
+
+        makeDeleteRequest(this, msg, endpoint, reply);
+    };
 
     /**
      * Build the options of a selected review
@@ -199,6 +217,21 @@
             // Include reviewer options
             var edit = $('<a rel="tooltip" title="Edit review" class="btn btn-blue"><i class="icon-edit"></i></a>').click(editHandler.bind(self, review));
             var del = $('<a rel="tooltip" title="Remove review" class="btn btn-blue"><i class="icon-trash"></i></a>').click(deleteHandler.bind(self, review));
+            container.append(edit);
+            container.append(del);
+        }
+    };
+
+    /**
+     * Builds the options of a reply in a selected review
+     */
+    var buildReplyOptions = function buildReplyOptions(self, review, domElem) {
+        var container = domElem.find('.comment-options');
+
+        if (USERPROFILE.isOwner(self.offeringElement))  {
+         // Include owner options
+            var edit = $('<a rel="tooltip" title="Edit reply" class="btn btn-blue"><i class="icon-edit"></i></a>').click(replyEditHandler.bind(self, review));
+            var del = $('<a rel="tooltip" title="Remove reply" class="btn btn-blue"><i class="icon-trash"></i></a>').click(replyDeleteHandler.bind(self, review));
             container.append(edit);
             container.append(del);
         }
@@ -315,6 +348,7 @@
                 var size;
                 var response = comments[i].response
                 response.comment = response.response;
+                response.id = comments[i].id;
 
                 var responseTempl = createCommentTemplate(this, comments[i].response, true);
                 responseTempl.addClass('comment-reply-dec').css('display', 'none');
@@ -323,6 +357,8 @@
                 var marker = $('<div class="up-marker"></div>').css('display', 'none') ;
                 templ.append(marker);
                 templ.append(responseTempl);
+
+                buildReplyOptions(this, response, responseTempl);
             }
             templ.appendTo('#comments');
         }

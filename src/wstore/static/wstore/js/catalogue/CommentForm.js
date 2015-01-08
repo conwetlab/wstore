@@ -220,11 +220,13 @@
         $('<textarea></textarea>').attr('id', 'comment-text').appendTo('.modal-body');
 
         // Fill fields if review data has been provided
-        if (!this.isReply && this.reviewData) {
-            for (var i = 0; i < this.reviewData.rating; i++) {
-                $('#star-' + i).removeClass('icon-star-empty').addClass('icon-star blue-star');
+        if (this.reviewData && this.reviewData.title) {
+            if (!this.isReply) {
+                for (var i = 0; i < this.reviewData.rating; i++) {
+                    $('#star-' + i).removeClass('icon-star-empty').addClass('icon-star blue-star');
+                }
+                this.rating = this.reviewData.rating;
             }
-            this.rating = this.reviewData.rating;
 
             $('#comment-title').val(this.reviewData.title);
             $('#comment-text').val(this.reviewData.comment);
