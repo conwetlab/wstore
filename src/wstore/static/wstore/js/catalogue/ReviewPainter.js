@@ -208,6 +208,8 @@
         var closeSelected = function(elems) {
             var responseDiv;
             elems.removeAttr('style');
+            elems.find('.txt-gradient').removeClass('hide');
+            elems.find('.txt-gradient').css('visibility', 'hidden');
             elems.removeClass('comment-selected');
 
             elems.find('.comment-options').addClass('hide');
@@ -216,7 +218,7 @@
                 responseDiv  = elems.find('.comment-reply-dec');
                 responseDiv.css('display', 'none');
                 elems.find('.up-marker').css('display', 'none');
-                elems.find('.txt-gradient').removeClass('hide');
+                elems.find('.txt-gradient').removeAttr('style');
             }, 1000);
         };
 
