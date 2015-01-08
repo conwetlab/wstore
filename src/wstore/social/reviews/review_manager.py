@@ -364,4 +364,5 @@ class ReviewManager():
         """
 
         rev = self._get_and_validate_review(user, review, owner=True)
-        rev.response.delete()
+        rev.response = None;
+        rev.save()
