@@ -640,7 +640,8 @@ class ReviewTestCase(TestCase):
         if not err_type:
             self.assertEquals(error, None)
             # Check calls
-            rev_object.response.delete.assert_called_with()
+            self.assertEquals(rev_object.response, None)
+            rev_object.save.assert_called_with()
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(error), err_msg)
