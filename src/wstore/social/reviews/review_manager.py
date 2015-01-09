@@ -99,7 +99,7 @@ class ReviewManager():
         else:
             #Check if the user is the owner of the reviewed offering
             if not (user.userprofile.current_organization == rev.offering.owner_organization) or \
-            not user.pk in user.userprofile.current_organization.managers:
+            (not user.pk in user.userprofile.current_organization.managers and not user == rev.offering.owner_admin_user):
                 raise PermissionDenied('The user cannot respond the current review')
 
         return rev
