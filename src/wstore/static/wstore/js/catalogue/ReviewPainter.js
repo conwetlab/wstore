@@ -277,7 +277,7 @@
                     $(this).find('.up-marker').removeAttr('style');
 
                     responseDiv.removeAttr('style');
-                    responseSize = responseDiv.find('p').height() + 80;
+                    responseSize = responseDiv.find('p').height() + 100;
                     responseDiv.css('height', responseSize + 'px');
                     size += responseSize;
                 }
@@ -337,7 +337,7 @@
         
         // Paint comments
         for (var i = 0; i < comments.length; i++) {
-            var templ = createCommentTemplate(self, comments[i], false);
+            var templ = createCommentTemplate(this, comments[i], false);
 
             // Build the different options for the review
             buildOptions(this, comments[i], templ);
