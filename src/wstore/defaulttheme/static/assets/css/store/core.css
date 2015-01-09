@@ -1333,6 +1333,13 @@ header {
   top: 6px;
 }
 
+.commented-reply-icon {
+  float: right;
+  margin-right: 11px;
+  color: rgb(96, 193, 207);
+  margin-top: 3px;
+}
+
 .gradient-grey-low {
   background: -webkit-linear-gradient(left, rgba(252, 252, 252, 0), rgb(252, 252, 252)) !important;
   background: linear-gradient(to right, rgba(252, 252, 252, 0), rgb(252, 252, 252)) !important;

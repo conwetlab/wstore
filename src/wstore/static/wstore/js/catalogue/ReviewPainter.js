@@ -355,6 +355,9 @@
                 responseTempl.find('.txt-gradient').remove();
 
                 var marker = $('<div class="up-marker"></div>').css('display', 'none') ;
+
+                // Add a icon to refect that the review is has been replied
+                templ.find('.commented-reply-icon').removeClass('hide');
                 templ.append(marker);
                 templ.append(responseTempl);
 
