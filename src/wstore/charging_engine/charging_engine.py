@@ -26,7 +26,6 @@ import time
 import codecs
 import subprocess
 import threading
-from pymongo import MongoClient
 from bson import ObjectId
 from urllib2 import HTTPError
 
@@ -50,6 +49,7 @@ from wstore.contracting.purchase_rollback import rollback
 from wstore.rss_adaptor.rss_adaptor import RSSAdaptorThread
 from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
 from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
+from wstore.store_commons.database import get_database_connection
 
 
 class ChargingEngine:
@@ -81,8 +81,7 @@ class ChargingEngine:
 
     def _timeout_handler(self):
 
-        connection = MongoClient()
-        db = connection[settings.DATABASES['default']['NAME']]
+        db = get_database_connection()
 
         # Uses an atomic operation to get and set the _lock value in the purchase
         # document
@@ -169,8 +168,7 @@ class ChargingEngine:
         # the mongoDB atomic access in order to avoid race
         # problems
         # Create connection for raw database access
-        connection = MongoClient()
-        db = connection[settings.DATABASES['default']['NAME']]
+        db = get_database_connection()
 
         corr_number = db.wstore_rss.find_and_modify(
             query={'_id': ObjectId(cdr_info['rss'].pk)},

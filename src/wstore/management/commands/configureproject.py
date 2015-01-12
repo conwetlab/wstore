@@ -20,7 +20,6 @@
 
 import os
 import codecs
-from pymongo import MongoClient
 from sys import stdin
 import subprocess
 
@@ -28,6 +27,7 @@ import django.conf
 from django.core.management.base import CommandError
 from django.core.management.base import BaseCommand
 from django.template import loader, Context
+from wstore.store_commons.database import get_database_connection
 
 
 def exec_external_cmd(cmd):
@@ -182,8 +182,7 @@ class Command(BaseCommand):
 
         # Get site pk to include it as site_id, raw mongo access since it is not
         # possible to change the database dynamically
-        client = MongoClient()
-        db = client[settings['database']]
+        db = get_database_connection()
         settings['site_id'] = unicode(db.django_site.find_one({'name': site_name})['_id'])
 
         # Create final settings file including site_id

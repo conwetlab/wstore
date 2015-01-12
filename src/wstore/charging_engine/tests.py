@@ -24,7 +24,6 @@ import os
 import json
 import rdflib
 from datetime import datetime
-from pymongo import MongoClient
 from bson import ObjectId
 from mock import MagicMock
 
@@ -38,6 +37,7 @@ from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.models import Organization
 from wstore.charging_engine.management.commands import resolve_use_charging
+from wstore.store_commons.database import get_database_connection
 
 
 __test__ = False
@@ -1162,8 +1162,7 @@ class AsynchronousPaymentTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f02111')
         charging = charging_engine.ChargingEngine(purchase)
 
-        connection = MongoClient()
-        db = connection[settings.DATABASES['default']['NAME']]
+        db = get_database_connection()
 
         raw_purchase = db.wstore_purchase.find_one({'_id': ObjectId(purchase.pk)})
         raw_purchase['_lock'] = True
@@ -1184,8 +1183,7 @@ class AsynchronousPaymentTestCase(TestCase):
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f02222')
         charging = charging_engine.ChargingEngine(purchase)
 
-        connection = MongoClient()
-        db = connection[settings.DATABASES['default']['NAME']]
+        db = get_database_connection()
 
         raw_purchase = db.wstore_purchase.find_one({'_id': ObjectId(purchase.pk)})
         raw_purchase['_lock'] = False

@@ -19,7 +19,6 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-from pymongo import MongoClient
 from bson import ObjectId
 
 from django.conf import settings
@@ -34,6 +33,7 @@ from wstore.models import UserProfile
 from wstore.charging_engine.charging_engine import ChargingEngine
 from wstore.contracting.purchase_rollback import rollback
 from wstore.contracting.notify_provider import notify_provider
+from wstore.store_commons.database import get_database_connection
 
 
 class ServiceRecordCollection(Resource):
@@ -74,8 +74,7 @@ class PayPalConfirmation(Resource):
             token = request.GET.get('token')
             payer_id = request.GET.get('PayerID', '')
 
-            connection = MongoClient()
-            db = connection[settings.DATABASES['default']['NAME']]
+            db = get_database_connection()
 
             # Uses an atomic operation to get and set the _lock value in the purchase
             # document

@@ -18,17 +18,9 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
-from pymongo import MongoClient
+from wstore.store_commons.database import get_database_connection
 
-from django.conf import settings
-
-
-# Get database info
-client = MongoClient()
-
-db_name = settings.DATABASES['default']['NAME']
-
-db = client[db_name]
+db = get_database_connection()
 
 # Create index for tagging if not created
 db.wstore_offering.ensure_index('tags')

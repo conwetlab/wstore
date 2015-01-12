@@ -26,7 +26,6 @@ import re
 import base64
 import os
 from datetime import datetime
-from pymongo import MongoClient
 from bson.objectid import ObjectId
 from urlparse import urlparse
 
@@ -49,6 +48,7 @@ from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.social.tagging.tag_manager import TagManager
 from wstore.store_commons.errors import ConflictError
+from wstore.store_commons.database import get_database_connection
 
 
 def get_offering_info(offering, user):
@@ -222,8 +222,7 @@ def get_offerings(user, filter_='published', state=None, pagination=None, sort=N
             order = 1
 
     # Get all the offerings owned by the provider using raw mongodb access
-    connection = MongoClient()
-    db = connection[settings.DATABASES['default']['NAME']]
+    db = get_database_connection()
     offerings = db.wstore_offering
 
     # Pagination: define the first element and the number of elements
@@ -851,8 +850,7 @@ def delete_offering(offering):
                 newest.remove(offering.pk)
             else:
                 # Get the 8 newest offerings using the publication date for sorting
-                connection = MongoClient()
-                db = connection[settings.DATABASES['default']['NAME']]
+                db = get_database_connection()
                 offerings = db.wstore_offering
                 newest_off = offerings.find({'state': 'published'}).sort('publication_date', -1).limit(8)
 
@@ -871,8 +869,7 @@ def delete_offering(offering):
                 top_rated.remove(offering.pk)
             else:
                 # Get the 4 top rated offerings
-                connection = MongoClient()
-                db = connection[settings.DATABASES['default']['NAME']]
+                db = get_database_connection()
                 offerings = db.wstore_offering
                 top_off = offerings.find({'state': 'published', 'rating': {'$gt': 0}}).sort('rating', -1).limit(8)
 
