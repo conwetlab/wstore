@@ -27,9 +27,9 @@ from wstore.charging_engine.payment_client.payment_client import PaymentClient
 
 
 # Paypal creadetials
-PAYPAL_USER = 'un_api1.email.com'
-PAYPAL_PASSWD = '1365179727'
-PAYPAL_SIGNATURE = 'An5ns1Kso7MWUdW4ErQKJJJ4qi4-A0JFrwdSv9Vm9zAsPyCXQAvP7TqL'
+PAYPAL_USER = ''
+PAYPAL_PASSWD = ''
+PAYPAL_SIGNATURE = ''
 PAYPAL_URL = 'https://api-3t.sandbox.paypal.com/nvp'
 PAYPAL_CHECKOUT_URL='https://www.sandbox.paypal.com/webscr?cmd=_express-checkout'
 
@@ -103,7 +103,7 @@ class PayPalClient(PaymentClient):
     def end_redirection_payment(self, token, payer_id):
         self._client.DoExpressCheckoutPayment(
             paymentrequest_0_paymentaction='Sale',
-            paymentrequest_0_amt=self._purchase.contract.pending_info['price'],
+            paymentrequest_0_amt=self._purchase.contract.pending_payment['price'],
             paymentrequest_0_currencycode='EUR',
             token=token,
             payerid=payer_id
