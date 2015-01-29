@@ -118,6 +118,12 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
     elif payment_info['payment_method'] != 'paypal':
         raise ValueError('Invalid payment method')
 
+    # Check if a purchase object exists
+    old_purchase = Purchase.objects.filter(owner_organization=organization, offering=offering)
+    if len(old_purchase) > 0:
+        for p in old_purchase:
+            p.delete()
+
     # Create the purchase
     purchase = Purchase.objects.create(
         customer=user,

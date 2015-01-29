@@ -70,6 +70,7 @@ class PayPalConfirmation(Resource):
     # when the customer is paying using his PayPal account
     @method_decorator(login_required)
     def read(self, request, reference):
+        purchase = None
         try:
             token = request.GET.get('token')
             payer_id = request.GET.get('PayerID', '')
@@ -83,7 +84,7 @@ class PayPalConfirmation(Resource):
                 update={'$set': {'_lock': True}}
             )
 
-            # If the value of _lock before setting it to true was true means
+            # If the value of _lock before setting it to true was true, means
             # that the time out function has acquired it previously so the
             # view ends
             if '_lock' in pre_value and pre_value['_lock']:
@@ -92,12 +93,8 @@ class PayPalConfirmation(Resource):
             purchase = Purchase.objects.get(ref=reference)
 
             # Check that the request user is authorized to end the payment
-            if purchase.organization_owned:
-                if request.user.userprofile.current_organization != purchase.owner_organization:
-                    raise Exception()
-            else:
-                if request.user != purchase.customer:
-                    raise Exception('')
+            if request.user.userprofile.current_organization != purchase.owner_organization:
+                raise Exception()
 
             # If the purchase state value is different from pending means that
             # the timeout function has completely ended before acquire the resource
@@ -130,7 +127,10 @@ class PayPalConfirmation(Resource):
 
             charging_engine.end_charging(pending_info['price'], pending_info['concept'], pending_info['related_model'], accounting)
         except:
-            rollback(purchase)
+            # Rollback the purchase if existing
+            if purchase is not None:
+                rollback(purchase)
+
             context = {
                 'title': 'Payment Canceled',
                 'message': 'Your payment has been canceled. An error occurs or the timeout has finished, if you want to acquire the offering purchase it again in WStore.'
