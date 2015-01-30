@@ -50,7 +50,7 @@ class SearchEngine():
 
         graph.parse(data=json.dumps(usdl_document), format='json-ld')
 
-        text = ''
+        text = offering.name
 
         for s, p, o in graph:
             if isinstance(o, rdflib.Literal):
