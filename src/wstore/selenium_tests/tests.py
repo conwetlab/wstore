@@ -343,7 +343,7 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
 
 @unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class PurchaseTestCase(WStoreSeleniumTestCase):
-    tags = ("selenium", )
+    tags = ("selenium", "selenium-purchase")
 
     def __init__(self, methodName='runTest'):
         WStoreSeleniumTestCase.__init__(self, methodName=methodName)
@@ -433,7 +433,7 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         self.driver.find_element_by_class_name('btn-danger').click()
 
         # Check redirection
-        time.sleep(1)
+        time.sleep(3)
         expected_url = 'http://localhost:' + unicode(TESTING_PORT) + '/'
         self.assertEquals(self.driver.current_url, expected_url)
 
