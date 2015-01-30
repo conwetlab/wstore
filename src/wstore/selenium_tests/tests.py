@@ -28,6 +28,9 @@ import time
 import urllib2
 
 from nose_parameterized import parameterized
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -418,7 +421,6 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         self.driver.get(form_url)
 
         # Fill purchase form
-        time.sleep(1)
         self.fill_tax_address({
             'street': 'fake street',
             'postal': '12345',
@@ -427,13 +429,18 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         })
 
         self.driver.find_element_by_css_selector('.modal-footer .btn-basic').click()
-        time.sleep(1)
 
+        # Wait until the end purchase button is loaded
+        element = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "btn-danger"))
+        )
         # End the purchase
-        self.driver.find_element_by_class_name('btn-danger').click()
+        element.click()
 
         # Check redirection
-        time.sleep(3)
+        WebDriverWait(self.driver, 5).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "a"))
+        )
         expected_url = 'http://localhost:' + unicode(TESTING_PORT) + '/'
         self.assertEquals(self.driver.current_url, expected_url)
 

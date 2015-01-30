@@ -235,7 +235,11 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
                 break
 
     def fill_tax_address(self, tax):
-        self.driver.find_element_by_id('street').send_keys(tax['street'])
+        # Wait until the form is loaded
+        element = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.ID, "street"))
+        )
+        element.send_keys(tax['street'])
         self.driver.find_element_by_id('postal').send_keys(tax['postal'])
         self.driver.find_element_by_id('city').send_keys(tax['city'])
         self.driver.find_element_by_id('country').send_keys(tax['country'])
