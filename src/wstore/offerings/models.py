@@ -95,6 +95,8 @@ class Resource(models.Model):
     offerings = ListField(models.ForeignKey(Offering))
     open = models.BooleanField(default=False)
     old_versions = ListField(EmbeddedModelField(ResourceVersion))
+    resource_type = models.CharField(max_length=100)
+    meta_info = DictField()
 
     def get_url(self):
         url = None
