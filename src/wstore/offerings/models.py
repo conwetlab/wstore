@@ -116,3 +116,20 @@ class Resource(models.Model):
     class Meta:
         app_label = 'wstore'
         unique_together = ('name', 'provider')
+
+
+class ResourcePlugin(models.Model):
+    name = models.CharField(max_length=100)
+    version = models.CharField(max_length=50)
+    author = models.CharField(max_length=100)
+    form = models.CharField(max_length=200)
+    module = models.CharField(max_length=200)
+    media_types = ListField(models.CharField(max_length=100))
+    formats = ListField(models.CharField(max_length=10))
+    options = DictField()
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        app_label = 'wstore'
