@@ -18,7 +18,17 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+import re
+
 from distutils.version import StrictVersion
+
+def is_valid_version(version):
+    valid = True
+
+    if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), version):
+        valid = False
+
+    return valid
 
 
 def is_lower_version(version1, version2):
