@@ -34,6 +34,7 @@ from wstore.search import views as search_views
 from wstore.charging_engine import views as charging_views
 from wstore.social.tagging import views as tagging_views
 from wstore.repository_adaptor import usdl_proxy
+from wstore.offerings.resource_plugins import views as plugins_views
 
 urlpatterns = patterns('',
 
@@ -78,6 +79,7 @@ urlpatterns = patterns('',
     url(r'^api/offering/offerings/(?P<organization>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/usdl/?$', usdl_proxy.USDLCollection(permitted_methods=('GET',))),
     url(r'^api/offering/resources/(?P<provider>[\w -]+)/(?P<name>[\w -]+)/(?P<version>[\d.]+)/?$', offering_views.ResourceEntry(permitted_methods=('DELETE', 'POST', 'PUT'))),
     url(r'^api/offering/resources/?$', offering_views.ResourceCollection(permitted_methods=('GET', 'POST'))),
+    url(r'^api/offering/resources/plugins?$', plugins_views.PluginCollection(permitted_methods=('GET', ))),
     url(r'^api/offering/applications/?$', offering_views.ApplicationCollection(permitted_methods=('GET',))),
     url(r'^api/contracting/?$', contracting_views.PurchaseCollection(permitted_methods=('POST',))),
     url(r'^api/contracting/form/?$', contracting_views.PurchaseFormCollection(permitted_methods=('POST','GET'))),

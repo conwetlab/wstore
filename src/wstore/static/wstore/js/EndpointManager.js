@@ -38,7 +38,8 @@
         'UNIT_COLLECTION': '/api/administration/units',
         'CURRENCY_COLLECTION': '/api/administration/currency',
         'CHANGE_ORGANIZATION': '/api/administration/organizations/change',
-        'REQUEST_PROVIDER': '/api/provider'
+        'REQUEST_PROVIDER': '/api/provider',
+        'PLUGINS_COLLECTION': '/api/offering/resources/plugins'
     };
 
     // Contains endpoints that depend on variables
