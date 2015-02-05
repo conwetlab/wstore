@@ -22,6 +22,8 @@
 from __future__ import unicode_literals
 
 from wstore.offerings.resource_plugins.plugin_error import PluginError
+from wstore.store_commons.utils.version import is_valid_version
+
 
 class PluginManager():
 
@@ -32,34 +34,74 @@ class PluginManager():
         if self._instance is not None:
             raise ValueError('This class has been already instantiated')
 
-    def register_plugin(self, plugin_info):
+    def validate_plugin_info(self, plugin_info):
 
+        valid = True
+        reason = None
         # Check plugin_info format
         if not isinstance(plugin_info, dict):
-            raise TypeError('Plugin info must be a dict instance')
+            valid = False
+            reason = 'Plugin info must be a dict instance'
 
-        if not 'type' in plugin_info:
-            raise ValueError('Missing required field: type')
+        # Validate structure
+        if valid and not "name" in plugin_info:
+            valid = False
+            reason = 'Missing required field: name'
 
-        if not 'options' in plugin_info:
-            raise ValueError('Missing required field: options')
+        if valid and not "author" in plugin_info:
+            valid = False
+            reason = 'Missing required field: author'
 
-        # Validate plugin type field
-        if not isinstance(plugin_info['type'], str) and not isinstance(plugin_info['type'], unicode):
-            raise TypeError('Plugin type must be an string')
+        if valid and not 'formats' in plugin_info:
+            valid = False
+            reason = 'Missing required field: formats'
 
-        
-    def subscribe_on_create(self):
-        pass
+        if valid and not "media_types" in plugin_info:
+            valid = False
+            reason = 'Missing required field: media_types'
 
-    def subscribe_on_update(self):
-        pass
+        if valid and not 'options' in plugin_info:
+            valid = False
+            reason  = 'Missing required field: options'
 
-    def subscribe_on_upgrade(self):
-        pass
+        if valid and not 'module' in plugin_info:
+            valid = False
+            reason = 'Missing required field: module'
 
-    def subscribe_on_delete(self):
-        pass
+        if valid and not 'version' in plugin_info:
+            valid = False
+            reason = 'Missing required field: version'
+
+        # Validate types
+        if valid and not isinstance(plugin_info['name'], str) and not isinstance(plugin_info['name'], unicode):
+            valid = False
+            reason = 'Plugin name must be an string'
+
+        if valid and not isinstance(plugin_info['author'], str) and not isinstance(plugin_info['author'], unicode):
+            valid = False
+            reason = 'Plugin author must be an string'
+
+        if valid and not isinstance(plugin_info['formats'], list):
+            valid = False
+            reason = 'Plugin formats must be a list'
+
+        if valid and not isinstance(plugin_info['media_types'], list):
+            valid = False
+            reason = 'Plugin media_types must be a list'
+
+        if valid and not isinstance(plugin_info['options'], dict):
+            valid = False
+            reason = 'Plugin options must be an object'
+
+        if valid and not isinstance(plugin_info['module'], str) and not isinstance(plugin_info['module'], unicode):
+            valid = False
+            reason = 'Plugin module must be an string'
+
+        if valid and not is_valid_version(plugin_info['version']):
+            valid = False
+            reason = 'Invalid format in plugin version'
+
+        return (valid, reason)
 
     @classmethod
     def get_instance(cls):

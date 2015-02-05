@@ -30,6 +30,7 @@ from django.conf import settings
 from wstore.offerings.resource_plugins.plugin_manager import PluginManager
 from wstore.offerings.resource_plugins.plugin_error import PluginError
 from wstore.offerings.resource_plugins.plugin_rollback import installPluginRollback
+from wstore.models import ResourcePlugin
 
 class PluginLoader():
 
@@ -64,9 +65,10 @@ class PluginLoader():
                 raise PluginError('Invalid format in package.json file. JSON cannot be parsed')
 
             # Create a directory for the plugin
-            ## Check plugin name
-            if not 'name' in json_info:
-                raise PluginError('Invalid format in package.json file. Missing name field')
+            # Validate plugin info
+            validation = self._plugin_manager.validate_plugin_info(json_info)
+            if not validation[0]:
+                raise PluginError('Invalid format in package.json file. ' + validation[1])
 
             dir_name = json_info['name'].replace(' ', '_')
 
@@ -78,11 +80,24 @@ class PluginLoader():
             ## Create the directory
             os.mkdir(plugin_path)
 
-            # Extrat files
+            # Extract files
             z.extractall(plugin_path)
 
-        # Load plugin
-        self._plugin_manager.register_plugin(json_info)
+        # Save plugin model
+        plugin = ResourcePlugin(
+            name = json_info['name'],
+            version = json_info['version'],
+            author = json_info['author'],
+            module = json_info['module'],
+            media_types = json_info['media_types'],
+            options = json_info['options'],
+            formats = json_info['formats']
+        )
+
+        if 'form' in json_info:
+            plugin.form = json_info['form']
+
+        plugin.save()
 
     def uninstall_plugin(self):
         # Unload plugin
