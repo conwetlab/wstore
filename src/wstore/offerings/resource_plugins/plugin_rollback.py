@@ -20,11 +20,28 @@
 
 from __future__ import unicode_literals
 
+from shutil import rmtree
+
+from wstore.models import ResourcePlugin
+from functools import wraps
+
 
 def installPluginRollback(func):
-    def wrapper(self, path):
+    _state = {}
+
+    def log_action(action, value):
+        _state[action] = value
+
+    @wraps(func)
+    def wrapper(self, path, logger=None):
         try:
-            func(self, path)
+            func(self, path, log_action)
         except Exception as e:
+
+            # Remove directory if existing
+            if 'PATH' in _state:
+                rmtree(_state['PATH'])
+
+            # Raise the exception
             raise(e)
     return wrapper
