@@ -90,6 +90,21 @@ class PluginManager():
             valid = False
             reason = 'Plugin formats must be a list'
 
+        # Validate formats
+        if valid:
+            valid_formats = ['FILE', 'URL']
+            valid_format = True
+            i = 0
+
+            while valid_format and i < len(plugin_info['formats']):
+                if not plugin_info['formats'][i] in valid_formats:
+                    valid_format = False
+                i += 1
+
+            if not valid_format or (i < 1 and i > 2):
+                valid = False
+                reason = 'Format must contain at least one format of: FILE, URL'
+
         if valid and not isinstance(plugin_info['media_types'], list):
             valid = False
             reason = 'Plugin media_types must be a list'
