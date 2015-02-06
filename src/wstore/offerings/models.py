@@ -122,7 +122,7 @@ class ResourcePlugin(models.Model):
     name = models.CharField(max_length=100)
     version = models.CharField(max_length=50)
     author = models.CharField(max_length=100)
-    form = models.CharField(max_length=200)
+    form = models.CharField(max_length=200, blank=True, null=True)
     module = models.CharField(max_length=200)
     media_types = ListField(models.CharField(max_length=100))
     formats = ListField(models.CharField(max_length=10))
