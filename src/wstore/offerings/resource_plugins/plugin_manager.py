@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 
 from wstore.offerings.resource_plugins.plugin_error import PluginError
 from wstore.store_commons.utils.version import is_valid_version
+from wstore.store_commons.utils.name import is_valid_name
 
 
 class PluginManager():
@@ -47,6 +48,10 @@ class PluginManager():
         if valid and not "name" in plugin_info:
             valid = False
             reason = 'Missing required field: name'
+
+        if valid and not is_valid_name(plugin_info['name']):
+            valid = False
+            reason = 'Invalid name format: invalid character'
 
         if valid and not "author" in plugin_info:
             valid = False
