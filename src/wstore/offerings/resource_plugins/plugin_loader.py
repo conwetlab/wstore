@@ -31,6 +31,8 @@ from wstore.offerings.resource_plugins.plugin_manager import PluginManager
 from wstore.offerings.resource_plugins.plugin_error import PluginError
 from wstore.offerings.resource_plugins.plugin_rollback import installPluginRollback
 from wstore.models import ResourcePlugin
+from wstore.offerings.resource_plugins.plugin import Plugin
+
 
 class PluginLoader():
 
@@ -44,7 +46,7 @@ class PluginLoader():
         self._plugins_path =  os.path.join(self._plugins_path, 'plugins')
 
     @installPluginRollback
-    def install_plugin(self, path):
+    def install_plugin(self, path, logger=None):
 
         # Validate package file
         if not zipfile.is_zipfile(path):
@@ -80,22 +82,43 @@ class PluginLoader():
             ## Create the directory
             os.mkdir(plugin_path)
 
+            if logger is not None:
+                logger('PATH', plugin_path)
+
             # Extract files
             z.extractall(plugin_path)
+
+            # Create a  __init__.py file if needed
+            open(os.path.join(plugin_path, '__init__.py'), 'a').close()
+
+        #Validate plugin main class
+        module = 'wstore.offerings.resource_plugins.plugins.' + dir_name + '.' + json_info['module']
+        module_class_name = module.split('.')[-1]
+        module_package = module.partition('.' + module_class_name)[0]
+
+        module_class = getattr(__import__(module_package, globals(), locals(), [module_class_name], -1), module_class_name)
+
+        if not Plugin in module_class.__bases__:
+            raise PluginError('No Plugin implementation has been found')
 
         # Save plugin model
         plugin = ResourcePlugin(
             name = json_info['name'],
             version = json_info['version'],
             author = json_info['author'],
-            module = json_info['module'],
+            module = module,
             media_types = json_info['media_types'],
             options = json_info['options'],
             formats = json_info['formats']
         )
 
         if 'form' in json_info:
-            plugin.form = json_info['form']
+            form_path = os.path.join('wstore', 'offerings')
+            form_path = os.path.join(form_path, 'resource_plugins')
+            form_path = os.path.join(form_path, 'plugins')
+            form_path = os.path.join(form_path, dir_name)
+            form_path = os.path.join(form_path, json_info['form'])
+            plugin.form = form_path
 
         plugin.save()
 
