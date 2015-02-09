@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2015 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * This file is part of WStore.
  *
@@ -23,18 +23,183 @@
     ResourceCreator = function ResourceCreator() {
     };
 
+    var displayPluginForm = function displayPluginForm(self) {
+        // Build the form HTML
+        var formGenerator = new FormGenerator();
+        var htmlForm = formGenerator.generateForm(self.plugin.form);
+
+        $(self.msgId + ' .modal-body').empty();
+
+        $.template('pluginFormTemplate', htmlForm);
+        $.tmpl('pluginFormTemplate').appendTo(self.msgId + ' .modal-body');
+
+        // Bind new click listener
+        // Fill new listener
+        $(self.msgId + ' .modal-footer > .btn').off();
+        $(self.msgId + ' .modal-footer > .btn').click(function(evnt) {
+            var msg = "";
+            var errFields = [];
+            var meta = {}
+
+            evnt.preventDefault();
+            evnt.stopPropagation();
+
+            // Read fields and populate meta field
+            for (key in this.plugin.form) {
+
+                if (this.plugin.form.hasOwnProperty(key)) {
+                    var inputInfo = this.plugin.form[key];
+                    var value;
+                    var input = $(this.msgId + ' [name="' + key +'"]');
+
+                    // Get value of the field
+                    if (inputInfo.type == 'textarea') {
+                        value = $.trim(input.text());
+
+                    } else if (inputInfo.type == 'checkbox') {
+                        value = input.prop('checked');
+
+                    } else {
+                        value = $.trim(input.val());
+                    }
+
+                    // Check if the field is mandatory
+                    if ((inputInfo.type == 'text' || inputInfo.type == 'textarea')
+                        && inputInfo.mandatory && !value) {
+
+                            msg += msg + 'Missing required field: ' + key + '<br />';
+                            errFields.push(input);
+                    }
+
+                    meta[key] = value;
+                }
+            }
+            if (!errFields.length) {
+                this.request.meta = meta;
+                createResource(this);
+            } else {
+                showErrorMessage(this, errFields, msg);
+            }
+
+        }.bind(self));
+    };
+
+    var showErrorMessage = function showErrorMessage (self, errFields, msg) {
+        var span;
+        MessageManager.showAlertError('Error', '', $(self.msgId + ' #error-container'));
+        span = $('<span></span>').appendTo('.alert-error');
+        span[0].innerHTML = msg;
+        $('.alert-error').removeClass('span8').on('close', function() {
+            $('.error').removeClass('error');
+        });
+
+        // Mark error fields
+        for (var i = 0; i < errFields.length; i++) {
+            errFields[i].parent().parent().addClass('error');
+        }
+    };
+
+    var displayProvideResForm = function displayProvideResForm(self) {
+        $(self.msgId + ' .modal-body').empty();
+
+        // Render template
+        $.template('provideResTemplate', $('#provide_res_form_template'));
+        $.tmpl('provideResTemplate').appendTo(self.msgId + ' .modal-body');
+
+        // Include plugin specific interface if needed
+        if (self.plugin) {
+            // - Check if the plugin define concrete media types
+            if (self.plugin.media_types.length > 0) {
+                var select = $('<select name="res-content-type"></select>');
+
+                $(self.msgId + ' [name="res-content-type"]').remove();
+
+                // Include allowed media types
+                for (var i = 0;  i < self.plugin.media_types.length; i++) {
+                    var media_type = self.plugin.media_types[i];
+
+                    $('<option val="' + media_type + '">' + media_type + '</option>')
+                        .appendTo(select);
+                }
+                select.appendTo('#res-content-type-cont');
+            }
+
+            // Check allowed formats in the plugin
+            if (self.plugin.formats.length == 1) {
+                // Hide select
+                $('#res-type-container').addClass('hide');
+
+                if (self.plugin.formats[0] == 'FILE') {
+                    // Hide URL
+                    self.uploadHandler();
+                } else {
+                    // Hide file
+                    self.linkHandler();
+                }
+            }
+        }
+
+        self.selectFormatHandler();
+        $(self.msgId + ' #upload').on('change', self.handleResourceSelection.bind(self));
+
+        // Fill new listener
+        $(self.msgId + ' .modal-footer > .btn').off();
+        $(self.msgId + ' .modal-footer > .btn').click(function(evnt) {
+            var errFields = [];
+            var msg = "";
+            var content_type;
+
+            evnt.preventDefault();
+            evnt.stopPropagation();
+
+            // Include resource
+            try {
+                this.loadResource(this.request);
+            } catch(err) {
+                msg += err + '<br />';
+                errFields.push($(this.msgId + ' [name="files"]'));
+            }
+
+            if (!this.request.content && !this.request.link) {
+                msg += "You have not provided a resource <br/>";
+                errFields.push($(this.msgId + ' [name="files"]'));
+            }
+
+            // Include  content type
+            content_type = $(this.msgId + ' [name="res-content-type"]').val();
+            if (!content_type) {
+                msg += 'Missing required field: Content type';
+                errFields.push($(this.msgId + ' [name="res-content-type"]'));
+            }
+
+            this.request.content_type = content_type;
+
+            // Display the plugin form if it is required
+            if (!errFields.length) {
+                if (this.plugin && this.plugin.form) {
+                    displayPluginForm(this)
+                } else {
+                    createResource(this);
+                }
+            } else {
+                showErrorMessage(this, errFields, msg);
+            }
+        }.bind(self));
+    };
+
     ResourceCreator.prototype.makeRequest = function makeRequest(evnt) {
-        var name, version, link, contentType, request = {};
-        var msg = '';
+        var name, version, resourceType, description, open;
+        var msg = "";
         var errFields = [];
-        var error = false;
+        this.request = {}
 
         evnt.preventDefault();
         evnt.stopPropagation();
 
+        // Load previous info
         name = $.trim($(this.msgId + ' [name="res-name"]').val());
         version = $.trim($(this.msgId + ' [name="res-version"]').val());
-        contentType = $.trim($(this.msgId + ' [name="res-content-type"]').val());
+        resourceType = $(this.msgId + ' #resource-type').val();
         description = $.trim($(this.msgId + ' [name="res-description"]').val());
 
         if (!name || !version) {
@@ -65,46 +230,34 @@
             msg += 'Invalid version format <br />';
             errFields.push($(this.msgId + ' [name="res-version"]'));
         }
-        request.content_type = contentType
-        request.name = name;
-        request.version = version;
-        request.description = description;
-        request.open = $(this.msgId + ' #res-open').prop('checked');
+        this.request.resource_type = resourceType
+        this.request.name = name;
+        this.request.version = version;
+        this.request.description = description;
+        this.request.open = $(this.msgId + ' #res-open').prop('checked');
 
-        try {
-            this.loadResource(request);
-        } catch(err) {
-            error = true;
-            msg += err + '<br />';
-            errFields.push($(this.msgId + ' [name="files"]'));
-        }
-
-        if (!request.content && !request.link) {
-            error = true;
-            msg += "You have not provided a resource <br/>";
-            errFields.push($(this.msgId + ' [name="files"]'));
-        }
-
-        if (!error) {
-            this.client.create(request, function (response) {
-                $(this.msgId).modal('hide');
-                MessageManager.showMessage('Created', 'The resource has been registered');
-            }.bind(this));
-        } else {
-            var span;
-            MessageManager.showAlertError('Error', '', $(this.msgId + ' #error-container'));
-            span = $('<span></span>').appendTo('.alert-error');
-            span[0].innerHTML = msg;
-            $('.alert-error').removeClass('span8').on('close', function() {
-                $('.error').removeClass('error');
-            });
-
-            // Mark error fields
-            for (var i = 0; i < errFields.length; i++) {
-                errFields[i].parent().parent().addClass('error');
+        // Save plugin object selected
+        var found = false;
+        for (var i = 0; i < this.pluginInfo.length && !found; i++) {
+            if (this.pluginInfo[i].name == resourceType) {
+                found = true;
+                this.plugin = this.pluginInfo[i];
             }
         }
 
+        // Change modal form
+        if (!errFields.length) {
+            displayProvideResForm(this);
+        } else {
+            showErrorMessage(this, errFields, msg);
+        }
+    };
+
+    var createResource = function createResource(self) {
+        self.client.create(self.request, function (response) {
+            $(this.msgId).modal('hide');
+            MessageManager.showMessage('Created', 'The resource has been registered');
+        }.bind(self));
     };
 
     ResourceCreator.prototype.fillResourceInfo = function fillResourceInfo() {
@@ -351,11 +504,11 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
 
 
     /**
-     * Private method used to handle the uploading of resources
+     * Method used to handle the uploading of resources
      * @param evnt
      * @returns
      */
-    var handleResourceSelection = function handleResourceSelection (evnt) {
+    RegisterResourceForm.prototype.handleResourceSelection = function handleResourceSelection (evnt) {
         var f = evnt.target.files[0];
         var reader = new FileReader();
         this.resource = {};
@@ -420,6 +573,38 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
         }
     };
 
+    RegisterResourceForm.prototype.linkHandler = function linkHandler () {
+        $(this.msgId + ' #upload').addClass('hide');
+        $(this.msgId + ' #upload-help').addClass('hide');
+        $(this.msgId + ' [name="res-link"]').removeClass('hide');
+        $(this.msgId + ' #link-help').removeClass('hide');
+    };
+
+    RegisterResourceForm.prototype.uploadHandler = function uploadHandler () {
+        $(this.msgId +' #upload').removeClass('hide');
+        $(this.msgId + ' #upload-help').removeClass('hide');
+        $(this.msgId + ' [name="res-link"]').addClass('hide');
+        $(this.msgId + ' #link-help').addClass('hide');
+    };
+
+    /**
+     * Creates the handler for managing the selection of how to provide the
+     * resource, upload or url
+     */
+    RegisterResourceForm.prototype.selectFormatHandler = function selectFormatHandler () {
+        $(this.msgId + ' #res-type').on('change', function(self) {
+            return function() {
+                self.resource= {};
+                $(self.msgId + ' [name="res-link"]').val('');
+                if ($(this).val() == 'upload') {
+                    self.uploadHandler();
+                } else {
+                    self.linkHandler();
+                }
+            };
+        }(this));
+    };
+
     /**
      * Implementation of setListeners abstract method
      */
@@ -436,31 +621,20 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
             $('.popover').remove();
         });
 
-        $(this.msgId + ' #res-type').on('change', function(self) {
-            return function() {
-                self.resource= {};
-                $(self.msgId + ' [name="res-link"]').val('');
-                if ($(this).val() == 'upload') {
-                    $(self.msgId +' #upload').removeClass('hide');
-                    $(self.msgId + ' #upload-help').removeClass('hide');
-                    $(self.msgId + ' [name="res-link"]').addClass('hide');
-                    $(self.msgId + ' #link-help').addClass('hide');
-                } else {
-                    $(self.msgId + ' #upload').addClass('hide');
-                    $(self.msgId + ' #upload-help').addClass('hide');
-                    $(self.msgId + ' [name="res-link"]').removeClass('hide');
-                    $(self.msgId + ' #link-help').removeClass('hide');
-                }
-            };
-        }(this));
-
         // If the view is used to update a resource include resource info
         filler = this.builderObj.fillResourceInfo.bind(this);
         filler();
 
-        $(this.msgId + ' #upload').on('change', handleResourceSelection.bind(this));
+        $(this.msgId + ' #upload').on('change', this.handleResourceSelection.bind(this));
 
         $(this.msgId + ' .modal-footer > .btn').click(this.builderObj.makeRequest.bind(this));
+    };
+
+    /**
+     * Include plugin info
+     */
+    RegisterResourceForm.prototype.setPluginInfo = function setPluginInfo(pluginInfo) {
+        this.pluginInfo = pluginInfo;
     };
 
     /**
@@ -471,7 +645,26 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
         $(this.msgId + ' #upload-help').popover({'trigger': 'manual'});
         $(this.msgId + ' #link-help').popover({'trigger': 'manual'});
         $(this.msgId + ' #open-help').popover({'trigger': 'manual'});
+
+        // Add plugin types
+        for (var i = 0; i < this.pluginInfo.length; i ++) {
+            $('#resource-type').append('<option value="'+ this.pluginInfo[i].name + '">' + this.pluginInfo[i].name + '</option>');
+        }
     };
 
     return new RegisterResourceForm(new builders[builder](), resourceInfo, messageId, caller);
 };
+
+/**
+ * Open a resource modal after loading resource plugin info
+ */
+openResourceView = function openResourceView(builder, resourceInfo, messageId, caller) {
+    // Retrieve resource types
+    plugin_client = new ServerClient('', 'PLUGINS_COLLECTION');
+
+    plugin_client.get(function(pluginInfo) {
+        var resModal = buildRegisterResourceForm(builder, resourceInfo, messageId, caller);
+        resModal.setPluginInfo(pluginInfo);
+        resModal.display();
+    });
+}

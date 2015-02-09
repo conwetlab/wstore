@@ -24,35 +24,13 @@
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label">Content type</label>
+            <label class="control-label">Resource Type*</label>
             <div class="controls">
-                <input type="text" name="res-content-type" placeholder="Content type"></input>
+                <select id="resource-type">
+                </select>
             </div>
         </div>
     </section>
-
-    <div class="line clear" />
-    <section class="span10">
-        <div class="clear space" />
-        <label>Select how to provide the resource*</label>
-        <select name="res-type" id="res-type">
-            <option value="upload">Upload resource</option>
-            <option value="url">Provide resource URL</option>
-        </select>
-
-        <div class="clear" />
-        <div class="control-group">
-            <div class="controls">
-                <input type="file" name="files" id="upload"></input>
-                <i class="icon-question-sign" id="upload-help" rel="popover" data-content="Upload the resource itself i.e. an executable file or packaged code" data-original-title="Help"></i>
-                <div class="space clear" />
-                <input type="text" name="res-link" class="hide" placeholder="Resource URL"></input>
-                <i class="icon-question-sign hide" id="link-help" rel="popover" data-content="Provide an URL where the resource can be accessed" data-original-title="Help"></i>
-            </div>
-        </div>
-
-        <label></label>
-        <input type="checkbox" name="res-open" id="res-open" /><span> Open Resource </span> <i class="icon-question-sign" id="open-help" rel="popover" data-content="Select whether the resource is open, that is, the resource is directly accessible by all the users" data-original-title="Help"></i>
-        <div class="clear space" />
-    </section>
+    <div class="space clear"></div>
+    <input type="checkbox" name="res-open" id="res-open" /><span> Open Resource </span> <i class="icon-question-sign" id="open-help" rel="popover" data-content="Select whether the resource is open, that is, the resource is directly accessible by all the users" data-original-title="Help"></i>
 </form>

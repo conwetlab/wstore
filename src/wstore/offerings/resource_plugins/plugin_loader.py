@@ -69,8 +69,8 @@ class PluginLoader():
             # Create a directory for the plugin
             # Validate plugin info
             validation = self._plugin_manager.validate_plugin_info(json_info)
-            if not validation[0]:
-                raise PluginError('Invalid format in package.json file. ' + validation[1])
+            if validation is not None:
+                raise PluginError('Invalid format in package.json file. ' + validation)
 
             dir_name = json_info['name'].replace(' ', '_')
 
@@ -113,12 +113,7 @@ class PluginLoader():
         )
 
         if 'form' in json_info:
-            form_path = os.path.join('wstore', 'offerings')
-            form_path = os.path.join(form_path, 'resource_plugins')
-            form_path = os.path.join(form_path, 'plugins')
-            form_path = os.path.join(form_path, dir_name)
-            form_path = os.path.join(form_path, json_info['form'])
-            plugin.form = form_path
+            plugin.form = json_info['form']
 
         plugin.save()
 

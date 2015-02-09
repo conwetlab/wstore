@@ -28,7 +28,7 @@ from bson import ObjectId
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
-from wstore.models import Resource, Offering
+from wstore.models import Resource, Offering, ResourcePlugin
 from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
@@ -76,7 +76,8 @@ def register_resource(provider, data, file_=None):
 
     # Check contents
     if not 'name' in data or not 'version' in data or\
-    not 'description' in data or not 'content_type' in data:
+    not 'description' in data or not 'content_type' in data or\
+    not 'resource_type' in data:
         raise ValueError('Invalid request: Missing required field')
 
     # Check version format
@@ -86,6 +87,13 @@ def register_resource(provider, data, file_=None):
     # Check name format
     if not is_valid_id(data['name']):
         raise ValueError('Invalid name format')
+
+    # Validate resource type
+    if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
+        res_type_model = ResourcePlugin.objects.filter(name=data['resource_type'])
+
+        if not len(res_type_model) > 0:
+            raise ValueError('Invalid resource type')
 
     resource_data = {
         'name': data['name'],
@@ -128,7 +136,9 @@ def register_resource(provider, data, file_=None):
         resource_path=resource_data['content_path'],
         content_type=resource_data['content_type'],
         state='created',
-        open=data.get('open', False)
+        open=data.get('open', False),
+        resource_type=data['resource_type'],
+        meta_info=data.get('meta', {})
     )
 
 

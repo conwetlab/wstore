@@ -20,12 +20,14 @@
 
 from __future__ import unicode_literals
 
+import os
 import json
 
 from django.http import HttpResponse
+from django.conf import settings
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import authentication_required
+from wstore.store_commons.utils.http import authentication_required, build_response
 from wstore.models import ResourcePlugin
 
 
@@ -36,7 +38,21 @@ class PluginCollection(Resource):
         """
         This view is used to retrieve the existing resource plugin types
         """
-        result = []
+        # Load basic types
+        result = [{
+            'name': 'Downloadable',
+            'author': 'Wstore',
+            'version': '1',
+            'media_types': [],
+            'formats': ['FILE', 'URL']
+        },{
+            'name': 'API',
+            'author': 'Wstore',
+            'version': '1',
+            'media_types': [],
+            'formats': ['URL']
+        }]
+
         # Get resource plugins
         plugins = ResourcePlugin.objects.all()
 
@@ -55,3 +71,5 @@ class PluginCollection(Resource):
 
         mime_type = 'application/JSON; charset=UTF-8'
         return HttpResponse(json.dumps(result), status=200, mimetype=mime_type)
+
+        

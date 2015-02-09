@@ -165,8 +165,7 @@
                 createOffForm.display();
             });
             $('#register-res').click(function() {
-                var regResForm = buildRegisterResourceForm('create');
-                regResForm.display();
+                openResourceView('create');
             });
             $('#view-res').click(function() {
                 var resForm, offElem = {}
