@@ -129,6 +129,8 @@
      */
     FormGenerator.prototype.generateForm = function generateForm (formInfo) {
         var form = $('<form class="form"><div id="error-container"></div></form>')
+        var section = $('<section class="span10"></section>');
+
         var methods = {
             "text": generateTextInput,
             "textarea": generateTextAreaInput,
@@ -141,9 +143,11 @@
 
             if (formInfo.hasOwnProperty(key)) {
                 var input = methods[formInfo[key].type](key, formInfo[key])
-                form.append(input);
+                section.append(input);
             }
         }
+
+        form.append(section);
         return form;
     };
 
