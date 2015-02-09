@@ -139,6 +139,11 @@
             }
         }
 
+        $(self.msgId + ' #upload-help').popover({'trigger': 'manual'});
+        $(self.msgId + ' #link-help').popover({'trigger': 'manual'});
+        $(self.msgId + ' #upload-help').click(self.helpHandler);
+        $(self.msgId + ' #link-help').click(self.helpHandler);
+
         self.selectFormatHandler();
         $(self.msgId + ' #upload').on('change', self.handleResourceSelection.bind(self));
 
@@ -532,11 +537,11 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
     };
 
     /**
-     * Private method used to handle help messages
+     * Method used to handle help messages
      * @param evnt
      * @returns
      */
-    var helpHandler = function helpHandler(evnt) {
+    RegisterResourceForm.prototype.helpHandler = function helpHandler(evnt) {
         var helpId = evnt.target;
         if (!$(helpId).prop('displayed')) {
             $(helpId).popover('show');
@@ -612,9 +617,7 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
         var filler;
 
         //Set listeners
-        $(this.msgId + ' #upload-help').click(helpHandler);
-        $(this.msgId + ' #link-help').click(helpHandler);
-        $(this.msgId + ' #open-help').click(helpHandler);
+        $(this.msgId + ' #open-help').click(this.helpHandler);
 
         $(this.msgId).on('hide', function() {
             $(document).unbind('click');
@@ -642,8 +645,6 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
      */
     RegisterResourceForm.prototype.includeContents = function includeContents() {
         // Configure help messages
-        $(this.msgId + ' #upload-help').popover({'trigger': 'manual'});
-        $(this.msgId + ' #link-help').popover({'trigger': 'manual'});
         $(this.msgId + ' #open-help').popover({'trigger': 'manual'});
 
         // Add plugin types
@@ -658,13 +659,18 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
 /**
  * Open a resource modal after loading resource plugin info
  */
-openResourceView = function openResourceView(builder, resourceInfo, messageId, caller) {
+openResourceView = function openResourceView(builder, resourceInfo, messageId, caller, container, callback) {
     // Retrieve resource types
     plugin_client = new ServerClient('', 'PLUGINS_COLLECTION');
 
     plugin_client.get(function(pluginInfo) {
         var resModal = buildRegisterResourceForm(builder, resourceInfo, messageId, caller);
         resModal.setPluginInfo(pluginInfo);
-        resModal.display();
+        resModal.display(container);
+
+        // Call the callback if needed
+        if(callback) {
+            callback();
+        }
     });
 }
