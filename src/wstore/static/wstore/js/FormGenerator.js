@@ -34,10 +34,6 @@
         controlGroupTemplate += '</div>';
         controlGroupTemplate += '</div>';
 
-        if (input.mandatory) {
-            label += '*';
-        }
-
         $.template('cntrlGroupTemplate', controlGroupTemplate);
         controlInput = $.tmpl('cntrlGroupTemplate', {'label': label});
 
@@ -69,12 +65,11 @@
      */
     FormGenerator.prototype.generateSelectInput = function generateSelectInput (name, inputInfo) {
         // Build select structure
-        var selectTemplate = '<select name="${name}" value="${val}"></select>';
+        var selectTemplate = '<select name="${name}"></select>';
 
         $.template('selectTemplate', selectTemplate);
         var selectInput = $.tmpl('selectTemplate', {
             'name': name,
-            'val': inputInfo.default
         });
 
         // Append options
@@ -84,6 +79,8 @@
 
             selectInput.append(optionInput);
         }
+
+        selectInput.val(inputInfo.default);
 
         // Return a control group with the input
         return this.generateControlGroup(inputInfo.label, selectInput);
@@ -132,10 +129,10 @@
         var section = $('<section class="span10"></section>');
 
         var methods = {
-            "text": generateTextInput.bind(this),
-            "textarea": generateTextAreaInput.bind(this),
-            "select": generateSelectInput.bind(this),
-            "checkbox": genrateCheckboxInput.bind(this)
+            "text": this.generateTextInput.bind(this),
+            "textarea": this.generateTextAreaInput.bind(this),
+            "select": this.generateSelectInput.bind(this),
+            "checkbox": this.genrateCheckboxInput.bind(this)
         }
 
         // Iterate form fields
