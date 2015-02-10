@@ -224,7 +224,8 @@ def get_provider_resources(provider, filter_=None, pagination=None):
             'content_type': res.content_type,
             'state': state,
             'open': res.open,
-            'link': res.get_url()
+            'link': res.get_url(),
+            'resource_type': res.resource_type
         }
         response.append(resource_info)
     return response
