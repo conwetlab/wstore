@@ -106,45 +106,24 @@
         $.template('provideResTemplate', $('#provide_res_form_template'));
         $.tmpl('provideResTemplate').appendTo(self.msgId + ' .modal-body');
 
-        // Include plugin specific interface if needed
-        if (self.plugin) {
-            // - Check if the plugin define concrete media types
-            if (self.plugin.media_types.length > 0) {
-                var select = $('<select name="res-content-type"></select>');
+        // - Check if the plugin define concrete media types
+        if (self.plugin.media_types.length > 0) {
+            var select = $('<select name="res-content-type"></select>');
 
-                $(self.msgId + ' [name="res-content-type"]').remove();
+            $(self.msgId + ' [name="res-content-type"]').remove();
 
-                // Include allowed media types
-                for (var i = 0;  i < self.plugin.media_types.length; i++) {
-                    var media_type = self.plugin.media_types[i];
+            // Include allowed media types
+            for (var i = 0;  i < self.plugin.media_types.length; i++) {
+                var media_type = self.plugin.media_types[i];
 
-                    $('<option val="' + media_type + '">' + media_type + '</option>')
-                        .appendTo(select);
-                }
-                select.appendTo('#res-content-type-cont');
+                $('<option val="' + media_type + '">' + media_type + '</option>')
+                    .appendTo(select);
             }
-
-            // Check allowed formats in the plugin
-            if (self.plugin.formats.length == 1) {
-                // Hide select
-                $('#res-type-container').addClass('hide');
-
-                if (self.plugin.formats[0] == 'FILE') {
-                    // Hide URL
-                    self.uploadHandler();
-                } else {
-                    // Hide file
-                    self.linkHandler();
-                }
-            }
+            select.appendTo('#res-content-type-cont');
         }
 
-        $(self.msgId + ' #upload-help').popover({'trigger': 'manual'});
-        $(self.msgId + ' #link-help').popover({'trigger': 'manual'});
-        $(self.msgId + ' #upload-help').click(self.helpHandler);
-        $(self.msgId + ' #link-help').click(self.helpHandler);
-
         self.selectFormatHandler();
+
         $(self.msgId + ' #upload').on('change', self.handleResourceSelection.bind(self));
 
         // Fill new listener
@@ -354,6 +333,7 @@
         $(this.msgId + ' [name="res-name"]').val(this.resourceInfo.name);
         $(this.msgId + ' [name="res-version"]').val(this.resourceInfo.version);
         $(this.msgId + ' [name="res-description"]').val(this.resourceInfo.description);
+        $(this.msgId + ' #resource-type').val(this.resourceInfo.resource_type, true);
 
         $(this.msgId + ' [name="res-open"]').prop('checked', this.resourceInfo.open);
 
@@ -463,21 +443,36 @@
         }
     };
 
+    var fillProvideResourceForm = function fillProvideResourceForm (self) {
+        // Add form components
+        $.template('provideResTemplate', $('#provide_res_template'));
+        $.tmpl('provideResTemplate').appendTo(self.msgId + ' .modal-body');
+
+        // Add handlers
+        self.selectFormatHandler();
+    };
+
     ResourceUpgrader.prototype.fillResourceInfo = function fillResourceInfo() {
+
+        this.setPlugin(this.resourceInfo.resource_type);
+
         $(this.msgId + ' [name="res-name"]').val(this.resourceInfo.name);
 
         // Remove unnecessary fields
         $(this.msgId + ' [name="res-name"]').prop('disabled', true);
 
         $(this.msgId + ' [name="res-version"]').val(this.resourceInfo.version);
-        $(this.msgId + ' [name="res-content-type"]').remove();
-        $(this.msgId + ' label:contains(Content type)').remove();
         $(this.msgId + ' [name="res-description"]').remove();
         $(this.msgId + ' label:contains(Description)').remove();
+        $(this.msgId + ' label:contains(Resource Type*)').remove();
+        $(this.msgId + ' #resource-type').remove()
 
         $(this.msgId + ' [name="res-open"]').remove();
         $(this.msgId + ' #open-help').remove();
         $(this.msgId + ' span:contains( Open Resource )').remove();
+
+        // Include upload forms
+        fillProvideResourceForm(this);
     };
 
 })();
@@ -610,22 +605,43 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
         $(this.msgId + ' #link-help').addClass('hide');
     };
 
+    
     /**
      * Creates the handler for managing the selection of how to provide the
      * resource, upload or url
      */
     RegisterResourceForm.prototype.selectFormatHandler = function selectFormatHandler () {
-        $(this.msgId + ' #res-type').on('change', function(self) {
-            return function() {
-                self.resource= {};
-                $(self.msgId + ' [name="res-link"]').val('');
-                if ($(this).val() == 'upload') {
-                    self.uploadHandler();
-                } else {
-                    self.linkHandler();
-                }
-            };
-        }(this));
+        // Check allowed formats in the plugin
+        if (this.plugin.formats.length == 1) {
+            // Hide select
+            $('#res-type-container').addClass('hide');
+
+            if (this.plugin.formats[0] == 'FILE') {
+                // Hide URL
+                this.uploadHandler();
+            } else {
+                // Hide file
+                this.linkHandler();
+            }
+        } else {
+            $(this.msgId + ' #res-type').on('change', function(self) {
+                return function() {
+                    self.resource= {};
+                    $(self.msgId + ' [name="res-link"]').val('');
+                    if ($(this).val() == 'upload') {
+                        self.uploadHandler();
+                    } else {
+                        self.linkHandler();
+                    }
+                };
+            }(this));
+
+            // Set help listeners
+            $(this.msgId + ' #upload-help').popover({'trigger': 'manual'});
+            $(this.msgId + ' #link-help').popover({'trigger': 'manual'});
+            $(this.msgId + ' #upload-help').click(this.helpHandler);
+            $(this.msgId + ' #link-help').click(this.helpHandler);
+        }
     };
 
     /**

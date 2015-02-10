@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2013-2015 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * This file is part of WStore.
  *
@@ -147,7 +147,6 @@
             this.client.get(this.getReqHandler.bind(this), '', queryString);
         }
     };
-
 
     ScrollPagination.prototype.setNextPage = function setNextPage(pageNum) {
         this.nextPage = pageNum;

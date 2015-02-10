@@ -1,0 +1,22 @@
+<section class="span10">
+    <div class="clear space"></div>
+
+    <div id="res-type-container"> 
+        <label>Select how to provide the resource*</label>
+        <select name="res-type" id="res-type">
+            <option value="upload">Upload resource</option>
+            <option value="url">Provide resource URL</option>
+        </select>
+    </div>
+
+    <div class="clear"></div>
+    <div class="control-group">
+        <div class="controls">
+            <input type="file" name="files" id="upload"></input>
+            <i class="icon-question-sign" id="upload-help" rel="popover" data-content="Upload the resource itself i.e. an executable file or packaged code" data-original-title="Help"></i>
+            <div class="space clear" />
+            <input type="text" name="res-link" class="hide" placeholder="Resource URL"></input>
+            <i class="icon-question-sign hide" id="link-help" rel="popover" data-content="Provide an URL where the resource can be accessed" data-original-title="Help"></i>
+        </div>
+    </div>
+</section>
