@@ -26,7 +26,7 @@
     /*
      *
      */
-    var generateControlGroup = function generateControlGroup (label, input) {
+    FormGenerator.prototype.generateControlGroup = function generateControlGroup (label, input) {
         var controlInput;
         var controlGroupTemplate = '<div class="control-group">';
         controlGroupTemplate += '<label class="control-label">${label}</label>';
@@ -49,7 +49,7 @@
     /*
      *
      */
-    var generateTextInput = function generateTextInput (name, inputInfo) {
+    FormGenerator.prototype.generateTextInput = function generateTextInput (name, inputInfo) {
         // Build text input structure
         var inputTemplate = '<input type="text" name="${name}" placeholder="${placeholder}" value="${val}"></input>';
 
@@ -61,13 +61,13 @@
         });
 
         // Return a control group with the input
-        return generateControlGroup(inputInfo.label, input);
+        return this.generateControlGroup(inputInfo.label, input);
     };
 
     /*
      *
      */
-    var generateSelectInput = function generateSelectInput (name, inputInfo) {
+    FormGenerator.prototype.generateSelectInput = function generateSelectInput (name, inputInfo) {
         // Build select structure
         var selectTemplate = '<select name="${name}" value="${val}"></select>';
 
@@ -86,13 +86,13 @@
         }
 
         // Return a control group with the input
-        return generateControlGroup(inputInfo.label, selectInput);
+        return this.generateControlGroup(inputInfo.label, selectInput);
     };
 
     /*
      *
      */
-    var genrateCheckboxInput = function genrateCheckboxInput (name, inputInfo) {
+    FormGenerator.prototype.genrateCheckboxInput = function genrateCheckboxInput (name, inputInfo) {
         // Build checkbox structure
         var checkboxTemplate = '<input type="checkbox" name="${name}" checked=${val}></input>${text}';
 
@@ -103,13 +103,13 @@
         });
 
         // Return a control group with the input
-        return generateControlGroup(inputInfo.label, checkboxInput);
+        return this.generateControlGroup(inputInfo.label, checkboxInput);
     };
 
     /*
      *
      */
-    var generateTextAreaInput = function generateTextAreaInput (name, inputInfo) {
+    FormGenerator.prototype.generateTextAreaInput = function generateTextAreaInput (name, inputInfo) {
         // Build textarea structure
         var textareaTemplate = '<textarea name="${name}" placeholder="${placeholder}">${val}</textarea>';
 
@@ -121,7 +121,7 @@
         });
 
         // Return a control group with the input
-        return generateControlGroup(inputInfo.label, textareaInput);
+        return this.generateControlGroup(inputInfo.label, textareaInput);
     };
 
     /*
@@ -132,10 +132,10 @@
         var section = $('<section class="span10"></section>');
 
         var methods = {
-            "text": generateTextInput,
-            "textarea": generateTextAreaInput,
-            "select": generateSelectInput,
-            "checkbox": genrateCheckboxInput
+            "text": generateTextInput.bind(this),
+            "textarea": generateTextAreaInput.bind(this),
+            "select": generateSelectInput.bind(this),
+            "checkbox": genrateCheckboxInput.bind(this)
         }
 
         // Iterate form fields

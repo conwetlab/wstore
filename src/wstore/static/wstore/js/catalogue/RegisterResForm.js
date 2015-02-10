@@ -241,14 +241,7 @@
         this.request.description = description;
         this.request.open = $(this.msgId + ' #res-open').prop('checked');
 
-        // Save plugin object selected
-        var found = false;
-        for (var i = 0; i < this.pluginInfo.length && !found; i++) {
-            if (this.pluginInfo[i].name == resourceType) {
-                found = true;
-                this.plugin = this.pluginInfo[i];
-            }
-        }
+        this.setPlugin(resourceType);
 
         // Change modal form
         if (!errFields.length) {
@@ -326,25 +319,50 @@
         }.bind(this));
     };
 
+    var fillContentTypeInput = function fillContentTypeInput (self) {
+        var input;
+        var generateForm = new FormGenerator();
+        var inputValues = {
+            'label': 'Content type',
+            'default': self.resourceInfo.content_type
+        }
+
+        if (self.plugin.media_types.length > 0) {
+            var options = [];
+
+            for (var i = 0; i < self.plugin.media_types.length; i++) {
+                options.push({
+                    'value': self.plugin.media_types[i],
+                    'text': self.plugin.media_types[i]
+                })
+            };
+            inputValues.options = options;
+            input = generateForm.generateSelectInput("res-content-type", inputValues);
+        } else {
+            inputValues.placeholder = 'Content type';
+            input = generateForm.generateTextInput("res-content-type", inputValues);
+        }
+
+        input.appendTo(self.msgId + ' section.span5');
+    };
+
     ResourceUpdater.prototype.fillResourceInfo = function fillResourceInfo() {
+
+        this.setPlugin(this.resourceInfo.resource_type);
+
         // Fill resource info
         $(this.msgId + ' [name="res-name"]').val(this.resourceInfo.name);
         $(this.msgId + ' [name="res-version"]').val(this.resourceInfo.version);
-        $(this.msgId + ' [name="res-content-type"]').val(this.resourceInfo.content_type);
         $(this.msgId + ' [name="res-description"]').val(this.resourceInfo.description);
 
         $(this.msgId + ' [name="res-open"]').prop('checked', this.resourceInfo.open);
 
-        // Remove unnecessary fields
+        // Disable unnecessary fields
         $(this.msgId + ' [name="res-name"]').prop('disabled', true);
         $(this.msgId + ' [name="res-version"]').prop('disabled', true);
+        $(this.msgId + ' #resource-type').prop('disabled', true);
 
-        $(this.msgId + ' [name="res-type"]').remove();
-        $(this.msgId + ' [name="files"]').remove();
-        $(this.msgId + ' [name="res-link"]').remove();
-        $(this.msgId + ' #link-help').remove();
-        $(this.msgId + ' #upload-help').remove();
-        $(this.msgId + ' label:contains(Select how to provide the resource)').remove();
+        fillContentTypeInput(this);
 
         // Disable fields depending on the state
         if (this.resourceInfo.state == 'used') {
@@ -640,6 +658,17 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
         this.pluginInfo = pluginInfo;
     };
 
+    RegisterResourceForm.prototype.setPlugin = function setPlugin (resourceType) {
+        // Save plugin object selected
+        var found = false;
+        for (var i = 0; i < this.pluginInfo.length && !found; i++) {
+            if (this.pluginInfo[i].name == resourceType) {
+                found = true;
+                this.plugin = this.pluginInfo[i];
+            }
+        }
+    };
+
     /**
      * Implementation of includeContents abstract method
      */
@@ -648,8 +677,8 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
         $(this.msgId + ' #open-help').popover({'trigger': 'manual'});
 
         // Add plugin types
-        for (var i = 0; i < this.pluginInfo.length; i ++) {
-            $('#resource-type').append('<option value="'+ this.pluginInfo[i].name + '">' + this.pluginInfo[i].name + '</option>');
+        for (var i = 0; i < this.pluginInfo.length; i++) {
+            $(this.msgId + ' #resource-type').append('<option value="'+ this.pluginInfo[i].name + '">' + this.pluginInfo[i].name + '</option>');
         }
     };
 

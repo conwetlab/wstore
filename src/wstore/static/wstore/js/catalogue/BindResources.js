@@ -133,17 +133,14 @@
         if(this.resources === undefined){
             this.resources = resources;  
             if(!this.viewOnly) {
-            // Set listener
-            $('.modal-footer > .btn').click((function () {
-                this.bindResources();
-            }).bind(this));
-        }  
+                // Set listener
+                $('.modal-footer > .btn').click((function () {
+                    this.bindResources();
+                }).bind(this));
+            }
+        } else {
+            this.resources = this.resources.concat(resources);
         }
-        else{
-            this.resources=this.resources.concat(resources);
-        }
-        
-
 
         var labels = {
             'deleted': 'label-important',
@@ -290,6 +287,12 @@
         });
     };
 
+    var onHiddenHandler = function onHiddenHandler() {
+        // Override hidden behaviour
+        $('#sec-message').off('hidden');
+        $('#sec-message').on('hidden', this.showModal.bind(this));
+    }
+
     /**
      * Set the different listeners included in the resource details
      * view, including the back button, the edit button and the remove
@@ -319,12 +322,8 @@
                 hideModal();
 
                 // Create the new form
-                regRes = buildRegisterResourceForm('edit', this.resource, '#sec-message', this);
-                regRes.display($('#new-container'));
+                openResourceView('edit', this.resource, '#sec-message', this, $('#new-container'), onHiddenHandler.bind(this));
 
-                // Override hidden behaviour
-                $('#sec-message').off('hidden');
-                $('#sec-message').on('hidden', this.showModal.bind(this));
             }.bind(this));
 
             // Set upgade listener
@@ -333,12 +332,8 @@
 
                 hideModal();
                 // Create the new form
-                regRes = buildRegisterResourceForm('upgrade', this.resource, '#sec-message', this);
-                regRes.display($('#new-container'));
+                openResourceView('upgrade', this.resource, '#sec-message', this, $('#new-container'), onHiddenHandler.bind(this));
 
-                // Override hidden behaviour
-                $('#sec-message').off('hidden');
-                $('#sec-message').on('hidden', this.showModal.bind(this));
             }.bind(this));
         }
     };
