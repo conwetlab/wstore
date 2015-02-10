@@ -90,6 +90,10 @@
         return elementsRow*this.numberOfRows;
     };
 
+    ScrollPagination.prototype.setElementsPage = function setElementsPage (elementsPage) {
+        this.elementsPage = elementsPage;
+    }
+
     /**
      * Handler for get elements response
      */

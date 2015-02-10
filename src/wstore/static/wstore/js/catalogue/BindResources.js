@@ -115,7 +115,7 @@
                 function(){}
             );
         this.pagination.setElemSpace(0);
-        this.pagination.configurePaginationParams(233, 2);
+        this.pagination.setElementsPage(2);
 
         // Remove possible listeners existing in the scroll
         this.pagination.removeListeners();
