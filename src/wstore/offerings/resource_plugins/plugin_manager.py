@@ -24,16 +24,13 @@ from __future__ import unicode_literals
 from wstore.offerings.resource_plugins.plugin_error import PluginError
 from wstore.store_commons.utils.version import is_valid_version
 from wstore.store_commons.utils.name import is_valid_id
+from wstore.models import ResourcePlugin
 
 
 class PluginManager():
 
     _plugins = {}
     _instance = None
-
-    def __init__(self):
-        if self._instance is not None:
-            raise ValueError('This class has been already instantiated')
 
     def _validate_plugin_form(self, form_info):
         """
@@ -149,9 +146,3 @@ class PluginManager():
 
         return reason
 
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = PluginManager()
-
-        return cls._instance

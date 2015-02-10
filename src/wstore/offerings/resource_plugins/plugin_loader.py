@@ -39,7 +39,7 @@ class PluginLoader():
     _plugin_manager = None
 
     def __init__(self):
-        self._plugin_manager = PluginManager.get_instance()
+        self._plugin_manager = PluginManager()
         self._plugins_path = os.path.join(settings.BASEDIR, 'wstore')
         self._plugins_path = os.path.join(self._plugins_path, 'offerings')
         self._plugins_path =  os.path.join(self._plugins_path, 'resource_plugins')
