@@ -80,6 +80,8 @@ def register_resource_events(func):
         if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
             plugin_module.on_post_create(provider, data)
 
+    return wrapper
+
 
 def upgrade_resource_events(func):
 
@@ -112,6 +114,7 @@ def upgrade_resource_events(func):
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
             plugin_module.on_post_upgrade(resource)
 
+    return wrapper
 
 def update_resource_events(func):
 
@@ -138,6 +141,7 @@ def update_resource_events(func):
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
             plugin_module.on_post_update(resource)
 
+    return wrapper
 
 def delete_resource_events(func):
 
@@ -158,3 +162,5 @@ def delete_resource_events(func):
         # Call on post delete event handler
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
             plugin_module.on_post_delete(resource)
+
+    return wrapper
