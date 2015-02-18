@@ -34,18 +34,26 @@ def load_plugin_module(module):
     return module_class
 
 
+def _get_plugin_model(name):
+    try:
+        plugin_model = ResourcePlugin.objects.get(name=name)
+    except:
+        # Validate resource type
+        raise ValueError('Invalid request: The specified resource type is not registered')
+
+    return plugin_model
+
+
 def register_resource_events(func):
 
     @wraps(func)
     def wrapper(provider, data):
         # Get plugin models
         if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
-            try:
-                plugin_model = ResourcePlugin.objects.get(name=data['resource_type'])
-            except:
-                # Validate resource type
-                raise ValueError('Invalid request: The specified resource type is not registered')
 
+            plugin_model = _get_plugin_model(data['resource_type'])
+
+            # TODO: Validate formats for API resource
             # Validate format
             if data['link'] != "" and 'URL' not in plugin_model.formats:
                 raise ValueError('Invalid plugin format: URL not allowed for the resource type')
@@ -70,3 +78,38 @@ def register_resource_events(func):
         # Call on post create event handler
         if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
             plugin_module.on_post_create(provider, data)
+
+
+def upgrade_resource_events(func):
+
+    @wraps(func)
+    def wrapper(resource):
+
+        if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
+            plugin_model = _get_plugin_model(resource.resource_type)
+
+            # TODO: Validate formats for API resource
+            # Validate format
+            if resource.download_link != "" and 'URL' not in plugin_model.formats:
+                raise ValueError('Invalid plugin format: URL not allowed for the resource type')
+
+            if resource.resource_path != "" and 'FILE' not in plugin_model.formats:
+                raise ValueError('Invalid plugin format: File not allowed for the resource type')
+
+            # Load plugin module
+            module_class = load_plugin_module()
+            plugin_module = module_class()
+
+            # Call on pre create event handler
+            plugin_module.on_pre_create(resource)
+
+        # Call method
+        func(resource)
+
+        # Call on post create event handler
+        if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
+            plugin_module.on_post_create(resource)
+
+
+def update_resource_events(func):
+    pass

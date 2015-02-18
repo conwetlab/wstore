@@ -28,15 +28,15 @@ from bson import ObjectId
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
-from wstore.models import Resource, Offering, ResourcePlugin
+from wstore.models import Resource, Offering
 from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.errors import ConflictError
 from wstore.offerings.resource_plugins.plugins.ckan_validation import validate_dataset
-from wstore.offerings.resource_plugins.plugin_manager import PluginManager
-from wstore.offerings.resource_plugins.decorators import register_resource_events
+from wstore.offerings.resource_plugins.decorators import register_resource_events, \
+    upgrade_resource_events, update_resource_events
 
 
 def _save_resource_file(provider, name, version, file_):
@@ -151,10 +151,28 @@ def register_resource(provider, data, file_=None):
     _create_resource_model(current_organization, resource_data)
 
 
+def _get_decorated_save(action):
+    save_decorators = {
+        'upgrade': upgrade_resource_events,
+        'update': update_resource_events
+    }
+
+    decorator = save_decorators[action]
+
+    @decorator
+    def save_resource(resource):
+        resource.save()
+
+    return save_resource
+
+
 def upgrade_resource(resource, data, file_=None):
+    """
+    Upgrades an existing resource to a new version
+    """
 
     # Validate data
-    if not 'version' in data:
+    if'version' not in data:
         raise ValueError('Missing a required field: Version')
 
     # Check version format
@@ -197,7 +215,9 @@ def upgrade_resource(resource, data, file_=None):
     else:
         raise ValueError('No resource has been provided')
 
-    resource.save()
+    # Save the resource
+    decorated_save = _get_decorated_save('upgrade')
+    decorated_save(resource)
 
 
 def get_provider_resources(provider, filter_=None, pagination=None):
@@ -211,8 +231,8 @@ def get_provider_resources(provider, filter_=None, pagination=None):
     response = []
 
     if pagination:
-        x = int(pagination['start']) -1
-        y = x+int(pagination['limit'])
+        x = int(pagination['start']) - 1
+        y = x + int(pagination['limit'])
         resources = Resource.objects.filter(provider=provider.userprofile.current_organization)[x:y]
     else:
         resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
