@@ -31,7 +31,7 @@ def load_plugin_module(module):
 
     module_class = getattr(__import__(module_package, globals(), locals(), [module_class_name], -1), module_class_name)
 
-    return module_class
+    return module_class()
 
 
 def _get_plugin_model(name):
@@ -66,8 +66,7 @@ def register_resource_events(func):
                 raise ValueError('Invalid media type: ' + data['content_type'] + ' is not allowed for the resource type')
 
             # Load plugin module
-            module_class = load_plugin_module()
-            plugin_module = module_class()
+            plugin_module = load_plugin_module()
 
             # Call on pre create event handler
             plugin_module.on_pre_create(provider, data)
@@ -97,19 +96,40 @@ def upgrade_resource_events(func):
                 raise ValueError('Invalid plugin format: File not allowed for the resource type')
 
             # Load plugin module
-            module_class = load_plugin_module()
-            plugin_module = module_class()
+            plugin_module = load_plugin_module()
 
-            # Call on pre create event handler
-            plugin_module.on_pre_create(resource)
+            # Call on pre upgrade event handler
+            plugin_module.on_pre_upgrade(resource)
 
         # Call method
         func(resource)
 
-        # Call on post create event handler
+        # Call on post upgrade event handler
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
-            plugin_module.on_post_create(resource)
+            plugin_module.on_post_upgrade(resource)
 
 
 def update_resource_events(func):
-    pass
+
+    @wraps(func)
+    def wrapper(resource):
+
+        if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
+            plugin_model = _get_plugin_model(resource.resource_type)
+
+            # Validate media type
+            if len(plugin_model.media_types) > 0 and resource.content_type not in plugin_model.media_types:
+                raise ValueError('Invalid media type: ' + resource.content_type + ' is not allowed for the resource type')
+
+            # Load plugin module
+            plugin_module = load_plugin_module()
+
+            # Call on pre update event handler
+            plugin_module.on_pre_update(resource)
+
+        # Call method
+        func(resource)
+
+        # Call on post update event handler
+        if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
+            plugin_module.on_post_update(resource)

@@ -349,4 +349,5 @@ def update_resource(resource, data):
 
         resource.description = data['description']
 
-    resource.save()
+    decorated_save = _get_decorated_save('update')
+    decorated_save(resource)

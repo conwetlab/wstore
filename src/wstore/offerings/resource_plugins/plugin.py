@@ -30,10 +30,10 @@ class Plugin():
     def on_post_create(self, provider, data):
         pass
 
-    def on_pre_update(self):
+    def on_pre_update(self, resource):
         pass
 
-    def on_post_update(self):
+    def on_post_update(self, resource):
         pass
 
     def on_pre_upgrade(self, resource):
