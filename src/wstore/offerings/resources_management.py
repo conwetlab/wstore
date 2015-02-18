@@ -35,6 +35,8 @@ from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.errors import ConflictError
 from wstore.offerings.resource_plugins.plugins.ckan_validation import validate_dataset
+from wstore.offerings.resource_plugins.plugin_manager import PluginManager
+from wstore.offerings.resource_plugins.decorators import register_resource_events
 
 
 def _save_resource_file(provider, name, version, file_):
@@ -61,7 +63,27 @@ def _save_resource_file(provider, name, version, file_):
     return settings.MEDIA_URL + 'resources/' + file_name
 
 
+@register_resource_events
+def _create_resource_model(provider, resource_data):
+    Resource.objects.create(
+        name=resource_data['name'],
+        provider=provider,
+        version=resource_data['version'],
+        description=resource_data['description'],
+        download_link=resource_data['link'],
+        resource_path=resource_data['content_path'],
+        content_type=resource_data['content_type'],
+        state='created',
+        open=resource_data['open'],
+        resource_type=resource_data['resource_type'],
+        meta_info=resource_data['meta']
+    )
+
+
 def register_resource(provider, data, file_=None):
+    """
+    Registers a new resource for the given provider
+    """
 
     # Check if the resource already exists
     existing = True
@@ -75,9 +97,9 @@ def register_resource(provider, data, file_=None):
         raise ConflictError('The resource ' + data['name'] + ' already exists. Please upgrade the resource if you want to provide new content')
 
     # Check contents
-    if not 'name' in data or not 'version' in data or\
-    not 'description' in data or not 'content_type' in data or\
-    not 'resource_type' in data:
+    if 'name' not in data or 'version' not in data or\
+    'description' not in data or 'content_type' not in data or\
+    'resource_type' not in data:
         raise ValueError('Invalid request: Missing required field')
 
     # Check version format
@@ -88,18 +110,12 @@ def register_resource(provider, data, file_=None):
     if not is_valid_id(data['name']):
         raise ValueError('Invalid name format')
 
-    # Validate resource type
-    if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
-        res_type_model = ResourcePlugin.objects.filter(name=data['resource_type'])
-
-        if not len(res_type_model) > 0:
-            raise ValueError('Invalid resource type')
-
     resource_data = {
         'name': data['name'],
         'version': data['version'],
         'description': data['description'],
-        'content_type': data['content_type']
+        'content_type': data['content_type'],
+        'resource_type': data['resource_type']
     }
 
     if not file_:
@@ -127,19 +143,12 @@ def register_resource(provider, data, file_=None):
         resource_data['content_path'] = _save_resource_file(current_organization.name, data['name'], data['version'], file_)
         resource_data['link'] = ''
 
-    Resource.objects.create(
-        name=resource_data['name'],
-        provider=current_organization,
-        version=resource_data['version'],
-        description=resource_data['description'],
-        download_link=resource_data['link'],
-        resource_path=resource_data['content_path'],
-        content_type=resource_data['content_type'],
-        state='created',
-        open=data.get('open', False),
-        resource_type=data['resource_type'],
-        meta_info=data.get('meta', {})
-    )
+    # Include missing info in resource data
+    resource_data['open'] = data.get('open', False)
+    resource_data['meta'] = data.get('meta', {})
+
+    # Create the resource entry in the database
+    _create_resource_model(current_organization, resource_data)
 
 
 def upgrade_resource(resource, data, file_=None):

@@ -24,10 +24,10 @@ from __future__ import unicode_literals
 
 class Plugin():
 
-    def on_pre_create(self):
+    def on_pre_create(self, provider, data):
         pass
 
-    def on_post_create(self):
+    def on_post_create(self, provider, data):
         pass
 
     def on_pre_update(self):
