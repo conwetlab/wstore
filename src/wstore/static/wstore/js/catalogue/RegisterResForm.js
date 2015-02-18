@@ -635,13 +635,12 @@ buildRegisterResourceForm = function buildRegisterResourceForm(builder, resource
                     }
                 };
             }(this));
-
-            // Set help listeners
-            $(this.msgId + ' #upload-help').popover({'trigger': 'manual'});
-            $(this.msgId + ' #link-help').popover({'trigger': 'manual'});
-            $(this.msgId + ' #upload-help').click(this.helpHandler);
-            $(this.msgId + ' #link-help').click(this.helpHandler);
         }
+        // Set help listeners
+        $(this.msgId + ' #upload-help').popover({'trigger': 'manual'});
+        $(this.msgId + ' #link-help').popover({'trigger': 'manual'});
+        $(this.msgId + ' #upload-help').click(this.helpHandler);
+        $(this.msgId + ' #link-help').click(this.helpHandler);
     };
 
     /**
