@@ -66,7 +66,7 @@ def register_resource_events(func):
                 raise ValueError('Invalid media type: ' + data['content_type'] + ' is not allowed for the resource type')
 
             # Load plugin module
-            plugin_module = load_plugin_module()
+            plugin_module = load_plugin_module(plugin_model)
 
             # Call on pre create event handler
             plugin_module.on_pre_create(provider, data)
@@ -96,7 +96,7 @@ def upgrade_resource_events(func):
                 raise ValueError('Invalid plugin format: File not allowed for the resource type')
 
             # Load plugin module
-            plugin_module = load_plugin_module()
+            plugin_module = load_plugin_module(plugin_model)
 
             # Call on pre upgrade event handler
             plugin_module.on_pre_upgrade(resource)
@@ -122,7 +122,7 @@ def update_resource_events(func):
                 raise ValueError('Invalid media type: ' + resource.content_type + ' is not allowed for the resource type')
 
             # Load plugin module
-            plugin_module = load_plugin_module()
+            plugin_module = load_plugin_module(plugin_model)
 
             # Call on pre update event handler
             plugin_module.on_pre_update(resource)
