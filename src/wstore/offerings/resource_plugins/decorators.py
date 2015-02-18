@@ -53,7 +53,6 @@ def register_resource_events(func):
 
             plugin_model = _get_plugin_model(data['resource_type'])
 
-            # TODO: Validate formats for API resource
             # Validate format
             if data['link'] != "" and 'URL' not in plugin_model.formats:
                 raise ValueError('Invalid plugin format: URL not allowed for the resource type')
@@ -71,6 +70,9 @@ def register_resource_events(func):
             # Call on pre create event handler
             plugin_module.on_pre_create(provider, data)
 
+        if data['resource_type'] == 'API' and data['content_path'] != "":
+            raise ValueError('Invalid plugin format: File not allowed for the resource type')
+
         # Call method
         func(provider, data)
 
@@ -87,7 +89,6 @@ def upgrade_resource_events(func):
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
             plugin_model = _get_plugin_model(resource.resource_type)
 
-            # TODO: Validate formats for API resource
             # Validate format
             if resource.download_link != "" and 'URL' not in plugin_model.formats:
                 raise ValueError('Invalid plugin format: URL not allowed for the resource type')
@@ -100,6 +101,9 @@ def upgrade_resource_events(func):
 
             # Call on pre upgrade event handler
             plugin_module.on_pre_upgrade(resource)
+
+        if resource.resource_type == 'API' and resource.resource_path != "":
+            raise ValueError('Invalid plugin format: File not allowed for the resource type')
 
         # Call method
         func(resource)
