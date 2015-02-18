@@ -439,6 +439,7 @@ class ResourceDeletionTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         reload(os)
+        reload(wstore.offerings.resource_plugins.decorators)
         reload(resources_management)
         super(ResourceDeletionTestCase, cls).tearDownClass()
 
@@ -490,6 +491,10 @@ class ResourceDeletionTestCase(TestCase):
         os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
         self.resource.delete.assert_called_once_with()
 
+    def _check_events(self):
+        self.plugin_mock.on_pre_delete.assert_called_once_with(self.resource)
+        self.plugin_mock.on_post_delete.assert_called_once_with(self.resource)
+
     def _res_url(self):
         self.resource.offerings = []
         self.resource.resource_path = ''
@@ -503,11 +508,22 @@ class ResourceDeletionTestCase(TestCase):
     def _deleted_res(self):
         self.resource.state = 'deleted'
 
+    def _res_plugin(self):
+        self.resource.resource_type = 'test_plugin'
+
+        # Create plugin module mocks
+        self.plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
+        reload(resources_management)
+
     @parameterized.expand([
         (_res_in_use, _check_in_use),
         (_res_in_use_uploaded, _check_deleted),
         (_res_file, _check_deleted),
         (_res_url, _check_url),
+        (_res_plugin, _check_events),
         (_deleted_res, None, PermissionDenied, 'The resource is already deleted')
     ])
     def test_resource_deletion(self, res_builder, check=None, err_type=None, err_msg=None):
