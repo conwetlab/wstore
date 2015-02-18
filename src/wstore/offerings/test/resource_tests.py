@@ -66,13 +66,14 @@ class ResourceRegisteringTestCase(TestCase):
                 'name': 'test_usdl.rdf',
                 'data': ''
             },
+            'resource_type': 'Downloadable',
             'content_type': 'application/rdf+xml'
         }, _basic_encoder),
         ({
             'name': 'History Mod',
             'version': '1.0',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'https://historymod.com/download',
             'content_type': 'text/plain'
         },),
@@ -80,21 +81,21 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'History Mod',
             'version': '1.0',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'content_type': 'text/plain'
         }, None, True),
         ({
             'name': 'Existing',
             'version': '1.0',
             'description': '',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'https://existing.com/download'
         }, _fill_provider, False, ConflictError, 'The resource Existing already exists. Please upgrade the resource if you want to provide new content'),
         ({
             'name': 'Invalid',
             'version': '1.0a',
             'description': '',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'content_type': 'text/plain',
             'link': 'https://existing.com/download'
         }, None, False, ValueError, 'Invalid version format'),
@@ -102,7 +103,7 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'invalidname$',
             'version': '1.0',
             'description': '',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'https://existing.com/download',
             'content_type': 'text/plain'
         }, None, False, ValueError, 'Invalid name format'),
@@ -110,7 +111,7 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'InvalidURL',
             'version': '1.0',
             'description': '',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'not an uri',
             'content_type': 'text/plain'
         }, None, False, ValueError, 'Invalid resource link format'),
@@ -122,12 +123,13 @@ class ResourceRegisteringTestCase(TestCase):
                 'name': 'test_usd$&.rdf',
                 'data': ''
             },
+            'resource_type': 'Downloadable',
             'content_type': 'application/rdf+xml'
         }, _basic_encoder, False, ValueError, 'Invalid file name format: Unsupported character'),
         ({
             'version': '1.1',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'https://historymod.com/download',
             'content_type': 'text/plain'
         }, None, False, ValueError, 'Invalid request: Missing required field'),
@@ -135,7 +137,7 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'Download',
             'version': '1.1',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'content_type': 'text/plain'
         }, None, False, ValueError, 'Invalid request: Missing resource content'),
     ])
@@ -192,7 +194,8 @@ RESOURCE_DATA1 = {
     'content_type': 'text/plain',
     'state': 'created',
     'open': False,
-    'link': 'http://localhost/media/resources/resource1'
+    'link': 'http://localhost/media/resources/resource1',
+    'resource_type': 'API'
 }
 
 RESOURCE_DATA2 = {
@@ -202,7 +205,8 @@ RESOURCE_DATA2 = {
     'content_type': 'text/plain',
     'state': 'created',
     'open': False,
-    'link': 'http://localhost/media/resources/resource2'
+    'link': 'http://localhost/media/resources/resource2',
+    'resource_type': 'API'
 }
 
 RESOURCE_DATA3 = {
@@ -212,7 +216,8 @@ RESOURCE_DATA3 = {
     'content_type': 'text/plain',
     'state': 'created',
     'open': True,
-    'link': 'http://localhost/media/resources/resource3'
+    'link': 'http://localhost/media/resources/resource3',
+    'resource_type': 'API'
 }
 
 RESOURCE_DATA4 = {
@@ -223,6 +228,7 @@ RESOURCE_DATA4 = {
     'state': 'used',
     'open': True,
     'link': 'http://localhost/media/resources/resource4',
+    'resource_type': 'API'
 }
 
 RESOURCE_IN_USE_DATA = {
@@ -251,6 +257,7 @@ class ResourceRetrievingTestCase(TestCase):
         resource1.state = 'created'
         resource1.open = False
         resource1.get_url.return_value = 'http://localhost/media/resources/resource1'
+        resource1.resource_type = 'API'
 
         resource2 = MagicMock()
         resource2.name = 'Resource2'
@@ -260,6 +267,7 @@ class ResourceRetrievingTestCase(TestCase):
         resource2.state = 'created'
         resource2.open = False
         resource2.get_url.return_value = 'http://localhost/media/resources/resource2'
+        resource2.resource_type = 'API'
 
         resource3 = MagicMock()
         resource3.name = 'Resource3'
@@ -269,6 +277,7 @@ class ResourceRetrievingTestCase(TestCase):
         resource3.state = 'created'
         resource3.open = True
         resource3.get_url.return_value = 'http://localhost/media/resources/resource3'
+        resource3.resource_type = 'API'
 
         resource4 = MagicMock()
         resource4.name = 'Resource4'
@@ -278,6 +287,7 @@ class ResourceRetrievingTestCase(TestCase):
         resource4.state = 'created'
         resource4.open = True
         resource4.get_url.return_value = 'http://localhost/media/resources/resource4'
+        resource4.resource_type = 'API'
         resource4.offerings = ['1111', '2222']
 
         resources_management.Resource = MagicMock()
@@ -301,16 +311,16 @@ class ResourceRetrievingTestCase(TestCase):
         ([RESOURCE_DATA1, RESOURCE_DATA2, RESOURCE_DATA3, RESOURCE_DATA4],),
         ([RESOURCE_DATA3, RESOURCE_DATA4], 'true'),
         ([RESOURCE_DATA1, RESOURCE_DATA2], 'false'),
-        ([RESOURCE_DATA1], None, {"start":1, "limit":1}),
-        ([RESOURCE_DATA2, RESOURCE_DATA3], None, {"start":2, "limit":2}),
-        ([RESOURCE_DATA3, RESOURCE_DATA4], None, {"start":3, "limit":8}),
-        ([], None, {"start":6}, ValueError,"Missing required parameter in pagination"),
-        ([], None, {"limit":8}, ValueError,"Missing required parameter in pagination"),
-        ([], None, {"start":0, "limit":8}, ValueError,"Invalid pagination limits"),
-        ([], None, {"start":2, "limit":0}, ValueError,"Invalid pagination limits"),
-        ([], None, {"start":6, "limit":-1}, ValueError,"Invalid pagination limits"),
-        ([], None, {"start":-6, "limit":2}, ValueError,"Invalid pagination limits"),
-        ([], None, {"start":0, "limit":0}, ValueError,"Invalid pagination limits")
+        ([RESOURCE_DATA1], None, {"start": 1, "limit": 1}),
+        ([RESOURCE_DATA2, RESOURCE_DATA3], None, {"start": 2, "limit": 2}),
+        ([RESOURCE_DATA3, RESOURCE_DATA4], None, {"start": 3, "limit": 8}),
+        ([], None, {"start": 6}, ValueError, "Missing required parameter in pagination"),
+        ([], None, {"limit": 8}, ValueError, "Missing required parameter in pagination"),
+        ([], None, {"start": 0, "limit": 8}, ValueError, "Invalid pagination limits"),
+        ([], None, {"start": 2, "limit": 0}, ValueError, "Invalid pagination limits"),
+        ([], None, {"start": 6, "limit": -1}, ValueError, "Invalid pagination limits"),
+        ([], None, {"start": -6, "limit": 2}, ValueError, "Invalid pagination limits"),
+        ([], None, {"start": 0, "limit": 0}, ValueError, "Invalid pagination limits")
     ])
     def test_resource_retrieving(self, expected_result, filter_=None, pagination=None, err_type=None, err_msg=None):
 
@@ -332,12 +342,6 @@ class ResourceRetrievingTestCase(TestCase):
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
 
-    def test_resource_errors(self):
-        try:
-            result = resources_management.get_provider_resources(self.user, pagination={"no_start":1, "limit":8})
-        except:
-            pass
-
 
 class ResourceDeletionTestCase(TestCase):
 
@@ -346,6 +350,7 @@ class ResourceDeletionTestCase(TestCase):
     def setUp(self):
         self.resource = MagicMock()
         self.resource.pk = '4444'
+        self.resource.resource_type = 'API'
         resources_management.Offering = MagicMock()
 
     @classmethod
@@ -460,6 +465,7 @@ class ResourceUpdateTestCase(TestCase):
         self.resource = MagicMock()
         self.resource.offerings = []
         self.resource.resource_path = ''
+        self.resource.resource_type = 'API'
         resources_management.Resource = MagicMock()
         resources_management.Resource.objects.filter.return_value = []
 
@@ -574,6 +580,7 @@ class ResourceUpgradeTestCase(TestCase):
         self.resource.provider = org
         self.resource.download_link = ''
         self.resource.resource_path = '/media/resources/test_res1.0.rdf'
+        self.resource.resource_type = 'Downloadable'
         self.resource.version = '0.1'
         self.resource.old_versions = []
 
