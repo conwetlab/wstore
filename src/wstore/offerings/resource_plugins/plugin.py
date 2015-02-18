@@ -42,8 +42,8 @@ class Plugin():
     def on_post_upgrade(self, resource):
         pass
 
-    def on_pre_delete(self):
+    def on_pre_delete(self, resource):
         pass
 
-    def on_post_delete(self):
+    def on_post_delete(self, resource):
         pass

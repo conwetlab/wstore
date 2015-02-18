@@ -36,7 +36,7 @@ from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.errors import ConflictError
 from wstore.offerings.resource_plugins.plugins.ckan_validation import validate_dataset
 from wstore.offerings.resource_plugins.decorators import register_resource_events, \
-    upgrade_resource_events, update_resource_events
+    upgrade_resource_events, update_resource_events, delete_resource_events
 
 
 def _save_resource_file(provider, name, version, file_):
@@ -220,86 +220,6 @@ def upgrade_resource(resource, data, file_=None):
     decorated_save(resource)
 
 
-def get_provider_resources(provider, filter_=None, pagination=None):
-
-    if pagination and (not 'start' in pagination or not 'limit' in pagination):
-        raise ValueError('Missing required parameter in pagination')
-
-    if pagination and (not int(pagination['start']) > 0 or not int(pagination['limit']) > 0):
-        raise ValueError('Invalid pagination limits')
-
-    response = []
-
-    if pagination:
-        x = int(pagination['start']) - 1
-        y = x + int(pagination['limit'])
-        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)[x:y]
-    else:
-        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
-
-    for res in resources:
-        # Filter by open property if needed
-        if (filter_ == 'true' and not res.open) or (filter_ == 'false' and res.open):
-            continue
-
-        state = res.state
-        if state != 'deleted' and len(res.offerings):
-            state = 'used'
-
-        resource_info = {
-            'name': res.name,
-            'version': res.version,
-            'description': res.description,
-            'content_type': res.content_type,
-            'state': state,
-            'open': res.open,
-            'link': res.get_url(),
-            'resource_type': res.resource_type
-        }
-        response.append(resource_info)
-    return response
-
-
-def _remove_resource(resource):
-    # Delete files if needed
-    if resource.resource_path:
-        path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
-        os.remove(path)
-
-    resource.delete()
-
-
-def delete_resource(resource):
-
-    if resource.state == 'deleted':
-        raise PermissionDenied('The resource is already deleted')
-
-    # If the resource is not included in any offering delete it
-    if not len(resource.offerings):
-        _remove_resource(resource)
-    else:
-        # If the resource is part of an offering check if all the
-        # offerings are in uploaded state
-        used_offerings = []
-        for off in resource.offerings:
-            offering = Offering.objects.get(pk=off)
-
-            # Remove resource from uploaded offerings
-            if offering.state == 'uploaded':
-                offering.resources.remove(ObjectId(resource.pk))
-                offering.save()
-            else:
-                used_offerings.append(off)
-
-        # If the resource is not included in any offering delete it
-        if not len(used_offerings):
-            _remove_resource(resource)
-        else:
-            resource.offerings = used_offerings
-            resource.state = 'deleted'
-            resource.save()
-
-
 def update_resource(resource, data):
 
     # Check that the resource can be updated
@@ -351,3 +271,89 @@ def update_resource(resource, data):
 
     decorated_save = _get_decorated_save('update')
     decorated_save(resource)
+
+
+def get_provider_resources(provider, filter_=None, pagination=None):
+
+    if pagination and (not 'start' in pagination or not 'limit' in pagination):
+        raise ValueError('Missing required parameter in pagination')
+
+    if pagination and (not int(pagination['start']) > 0 or not int(pagination['limit']) > 0):
+        raise ValueError('Invalid pagination limits')
+
+    response = []
+
+    if pagination:
+        x = int(pagination['start']) - 1
+        y = x + int(pagination['limit'])
+        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)[x:y]
+    else:
+        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
+
+    for res in resources:
+        # Filter by open property if needed
+        if (filter_ == 'true' and not res.open) or (filter_ == 'false' and res.open):
+            continue
+
+        state = res.state
+        if state != 'deleted' and len(res.offerings):
+            state = 'used'
+
+        resource_info = {
+            'name': res.name,
+            'version': res.version,
+            'description': res.description,
+            'content_type': res.content_type,
+            'state': state,
+            'open': res.open,
+            'link': res.get_url(),
+            'resource_type': res.resource_type
+        }
+        response.append(resource_info)
+    return response
+
+
+def _remove_resource(resource):
+    # Delete files if needed
+    if resource.resource_path:
+        path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
+        os.remove(path)
+
+    resource.delete()
+
+
+@delete_resource_events
+def _delete_resource(resource):
+
+    # If the resource is not included in any offering delete it
+    if not len(resource.offerings):
+        _remove_resource(resource)
+    else:
+        # If the resource is part of an offering check if all the
+        # offerings are in uploaded state
+        used_offerings = []
+        for off in resource.offerings:
+            offering = Offering.objects.get(pk=off)
+
+            # Remove resource from uploaded offerings
+            if offering.state == 'uploaded':
+                offering.resources.remove(ObjectId(resource.pk))
+                offering.save()
+            else:
+                used_offerings.append(off)
+
+        # If the resource is not included in any offering delete it
+        if not len(used_offerings):
+            _remove_resource(resource)
+        else:
+            resource.offerings = used_offerings
+            resource.state = 'deleted'
+            resource.save()
+
+
+def delete_resource(resource):
+
+    if resource.state == 'deleted':
+        raise PermissionDenied('The resource is already deleted')
+
+    _delete_resource(resource)
