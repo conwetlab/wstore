@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 
 import base64
 import os
+import wstore
 from StringIO import StringIO
 from mock import MagicMock
 from nose_parameterized import parameterized
@@ -39,10 +40,71 @@ from wstore.store_commons.errors import ConflictError
 __test__ = False
 
 
+RESOURCE_DATA1 = {
+    'name': 'Resource1',
+    'version': '1.0',
+    'description': 'Test resource 1',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': False,
+    'link': 'http://localhost/media/resources/resource1',
+    'resource_type': 'API'
+}
+
+RESOURCE_DATA2 = {
+    'name': 'Resource2',
+    'version': '2.0',
+    'description': 'Test resource 2',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': False,
+    'link': 'http://localhost/media/resources/resource2',
+    'resource_type': 'API'
+}
+
+RESOURCE_DATA3 = {
+    'name': 'Resource3',
+    'version': '2.0',
+    'description': 'Test resource 3',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': True,
+    'link': 'http://localhost/media/resources/resource3',
+    'resource_type': 'API'
+}
+
+RESOURCE_DATA4 = {
+    'name': 'Resource4',
+    'version': '1.0',
+    'description': 'Test resource 4',
+    'content_type': 'text/plain',
+    'state': 'used',
+    'open': True,
+    'link': 'http://localhost/media/resources/resource4',
+    'resource_type': 'API'
+}
+
+RESOURCE_IN_USE_DATA = {
+    'description': 'Test resource 4',
+}
+
+RESOURCE_CONTENT = {
+    'content': {
+        'name': 'test_usdl.rdf',
+        'data': ''
+    },
+}
+
+
 class ResourceRegisteringTestCase(TestCase):
 
     tags = ('fiware-ut-3',)
     fixtures = ['reg_res.json']
+
+    @classmethod
+    def tearDownClass(cls):
+        reload(wstore.offerings.resource_plugins.decorators)
+        reload(resources_management)
 
     def _basic_encoder(self, data):
         f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
@@ -186,61 +248,82 @@ class ResourceRegisteringTestCase(TestCase):
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
 
+    def _not_existing_plugin(self, data):
+        data['resource_type'] = 'not_existing'
 
-RESOURCE_DATA1 = {
-    'name': 'Resource1',
-    'version': '1.0',
-    'description': 'Test resource 1',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': False,
-    'link': 'http://localhost/media/resources/resource1',
-    'resource_type': 'API'
-}
+    def _url_format(self, data):
+        del(data['content'])
+        data['link'] = 'http://resourcelink.com'
 
-RESOURCE_DATA2 = {
-    'name': 'Resource2',
-    'version': '2.0',
-    'description': 'Test resource 2',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': False,
-    'link': 'http://localhost/media/resources/resource2',
-    'resource_type': 'API'
-}
+    def _change_type(self, data):
+        data['resource_type'] = 'test_plugin2'
 
-RESOURCE_DATA3 = {
-    'name': 'Resource3',
-    'version': '2.0',
-    'description': 'Test resource 3',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': True,
-    'link': 'http://localhost/media/resources/resource3',
-    'resource_type': 'API'
-}
+    def _invalid_media(self, data):
+        data['content_type'] = 'inv_type'
 
-RESOURCE_DATA4 = {
-    'name': 'Resource4',
-    'version': '1.0',
-    'description': 'Test resource 4',
-    'content_type': 'text/plain',
-    'state': 'used',
-    'open': True,
-    'link': 'http://localhost/media/resources/resource4',
-    'resource_type': 'API'
-}
+    def _change_type_api(self, data):
+        self._basic_encoder(data)
+        data['resource_type'] = 'API'
 
-RESOURCE_IN_USE_DATA = {
-    'description': 'Test resource 4',
-}
+    @parameterized.expand([
+        ('file_format', _basic_encoder),
+        ('not_existing', _not_existing_plugin, ValueError, 'Invalid request: The specified resource type is not registered'),
+        ('invalid_format_url', _url_format, ValueError, 'Invalid plugin format: URL not allowed for the resource type'),
+        ('invalid_format_file', _change_type, ValueError, 'Invalid plugin format: File not allowed for the resource type'),
+        ('invalid_media_type', _invalid_media, ValueError, 'Invalid media type: inv_type is not allowed for the resource type'),
+        ('invalid_api_format', _change_type_api, ValueError, 'Invalid plugin format: File not allowed for the resource type')
+    ])
+    def test_resource_registering_plugin(self, name, encoder=None, err_type=None, err_msg=None):
 
-RESOURCE_CONTENT = {
-    'content': {
-        'name': 'test_usdl.rdf',
-        'data': ''
-    },
-}
+        data = {
+            'name': 'Download',
+            'version': '1.0',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'content': {
+                'name': 'test_usdl.rdf',
+                'data': ''
+            },
+            'resource_type': 'test_plugin',
+            'content_type': 'application/x-widget'
+        }
+
+        # Create plugin module mocks
+        plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = plugin_mock
+        reload(resources_management)
+
+        if encoder is not None:
+            encoder(self, data)
+
+        provider = User.objects.get(username='test_user')
+
+        error = None
+        try:
+            resources_management.register_resource(provider, data)
+        except Exception as e:
+            error = e
+
+        if err_type is None:
+            self.assertEquals(error, None)
+            # Check event calls
+            expected_data = {
+                'name': 'Download',
+                'meta': {},
+                'content_path': '/media/resources/test_user__Download__1.0__test_usdl.rdf',
+                'version': '1.0',
+                'link': '',
+                'content_type': 'application/x-widget',
+                'open': False,
+                'resource_type': 'test_plugin',
+                'description': 'This service is in charge of maintaining historical info for Smart Cities'
+            }
+            plugin_mock.on_pre_create.assert_called_once_with(provider.userprofile.current_organization, expected_data)
+            plugin_mock.on_post_create.assert_called_once_with(provider.userprofile.current_organization, expected_data)
+
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(error), err_msg)
 
 
 class ResourceRetrievingTestCase(TestCase):
