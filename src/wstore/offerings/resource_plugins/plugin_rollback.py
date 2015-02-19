@@ -22,7 +22,6 @@ from __future__ import unicode_literals
 
 from shutil import rmtree
 
-from wstore.models import ResourcePlugin
 from functools import wraps
 
 

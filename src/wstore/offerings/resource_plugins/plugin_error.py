@@ -20,10 +20,11 @@
 
 from __future__ import unicode_literals
 
+
 class PluginError(Exception):
 
     def __init__(self, msg):
-        self.value = msg;
+        self.value = msg
 
     def __unicode__(self):
         return 'Plugin Error: ' + self.value

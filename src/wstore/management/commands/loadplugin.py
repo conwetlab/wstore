@@ -30,8 +30,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
     	"""
-    	Loads a new resource plugin
-    	"""
+        Loads a new resource plugin
+        """
 
         # Check arguments
         if len(args) != 1:
@@ -43,6 +43,6 @@ class Command(BaseCommand):
             plugin_loader = PluginLoader()
             plugin_loader.install_plugin(path)
         except Exception as e:
-        	raise CommandError(unicode(e))
+            raise CommandError(unicode(e))
 
         self.stdout.write("The plugin  has been loaded\n")

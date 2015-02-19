@@ -21,16 +21,11 @@
 
 from __future__ import unicode_literals
 
-from wstore.offerings.resource_plugins.plugin_error import PluginError
 from wstore.store_commons.utils.version import is_valid_version
 from wstore.store_commons.utils.name import is_valid_id
-from wstore.models import ResourcePlugin
 
 
 class PluginManager():
-
-    _plugins = {}
-    _instance = None
 
     def _validate_plugin_form(self, form_info):
         """
@@ -47,7 +42,7 @@ class PluginManager():
                 break
 
             # Validate type value
-            if not 'type' in v:
+            if 'type' not in v:
                 reason = 'Invalid form field: Missing type in ' + k + ' entry'
                 break
 
@@ -62,7 +57,7 @@ class PluginManager():
 
             # Validate specific fields
             if v['type'] == 'checkbox' and 'default' in v and not isinstance(v['default'], bool):
-                reason = 'Invalid form field: default field in ' + k +' entry must be a boolean'
+                reason = 'Invalid form field: default field in ' + k + ' entry must be a boolean'
                 break
 
         return reason
@@ -78,28 +73,28 @@ class PluginManager():
             reason = 'Plugin info must be a dict instance'
 
         # Validate structure
-        if reason is None and not "name" in plugin_info:
+        if reason is None and "name" not in plugin_info:
             reason = 'Missing required field: name'
 
         if reason is None and not is_valid_id(plugin_info['name']):
             reason = 'Invalid name format: invalid character'
 
-        if reason is None and not "author" in plugin_info:
+        if reason is None and "author" not in plugin_info:
             reason = 'Missing required field: author'
 
-        if reason is None and not 'formats' in plugin_info:
+        if reason is None and 'formats' not in plugin_info:
             reason = 'Missing required field: formats'
 
-        if reason is None and not "media_types" in plugin_info:
+        if reason is None and "media_types" not in plugin_info:
             reason = 'Missing required field: media_types'
 
-        if reason is None and not 'options' in plugin_info:
-            reason  = 'Missing required field: options'
+        if reason is None and 'options' not in plugin_info:
+            reason = 'Missing required field: options'
 
-        if reason is None and not 'module' in plugin_info:
+        if reason is None and 'module' not in plugin_info:
             reason = 'Missing required field: module'
 
-        if reason is None and not 'version' in plugin_info:
+        if reason is None and 'version' not in plugin_info:
             reason = 'Missing required field: version'
 
         # Validate types
@@ -145,4 +140,3 @@ class PluginManager():
                 reason = self._validate_plugin_form(plugin_info['form'])
 
         return reason
-

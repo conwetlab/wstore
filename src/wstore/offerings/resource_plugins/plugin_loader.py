@@ -42,8 +42,8 @@ class PluginLoader():
         self._plugin_manager = PluginManager()
         self._plugins_path = os.path.join(settings.BASEDIR, 'wstore')
         self._plugins_path = os.path.join(self._plugins_path, 'offerings')
-        self._plugins_path =  os.path.join(self._plugins_path, 'resource_plugins')
-        self._plugins_path =  os.path.join(self._plugins_path, 'plugins')
+        self._plugins_path = os.path.join(self._plugins_path, 'resource_plugins')
+        self._plugins_path = os.path.join(self._plugins_path, 'plugins')
 
     @installPluginRollback
     def install_plugin(self, path, logger=None):
@@ -56,7 +56,7 @@ class PluginLoader():
         with zipfile.ZipFile(path, 'r') as z:
 
             # Validate that the file package.json exists
-            if not 'package.json' in z.namelist():
+            if 'package.json' not in z.namelist():
                 raise PluginError('Missing package.json file')
 
             # Read package metainfo
@@ -74,12 +74,12 @@ class PluginLoader():
 
             dir_name = json_info['name'].replace(' ', '_')
 
-            ## Check if the directory already exists
+            # Check if the directory already exists
             plugin_path = os.path.join(self._plugins_path, dir_name)
             if os.path.isdir(plugin_path):
                 raise PluginError('A plugin with the same name already exists')
 
-            ## Create the directory
+            # Create the directory
             os.mkdir(plugin_path)
 
             if logger is not None:
@@ -91,25 +91,25 @@ class PluginLoader():
             # Create a  __init__.py file if needed
             open(os.path.join(plugin_path, '__init__.py'), 'a').close()
 
-        #Validate plugin main class
+        # Validate plugin main class
         module = 'wstore.offerings.resource_plugins.plugins.' + dir_name + '.' + json_info['module']
         module_class_name = module.split('.')[-1]
         module_package = module.partition('.' + module_class_name)[0]
 
         module_class = getattr(__import__(module_package, globals(), locals(), [module_class_name], -1), module_class_name)
 
-        if not Plugin in module_class.__bases__:
+        if Plugin not in module_class.__bases__:
             raise PluginError('No Plugin implementation has been found')
 
         # Save plugin model
         plugin = ResourcePlugin(
-            name = json_info['name'],
-            version = json_info['version'],
-            author = json_info['author'],
-            module = module,
-            media_types = json_info['media_types'],
-            options = json_info['options'],
-            formats = json_info['formats']
+            name=json_info['name'],
+            version=json_info['version'],
+            author=json_info['author'],
+            module=module,
+            media_types=json_info['media_types'],
+            options=json_info['options'],
+            formats=json_info['formats']
         )
 
         if 'form' in json_info:
@@ -120,13 +120,4 @@ class PluginLoader():
     def uninstall_plugin(self):
         # Unload plugin
         # Remove plugin files
-        pass
-
-    def _load_plugin(self):
-        # Read configuration file
-        plugin_info = {}
-        # Call register plugin method
-        self._plugin_manager.register_plugin(plugin_info)
-
-    def load_plugins(self):
         pass
