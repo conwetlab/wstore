@@ -38,7 +38,7 @@ class PluginManager():
         for k, v in form_info.iteritems():
             # Validate component
             if not isinstance(v, dict):
-                reason = 'Invalid form field: ' + k + ' entry in not an object'
+                reason = 'Invalid form field: ' + k + ' entry is not an object'
                 break
 
             # Validate type value
@@ -76,6 +76,10 @@ class PluginManager():
         if reason is None and "name" not in plugin_info:
             reason = 'Missing required field: name'
 
+        # Validate types
+        if reason is None and not isinstance(plugin_info['name'], str) and not isinstance(plugin_info['name'], unicode):
+            reason = 'Plugin name must be an string'
+
         if reason is None and not is_valid_id(plugin_info['name']):
             reason = 'Invalid name format: invalid character'
 
@@ -85,21 +89,11 @@ class PluginManager():
         if reason is None and 'formats' not in plugin_info:
             reason = 'Missing required field: formats'
 
-        if reason is None and "media_types" not in plugin_info:
-            reason = 'Missing required field: media_types'
-
-        if reason is None and 'options' not in plugin_info:
-            reason = 'Missing required field: options'
-
         if reason is None and 'module' not in plugin_info:
             reason = 'Missing required field: module'
 
         if reason is None and 'version' not in plugin_info:
             reason = 'Missing required field: version'
-
-        # Validate types
-        if reason is None and not isinstance(plugin_info['name'], str) and not isinstance(plugin_info['name'], unicode):
-            reason = 'Plugin name must be an string'
 
         if reason is None and not isinstance(plugin_info['author'], str) and not isinstance(plugin_info['author'], unicode):
             reason = 'Plugin author must be an string'
@@ -121,11 +115,8 @@ class PluginManager():
             if not valid_format or (i < 1 and i > 2):
                 reason = 'Format must contain at least one format of: FILE, URL'
 
-        if reason is None and not isinstance(plugin_info['media_types'], list):
+        if reason is None and 'media_types' in plugin_info and not isinstance(plugin_info['media_types'], list):
             reason = 'Plugin media_types must be a list'
-
-        if reason is None and not isinstance(plugin_info['options'], dict):
-            reason = 'Plugin options must be an object'
 
         if reason is None and not isinstance(plugin_info['module'], str) and not isinstance(plugin_info['module'], unicode):
             reason = 'Plugin module must be an string'
