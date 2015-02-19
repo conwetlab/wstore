@@ -24,13 +24,15 @@ from __future__ import unicode_literals
 import os
 import json
 import zipfile
+from shutil import rmtree
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 
 from wstore.offerings.resource_plugins.plugin_manager import PluginManager
 from wstore.offerings.resource_plugins.plugin_error import PluginError
 from wstore.offerings.resource_plugins.plugin_rollback import installPluginRollback
-from wstore.models import ResourcePlugin
+from wstore.models import ResourcePlugin, Resource
 from wstore.offerings.resource_plugins.plugin import Plugin
 
 
@@ -117,7 +119,28 @@ class PluginLoader():
 
         plugin.save()
 
-    def uninstall_plugin(self):
-        # Unload plugin
+    def uninstall_plugin(self, name):
+        """
+        Removes a plugin from the system including model and files
+        """
+
+        # Check if the plugin is in use
+        resources = Resource.objects.filter(resource_type=name)
+
+        if len(resources) > 0:
+            raise PermissionDenied('The plugin ' + name + ' is being used in some resources')
+
+        # Get plugin model
+        try:
+            plugin_model = ResourcePlugin.objects.get(name=name)
+        except:
+            raise ObjectDoesNotExist('The plugin ' + name + ' is not registered')
+
         # Remove plugin files
-        pass
+        dir_name = name.replace(' ', '_')
+        plugin_path = os.path.join(self._plugins_path, dir_name)
+
+        rmtree(plugin_path)
+
+        # Remove model
+        plugin_model.delete()

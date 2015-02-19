@@ -29,20 +29,20 @@ from wstore.offerings.resource_plugins.plugin_loader import PluginLoader
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-    	"""
+        """
         Loads a new resource plugin
         """
 
         # Check arguments
         if len(args) != 1:
-            raise CommandError("Error: Please specify the path to the plugin package")
+            raise CommandError("Error: Please specify the plugin to be deleted")
 
         try:
-            path = args[0]
+            name = args[0]
             # Load plugin
             plugin_loader = PluginLoader()
-            plugin_loader.install_plugin(path)
+            plugin_loader.uninstall_plugin(name)
         except Exception as e:
             raise CommandError(unicode(e))
 
-        self.stdout.write("The plugin has been loaded\n")
+        self.stdout.write("The plugin has been removed\n")
