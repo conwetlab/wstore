@@ -96,6 +96,10 @@ RESOURCE_CONTENT = {
 }
 
 
+class FakePlugin():
+    pass
+
+
 class ResourceRegisteringTestCase(TestCase):
 
     tags = ('fiware-ut-3',)
@@ -324,6 +328,15 @@ class ResourceRegisteringTestCase(TestCase):
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(error), err_msg)
+
+    def test_load_plugin_module(self):
+        module = 'wstore.offerings.test.resource_tests.FakePlugin'
+        from wstore.offerings.resource_plugins.decorators import load_plugin_module
+
+        loaded_module = load_plugin_module(module)
+
+        # Check loaded module
+        self.assertTrue(isinstance(loaded_module, FakePlugin))
 
 
 class ResourceRetrievingTestCase(TestCase):
