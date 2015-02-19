@@ -315,6 +315,7 @@ class PluginValidatorTestCase(TestCase):
 
     @parameterized.expand([
         ('correct', PLUGIN_INFO),
+        ('invalid_type', 'invalid', 'Plugin info must be a dict instance'),
         ('missing_name', MISSING_NAME, 'Missing required field: name'),
         ('invalid_name', INVALID_NAME, 'Invalid name format: invalid character'),
         ('missing_author', MISSING_AUTHOR, 'Missing required field: author'),
