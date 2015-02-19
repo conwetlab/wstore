@@ -570,6 +570,7 @@ class ResourceUpdateTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        reload(wstore.offerings.resource_plugins.decorators)
         reload(resources_management)
         reload(os)
         super(ResourceUpdateTestCase, cls).tearDownClass()
@@ -579,6 +580,25 @@ class ResourceUpdateTestCase(TestCase):
 
     def _res_in_use(self):
         self.resource.offerings = ['111', '222']
+
+    def _res_plugin_type(self):
+        self.resource.resource_type = 'test_plugin'
+        self.plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
+        reload(resources_management)
+
+    def _invalid_media(self):
+        self.resource.resource_type = 'test_plugin'
+        self.plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
+
+        mock_model = MagicMock(name="ResourcePluginModel")
+        mock_model.media_types = ['application/x-widget']
+
+        wstore.offerings.resource_plugins.decorators._get_plugin_model.return_value = mock_model
+        reload(resources_management)
 
     def _check_in_use(self):
         self.assertEquals(self.resource.description, 'Test resource 4')
@@ -597,11 +617,21 @@ class ResourceUpdateTestCase(TestCase):
         self.assertEquals(self.resource.open, False)
         self.assertEquals(self.resource.resource_path, '')
 
+    def _check_plugin_type(self):
+        self._check_complete()
+        # Check event calls
+        self.plugin_mock.on_pre_update.assert_called_once_with(self.resource)
+        self.plugin_mock.on_post_update.assert_called_once_with(self.resource)
+        wstore.offerings.resource_plugins.decorators._get_plugin_model.assert_called_once_with('test_plugin')
+
+
     @parameterized.expand([
         (RESOURCE_IN_USE_DATA, _check_in_use, _res_in_use),
         (UPDATE_DATA1, _check_complete),
         (UPDATE_DATA2, _check_no_description),
         ({'description': 'Modified description'}, _check_description),
+        (UPDATE_DATA1, _check_plugin_type, _res_plugin_type),
+        (UPDATE_DATA1, None, _invalid_media, ValueError, 'Invalid media type: text/plain is not allowed for the resource type'),
         ({'name': 'name'}, None, None, ValueError, 'Name field cannot be updated since is used to identify the resource'),
         ({'version': '1.0'}, None, None, ValueError, 'Version field cannot be updated since is used to identify the resource'),
         ({'content_type': 3}, None, None, TypeError, 'Invalid type for content_type field'),
