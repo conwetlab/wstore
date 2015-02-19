@@ -697,6 +697,7 @@ class ResourceUpgradeTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        reload(wstore.offerings.resource_plugins.decorators)
         reload(resources_management)
         super(ResourceUpgradeTestCase, cls).tearDownClass()
 
@@ -720,10 +721,34 @@ class ResourceUpgradeTestCase(TestCase):
         resources_management._save_resource_file = MagicMock()
         resources_management._save_resource_file.return_value = '/media/resources/test_usdl.rdf'
 
+    def _mock_res_plugin(self):
+        self.resource.resource_type = 'test_plugin'
+        self.plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
+        self.mock_model = MagicMock()
+        self.mock_model.formats = ['FILE']
+        wstore.offerings.resource_plugins.decorators._get_plugin_model.return_value = self.mock_model
+        wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
+
+        reload(resources_management)
+        self._mock_save_file()
+
+    def _mock_res_api(self):
+        self.resource.resource_type = 'API'
+
+    def _mock_file_not_allowed(self):
+        self._mock_res_plugin()
+        self.mock_model.formats = ["URL"]
+
     @parameterized.expand([
         (UPGRADE_CONTENT, False, _mock_save_file),
         ({'version': '1.0'}, True, _mock_save_file),
         (UPGRADE_LINK,),
+        (UPGRADE_CONTENT, False, _mock_res_plugin),
+        (UPGRADE_CONTENT, False, _mock_res_api, ValueError, 'Invalid plugin format: File not allowed for the resource type'),
+        (UPGRADE_LINK, False, _mock_res_plugin, ValueError, 'Invalid plugin format: URL not allowed for the resource type'),
+        (UPGRADE_CONTENT, False, _mock_file_not_allowed, ValueError, 'Invalid plugin format: File not allowed for the resource type'),
         ({}, False, None, ValueError, 'Missing a required field: Version'),
         ({'version': '1.0a'}, False, None, ValueError, 'Invalid version format'),
         ({'version': '1.0'}, False, _deleted_res, PermissionDenied, 'Deleted resources cannot be upgraded'),
@@ -754,7 +779,7 @@ class ResourceUpgradeTestCase(TestCase):
             # Check new version
             self.assertEquals(self.resource.version, data['version'])
             # Check new resource contents
-            if not 'link' in data:
+            if 'link' not in data:
                 self.assertEquals(self.resource.resource_path, '/media/resources/test_usdl.rdf')
                 self.assertEquals(self.resource.download_link, '')
 
@@ -783,6 +808,11 @@ class ResourceUpgradeTestCase(TestCase):
             self.assertEquals(old_ver.version, '0.1')
             self.assertEquals(old_ver.resource_path, '/media/resources/test_res1.0.rdf')
             self.assertEquals(old_ver.download_link, '')
+
+            # Check events calls if needed
+            if self.resource.resource_type != 'Downloadable':
+                self.plugin_mock.on_pre_upgrade.assert_called_once_with(self.resource)
+                self.plugin_mock.on_post_upgrade.assert_called_once_with(self.resource)
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
