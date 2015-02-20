@@ -34,13 +34,15 @@ def installPluginRollback(func):
     @wraps(func)
     def wrapper(self, path, logger=None):
         try:
+            _state = {}
             func(self, path, log_action)
         except Exception as e:
 
             # Remove directory if existing
             if 'PATH' in _state:
-                rmtree(_state['PATH'])
+                rmtree(_state['PATH'], True)
 
             # Raise the exception
             raise(e)
+
     return wrapper
