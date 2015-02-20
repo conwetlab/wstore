@@ -21,286 +21,118 @@
 
 from __future__ import unicode_literals
 
+import os
 from mock import MagicMock
 from nose_parameterized import parameterized
+from shutil import rmtree
 
 from django.test import TestCase
 
 from wstore.offerings.resource_plugins.plugin_manager import PluginManager
-
-
-PLUGIN_INFO = {
-  "name": "test plugin",
-  "author": "test author",
-  "version": "1.0",
-  "module": "test.TestPlugin",
-  "media_types": [
-      "application/x-widget+mashable-application-component",
-      "application/x-mashup+mashable-application-component",
-      "application/x-operator+mashable-application-component"
-  ],
-  "formats": ["FILE"],
-  "form": {
-      "vendor": {
-         "type": "text",
-         "placeholder": "Vendor",
-         "default": "Default vendor",
-         "label": "Vendor"
-      },
-      "name": {
-         "type": "text",
-         "placeholder": "Name",
-         "default": "Default name",
-         "label": "Name",
-         "mandatory": True
-      },
-      "type": {
-          "type": "select",
-          "label": "Select",
-          "options": [{
-              "text": "Option 1",
-              "value": "opt1"
-          }, {
-              "text": "Option 2",
-              "value": "opt2"
-          }]
-      },
-      "is_op": {
-          "type": "checkbox",
-          "label": "Is a checkbox",
-          "text": "The checkbox",
-          "default": True
-      },
-      "area": {
-          "type": "textarea",
-          "label": "Area",
-          "default": "A text area",
-          "placeholder": "A text area"
-      }
-  },
-  "options": {}
-}
-
-MISSING_NAME = {
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": [],
-    "formats": ["FILE"]
-}
-
-INVALID_NAME = {
-    "name": "inv&name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": [],
-    "formats": ["FILE"]
-}
-
-MISSING_AUTHOR = {
-    "name": "plugin name",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": [],
-    "formats": ["FILE"]
-}
-
-MISSING_FORMATS = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": []
-}
-
-MISSING_MODULE = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "media_types": [],
-    "formats": ["FILE"]
-}
-
-MISSING_VERSION = {
-    "name": "plugin name",
-    "author": "test author",
-    "module": "test.TestPlugin",
-    "media_types": [],
-    "formats": ["FILE"]
-}
-
-INVALID_NAME_TYPE = {
-    "name": 9,
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": [],
-    "formats": ["FILE"]
-}
-
-INVALID_AUTHOR_TYPE = {
-    "name": "plugin name",
-    "author": 10,
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": [],
-    "formats": ["FILE"]
-}
-
-INVALID_FORMAT_TYPE = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": [],
-    "formats": "FILE"
-}
-
-INVALID_FORMAT = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": [],
-    "formats": ["FILE", "URL", "INV"]
-}
-
-INVALID_MEDIA_TYPE = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": "text/plain",
-    "formats": ["FILE", "URL"]
-}
-
-INVALID_MODULE_TYPE = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": [],
-    "media_types": ["text/plain"],
-    "formats": ["FILE", "URL"]
-}
-
-INVALID_VERSION = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.a",
-    "module": "test.TestPlugin",
-    "media_types": ["text/plain"],
-    "formats": ["FILE", "URL"]
-}
-
-INVALID_VERSION = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.a",
-    "module": "test.TestPlugin",
-    "media_types": ["text/plain"],
-    "formats": ["FILE", "URL"]
-}
-
-INVALID_FORM_TYPE = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": ["text/plain"],
-    "formats": ["FILE", "URL"],
-    "form": ""
-}
-
-INVALID_FORM_ENTRY_TYPE = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": ["text/plain"],
-    "formats": ["FILE", "URL"],
-    "form": {
-        "name": "input"
-    }
-}
-
-INVALID_FORM_MISSING_TYPE = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": ["text/plain"],
-    "formats": ["FILE", "URL"],
-    "form": {
-        "name": {
-            "placeholder": "Name",
-            "default": "Default name",
-            "label": "Name",
-            "mandatory": True
-        }
-    }
-}
-
-INVALID_FORM_INV_TYPE = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": ["text/plain"],
-    "formats": ["FILE", "URL"],
-    "form": {
-        "name": {
-            "type": "invalid",
-            "placeholder": "Name",
-            "default": "Default name",
-            "label": "Name",
-            "mandatory": True
-        }
-    }
-}
-
-INVALID_FORM_INVALID_NAME = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": ["text/plain"],
-    "formats": ["FILE", "URL"],
-    "form": {
-        "inv&name": {
-            "type": "text",
-            "placeholder": "Name",
-            "default": "Default name",
-            "label": "Name",
-            "mandatory": True
-        }
-    }
-}
-
-INVALID_FORM_CHECKBOX_DEF = {
-    "name": "plugin name",
-    "author": "test author",
-    "version": "1.0",
-    "module": "test.TestPlugin",
-    "media_types": ["text/plain"],
-    "formats": ["FILE", "URL"],
-    "form": {
-        "check": {
-            "type": "checkbox",
-            "default": "Default name",
-            "label": "Name"
-        }
-    }
-}
+from wstore.offerings.resource_plugins.plugin_error import PluginError
+from wstore.offerings.resource_plugins import plugin_loader
+from wstore.models import ResourcePlugin
+from wstore.offerings.resource_plugins.test_data import *
 
 
 class PluginLoaderTestCase(TestCase):
 
+    tags = ('plugin', )
+
+    _to_remove = None
+
+    def setUp(self):
+        # Create PluginManager mock
+        plugin_loader.PluginManager = MagicMock(name="PluginManager")
+        self.manager_mock = MagicMock()
+        self.manager_mock.validate_plugin_info.return_value = None
+
+        plugin_loader.PluginManager.return_value = self.manager_mock
+
+    def _remove_plugin_dir(self, plugin_name):
+        plugin_dir = os.path.join(os.path.join('wstore', 'test'), plugin_name)
+        rmtree(plugin_dir, True)
+
+    def tearDown(self):
+        # Remove created plugin dir if needed
+        try:
+            os.remove(os.path.join(self.plugin_dir, '__init__.py'))
+
+            self._remove_plugin_dir(self._to_remove.split('.')[0])
+        except:
+            pass
+
+    def _inv_zip(self):
+        self.zip_path = 'wstore'
+
+    def _inv_plugin_info(self):
+        self.manager_mock.validate_plugin_info.return_value = 'validation error'
+
+    def _existing_plugin(self):
+        os.mkdir(os.path.join(self.plugin_dir, 'test_plugin'))
+
     @parameterized.expand([
-        ()
+        ('correct', 'test_plugin.zip', PLUGIN_INFO),
+        ('correct_no_optionals', 'test_plugin_5.zip', PLUGIN_INFO2),
+        ('invalid_zip', 'test_plugin.zip', None, _inv_zip, PluginError, 'Plugin Error: Invalid package format: Not a zip file'),
+        ('missing_json', 'test_plugin_2.zip', None, None, PluginError, 'Plugin Error: Missing package.json file'),
+        ('not_plugin_imp', 'test_plugin_3.zip', None, None, PluginError, 'Plugin Error: No Plugin implementation has been found'),
+        ('inv_json', 'test_plugin_4.zip', None, None,  PluginError, 'Plugin Error: Invalid format in package.json file. JSON cannot be parsed'),
+        ('validation_err', 'test_plugin.zip', None,  _inv_plugin_info, PluginError, 'Plugin Error: Invalid format in package.json file. validation error'),
+        ('existing', 'test_plugin.zip', None,  _existing_plugin, PluginError, 'Plugin Error: A plugin with the same name already exists')
     ])
-    def test_plugin_installation(self):
-        pass
+    def test_plugin_installation(self, name, zip_file, expected=None, side_effect=None, err_type=None, err_msg=None):
+        # Build plugin loader
+        plugin_l = plugin_loader.PluginLoader()
+
+        self.plugin_dir = os.path.join('wstore', 'test')
+
+        # Mock plugin directory location
+        plugin_l._plugins_path = self.plugin_dir
+        plugin_l._plugins_module = 'wstore.test.'
+
+        # Create a init file in the test dir
+        open(os.path.join(self.plugin_dir, '__init__.py'), 'a').close()
+
+        self.zip_path = os.path.join(self.plugin_dir, 'test_plugin_files')
+        self.zip_path = os.path.join(self.zip_path, zip_file)
+
+        if side_effect is not None:
+            side_effect(self)
+
+        self._to_remove = zip_file
+        error = None
+        try:
+            plugin_l.install_plugin(self.zip_path)
+        except Exception as e:
+            error = e
+
+        if err_type is None:
+            self.assertEquals(error, None)
+            # Check calls
+            self.manager_mock.validate_plugin_info.assert_called_once_with(expected)
+
+            # Check plugin files
+            dir_name = zip_file.split('.')[0]
+            test_plugin_dir = os.path.join(self.plugin_dir, dir_name)
+            self.assertTrue(os.path.isdir(test_plugin_dir))
+            self.assertTrue(os.path.isfile(os.path.join(test_plugin_dir, 'package.json')))
+            self.assertTrue(os.path.isfile(os.path.join(test_plugin_dir, 'test.py')))
+
+            # Check plugin model
+            plugin_model = ResourcePlugin.objects.all()[0]
+            self.assertEquals(plugin_model.name, expected['name'])
+            self.assertEquals(plugin_model.author, expected['author'])
+            self.assertEquals(plugin_model.version, expected['version'])
+            self.assertEquals(plugin_model.formats, expected['formats'])
+
+            self.assertEquals(plugin_model.module, 'wstore.test.' + dir_name + '.' + expected['module'])
+            self.assertEquals(plugin_model.media_types, expected.get('media_types', []))
+            self.assertEquals(plugin_model.form, expected.get('form', {}))
+
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
 
     @parameterized.expand([
         ()
