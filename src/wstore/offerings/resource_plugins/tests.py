@@ -27,6 +27,7 @@ from nose_parameterized import parameterized
 from shutil import rmtree
 
 from django.test import TestCase
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 
 from wstore.offerings.resource_plugins.plugin_manager import PluginManager
 from wstore.offerings.resource_plugins.plugin_error import PluginError
@@ -134,11 +135,52 @@ class PluginLoaderTestCase(TestCase):
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
 
+    def _plugin_in_use(self):
+        plugin_loader.Resource.objects.filter.return_value = ['resource']
+
+    def _plugin_not_exists(self):
+        plugin_loader.ResourcePlugin.objects.get.side_effect = Exception('Not exists')
+
     @parameterized.expand([
-        ()
+        ('correct', ),
+        ('plugin_used', _plugin_in_use, PermissionDenied, 'The plugin test_plugin is being used in some resources'),
+        ('not_exists', _plugin_not_exists, ObjectDoesNotExist, 'The plugin test_plugin is not registered')
     ])
-    def test_plugin_removal(self):
-        pass
+    def test_plugin_removal(self, name, side_effect=None, err_type=None, err_msg=None):
+
+        # Mock libreries
+        plugin_loader.Resource = MagicMock(name="Resource")
+
+        self.resources_mock = MagicMock()
+        plugin_loader.Resource.objects.filter.return_value = []
+
+        plugin_loader.ResourcePlugin = MagicMock(name="ResourcePlugin")
+        plugin_mock = MagicMock()
+        plugin_loader.ResourcePlugin.objects.get.return_value = plugin_mock
+
+        plugin_loader.rmtree = MagicMock(name="rmtree")
+
+        if side_effect is not None:
+            side_effect(self)
+
+        # Build plugin loader
+        plugin_l = plugin_loader.PluginLoader()
+
+        error = None
+        try:
+            plugin_l.uninstall_plugin('test_plugin')
+        except Exception as e:
+            error = e
+
+        if err_type is None:
+            self.assertEquals(error, None)
+            # Check calls
+            plugin_loader.ResourcePlugin.objects.get.assert_called_once_with(name='test_plugin')
+            plugin_loader.rmtree.assert_called_once_with(os.path.join(plugin_l._plugins_path, 'test_plugin'))
+            plugin_mock.delete.assert_called_once_with()
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
 
 
 class PluginValidatorTestCase(TestCase):
