@@ -39,6 +39,8 @@ from wstore.offerings.resource_plugins.plugin import Plugin
 class PluginLoader():
 
     _plugin_manager = None
+    _plugins_path = None
+    _plugins_module = None
 
     def __init__(self):
         self._plugin_manager = PluginManager()
@@ -46,13 +48,14 @@ class PluginLoader():
         self._plugins_path = os.path.join(self._plugins_path, 'offerings')
         self._plugins_path = os.path.join(self._plugins_path, 'resource_plugins')
         self._plugins_path = os.path.join(self._plugins_path, 'plugins')
+        self._plugins_module = 'wstore.offerings.resource_plugins.plugins.'
 
     @installPluginRollback
     def install_plugin(self, path, logger=None):
 
         # Validate package file
         if not zipfile.is_zipfile(path):
-            raise PluginError('Invalid package format')
+            raise PluginError('Invalid package format: Not a zip file')
 
         # Uncompress plugin file
         with zipfile.ZipFile(path, 'r') as z:
@@ -94,7 +97,7 @@ class PluginLoader():
             open(os.path.join(plugin_path, '__init__.py'), 'a').close()
 
         # Validate plugin main class
-        module = 'wstore.offerings.resource_plugins.plugins.' + dir_name + '.' + json_info['module']
+        module = self._plugins_module + dir_name + '.' + json_info['module']
         module_class_name = module.split('.')[-1]
         module_package = module.partition('.' + module_class_name)[0]
 
@@ -109,13 +112,10 @@ class PluginLoader():
             version=json_info['version'],
             author=json_info['author'],
             module=module,
-            media_types=json_info['media_types'],
-            options=json_info['options'],
-            formats=json_info['formats']
+            formats=json_info['formats'],
+            media_types=json_info.get('media_types', []),
+            form=json_info.get('form', {})
         )
-
-        if 'form' in json_info:
-            plugin.form = json_info['form']
 
         plugin.save()
 
