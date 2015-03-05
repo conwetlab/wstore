@@ -275,7 +275,7 @@ def update_resource(resource, data):
 
 def get_provider_resources(provider, filter_=None, pagination=None):
 
-    if pagination and (not 'start' in pagination or not 'limit' in pagination):
+    if pagination and ('start' not in pagination or 'limit' not in pagination):
         raise ValueError('Missing required parameter in pagination')
 
     if pagination and (not int(pagination['start']) > 0 or not int(pagination['limit']) > 0):
@@ -307,7 +307,8 @@ def get_provider_resources(provider, filter_=None, pagination=None):
             'state': state,
             'open': res.open,
             'link': res.get_url(),
-            'resource_type': res.resource_type
+            'resource_type': res.resource_type,
+            'meta': res.meta_info
         }
         response.append(resource_info)
     return response

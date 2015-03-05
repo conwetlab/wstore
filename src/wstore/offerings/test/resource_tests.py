@@ -48,7 +48,8 @@ RESOURCE_DATA1 = {
     'state': 'created',
     'open': False,
     'link': 'http://localhost/media/resources/resource1',
-    'resource_type': 'API'
+    'resource_type': 'API',
+    'meta': {}
 }
 
 RESOURCE_DATA2 = {
@@ -59,7 +60,8 @@ RESOURCE_DATA2 = {
     'state': 'created',
     'open': False,
     'link': 'http://localhost/media/resources/resource2',
-    'resource_type': 'API'
+    'resource_type': 'API',
+    'meta': {}
 }
 
 RESOURCE_DATA3 = {
@@ -70,7 +72,8 @@ RESOURCE_DATA3 = {
     'state': 'created',
     'open': True,
     'link': 'http://localhost/media/resources/resource3',
-    'resource_type': 'API'
+    'resource_type': 'API',
+    'meta': {}
 }
 
 RESOURCE_DATA4 = {
@@ -81,7 +84,8 @@ RESOURCE_DATA4 = {
     'state': 'used',
     'open': True,
     'link': 'http://localhost/media/resources/resource4',
-    'resource_type': 'API'
+    'resource_type': 'API',
+    'meta': {}
 }
 
 RESOURCE_IN_USE_DATA = {
@@ -354,6 +358,7 @@ class ResourceRetrievingTestCase(TestCase):
         resource1.open = False
         resource1.get_url.return_value = 'http://localhost/media/resources/resource1'
         resource1.resource_type = 'API'
+        resource1.meta_info = {}
 
         resource2 = MagicMock()
         resource2.name = 'Resource2'
@@ -364,6 +369,7 @@ class ResourceRetrievingTestCase(TestCase):
         resource2.open = False
         resource2.get_url.return_value = 'http://localhost/media/resources/resource2'
         resource2.resource_type = 'API'
+        resource2.meta_info = {}
 
         resource3 = MagicMock()
         resource3.name = 'Resource3'
@@ -374,6 +380,7 @@ class ResourceRetrievingTestCase(TestCase):
         resource3.open = True
         resource3.get_url.return_value = 'http://localhost/media/resources/resource3'
         resource3.resource_type = 'API'
+        resource3.meta_info = {}
 
         resource4 = MagicMock()
         resource4.name = 'Resource4'
@@ -385,6 +392,7 @@ class ResourceRetrievingTestCase(TestCase):
         resource4.get_url.return_value = 'http://localhost/media/resources/resource4'
         resource4.resource_type = 'API'
         resource4.offerings = ['1111', '2222']
+        resource4.meta_info = {}
 
         resources_management.Resource = MagicMock()
         resources_management.Resource.objects.filter.return_value = [
