@@ -5,7 +5,8 @@
     <a rel="tooltip" title="Edit resource" class="btn btn-blue res-edit"><i class="icon-edit"></i></a>
 </div>
 <div class="clear space" />
-
+<span class="label" id="res-state" style="float: right; margin-top: 10px;">${state}</span>
+<span class="label label-success hide" style="float: right; margin-top: 10px; margin-right: 3px;">Open</span>
 <div class="resource-details">
     <dl>
         <dt><p class="res-det-title"><b class="color-resource">Name</b></p></dt>
@@ -14,8 +15,8 @@
         <dt><p class="res-det-title"><b class="color-resource">Version</b></p></dt>
           <dd>${version}</dd>
 
-        <dt><p class="res-det-title"><b class="color-resource">State</b></p></dt>
-          <dd>${state}</dd>
+        <dt><p class="res-det-title"><b class="color-resource">Type</b></p></dt>
+          <dd>${resource_type}</dd>
 
         <dt><p class="res-det-title"><b class="color-resource">Content type</b></p></dt>
           <dd>${content_type}</dd>

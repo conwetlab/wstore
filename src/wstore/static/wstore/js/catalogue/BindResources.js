@@ -345,8 +345,22 @@
         // Clean modal body
         $('.modal-body').empty()
 
+        var labels = {
+            'deleted': 'label-important',
+            'used': 'label-info',
+            'created': ''
+        };
+
         $.template('resourceDetails', $('#resource_details_template'));
-        $.tmpl('resourceDetails', this.resource).appendTo('.modal-body');
+        var templ = $.tmpl('resourceDetails', this.resource).appendTo('.modal-body');
+
+        // Fill label class
+        $('#res-state').addClass(labels[this.resource.state]);
+
+        // Include open label if needed
+        if (this.resource.open) {
+            $('span:contains("Open")').removeClass('hide');
+        }
 
         // If the resource is deleted remove options
         if (this.resource.state == 'deleted') {
