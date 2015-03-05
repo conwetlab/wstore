@@ -327,7 +327,9 @@ class ResourceRegisteringTestCase(TestCase):
                 'description': 'This service is in charge of maintaining historical info for Smart Cities'
             }
             plugin_mock.on_pre_create.assert_called_once_with(provider.userprofile.current_organization, expected_data)
-            plugin_mock.on_post_create.assert_called_once_with(provider.userprofile.current_organization, expected_data)
+
+            res = Resource.objects.get(name=data['name'], version=data['version'])
+            plugin_mock.on_post_create.assert_called_once_with(res)
 
         else:
             self.assertTrue(isinstance(error, err_type))

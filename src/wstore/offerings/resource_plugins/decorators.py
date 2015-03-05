@@ -21,7 +21,7 @@
 
 from __future__ import unicode_literals
 
-from wstore.models import ResourcePlugin
+from wstore.models import ResourcePlugin, Resource
 from functools import wraps
 
 
@@ -78,7 +78,8 @@ def register_resource_events(func):
 
         # Call on post create event handler
         if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
-            plugin_module.on_post_create(provider, data)
+            resource = Resource.objects.get(name=data['name'], provider=provider, version=data['version'])
+            plugin_module.on_post_create(resource)
 
     return wrapper
 

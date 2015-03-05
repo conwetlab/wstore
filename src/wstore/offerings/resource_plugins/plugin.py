@@ -27,7 +27,7 @@ class Plugin():
     def on_pre_create(self, provider, data):
         pass
 
-    def on_post_create(self, provider, data):
+    def on_post_create(self, resource):
         pass
 
     def on_pre_update(self, resource):
