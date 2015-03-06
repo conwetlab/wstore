@@ -26,21 +26,25 @@ from functools import wraps
 
 
 def installPluginRollback(func):
-    _state = {}
 
-    def log_action(action, value):
-        _state[action] = value
+    class Logger():
+        _state = {}
+
+        def get_state(self):
+            return self._state
+
+        def log_action(self, action, value):
+            self._state[action] = value
 
     @wraps(func)
     def wrapper(self, path, logger=None):
         try:
-            _state = {}
-            func(self, path, log_action)
+            logger = Logger()
+            func(self, path, logger=logger)
         except Exception as e:
-
             # Remove directory if existing
-            if 'PATH' in _state:
-                rmtree(_state['PATH'], True)
+            if 'PATH' in logger.get_state():
+                rmtree(logger.get_state()['PATH'], True)
 
             # Raise the exception
             raise(e)

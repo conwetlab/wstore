@@ -88,7 +88,7 @@ class PluginLoader():
             os.mkdir(plugin_path)
 
             if logger is not None:
-                logger('PATH', plugin_path)
+                logger.log_action('PATH', plugin_path)
 
             # Extract files
             z.extractall(plugin_path)
