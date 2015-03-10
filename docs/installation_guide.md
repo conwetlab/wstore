@@ -2,6 +2,8 @@
 
 .fx: cover
 
+@conwet
+
 ---
 ## Requirements
 
@@ -20,6 +22,10 @@ In order to have WStore up and running the following software is required. This 
 * djangotoolbox 
 * django\_mongodb\_engine
 * lxml
+
+---
+## Requirements
+
 * rdflib 3.2.0+
 * rdflib-jsonld
 * Pymongo
@@ -46,7 +52,7 @@ package management tools provided by your operating system or using the availabl
 **NOTE:** WStore needs Python 2.7 to work; however, CentOS 6 uses Python 2.6 in the system. Although it is possible to install WStore in CentOS 6 (as explained before), it is strongly recommended to use an Ubuntu/Debian distribution.
 
 ---
-## Installing basic dependecies using the script
+## Installing basic dependencies: script
 
 * In order to facilitate the installation of the basic dependencies the script *resolve-basic-dep.sh* has been provided. This script will install the needed packages for both Ubuntu/Debian and CentOS 6 systems. For CentOS systems, this script will install Python 2.7 and its tools, without replacing the system Python, making them avalailable as python2.7, pip2.7 and vitualenv2.7.
 
@@ -54,29 +60,36 @@ package management tools provided by your operating system or using the availabl
 
 * To execute the script run the following command
 
-    $ sudo ./resolve-basic-dep.sh 
+<pre>
+$ sudo ./resolve-basic-dep.sh
+</pre> 
 
 ---
 
-## Manually resolving basic dependencies: Debian/Ubuntu
+## Installing basic dependencies: Manual installation Debian/Ubuntu
 
 Following, you can find how to resolve WStore basic dependencies if you do not want to use the script. Be aware that some commands require to be executed as root.
 
 * To install Python and pip
 
-    # apt-get install python python-pip
+<pre>
+# apt-get install python python-pip
+</pre>
 
 * To install MongoDB
 
-    # apt-get install mongodb
+<pre>
+# apt-get install mongodb
+</pre>
 
 * To install wkhtmltopdf
 
-    # apt-get install wkhtmltopdf
-
+<pre>
+# apt-get install wkhtmltopdf
+</pre>
 ---
 
-## Manually resolving basic dependencies: CentOS/RedHat
+## Installing basic dependencies: Manual installation CentOS/RedHat
 
 As mentioned above, CentOS systems include Python 2.6. Replacing this Python version with Python 2.7 may break the system, so it should be installed separately.
 
@@ -91,7 +104,7 @@ As mentioned above, CentOS systems include Python 2.6. Replacing this Python ver
 </pre>
 
 ---
-## Manually resolving basic dependencies: CentOS/RedHat
+## Installing basic dependencies: Manual installation CentOS/RedHat
 
 * The next step is to download and compile Python 2.7
 
@@ -105,7 +118,7 @@ As mentioned above, CentOS systems include Python 2.6. Replacing this Python ver
 </pre>
 
 ---
-## Manually resolving basic dependencies: CentOS/RedHat
+## Installing basic dependencies: Manual installation CentOS/RedHat
 
 * Then, include the line */usr/local/lib* at the end of the file */etc/ld.so.conf*, In a CentOS 6.5 it shoud be similar to:
 
@@ -116,10 +129,12 @@ include ld.so.conf.d/*.conf
 
 To finish with Python 2.7 installation execute the following command:
 
-    # /sbin/ldconfig
+<pre>
+# /sbin/ldconfig
+</pre>
 
 ---
-## Manually resolving basic dependencies: CentOS/RedHat
+## Installing basic dependencies: Manual installation CentOS/RedHat
 
 * Finally, install Python 2.7 setup tools
 
@@ -136,11 +151,13 @@ To finish with Python 2.7 installation execute the following command:
 Now, Python 2.7 and its pip are available as python2.7 and pip2.7
 
 ---
-## Manually resolving basic dependencies: CentOS/RedHat
+## Installing basic dependencies: Manual installation CentOS/RedHat
 
 * MongoDB is included in the official MongoDB downloads repositories. Once the related repositories has been included (see http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fedora-linux/ ) install MongoDB with the command
 
-    # yum install -y mongodb-org
+<pre>
+# yum install -y mongodb-org
+</pre>
 
 To install wkhtmltopdf get the related rpm for your system from http://wkhtmltopdf.org/downloads.html and install the package. For example, version 0.12.1 for a 64 bits architecture: 
 
@@ -220,7 +237,9 @@ $ service mongod start
 
 * You can execute the script *setup.sh* to perform the complete installation. **Please note that this script should be run as an user without using sudo (no root permissions are needed, although root user is allowed).** Executing the script using sudo will cause Python and Django packages to be installed in the system, not in the virtualenv, which can cause WStore not working properly or even break your system if using CentOS.
 
-    $ ./setup.sh
+<pre>
+$ ./setup.sh
+</pre>
 
 ---
 ## Installing WStore using scripts
@@ -302,6 +321,9 @@ Select authentication method:
 2) WStore
 </pre>
 
+---
+## Installing WStore using scripts
+
 * If you choose the identity manager option, you will be asked for the identity manager endpoint, and the basic OAuth2 configuration (Client ID and Client Secret). You can avoid to introduce the basic OAuth2 configuration if you don't have the credentials at that moment. However, in order to start the Store, you need to introduce this information in the settings.py file as explained in the Configuration section. Note that for using this authentication method you must have registered your WStore instance in the identity Manager using the Callback URL explained in the configuration section of this document.
 
 <pre>
@@ -341,23 +363,30 @@ $ ./setup.sh --noinput
 
 * It is sugested to create a virtualenv where install Python and Django dependencies.
 
-    $ virtualenv-2.7 src/virtenv
+<pre>
+$ virtualenv-2.7 src/virtenv
+</pre>
 
 * or, if virtualenv-2.7 is not available
 
-    $ virtualenv src/virtenv
-
+<pre>
+$ virtualenv src/virtenv
+</pre>
 
 * Then it is needed to activate the virtual env
 
-    $ source src/virtenv/bin/activate
+<pre>
+$ source src/virtenv/bin/activate
+</pre>
 
 ---
 ## Manually resolving python dependencies
 
 * To install *rdflib*, *lxml*, and *pymongo*
 
-    $ pip install lxml "rdflib>=3.2.0" pymongo 
+<pre>
+$ pip install lxml "rdflib>=3.2.0" pymongo 
+</pre>
 
 **NOTE**: See http://lxml.de/installation.html#installation if in trouble installing lxml. You probably have to install the following packages:
 
@@ -376,13 +405,7 @@ $ yum install libxml2-devel libxslt-devel zlib-devel python-devel
 
 <pre>
 $ pip install https://github.com/django-nonrel/django/archive/nonrel-1.4.zip
-</pre>
-
-<pre>
 $ pip install https://github.com/django-nonrel/djangotoolbox/archive/toolbox-1.4.zip
-</pre>
-
-<pre>
 $ pip install https://github.com/django-nonrel/mongodb-engine/archive/mongodb-engine-1.4-beta.zip
 </pre>
 
@@ -409,17 +432,8 @@ $ pip install https://github.com/conwetlab/paypalpy/archive/master.zip
 
 <pre>
 $ pip install nose django-nose
-</pre>
-
-<pre>
 $ pip install django-social-auth
-</pre>
-
-<pre>
 $ pip install django-crontab
-</pre>
-
-<pre>
 $ pip install whoosh
 </pre>
 
@@ -431,11 +445,13 @@ $ pip install whoosh
 ---
 ## Configuration
 
-Note that if the script has been used to resolve WStore python dependencies, they have been installed in a virtual environment that must be activated before running any configuration command (*python manage.py {command}*). To activate the virtualenv execute the following command from the installation directory.
+* Note that if the script has been used to resolve WStore python dependencies, they have been installed in a virtual environment that must be activated before running any configuration command (*python manage.py {command}*). To activate the virtualenv execute the following command from the installation directory.
 
-    $ source src/virtenv/bin/activate 
+<pre>
+$ source src/virtenv/bin/activate 
+</pre>
 
-Moreover, if you have followed the configuration wizard of the *setup.sh* script you can skip this section. However, it is highly recomended to read it in order to understand the different configuration settings.
+* Moreover, if you have followed the configuration wizard of the *setup.sh* script you can skip this section. However, it is highly recomended to read it in order to understand the different configuration settings.
 
 ---
 ## Database Configuration
@@ -459,11 +475,11 @@ DATABASES = {
 ---
 ## Database Configuration
 
-Using this setting is possible to change the database name and the test database name, include an user and password, and specify the host and port of MongoDB.
+* Using this setting is possible to change the database name and the test database name, include an user and password, and specify the host and port of MongoDB.
 
 **NOTE:** The engine field cannot be changed, since WStore only works with MongoDB.
 
-The name of the instance is included in the *STORE_NAME* setting:
+* The name of the instance is included in the *STORE_NAME* setting:
 
 <pre>
 STORE_NAME = 'WStore' 
@@ -487,7 +503,7 @@ $ python manage.py createsite site_name http://host:port
 $ python manage.py tellsiteid
 </pre>
 
-Include the site id in ''settings.py'' updating the ''SITE_ID'' setting
+* Include the site id in ''settings.py'' updating the ''SITE_ID'' setting
 
 <pre>
 SITE_ID = u'515ab0738e05ac20b622888b'
@@ -502,12 +518,14 @@ file. In this file is also possible to configure the endpoints used by PayPal,
 this settings contain by default the testing sandbox endpoints.
 
 
-    # Paypal creadetials
-    PAYPAL_USER = '<PayPal_user_name>'
-    PAYPAL_PASSWD = '<PayPal_password>'
-    PAYPAL_SIGNATURE = '<PayPal_signature>'
-    PAYPAL_URL = 'https://api-3t.sandbox.paypal.com/nvp'
-    PAYPAL_CHECKOUT_URL='https://www.sandbox.paypal.com/webscr?cmd=_express-checkout'
+<pre>
+# Paypal creadetials
+PAYPAL_USER = 'PayPal_user_name'
+PAYPAL_PASSWD = 'PayPal_password'
+PAYPAL_SIGNATURE = 'PayPal_signature'
+PAYPAL_URL = 'https://api-3t.sandbox.paypal.com/nvp'
+PAYPAL_CHECKOUT_URL='https://www.sandbox.paypal.com/webscr?cmd=_express-checkout'
+</pre>
 
 ---
 ## Pay-Per-Use Cron Configuration
@@ -525,21 +543,24 @@ CRONJOBS = [
 ---
 ## Pay-Per-Use Cron Configuration
 
-Once the Cron task has been configured, it is necessary to include it in the Cron 
+* Once the Cron task has been configured, it is necessary to include it in the Cron 
 tasks using the command: 
 
-    $ python manage.py crontab add
+<pre>
+$ python manage.py crontab add
+</pre>
 
-It is also possible to show current jobs or remove jobs using the commands:
+* It is also possible to show current jobs or remove jobs using the commands:
 
-    $ python manage.py crontab show
- 
-    $ python manage.py crontab remove
+<pre>
+$ python manage.py crontab show
+$ python manage.py crontab remove
+</pre>
 
 ---
 ## Email configuration
 
-WStore uses some email configuration for sending notifications. To configure the source email used by WStore for sending notifications include the following settings:
+* WStore uses some email configuration for sending notifications. To configure the source email used by WStore for sending notifications include the following settings:
 
 <pre>
 WSTOREMAILUSER = 'email_user'
@@ -548,7 +569,7 @@ WSTOREMAILPASS = 'wstore_email_passwd'
 SMTPSERVER = 'email_smtp_server'
 </pre>
 
-It is also possible to configure a provider notification email. This email will be used by WStore as the destination email when an user requests the provider role. To set this email, include it in the *WSTOREPROVIDERREQUEST* setting:
+* It is also possible to configure a provider notification email. This email will be used by WStore as the destination email when an user requests the provider role. To set this email, include it in the *WSTOREPROVIDERREQUEST* setting:
 
 <pre>
 WSTOREPROVIDERREQUEST = 'provider_requ_email'
@@ -571,16 +592,20 @@ system has started to be used may cause unexpected behaviours.
 * It is possible to delegate the authentication of users to the FI-WARE Identity 
 Management system on a FI-WARE instance. View FI-LAB info in:
 
-** http://help.lab.fi-ware.org
+    http://help.lab.fiware.org
 
 * To do that, the first step is setting up the OILAUTH setting
 to True (Note that this is the default value).
 
-    OILAUTH=True
+<pre>
+OILAUTH=True
+</pre>
 
 * Then configure the authentication endpoint in filling the setting:
 
-    FIWARE_IDM_ENDPOINT='https://fiware_endpoint'
+<pre>
+FIWARE_IDM_ENDPOINT='https://fiware_endpoint'
+</pre>
 
 ---
 ## Authentication: FIWARE Identity management
@@ -588,34 +613,44 @@ to True (Note that this is the default value).
 * Next, register WStore as an application in the identity management portal, to do that
 WStore uses the following URL as as callback URL for OAuth2 authentication:
 
-    <host_wstore>/complete/fiware/
+<pre>
+[host_wstore]/complete/fiware/
+</pre>
 
 * Once you have registered your WStore instance, get OAuth2 credentials needed for the 
 authenticacion of your application. You will need to create some roles in your 
 application, one for offering provider, other for offering customer, and a role for developers. This roles 
 will be used in the organizations with access to your WStore instance in order to grant
 organization users the corresponding rights for purchasing and creating offerings for a 
-complete organization. To include the name you have specified for that roles, you have 
-to fill the following settings in social\_auth\_backend.py:
+complete organization.
 
-    FIWARE_PROVIDER_ROLE='Name of the role'
-    FIWARE_CUSTOMER_ROLE='Name of the role' 
-    FIWARE_DEVELOPER_ROLE='Name of the role' 
 ---
 ## Authentication: FIWARE Identity management
 
+* To include the name you have specified for that roles, you have 
+to fill the following settings in social\_auth\_backend.py:
+
+<pre>
+FIWARE_PROVIDER_ROLE='Name of the role'
+FIWARE_CUSTOMER_ROLE='Name of the role' 
+FIWARE_DEVELOPER_ROLE='Name of the role'
+</pre>
+
 * Finally, include OAuth2 credentials in your WStore instance by filling the settings:
 
-    FIWARE_APP_ID = client_id_number
-    FIWARE_API_SECRET = client_secret
-
+<pre>
+FIWARE_APP_ID = client_id_number
+FIWARE_API_SECRET = client_secret
+</pre>
 ---
 ## Authentication: WStore Identity Management
 
 * WStore has its own authentication mechanism based on django auth. To enable WStore 
 authentication, set up the OILAUTH setting to False:
 
-    OILAUTH=False
+<pre>
+OILAUTH=False
+</pre>
 
 * For API accesses, WStore has an OAuth2 server that can be enabled by including the
 oauth2provider in the INSTALLED\_APPS setting.
@@ -628,7 +663,9 @@ oauth2provider in the INSTALLED\_APPS setting.
 * Before running WStore, it is necessary to populate the database. This can be achieved 
 by using this command:
 
-    $ python manage.py syncdb
+<pre>
+$ python manage.py syncdb
+</pre>
 
 * This command creates indexes for the different models of the database and ask if you 
 want to create a Django superuser. In case you are using WStore authentication, this 
@@ -639,7 +676,7 @@ Users with corresponding role (Provider) will be able to perform the administrat
 ---
 ## Database Population
 
-An example of the output of this command follows:
+* An example of the output of this command follows:
 
 <pre>
 ...
@@ -663,20 +700,24 @@ Superuser created successfully.
 ---
 ## Final Steps
 
-Make sure that the directories wstore\_path/src/media, wstore\_path/src/media/resources, 
+* Make sure that the directories wstore\_path/src/media, wstore\_path/src/media/resources, 
 wstore\_path/src/media/bills, wstore\_path/src/wstore/search/indexes  exist, and that the 
 server has sufficient permissions to write on them. For example, the following commands give permissions to apache user in a Debian/Ubuntu system: 
 
-    # chgrp -R www-data  <wstore_path>/src/media <wstore_path>/src/wstore/search/indexes <wstore_path>/src/wstore/social/indexes
+<pre>
+# chgrp -R www-data  [wstore_path]/src/media [wstore_path]/src/wstore/search/indexes [wstore_path]/src/wstore/social/indexes
 
-    # chmod g+wrX -R <wstore_path>/src/media <wstore_path>/src/wstore/search/indexes <wstore_path>/src/wstore/social/indexes
+# chmod g+wrX -R [wstore_path]/src/media [wstore_path]/src/wstore/search/indexes [wstore_path]/src/wstore/social/indexes
+</pre>
 
 **Note:** In a CentOS system  the commands are similar but using *apache* instead of *www-data* as group.
 
-it is possible to collect all static files in WStore in a single directory using the 
+* it is possible to collect all static files in WStore in a single directory using the 
 following command and answering yes when asked. Be aware of activating the virtualenv if needed as explained in the previous sections.
 
-    $ python manage.py collectstatic
+<pre>
+$ python manage.py collectstatic
+</pre>
 
 ---
 ## Running WStore: Django internal web server
@@ -686,11 +727,15 @@ Do not use it in a production environment.
 
 **NOTE:** Since the installation scripts create a virtualenv to install the dependencies, you must activate virtualenv before running the runserver command if you have installed and configured the Store using these scripts. To do so, you must run the following command (in the src folder):
 
-    $ source virtenv/bin/activate
+<pre>
+$ source virtenv/bin/activate
+</pre>
 
 * To start WStore, type the following command:
 
-    $ python manage.py runserver 0.0.0.0:8000
+<pre>
+$ python manage.py runserver 0.0.0.0:8000
+</pre>
 
 * Then, go to http://computer\_name\_or\_IP\_address:8000/ where computer\_name\_or\_IP\_address 
 is the name or IP address of the computer on which WStore is installed.
@@ -701,11 +746,15 @@ is the name or IP address of the computer on which WStore is installed.
 * If you choose to deploy WStore in Apache, the *libapache2-mod-wsgi* module must be installed 
 (and so does Apache!). To do so, type the following command in Ubuntu/Debian: 
 
-    # apt-get install apache2 libapache2-mod-wsgi
+<pre>
+# apt-get install apache2 libapache2-mod-wsgi
+</pre>
 
 * In CentOS 6 systems apache can be installed as
 
-    # yum install -y httpd
+<pre>
+# yum install -y httpd
+</pre>
 
 * In the case of *mod_wsgi* in CentOS 6, it is not possible to directly use the existing package. As explained in previous sections CentOS 6 relies in Python 2.6 to work, while WStore uses Python 2.7. For this reason when mod_wsgi is installed using yum, it uses Python 2.6, causing WStore not working properly over Apache.
 
@@ -724,16 +773,19 @@ is the name or IP address of the computer on which WStore is installed.
 # chmod 755 /usr/lib64/httpd/modules/mod_wsgi.so
 </pre>
 
-Finally, turn on mod_wsgi in apache by creating the file */etc/httpd/conf.d/wsgi.conf* and including:
+* Finally, turn on mod_wsgi in apache by creating the file */etc/httpd/conf.d/wsgi.conf* and including:
 
-    LoadModule wsgi_module modules/mod_wsgi.so
+<pre>
+LoadModule wsgi_module modules/mod_wsgi.so
+</pre>
 
 ---
 ## Running WStore: Apache integration
 
 * Then you have to populate the wsgi.py file:
 
-```python
+
+<pre>
  import os
  import sys
  path = 'path_to_wstore/src'
@@ -742,7 +794,7 @@ Finally, turn on mod_wsgi in apache by creating the file */etc/httpd/conf.d/wsgi
  os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
  import django.core.handlers.wsgi
  application = django.core.handlers.wsgi.WSGIHandler()
-```
+</pre>
 
 ---
 ## Running WStore: Apache integration
@@ -750,7 +802,7 @@ Finally, turn on mod_wsgi in apache by creating the file */etc/httpd/conf.d/wsgi
 * If you are running WStore using a virtualenv environment (for example if you have installed the 
 dependencies using the provided script) your wsgi.py file sholud have the following structure:
 
-```python
+<pre>
 import os
 import sys
 import site
@@ -768,8 +820,9 @@ execfile(activate_env, dict(__file__=activate_env))
 
 import django.core.handlers.wsgi
 application = django.core.handlers.wsgi.WSGIHandler()
-```
-Please, pay attention that you set the right path to the wtore/src directory. 
+</pre>
+
+* Please, pay attention that you set the right path to the wtore/src directory. 
 
 ---
 ## Running WStore: Apache integration
@@ -810,7 +863,7 @@ Once you have the site enabled, restart Apache
 ---
 ## Running WStore: Apache integration
 
-* To configure WStore virtualhost add the following lines to the site configuration file:
+To configure WStore virtualhost add the following lines to the site configuration file:
 
     <VirtualHost *:80>
             ...
@@ -836,7 +889,7 @@ Once you have the site enabled, restart Apache
             ...
     </VirtualHost>
 
-Again, pay special attention to the paths to the django wsgi file and the 
+* Again, pay special attention to the paths to the django wsgi file and the 
 path\_to\_wstore/src/static directory.
 
 ---
@@ -845,6 +898,9 @@ path\_to\_wstore/src/static directory.
 * Moreover, it is important that the apache user (www-data in Ubuntu/Debian, apache in CentOS/RedHat) could access the directory where WStore is deployed. Be aware of configuring the directory permissions so this user can access wstore directory and go through the previous directories in the path (x permission).
 
 * Finally, depending on the version of apache you are using, you may need to explicitly allow the access to the directory where WStore is deployed in the configuration of the virtualhost. To do that, add the following lines to your virtualhost:
+
+---
+## Running WStore: Apache integration
 
 Apache version < 2.4
 
