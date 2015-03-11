@@ -514,7 +514,7 @@
         var i, repLength = repositories.length;
 
         if (repLength == 0) {
-            var msg = 'No repositories registered';
+            var msg = "There isn't any repository registered where saving offering descriptions. A repository is needed for the creation of offerings";
             $('.modal-header h2').text('Error');
             $('.modal-body').empty();
             $('.modal-body').append('<p>' + msg + '</p>');
