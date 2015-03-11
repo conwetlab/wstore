@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+    xmlns:foaf="http://xmlns.com/foaf/0.1/" 
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"  
+    xmlns:dcterms="http://purl.org/dc/terms/" 
+    xmlns:usdl="http://www.linked-usdl.org/ns/usdl-core#" 
+    xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+    xmlns:gr="http://purl.org/goodrelations/v1#">
+
+    <usdl:Service xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ resource_uri }}">
+        <usdl:hasClassification rdf:nodeID="{{ base_id }}01" />
+        <dcterms:title>{{ name }}</dcterms:title>
+        <dcterms:description>{{ description }}</dcterms:description>
+        <dcterms:format rdf:nodeID="{{ base_id }}02" />
+        <gr:hasManufacturer rdf:nodeID="{{ base_id }}03" />
+    </usdl:Service>
+
+    <skos:Concept xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="{{ base_id }}01">
+        <rdfs:label>{{ resource_type }}</rdfs:label>
+    </skos:Concept>
+
+    <dcterms:MediaType xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="{{ base_id }}02">
+        <rdfs:label>{{ media_type }}</rdfs:label>
+    </dcterms:MediaType>
+
+    <gr:BusinessEntity xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="{{ base_id }}03">
+        <foaf:name>{{ provider }}</foaf:name>
+    </gr:BusinessEntity>
+
+</rdf:RDF>
