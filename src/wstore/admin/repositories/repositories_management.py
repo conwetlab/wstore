@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013-2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -18,23 +18,23 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+
+from __future__ import unicode_literals
+
+from wstore.store_commons.errors import ConflictError
+
 from wstore.models import Repository
 
 
-def register_repository(name, host):
+def register_repository(name, host, default=False):
 
     # Check if the repository name is in use
-    existing = True
+    repos = Repository.objects.filter(name=name) | Repository.objects.filter(host=host)
 
-    try:
-        Repository.objects.get(name=name)
-    except:
-        existing = False
+    if len(repos) > 0:
+        raise ConflictError('The repository already exists')
 
-    if existing:
-        raise Exception('The repository already exists')
-
-    Repository.objects.create(name=name, host=host)
+    Repository.objects.create(name=name, host=host, is_default=default)
 
 
 def unregister_repository(repository):

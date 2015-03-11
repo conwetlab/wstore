@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013-2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -18,15 +18,18 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
 import json
 
 from django.http import HttpResponse
 
+from wstore.store_commons.errors import ConflictError
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types,\
-authentication_required
+    authentication_required
 from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, get_repositories
 
 
@@ -49,6 +52,7 @@ class RepositoryCollection(Resource):
             content = json.loads(request.raw_post_data)
             name = content['name']
             host = content['host']
+            is_default = content.get('is_default', False)
         except:
             msg = "Request body is not valid JSON data"
             return build_response(request, 400, msg)
@@ -62,9 +66,11 @@ class RepositoryCollection(Resource):
 
         # Register repository
         try:
-            register_repository(name, host)
-        except Exception, e:
-            return build_response(request, 400, e.message)
+            register_repository(name, host, is_default)
+        except ConflictError as e:
+            return build_response(request, 409, unicode(e))
+        except Exception as e:
+            return build_response(request, 500, unicode(e))
 
         return build_response(request, 201, 'Created')
 
