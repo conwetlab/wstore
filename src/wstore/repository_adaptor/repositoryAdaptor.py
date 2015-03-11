@@ -38,7 +38,7 @@ class RepositoryAdaptor():
 
         self._repository_url = repository_url
 
-        if collection != None:
+        if collection is not None:
             if not self._repository_url.endswith('/'):
                 self._repository_url += '/'
 
@@ -51,7 +51,7 @@ class RepositoryAdaptor():
         opener = urllib2.build_opener()
         url = self._repository_url
 
-        if name != None:
+        if name is not None:
             name = name.replace(' ', '')
             url = urljoin(self._repository_url, self._collection)
             url = urljoin(url, name)
@@ -74,7 +74,7 @@ class RepositoryAdaptor():
         url = self._repository_url
         opener = urllib2.build_opener()
 
-        if name != None:
+        if name is not None:
             name = name.replace(' ', '')
             url = urljoin(url, self._collection)
             url = urljoin(url, name)
@@ -100,7 +100,7 @@ class RepositoryAdaptor():
         opener = urllib2.build_opener()
         url = self._repository_url
 
-        if name != None:
+        if name is not None:
             name = name.replace(' ', '')
             url = urljoin(self._repository_url, self._collection)
             url = urljoin(url, name)
