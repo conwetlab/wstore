@@ -28,7 +28,8 @@ from django.test import TestCase
 from django.core.exceptions import ObjectDoesNotExist
 
 from wstore.store_commons.errors import ConflictError
-from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, get_repositories
+from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, \
+    get_repositories, set_default_repository
 from wstore.models import Repository
 from wstore.admin.repositories import views
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
@@ -154,6 +155,32 @@ class RepositoriesRetrievingTestCase(TestCase):
         self.assertEqual(rep[1]['name'], 'test_repository2')
         self.assertEqual(rep[1]['host'], 'http://testrepository2.com/')
         self.assertTrue(rep[1]['is_default'])
+
+
+class SetDefaultRepositoryTestCase(TestCase):
+    tags = ('repository', )
+    fixtures = ['reg_rep.json']
+
+    @parameterized.expand([
+        ('basic', "test_repository1"),
+        ('not_found', "test_repository3", True)
+    ])
+    def test_set_default_respository(self, name, repository, error_expected=False):
+        error = None
+        try:
+            set_default_repository(repository)
+        except Exception as e:
+            error = e
+
+        if not error_expected:
+            self.assertEquals(error, None)
+            repo1 = Repository.objects.get(name=repository)
+            self.assertTrue(repo1.is_default)
+            repo2 = Repository.objects.get(name="test_repository2")
+            self.assertFalse(repo2.is_default)
+        else:
+            self.assertTrue(isinstance(error, ObjectDoesNotExist))
+            self.assertEquals(unicode(e), 'The specified repository does not exist')
 
 
 class RepositoryViewTestCase(TestCase):
@@ -304,16 +331,28 @@ class RepositoryEntryTestCase(TestCase):
         self.request = MagicMock()
         self.request.user.is_staff = True
         views.unregister_repository = MagicMock()
+        views.set_default_repository = MagicMock()
         TestCase.setUp(self)
 
-    def _forbidden(self):
+    def _forbidden(self, method):
         self.request.user.is_staff = False
 
-    def _not_found(self):
-        views.unregister_repository.side_effect = ObjectDoesNotExist('Not found')
+    def _not_found(self, method):
+        method.side_effect = ObjectDoesNotExist('Not found')
 
-    def _call_error(self):
-        views.unregister_repository.side_effect = Exception('Exception')
+    def _call_error(self, method):
+        method.side_effect = Exception('Exception')
+
+    def _execute_api_test(self, repo_entry_method, expected_result, called_method):
+        response = repo_entry_method(self.request, 'test_repository')
+
+        if expected_result[0] != 403:
+            called_method.assert_called_once_with('test_repository')
+
+        content = json.loads(response.content)
+        self.assertEquals(response.status_code, expected_result[0])
+        self.assertEquals(content['message'], expected_result[1])
+        self.assertEquals(content['result'], expected_result[2])
 
     @parameterized.expand([
         ((204, 'No content', 'correct'),),
@@ -324,17 +363,22 @@ class RepositoryEntryTestCase(TestCase):
     def test_repository_api_delete(self, expected_result, side_effect=None):
 
         if side_effect:
-            side_effect(self)
+            side_effect(self, views.unregister_repository)
 
         # Build the view
         repo_entry = views.RepositoryEntry(permitted_methods=('DELETE',))
+        self._execute_api_test(repo_entry.delete, expected_result, views.unregister_repository)
 
-        response = repo_entry.delete(self.request, 'test_repository')
+    @parameterized.expand([
+        ('correct', (200, 'OK', 'correct')),
+        ('forbidden', (403, 'Forbidden', 'error'), _forbidden),
+        ('not_found', (404, 'Not found', 'error'), _not_found),
+        ('exception', (500, 'Error managing the repository', 'error'), _call_error)
+    ])
+    def test_set_default_repository_api(self, name, expected_result, side_effect=None):
+        if side_effect:
+            side_effect(self, views.set_default_repository)
 
-        if expected_result[0] != 403:
-            views.unregister_repository.assert_called_once_with('test_repository')
-
-        content = json.loads(response.content)
-        self.assertEquals(response.status_code, expected_result[0])
-        self.assertEquals(content['message'], expected_result[1])
-        self.assertEquals(content['result'], expected_result[2])
+        # Build the view
+        repo_entry = views.RepositoryDefaultEntry(permitted_methods=('POST',))
+        self._execute_api_test(repo_entry.create, expected_result, views.set_default_repository)
