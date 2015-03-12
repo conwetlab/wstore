@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 import json
 
 from django.http import HttpResponse
+from django.core.exceptions import ObjectDoesNotExist
 
 from wstore.store_commons.errors import ConflictError
 from wstore.store_commons.resource import Resource
@@ -95,12 +96,9 @@ class RepositoryEntry(Resource):
 
         try:
             unregister_repository(repository)
-        except Exception, e:
-            if e.message == 'Not found':
-                code = 404
-            else:
-                code = 400
-
-            return build_response(request, code, e.message)
+        except ObjectDoesNotExist as e:
+            return build_response(request, 404, unicode(e))
+        except Exception as e:
+            return build_response(request, 500, 'Error deleting the repository')
 
         return build_response(request, 204, 'No content')

@@ -25,12 +25,14 @@ from mock import MagicMock
 from nose_parameterized import parameterized
 
 from django.test import TestCase
+from django.core.exceptions import ObjectDoesNotExist
 
+from wstore.store_commons.errors import ConflictError
 from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, get_repositories
 from wstore.models import Repository
 from wstore.admin.repositories import views
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
-decorator_mock_callable, HTTPResponseMock
+    decorator_mock_callable, HTTPResponseMock
 from wstore.store_commons.utils import http
 
 
@@ -39,72 +41,108 @@ __test__ = False
 
 class RegisteringRepositoriesTestCase(TestCase):
 
-    tags = ('fiware-ut-10',)
+    tags = ('fiware-ut-10', 'repository')
     fixtures = ['reg_rep.json']
 
-    def test_basic_registering_rep(self):
+    @parameterized.expand([
+        ('basic', {
+            'name': 'test_repository',
+            'host': 'http://testrepository.com/',
+            'default': False
+        }),
+        ('existing_name', {
+            'name': 'test_repository1',
+            'host': 'http://testrepository.com/',
+            'default': False
+        }, ConflictError, 'The repository already exists'),
+        ('existing_host', {
+            'name': 'test_repository',
+            'host': 'http://testrepository1.com/',
+            'default': False
+        }, ConflictError, 'The repository already exists'),
+        ('new_default', {
+            'name': 'test_repository',
+            'host': 'http://testrepository.com/',
+            'default': True
+        }),
+    ])
+    def test_repository_registering(self, name, data, err_type=None, err_msg=None):
 
-        name = 'test_repository'
-        host = 'http://testrepository.com/'
-        register_repository(name, host)
-
-        rep = Repository.objects.get(name=name, host=host)
-        self.assertEqual(name, rep.name)
-        self.assertEqual(host, rep.host)
-
-    def test_register_existing_repository(self):
-
-        name = 'test_repository1'
-        host = 'http://testrepository.com/'
-
-        error = False
-        msg = None
-
+        error = None
         try:
-            register_repository(name, host)
-        except Exception, e:
-            error = True
-            msg = e.message
+            register_repository(data['name'], data['host'], default=data['default'])
+        except Exception as e:
+            error = e
 
-        self.assertTrue(error)
-        self.assertEqual(msg, 'The repository already exists')
+        if err_type is None:
+            self.assertEquals(error, None)
+            rep = Repository.objects.get(name=data['name'], host=data['host'])
+            self.assertEqual(data['name'], rep.name)
+            self.assertEqual(data['host'], rep.host)
+            self.assertEquals(data['default'], rep.is_default)
+
+            # Check that the default repository has been to to false
+            if data['default']:
+                self.assertFalse(Repository.objects.get(pk="61001bba8e05ac2115f11111").is_default)
+
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(error), err_msg)
+
+    def test_first_repository_registering(self):
+
+        for r in Repository.objects.all():
+            r.delete()
+
+        register_repository('test_repository', 'http://testrepository.com', False)
+        rep = Repository.objects.get(name='test_repository')
+        self.assertTrue(rep.is_default)
 
 
 class UnregisteringRepositoriesTestCase(TestCase):
 
-    tags = ('fiware-ut-11',)
-    fixtures = ['del_rep.json']
+    tags = ('fiware-ut-11', 'repository')
+    fixtures = ['reg_rep.json']
 
-    def test_basic_unregistering_rep(self):
-
-        unregister_repository('test_repository')
+    def _unregister_repository(self, repository):
+        unregister_repository(repository)
 
         deleted = False
         try:
-            Repository.objects.get(name='test_repository')
+            Repository.objects.get(name=repository)
         except:
             deleted = True
 
+        return deleted
+
+    def test_basic_unregistering_rep(self):
+        deleted = self._unregister_repository('test_repository1')
         self.assertTrue(deleted)
+
+    def test_unregistering_default(self):
+        deleted = self._unregister_repository('test_repository2')
+        self.assertTrue(deleted)
+
+        # Check that another repository has be set as default
+        rep = Repository.objects.get(pk="61001bba8e05ac2115f022f9")
+        self.assertTrue(rep.is_default)
 
     def test_unregister_not_existing_rep(self):
 
-        error = False
-        msg = None
-
+        error = None
         try:
-            unregister_repository('test_repository1')
-        except Exception, e:
-            error = True
-            msg = e.message
+            unregister_repository('test_repository3')
+        except Exception as e:
+            error = e
 
-        self.assertTrue(error)
-        self.assertEqual(msg, 'Not found')
+        self.assertTrue(isinstance(error, ObjectDoesNotExist))
+        self.assertEqual(unicode(error), 'The specified repository does not exist')
 
 
 class RepositoriesRetrievingTestCase(TestCase):
 
-    fixtures = ['get_rep.json']
+    tags = ('repository', )
+    fixtures = ['reg_rep.json']
 
     def test_basic_retrieving_repositories(self):
 
@@ -112,15 +150,15 @@ class RepositoriesRetrievingTestCase(TestCase):
 
         self.assertEqual(rep[0]['name'], 'test_repository1')
         self.assertEqual(rep[0]['host'], 'http://testrepository1.com/')
+        self.assertFalse(rep[0]['is_default'])
         self.assertEqual(rep[1]['name'], 'test_repository2')
         self.assertEqual(rep[1]['host'], 'http://testrepository2.com/')
-        self.assertEqual(rep[2]['name'], 'test_repository3')
-        self.assertEqual(rep[2]['host'], 'http://testrepository3.com/')
+        self.assertTrue(rep[1]['is_default'])
 
 
 class RepositoryViewTestCase(TestCase):
 
-    tags = ('repository-view',)
+    tags = ('repository-view', 'repository')
 
     @classmethod
     def setUpClass(cls):
@@ -151,31 +189,38 @@ class RepositoryViewTestCase(TestCase):
     def _bad_request(self):
         views.register_repository.side_effect = Exception('Bad request')
 
+    def _conflict(self):
+        views.register_repository.side_effect = ConflictError('Conflict')
+
     @parameterized.expand([
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com'
-    }, (201, 'Created', 'correct'), False),
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com'
-    }, (403, 'Forbidden', 'error'), True, _forbidden),
-    ({
-        'invalid': 'test_repo',
-        'host': 'http://testrepo.com'
-    }, (400, 'Request body is not valid JSON data', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com'
-    }, (400, 'Bad request', 'error'), True, _bad_request),
-    ({
-        'name': 'test_repo$',
-        'host': 'http://testrepo.com'
-    }, (400, 'Invalid name format', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'host': 'invalid_url'
-    }, (400, 'Invalid URL format', 'error'), True)
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com'
+        }, (201, 'Created', 'correct'), False),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com'
+        }, (403, 'Forbidden', 'error'), True, _forbidden),
+        ({
+            'invalid': 'test_repo',
+            'host': 'http://testrepo.com'
+        }, (400, 'Request body is not valid JSON data', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com'
+        }, (500, 'Bad request', 'error'), True, _bad_request),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com'
+        }, (409, 'Conflict', 'error'), True, _conflict),
+        ({
+            'name': 'test_repo$',
+            'host': 'http://testrepo.com'
+        }, (400, 'Invalid name format', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'invalid_url'
+        }, (400, 'Invalid URL format', 'error'), True)
     ])
     def test_repository_api_create(self, data, exp_resp, error, side_effect=None):
         # Create request data
@@ -197,7 +242,7 @@ class RepositoryViewTestCase(TestCase):
 
         # Check calls
         if not error:
-            views.register_repository.assert_called_with(data['name'], data['host'])
+            views.register_repository.assert_called_with(data['name'], data['host'], False)
 
     @parameterized.expand([
         (False,),
@@ -235,7 +280,7 @@ class RepositoryViewTestCase(TestCase):
 
 class RepositoryEntryTestCase(TestCase):
 
-    tags = ("repository-view", )
+    tags = ("repository-view", 'repository')
 
     @classmethod
     def setUpClass(cls):
@@ -265,7 +310,7 @@ class RepositoryEntryTestCase(TestCase):
         self.request.user.is_staff = False
 
     def _not_found(self):
-        views.unregister_repository.side_effect = Exception('Not found')
+        views.unregister_repository.side_effect = ObjectDoesNotExist('Not found')
 
     def _call_error(self):
         views.unregister_repository.side_effect = Exception('Exception')
@@ -274,7 +319,7 @@ class RepositoryEntryTestCase(TestCase):
         ((204, 'No content', 'correct'),),
         ((403, 'Forbidden', 'error'), _forbidden),
         ((404, 'Not found', 'error'), _not_found),
-        ((400, 'Exception', 'error'), _call_error)
+        ((500, 'Error deleting the repository', 'error'), _call_error)
     ])
     def test_repository_api_delete(self, expected_result, side_effect=None):
 

@@ -21,12 +21,17 @@
 
 from __future__ import unicode_literals
 
-from wstore.store_commons.errors import ConflictError
+from django.core.exceptions import ObjectDoesNotExist
 
+from wstore.store_commons.errors import ConflictError
 from wstore.models import Repository
 
 
 def register_repository(name, host, default=False):
+    """
+    Register a new repository in WStore, these repositories will be used for the storage
+    of the USDL descriptions of offerings and resources
+    """
 
     # Check if the repository name is in use
     repos = Repository.objects.filter(name=name) | Repository.objects.filter(host=host)
@@ -34,17 +39,42 @@ def register_repository(name, host, default=False):
     if len(repos) > 0:
         raise ConflictError('The repository already exists')
 
+    # If the repository will be the default one modify the existing repos
+    if default:
+
+        def_rep = Repository.objects.filter(is_default=True)
+        for rep in def_rep:
+            rep.is_default = False
+            rep.save()
+
+    # If this is the first repository registered default must be true
+    elif len(Repository.objects.all()) == 0:
+        default = True
+
+    # Create new repository
     Repository.objects.create(name=name, host=host, is_default=default)
 
 
 def unregister_repository(repository):
+    """
+    Unregisters a repository from WStore
+    """
     rep = None
     try:
         rep = Repository.objects.get(name=repository)
     except:
-        raise Exception('Not found')
+        raise ObjectDoesNotExist('The specified repository does not exist')
 
+    # Remove the repository object
     rep.delete()
+
+    # Check if the deleted repository is the default one
+    if rep.is_default:
+        # Change the default repository
+        repos = Repository.objects.all()
+        if len(repos) > 0:
+            repos[0].is_default = True
+            repos[0].save()
 
 
 def get_repositories():
@@ -55,7 +85,8 @@ def get_repositories():
     for rep in repositories:
         response.append({
             'name': rep.name,
-            'host': rep.host
+            'host': rep.host,
+            'is_default': rep.is_default
         })
 
     return response
