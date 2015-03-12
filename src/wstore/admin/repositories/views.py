@@ -31,7 +31,8 @@ from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types,\
     authentication_required
-from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, get_repositories
+from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, \
+    get_repositories, set_default_repository
 
 
 class RepositoryCollection(Resource):
@@ -86,19 +87,39 @@ class RepositoryCollection(Resource):
         return HttpResponse(response, status=200, mimetype='application/JSON; charset=UTF-8')
 
 
+def _manage_repository(user, repository, method):
+
+    if not user.is_staff:
+        return (True, 403, 'Forbidden')
+
+    try:
+        method(repository)
+    except ObjectDoesNotExist as e:
+        return (True, 404, unicode(e))
+    except Exception as e:
+        return (True, 500, 'Error managing the repository')
+
+    return (False, None, None)
+
+
+class RepositoryDefaultEntry(Resource):
+
+    @authentication_required
+    def create(self, request, repository):
+        result = _manage_repository(request.user, repository, set_default_repository)
+        if result[0]:
+            return build_response(request, result[1], result[2])
+        else:
+            return build_response(request, 200, 'OK')
+
+
 class RepositoryEntry(Resource):
 
     @authentication_required
     def delete(self, request, repository):
 
-        if not request.user.is_staff:
-            return build_response(request, 403, 'Forbidden')
-
-        try:
-            unregister_repository(repository)
-        except ObjectDoesNotExist as e:
-            return build_response(request, 404, unicode(e))
-        except Exception as e:
-            return build_response(request, 500, 'Error deleting the repository')
-
-        return build_response(request, 204, 'No content')
+        result = _manage_repository(request.user, repository, unregister_repository)
+        if result[0]:
+            return build_response(request, result[1], result[2])
+        else:
+            return build_response(request, 204, 'No content')

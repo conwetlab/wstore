@@ -41,11 +41,7 @@ def register_repository(name, host, default=False):
 
     # If the repository will be the default one modify the existing repos
     if default:
-
-        def_rep = Repository.objects.filter(is_default=True)
-        for rep in def_rep:
-            rep.is_default = False
-            rep.save()
+        _unset_default()
 
     # If this is the first repository registered default must be true
     elif len(Repository.objects.all()) == 0:
@@ -55,22 +51,35 @@ def register_repository(name, host, default=False):
     Repository.objects.create(name=name, host=host, is_default=default)
 
 
-def unregister_repository(repository):
-    """
-    Unregisters a repository from WStore
-    """
+def _get_repository(repository):
     rep = None
     try:
         rep = Repository.objects.get(name=repository)
     except:
         raise ObjectDoesNotExist('The specified repository does not exist')
 
+    return rep
+
+
+def _unset_default():
+    # Change the default repository
+    def_rep = Repository.objects.filter(is_default=True)
+    for rep in def_rep:
+        rep.is_default = False
+        rep.save()
+
+
+def unregister_repository(repository):
+    """
+    Unregisters a repository from WStore
+    """
+
+    rep = _get_repository(repository)
     # Remove the repository object
     rep.delete()
 
     # Check if the deleted repository is the default one
     if rep.is_default:
-        # Change the default repository
         repos = Repository.objects.all()
         if len(repos) > 0:
             repos[0].is_default = True
@@ -90,3 +99,11 @@ def get_repositories():
         })
 
     return response
+
+
+def set_default_repository(repository):
+
+    rep = _get_repository(repository)
+    _unset_default()
+    rep.is_default = True
+    rep.save()

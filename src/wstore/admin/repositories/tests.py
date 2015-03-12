@@ -319,7 +319,7 @@ class RepositoryEntryTestCase(TestCase):
         ((204, 'No content', 'correct'),),
         ((403, 'Forbidden', 'error'), _forbidden),
         ((404, 'Not found', 'error'), _not_found),
-        ((500, 'Error deleting the repository', 'error'), _call_error)
+        ((500, 'Error managing the repository', 'error'), _call_error)
     ])
     def test_repository_api_delete(self, expected_result, side_effect=None):
 
