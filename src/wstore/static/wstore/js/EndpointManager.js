@@ -46,6 +46,7 @@
     var contextEndpoints = {
         'MARKET_ENTRY': '/api/administration/marketplaces/${name}',
         'REPOSITORY_ENTRY': '/api/administration/repositories/${name}',
+        'REPOSITORY_DEFAULT_ENTRY': '/api/administration/repositories/${name}/default',
         'RSS_ENTRY': '/api/administration/rss/${name}',
         'USERPROFILE_ENTRY': '/api/administration/profiles/${username}',
         'ORGANIZATION_ENTRY': '/api/administration/organizations/${org}',

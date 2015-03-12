@@ -32,8 +32,8 @@
         var rssForm = new RssForm();
         var organizationForm = new OrganizationForm();
         var userForm = new UserForm();
-        var marketplaceForm = EndpointFormBuilder('marketplace');
-        var repositoryForm = EndpointFormBuilder('repository');
+        var marketplaceForm = new MarketplaceForm();
+        var repositoryForm = new RepositoryForm();
         var currencyForm = new CurrencyForm();
 
         $('.show-markets').click(function() {
