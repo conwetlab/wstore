@@ -204,12 +204,12 @@ def get_offerings(user, filter_='published', state=None, pagination=None, sort=N
     # Validate states
     if state:
         for st in state:
-            if not st in allowed_states:
+            if st not in allowed_states:
                 raise ValueError('Invalid state: ' + st)
 
     # Set sorting values
     order = -1
-    if sort == None or sort == 'date':
+    if sort is None or sort == 'date':
         if filter_ == 'published' or filter_ == 'purchased':
             sorting = 'publication_date'
         else:
@@ -230,7 +230,7 @@ def get_offerings(user, filter_='published', state=None, pagination=None, sort=N
         current_organization = user.userprofile.current_organization
         query = {
             'owner_organization_id': ObjectId(current_organization.id),
-            'state': { '$in': state }
+            'state': {'$in': state}
         }
 
         prov_offerings = offerings.find(query).sort(sorting, order)
@@ -242,7 +242,7 @@ def get_offerings(user, filter_='published', state=None, pagination=None, sort=N
         else:
             prov_offerings = _get_purchased_offerings(user, db, sort=sorting)
 
-    elif  filter_ == 'published':
+    elif filter_ == 'published':
             prov_offerings = offerings.find({'state': 'published'}).sort(sorting, order)
     else:
         raise ValueError('Invalid filter: ' + filter_)
@@ -273,7 +273,7 @@ def count_offerings(user, filter_='published', state=None):
             raise ValueError('Invalid filter: states are not allowed for filter ' + filter_)
 
         for st in state:
-            if not st in ['uploaded', 'published', 'deleted']:
+            if st not in ['uploaded', 'published', 'deleted']:
                 raise ValueError('Invalid state: ' + st)
 
     if filter_ == 'provided':
@@ -289,7 +289,7 @@ def count_offerings(user, filter_='published', state=None):
         if user.userprofile.is_user_org():
             count += len(user.userprofile.offerings_purchased)
 
-    elif  filter_ == 'published':
+    elif filter_ == 'published':
         count = Offering.objects.filter(state='published').count()
     else:
         raise ValueError('Invalid filter: ' + filter_)
@@ -345,7 +345,7 @@ def _create_basic_usdl(usdl_info):
 
 def _validate_offering_info(offering_info):
     # Validate USDL mandatory fields
-    if not 'description' in offering_info or not 'pricing' in offering_info:
+    if 'description' not in offering_info or 'pricing' not in offering_info:
         raise ValueError('Invalid USDL info: Missing a required field')
 
     # Validate that description field is not empty
@@ -354,21 +354,21 @@ def _validate_offering_info(offering_info):
 
     # Validate legal fields
     if 'legal' in offering_info:
-        if not 'title' in offering_info['legal'] or not 'text' in offering_info['legal']:
+        if 'title' not in offering_info['legal'] or 'text' not in offering_info['legal']:
             raise ValueError('Invalid USDL info: Title and text fields are required if providing legal info')
 
         if not offering_info['legal']['title'] or not offering_info['legal']['text']:
             raise ValueError('Invalid USDL info: Title and text fields cannot be empty in legal info')
 
     # Validate pricing fields
-    if not 'price_model' in offering_info['pricing']:
+    if 'price_model' not in offering_info['pricing']:
         raise ValueError('Invalid USDL info: The pricing field must define a pricing model')
 
     if offering_info['pricing']['price_model'] != 'free' and offering_info['pricing']['price_model'] != 'single_payment':
         raise ValueError('Invalid USDL info: Invalid pricing model')
 
     if offering_info['pricing']['price_model'] == 'single_payment':
-        if not 'price' in offering_info['pricing']:
+        if 'price' not in offering_info['pricing']:
             raise ValueError('Invalid USDL info: Missing price for single payment model')
 
         if not offering_info['pricing']['price']:
@@ -382,7 +382,7 @@ def create_offering(provider, json_data):
 
     profile = provider.userprofile
     data = {}
-    if not 'name' in json_data or not 'version' in json_data:
+    if 'name' not in json_data or 'version' not in json_data:
         raise ValueError('Missing required fields')
 
     data['name'] = json_data['name']
@@ -452,7 +452,7 @@ def create_offering(provider, json_data):
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
     os.makedirs(path)
 
-    if not 'image' in json_data:
+    if 'image' not in json_data:
         raise ValueError('Missing required field: Logo')
 
     if not isinstance(json_data['image'], dict):
@@ -460,7 +460,7 @@ def create_offering(provider, json_data):
 
     image = json_data['image']
 
-    if not 'name' in image or not 'data' in image:
+    if 'name' not in image or 'data' not in image:
         raise ValueError('Missing required field in image')
 
     # Save the application image or logo
@@ -651,7 +651,7 @@ def update_offering(offering, data):
             'content_type': 'application/rdf+xml'
         }
         # Validate USDL info
-        if not 'description' in data['offering_info'] or not 'pricing' in data['offering_info']:
+        if 'description' not in data['offering_info'] or 'pricing' not in data['offering_info']:
             raise ValueError('Invalid USDL info')
 
         offering_info = data['offering_info']
@@ -724,12 +724,12 @@ def update_offering(offering, data):
 def publish_offering(offering, data):
 
     # Validate data
-    if not 'marketplaces' in data:
+    if 'marketplaces' not in data:
         raise ValueError('Publication error: missing required field, marketplaces')
 
     # Validate the state of the offering
     if not offering.state == 'uploaded':
-        raise PermissionDenied('Publication error: The offering ' + offering.name + ' ' + offering.version +' cannot be published')
+        raise PermissionDenied('Publication error: The offering ' + offering.name + ' ' + offering.version + ' cannot be published')
 
     # Validate the offering has enough content to be published
     # Open offerings cannot be published in they do not contain
@@ -799,12 +799,13 @@ def _remove_offering(offering, se):
 
     offering.delete()
 
+
 def delete_offering(offering):
     # If the offering has been purchased it is not deleted
     # it is marked as deleted in order to allow customers that
     # have purchased the offering to install it if needed
 
-    #delete the usdl description from the repository
+    # delete the usdl description from the repository
     if offering.state == 'deleted':
         raise PermissionDenied('The offering is already deleted')
 
