@@ -166,7 +166,7 @@ def _get_purchased_offerings(user, db, pagination=None, sort=None):
 
         # Append user offerings from organization offerings
         for offer in organization['offerings_purchased']:
-            if not offer in user_purchased:
+            if offer not in user_purchased:
                 user_purchased.append(offer)
 
     # Check sorting
@@ -483,17 +483,13 @@ def create_offering(provider, json_data):
             data['related_images'].append(settings.MEDIA_URL + dir_name + '/' + image['name'])
 
     # Save USDL document
-    # If the USDL itself is provided
+    repository = Repository.objects.get(is_default=True)
 
+    # If the USDL itself is provided
     if 'offering_description' in json_data:
         usdl_info = json_data['offering_description']
 
-        repository = Repository.objects.get(name=json_data['repository'])
-        repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
-        offering_id = organization.name + '__' + data['name'] + '__' + data['version']
-
         usdl = usdl_info['data']
-        data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl_info['data'], name=offering_id)
 
     # If the USDL is going to be created
     elif 'offering_info' in json_data:
@@ -504,18 +500,12 @@ def create_offering(provider, json_data):
         offering_info['image_url'] = data['image_url']
         offering_info['name'] = data['name']
 
-        repository = Repository.objects.get(name=json_data['repository'])
-
         offering_info['base_uri'] = repository.host
 
         usdl = _create_basic_usdl(offering_info)
         usdl_info = {
             'content_type': 'application/rdf+xml'
         }
-
-        repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
-        offering_id = organization.name + '__' + data['name'] + '__' + data['version']
-        data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl, name=offering_id)
     else:
         raise Exception('No USDL description provided')
 
@@ -525,7 +515,12 @@ def create_offering(provider, json_data):
     valid = validate_usdl(usdl, usdl_info['content_type'], data)
 
     if not valid[0]:
-        raise Exception(valid[1])
+        raise ValueError(valid[1])
+
+    # Upload the USDL document to the repository
+    repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
+    offering_id = organization.name + '__' + data['name'] + '__' + data['version']
+    data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl, name=offering_id)
 
     # Check new currencies used
     if len(valid) > 2:

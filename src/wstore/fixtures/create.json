@@ -28,7 +28,8 @@
         "model": "wstore.Repository",
         "fields": {
             "name": "test_repository",
-            "host": "http://testrepository/"
+            "host": "http://testrepository/",
+            "is_default": true
         }
     },
     {
