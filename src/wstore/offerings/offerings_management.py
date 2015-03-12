@@ -375,6 +375,16 @@ def _validate_offering_info(offering_info):
             raise ValueError('Invalid USDL info: Price cannot be empty in single payment models')
 
 
+def _save_encoded_image(path, name, data):
+    """
+    Saves into the filesystem a base64 encoded image
+    """
+    f = open(os.path.join(path, name), "wb")
+    dec = base64.b64decode(data)
+    f.write(dec)
+    f.close()
+
+
 # Creates a new offering including the media files and
 # the repository uploads
 @OfferingRollback
@@ -430,8 +440,6 @@ def create_offering(provider, json_data):
                 'description': app['description']
             })
 
-    data['related_images'] = []
-
     # Check the URL to notify the provider
     notification_url = ''
 
@@ -452,6 +460,8 @@ def create_offering(provider, json_data):
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
     os.makedirs(path)
 
+    data['related_images'] = []
+
     if 'image' not in json_data:
         raise ValueError('Missing required field: Logo')
 
@@ -464,10 +474,7 @@ def create_offering(provider, json_data):
         raise ValueError('Missing required field in image')
 
     # Save the application image or logo
-    f = open(os.path.join(path, image['name']), "wb")
-    dec = base64.b64decode(image['data'])
-    f.write(dec)
-    f.close()
+    _save_encoded_image(path, image['name'], image['data'])
 
     data['image_url'] = settings.MEDIA_URL + dir_name + '/' + image['name']
     # Save screen shots
@@ -475,11 +482,7 @@ def create_offering(provider, json_data):
         for image in json_data['related_images']:
 
             # images must be encoded in base64 format
-            f = open(os.path.join(path, image['name']), "wb")
-            dec = base64.b64decode(image['data'])
-            f.write(dec)
-            f.close()
-
+            _save_encoded_image(path, image['name'], image['data'])
             data['related_images'].append(settings.MEDIA_URL + dir_name + '/' + image['name'])
 
     # Save USDL document
@@ -606,10 +609,7 @@ def update_offering(offering, data):
         os.remove(logo_path)
 
         # Save the new logo
-        f = open(os.path.join(path, data['image']['name']), "wb")
-        dec = base64.b64decode(data['image']['data'])
-        f.write(dec)
-        f.close()
+        _save_encoded_image(path, data['image']['name'], data['image']['data'])
         offering.image_url = settings.MEDIA_URL + dir_name + '/' + data['image']['name']
 
     # Update the related images
@@ -624,10 +624,7 @@ def update_offering(offering, data):
 
         # Create new images
         for img in data['related_images']:
-            f = open(os.path.join(path, img['name']), "wb")
-            dec = base64.b64decode(img['data'])
-            f.write(dec)
-            f.close()
+            _save_encoded_image(path, img['name'], img['data'])
             offering.related_images.append(settings.MEDIA_URL + dir_name + '/' + img['name'])
 
     new_usdl = False
