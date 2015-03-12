@@ -7,7 +7,7 @@ pip install selenium
 cd $WORKSPACE/src
 
 coverage run --branch --source=wstore ./manage.py test --noinput --with-xunit --nologcapture -v 2
-coverage xml --omit="*urls*"
+coverage xml --omit="*urls*" -i
 
 # Prettify Coverate Report
 COVERAGE_FILE=coverage.xml
