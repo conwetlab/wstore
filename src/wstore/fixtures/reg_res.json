@@ -16,6 +16,15 @@
         }
     },
     {
+        "pk": "51000aba8e05ac2115f022ff",
+        "model": "wstore.Repository",
+        "fields": {
+            "name": "test_repository",
+            "host": "http://testrepository/",
+            "is_default": true
+        }
+    },
+    {
         "pk": "61000bba8e05ac2116f022f9",
         "model": "wstore.Resource",
         "fields": {

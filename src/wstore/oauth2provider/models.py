@@ -34,6 +34,7 @@ class Application(models.Model):
     def __unicode__(self):
         return unicode(self.name)
 
+
 class Code(models.Model):
 
     client = models.ForeignKey(Application)

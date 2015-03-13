@@ -114,6 +114,19 @@ class ResourceRegisteringTestCase(TestCase):
         reload(wstore.offerings.resource_plugins.decorators)
         reload(resources_management)
 
+    def setUp(self):
+        # Mock repository adaptor
+        self.adaptor_obj = MagicMock()
+        self.adaptor_obj.upload.return_value('http://testrepo.com/resource1')
+        resources_management.RepositoryAdaptor = MagicMock(name="RepositoryAdaptor")
+        resources_management.RepositoryAdaptor.return_value(self.adaptor_obj)
+
+        # Mock context
+        context_obj = MagicMock()
+        context_obj.site.host = 'http://localhost'
+        resources_management.Context = MagicMock(name="Context")
+        resources_management.Context.objects.all.return_value = [context_obj]
+
     def _basic_encoder(self, data):
         f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
         encoded = base64.b64encode(f.read())
@@ -300,6 +313,8 @@ class ResourceRegisteringTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = plugin_mock
         reload(resources_management)
+
+        self.setUp()
 
         if encoder is not None:
             encoder(self, data)

@@ -24,11 +24,15 @@ import base64
 import os
 import re
 from bson import ObjectId
+from urlparse import urljoin
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.template import loader
+from django.template import Context as TmplContext
 
-from wstore.models import Resource, Offering
+from wstore.models import Resource, Offering, Repository, Context
+from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
@@ -63,9 +67,43 @@ def _save_resource_file(provider, name, version, file_):
     return settings.MEDIA_URL + 'resources/' + file_name
 
 
+def _upload_usdl(resource):
+    # Create rdf template for the resource
+    site_context = Context.objects.all()[0]
+    base_uri = site_context.site.host
+    resource_uri = urljoin(base_uri, 'api/offering/resources/' + resource.provider.name + '/' + resource.name + '/' + resource.version)
+
+    context = {
+        'resource_uri': resource_uri,
+        'base_id': resource.pk,
+        'name': resource.name,
+        'description': resource.description,
+        'resource_type': resource.resource_type,
+        'media_type': resource.content_type,
+        'provider': resource.provider.name
+    }
+
+    usdl_template = loader.get_template('usdl/resource_usdl_template.rdf')
+    # Render the template
+    usdl = usdl_template.render(TmplContext(context))
+
+    # Upload the rdf of the resource to the repository
+    repository = Repository.objects.get(is_default=True)
+    repository_adaptor = RepositoryAdaptor(repository.host, 'storeResourcesCollection')
+
+    resource_id = resource.pk + '__' + resource.provider.name + '__' + resource.name.replace(' ', '_') + '__' + resource.version
+
+    usdl_url = repository_adaptor.upload('application/rdf+xml', usdl, resource_id)
+
+    resource.resource_usdl = usdl_url
+    resource.resource_uri = resource_id
+    resource.save()
+
+
 @register_resource_events
 def _create_resource_model(provider, resource_data):
-    Resource.objects.create(
+    # Create the resource
+    resource = Resource.objects.create(
         name=resource_data['name'],
         provider=provider,
         version=resource_data['version'],
@@ -78,6 +116,7 @@ def _create_resource_model(provider, resource_data):
         resource_type=resource_data['resource_type'],
         meta_info=resource_data['meta']
     )
+    _upload_usdl(resource)
 
 
 def register_resource(provider, data, file_=None):
@@ -273,6 +312,24 @@ def update_resource(resource, data):
     decorated_save(resource)
 
 
+def get_resource_info(resource):
+    state = resource.state
+    if state != 'deleted' and len(resource.offerings):
+        state = 'used'
+
+    return {
+        'name': resource.name,
+        'version': resource.version,
+        'description': resource.description,
+        'content_type': resource.content_type,
+        'state': state,
+        'open': resource.open,
+        'link': resource.get_url(),
+        'resource_type': resource.resource_type,
+        'meta': resource.meta_info
+    }
+
+
 def get_provider_resources(provider, filter_=None, pagination=None):
 
     if pagination and ('start' not in pagination or 'limit' not in pagination):
@@ -295,22 +352,7 @@ def get_provider_resources(provider, filter_=None, pagination=None):
         if (filter_ == 'true' and not res.open) or (filter_ == 'false' and res.open):
             continue
 
-        state = res.state
-        if state != 'deleted' and len(res.offerings):
-            state = 'used'
-
-        resource_info = {
-            'name': res.name,
-            'version': res.version,
-            'description': res.description,
-            'content_type': res.content_type,
-            'state': state,
-            'open': res.open,
-            'link': res.get_url(),
-            'resource_type': res.resource_type,
-            'meta': res.meta_info
-        }
-        response.append(resource_info)
+        response.append(get_resource_info(res))
     return response
 
 
