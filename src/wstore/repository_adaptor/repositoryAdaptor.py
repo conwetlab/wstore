@@ -22,11 +22,23 @@ from __future__ import unicode_literals
 
 import urllib2
 import unicodedata
-from urllib2 import HTTPError
 from urlparse import urljoin
 
 from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils import mimeparser
+
+
+class RepositoryError(Exception):
+    _msg = None
+
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return 'Repository error: ' + self._msg
+
+    def __unicode__(self):
+        return 'Repository error: ' + self._msg
 
 
 class RepositoryAdaptor():
@@ -65,7 +77,7 @@ class RepositoryAdaptor():
         response = opener.open(request)
 
         if not (response.code > 199 and response.code < 300):
-            raise HTTPError(response.url, response.code, response.msg, None, None)
+            raise RepositoryError('The repository has failed while uploading the resource')
 
         return url
 
@@ -85,7 +97,7 @@ class RepositoryAdaptor():
         response = opener.open(request)
 
         if not (response.code > 199 and response.code < 300):
-            raise HTTPError(response.url, response.code, response.msg, None, None)
+            raise RepositoryError('The repository has failed downloading the resource')
 
         allowed_formats = ['text/plain', 'application/rdf+xml', 'text/turtle', 'text/n3']
         resp_content_type = mimeparser.best_match(allowed_formats, response.headers.get('content-type'))
@@ -110,4 +122,4 @@ class RepositoryAdaptor():
         response = opener.open(request)
 
         if not (response.code > 199 and response.code < 300):
-            raise HTTPError(response.url, response.code, response.msg, None, None)
+            raise RepositoryError('The repository has failed deleting the resource')
