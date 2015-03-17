@@ -11,6 +11,7 @@
         <usdl:hasClassification rdf:nodeID="{{ base_id }}01" />
         <dcterms:title>{{ name }}</dcterms:title>
         <dcterms:description>{{ description }}</dcterms:description>
+        <dcterms:hasVersion>{{ version }}</dcterms:hasVersion>
         <dcterms:format rdf:nodeID="{{ base_id }}02" />
         <gr:hasManufacturer rdf:nodeID="{{ base_id }}03" />
     </usdl:Service>

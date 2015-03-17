@@ -80,7 +80,8 @@ def _upload_usdl(resource):
         'description': resource.description,
         'resource_type': resource.resource_type,
         'media_type': resource.content_type,
-        'provider': resource.provider.name
+        'provider': resource.provider.name,
+        'version': resource.version
     }
 
     usdl_template = loader.get_template('usdl/resource_usdl_template.rdf')
@@ -200,6 +201,7 @@ def _get_decorated_save(action):
 
     @decorator
     def save_resource(resource):
+        _upload_usdl(resource)
         resource.save()
 
     return save_resource
@@ -229,7 +231,9 @@ def upgrade_resource(resource, data, file_=None):
     resource.old_versions.append(ResourceVersion(
         version=resource.version,
         resource_path=resource.resource_path,
-        download_link=resource.download_link
+        download_link=resource.download_link,
+        resource_usdl=resource.resource_usdl,
+        resource_uri=resource.resource_uri
     ))
 
     # Update new version number
