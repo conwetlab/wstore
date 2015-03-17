@@ -102,9 +102,9 @@ class OfferingRollback():
 
         try:
             self._func(provider, json_data)
-        except HTTPError, e:
+        except HTTPError as e:
             rollback(provider, provider.userprofile, json_data, 'Http error')
             raise e
-        except Exception, e:
+        except Exception as e:
             rollback(provider, provider.userprofile, json_data, unicode(e))
             raise e
