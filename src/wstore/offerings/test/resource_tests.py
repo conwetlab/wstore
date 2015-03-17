@@ -472,7 +472,11 @@ class ResourceDeletionTestCase(TestCase):
         self.resource = MagicMock()
         self.resource.pk = '4444'
         self.resource.resource_type = 'API'
-        resources_management.Offering = MagicMock()
+        self.resource.resource_usdl = 'http://repository.com/resource'
+        resources_management.Offering = MagicMock(name="Offering")
+        resources_management.RepositoryAdaptor = MagicMock(name="RepositoryAdaptor")
+        self.adaptor_mock = MagicMock()
+        resources_management.RepositoryAdaptor.return_value = self.adaptor_mock
 
     @classmethod
     def tearDownClass(cls):
@@ -528,6 +532,8 @@ class ResourceDeletionTestCase(TestCase):
     def _check_deleted(self):
         os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
         self.resource.delete.assert_called_once_with()
+        resources_management.RepositoryAdaptor.assert_called_once_with(self.resource.resource_usdl)
+        self.adaptor_mock.delete.assert_called_once_with()
 
     def _check_events(self):
         self.plugin_mock.on_pre_delete.assert_called_once_with(self.resource)
@@ -555,6 +561,9 @@ class ResourceDeletionTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
         reload(resources_management)
+        resources_management.RepositoryAdaptor = MagicMock(name="RepositoryAdaptor")
+        self.adaptor_mock = MagicMock()
+        resources_management.RepositoryAdaptor.return_value = self.adaptor_mock
 
     @parameterized.expand([
         (_res_in_use, _check_in_use),

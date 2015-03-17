@@ -124,7 +124,10 @@ class RepositoryAdaptor():
 
         request = MethodRequest('DELETE', url)
 
-        response = opener.open(request)
+        try:
+            response = opener.open(request)
+        except HTTPError:
+            raise RepositoryError('The repository has failed deleting the resource')
 
         if not (response.code > 199 and response.code < 300):
             raise RepositoryError('The repository has failed deleting the resource')

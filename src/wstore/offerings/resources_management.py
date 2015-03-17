@@ -366,7 +366,19 @@ def _remove_resource(resource):
         path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
         os.remove(path)
 
+    usdl_urls = [resource.resource_usdl]
+
+    for old in resource.old_versions:
+        # Save usdl urls of old versions
+        usdl_urls.append(old.resource_usdl)
+
+    # Remove the resource
     resource.delete()
+
+    # Remove the usdl descriptions from the repository
+    for url in usdl_urls:
+        repository_adaptor = RepositoryAdaptor(url)
+        repository_adaptor.delete()
 
 
 @delete_resource_events
