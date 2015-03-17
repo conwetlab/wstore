@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013-2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -35,69 +35,10 @@ from wstore.offerings import resources_management
 from wstore.models import Resource
 from django.core.exceptions import PermissionDenied
 from wstore.store_commons.errors import ConflictError
+from wstore.offerings.test.resource_test_data import *
 
 
 __test__ = False
-
-
-RESOURCE_DATA1 = {
-    'name': 'Resource1',
-    'version': '1.0',
-    'description': 'Test resource 1',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': False,
-    'link': 'http://localhost/media/resources/resource1',
-    'resource_type': 'API',
-    'meta': {}
-}
-
-RESOURCE_DATA2 = {
-    'name': 'Resource2',
-    'version': '2.0',
-    'description': 'Test resource 2',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': False,
-    'link': 'http://localhost/media/resources/resource2',
-    'resource_type': 'API',
-    'meta': {}
-}
-
-RESOURCE_DATA3 = {
-    'name': 'Resource3',
-    'version': '2.0',
-    'description': 'Test resource 3',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': True,
-    'link': 'http://localhost/media/resources/resource3',
-    'resource_type': 'API',
-    'meta': {}
-}
-
-RESOURCE_DATA4 = {
-    'name': 'Resource4',
-    'version': '1.0',
-    'description': 'Test resource 4',
-    'content_type': 'text/plain',
-    'state': 'used',
-    'open': True,
-    'link': 'http://localhost/media/resources/resource4',
-    'resource_type': 'API',
-    'meta': {}
-}
-
-RESOURCE_IN_USE_DATA = {
-    'description': 'Test resource 4',
-}
-
-RESOURCE_CONTENT = {
-    'content': {
-        'name': 'test_usdl.rdf',
-        'data': ''
-    },
-}
 
 
 class FakePlugin():
@@ -265,6 +206,7 @@ class ResourceRegisteringTestCase(TestCase):
                 os.remove(res_path)
             elif 'link' in data:
                 self.assertEquals(res.download_link, data['link'])
+
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
@@ -592,18 +534,6 @@ class ResourceDeletionTestCase(TestCase):
             self.assertEquals(unicode(e), err_msg)
 
 
-UPDATE_DATA1 = {
-    'description': 'Test resource 1',
-    'content_type': 'text/plain',
-    'open': False
-}
-
-UPDATE_DATA2 = {
-    'content_type': 'text/plain',
-    'open': False
-}
-
-
 class ResourceUpdateTestCase(TestCase):
 
     tags = ('fiware-ut-3', )
@@ -711,25 +641,6 @@ class ResourceUpdateTestCase(TestCase):
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
-
-
-UPGRADE_CONTENT = {
-    'version': '1.0',
-    'content': {
-        'name': 'test_usdl.rdf',
-        'data': ''
-    },
-}
-
-UPGRADE_LINK = {
-    'version': '1.0',
-    'link': 'http://newlinktoresource.com'
-}
-
-UPGRADE_INV_LINK = {
-    'version': '1.0',
-    'link': 'invalid link'
-}
 
 
 class ResourceUpgradeTestCase(TestCase):
