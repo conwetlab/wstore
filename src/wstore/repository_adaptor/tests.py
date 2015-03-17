@@ -31,7 +31,7 @@ from wstore.repository_adaptor import repositoryAdaptor
 
 class RepositoryAdaptorTestCase(TestCase):
 
-    tags = ('repository_adaptor', )
+    tags = ('repository-adaptor', )
 
     def setUp(self):
         # Create mocks
@@ -91,7 +91,7 @@ class RepositoryAdaptorTestCase(TestCase):
 
     @parameterized.expand([
         ('basic', 'application/rdf+xml', 'content',
-            'http://repository.com/', 'http://repository.com/collection/resource', 'collection', 'resource'),
+            'http://repository.com/', 'http://repository.com/collection/resource', 'collection/', 'resource'),
         ('absolute_url', 'text/turtle', 'turtle content',
             'http://repository.com/resource', 'http://repository.com/resource'),
         ('http_error', 'application/rdf+xml', 'content', None, None, None, None, _http_error, 'Repository error: The repository has failed while uploading the resource'),
