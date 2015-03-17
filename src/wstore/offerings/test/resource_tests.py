@@ -594,6 +594,7 @@ UPDATE_DATA2 = {
     'open': False
 }
 
+
 class ResourceUpdateTestCase(TestCase):
 
     tags = ('fiware-ut-3', )
@@ -605,6 +606,7 @@ class ResourceUpdateTestCase(TestCase):
         self.resource.resource_type = 'API'
         resources_management.Resource = MagicMock()
         resources_management.Resource.objects.filter.return_value = []
+        resources_management._upload_usdl = MagicMock(name="_upload_usdl")
 
     @classmethod
     def tearDownClass(cls):
@@ -626,6 +628,7 @@ class ResourceUpdateTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
         reload(resources_management)
+        resources_management._upload_usdl = MagicMock(name="_upload_usdl")
 
     def _invalid_media(self):
         self.resource.resource_type = 'test_plugin'
@@ -662,7 +665,6 @@ class ResourceUpdateTestCase(TestCase):
         self.plugin_mock.on_post_update.assert_called_once_with(self.resource)
         wstore.offerings.resource_plugins.decorators._get_plugin_model.assert_called_once_with('test_plugin')
 
-
     @parameterized.expand([
         (RESOURCE_IN_USE_DATA, _check_in_use, _res_in_use),
         (UPDATE_DATA1, _check_complete),
@@ -695,6 +697,7 @@ class ResourceUpdateTestCase(TestCase):
             self.assertEquals(error, None)
             check(self)
             self.resource.save.assert_called_once_with()
+            resources_management._upload_usdl.assert_called_once_with(self.resource)
 
         else:
             self.assertTrue(isinstance(error, err_type))
@@ -718,6 +721,7 @@ UPGRADE_INV_LINK = {
     'version': '1.0',
     'link': 'invalid link'
 }
+
 
 class ResourceUpgradeTestCase(TestCase):
 
@@ -751,6 +755,7 @@ class ResourceUpgradeTestCase(TestCase):
         self.resource.resource_type = 'Downloadable'
         self.resource.version = '0.1'
         self.resource.old_versions = []
+        resources_management._upload_usdl = MagicMock(name="_upload_usdl")
 
     def _deleted_res(self):
         self.resource.state = 'deleted'
@@ -770,6 +775,7 @@ class ResourceUpgradeTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
 
         reload(resources_management)
+        resources_management._upload_usdl = MagicMock(name="_upload_usdl")
         self._mock_save_file()
 
     def _mock_res_api(self):
@@ -839,6 +845,7 @@ class ResourceUpgradeTestCase(TestCase):
                 self.assertEquals(self.resource.download_link, 'http://newlinktoresource.com')
 
             self.resource.save.assert_called_once_with()
+            resources_management._upload_usdl.assert_called_once_with(self.resource)
 
             # Check old versions
             self.assertEquals(len(self.resource.old_versions), 1)
