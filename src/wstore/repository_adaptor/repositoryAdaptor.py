@@ -60,15 +60,20 @@ class RepositoryAdaptor():
             if not self._collection.endswith('/'):
                 self._collection += '/'
 
-    def upload(self, content_type, data, name=None):
-
-        opener = urllib2.build_opener()
+    def _get_url(self, name):
         url = self._repository_url
 
         if name is not None:
             name = name.replace(' ', '')
-            url = urljoin(self._repository_url, self._collection)
+            url = urljoin(url, self._collection)
             url = urljoin(url, name)
+
+        return url
+
+    def upload(self, content_type, data, name=None):
+
+        opener = urllib2.build_opener()
+        url = self._get_url(name)
 
         # Only ASCII characters are allowed
         data = unicodedata.normalize('NFKD', data).encode('ascii', 'ignore')
@@ -86,20 +91,18 @@ class RepositoryAdaptor():
 
         return url
 
-    def download(self, name=None, content_type='application/rdf+xml'):
+    def download(self, name=None):
 
-        url = self._repository_url
         opener = urllib2.build_opener()
-
-        if name is not None:
-            name = name.replace(' ', '')
-            url = urljoin(url, self._collection)
-            url = urljoin(url, name)
+        url = self._get_url(name)
 
         headers = {'Accept': '*'}
         request = MethodRequest('GET', url, '', headers)
 
-        response = opener.open(request)
+        try:
+            response = opener.open(request)
+        except HTTPError:
+            raise RepositoryError('The repository has failed downloading the resource')
 
         if not (response.code > 199 and response.code < 300):
             raise RepositoryError('The repository has failed downloading the resource')
@@ -115,12 +118,7 @@ class RepositoryAdaptor():
     def delete(self, name=None):
 
         opener = urllib2.build_opener()
-        url = self._repository_url
-
-        if name is not None:
-            name = name.replace(' ', '')
-            url = urljoin(self._repository_url, self._collection)
-            url = urljoin(url, name)
+        url = self._get_url(name)
 
         request = MethodRequest('DELETE', url)
 
