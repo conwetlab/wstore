@@ -24,6 +24,8 @@ import urllib2
 import unicodedata
 from urlparse import urljoin
 
+from urllib2 import HTTPError
+
 from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils import mimeparser
 
@@ -32,7 +34,7 @@ class RepositoryError(Exception):
     _msg = None
 
     def __init__(self, msg):
-        self.msg = msg
+        self._msg = msg
 
     def __str__(self):
         return 'Repository error: ' + self._msg
@@ -74,7 +76,10 @@ class RepositoryAdaptor():
         headers = {'content-type': content_type + '; charset=utf-8'}
         request = MethodRequest('PUT', url, data, headers)
 
-        response = opener.open(request)
+        try:
+            response = opener.open(request)
+        except HTTPError:
+            raise RepositoryError('The repository has failed while uploading the resource')
 
         if not (response.code > 199 and response.code < 300):
             raise RepositoryError('The repository has failed while uploading the resource')
