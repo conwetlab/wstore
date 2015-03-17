@@ -70,7 +70,7 @@ def _save_resource_file(provider, name, version, file_):
 def _upload_usdl(resource):
     # Create rdf template for the resource
     site_context = Context.objects.all()[0]
-    base_uri = site_context.site.host
+    base_uri = site_context.site.domain
     resource_uri = urljoin(base_uri, 'api/offering/resources/' + resource.provider.name + '/' + resource.name + '/' + resource.version)
 
     context = {
