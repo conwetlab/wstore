@@ -308,7 +308,7 @@ def get_provider_resources(provider, filter_=None, pagination=None):
             'open': res.open,
             'link': res.get_url(),
             'resource_type': res.resource_type,
-            'meta': res.meta_info
+            'metadata': res.meta_info
         }
         response.append(resource_info)
     return response

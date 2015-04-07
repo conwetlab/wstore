@@ -49,7 +49,7 @@ RESOURCE_DATA1 = {
     'open': False,
     'link': 'http://localhost/media/resources/resource1',
     'resource_type': 'API',
-    'meta': {}
+    'metadata': {}
 }
 
 RESOURCE_DATA2 = {
@@ -61,7 +61,7 @@ RESOURCE_DATA2 = {
     'open': False,
     'link': 'http://localhost/media/resources/resource2',
     'resource_type': 'API',
-    'meta': {}
+    'metadata': {}
 }
 
 RESOURCE_DATA3 = {
@@ -73,7 +73,7 @@ RESOURCE_DATA3 = {
     'open': True,
     'link': 'http://localhost/media/resources/resource3',
     'resource_type': 'API',
-    'meta': {}
+    'metadata': {}
 }
 
 RESOURCE_DATA4 = {
@@ -85,7 +85,7 @@ RESOURCE_DATA4 = {
     'open': True,
     'link': 'http://localhost/media/resources/resource4',
     'resource_type': 'API',
-    'meta': {}
+    'metadata': {}
 }
 
 RESOURCE_IN_USE_DATA = {
