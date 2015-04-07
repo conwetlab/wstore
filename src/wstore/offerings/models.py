@@ -119,6 +119,7 @@ class Resource(models.Model):
 
 
 class ResourcePlugin(models.Model):
+    plugin_id = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     version = models.CharField(max_length=50)
     author = models.CharField(max_length=100)
@@ -129,7 +130,7 @@ class ResourcePlugin(models.Model):
     options = DictField()
 
     def __unicode__(self):
-        return self.name
+        return self.plugin_id
 
     class Meta:
         app_label = 'wstore'

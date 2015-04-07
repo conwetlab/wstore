@@ -74,15 +74,17 @@ class PluginLoader():
             # Create a directory for the plugin
             # Validate plugin info
             validation = self._plugin_manager.validate_plugin_info(json_info)
+
+            # Create plugin id
+            plugin_id = json_info['name'].lower().replace(' ', '-')
+            if len(ResourcePlugin.objects.filter(plugin_id=plugin_id)) > 0:
+                raise PluginError('A plugin with the same id (' + plugin_id + ') already exists')
+
             if validation is not None:
                 raise PluginError('Invalid format in package.json file. ' + validation)
 
-            dir_name = json_info['name'].replace(' ', '_')
-
             # Check if the directory already exists
-            plugin_path = os.path.join(self._plugins_path, dir_name)
-            if os.path.isdir(plugin_path):
-                raise PluginError('A plugin with the same name already exists')
+            plugin_path = os.path.join(self._plugins_path, plugin_id)
 
             # Create the directory
             os.mkdir(plugin_path)
@@ -97,7 +99,7 @@ class PluginLoader():
             open(os.path.join(plugin_path, '__init__.py'), 'a').close()
 
         # Validate plugin main class
-        module = self._plugins_module + dir_name + '.' + json_info['module']
+        module = self._plugins_module + plugin_id + '.' + json_info['module']
         module_class_name = module.split('.')[-1]
         module_package = module.partition('.' + module_class_name)[0]
 
@@ -107,7 +109,8 @@ class PluginLoader():
             raise PluginError('No Plugin implementation has been found')
 
         # Save plugin model
-        plugin = ResourcePlugin(
+        ResourcePlugin.objects.create(
+            plugin_id=plugin_id,
             name=json_info['name'],
             version=json_info['version'],
             author=json_info['author'],
@@ -117,28 +120,28 @@ class PluginLoader():
             form=json_info.get('form', {})
         )
 
-        plugin.save()
+        return plugin_id
 
-    def uninstall_plugin(self, name):
+    def uninstall_plugin(self, plugin_id):
         """
         Removes a plugin from the system including model and files
         """
 
+        # Get plugin model
+        try:
+            plugin_model = ResourcePlugin.objects.get(plugin_id=plugin_id)
+        except:
+            raise ObjectDoesNotExist('The plugin ' + plugin_id + ' is not registered')
+
+        name = plugin_model.name
         # Check if the plugin is in use
         resources = Resource.objects.filter(resource_type=name)
 
         if len(resources) > 0:
-            raise PermissionDenied('The plugin ' + name + ' is being used in some resources')
-
-        # Get plugin model
-        try:
-            plugin_model = ResourcePlugin.objects.get(name=name)
-        except:
-            raise ObjectDoesNotExist('The plugin ' + name + ' is not registered')
+            raise PermissionDenied('The plugin ' + plugin_id + ' is being used in some resources')
 
         # Remove plugin files
-        dir_name = name.replace(' ', '_')
-        plugin_path = os.path.join(self._plugins_path, dir_name)
+        plugin_path = os.path.join(self._plugins_path, plugin_id)
 
         rmtree(plugin_path)
 
