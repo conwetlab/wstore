@@ -383,7 +383,7 @@
             // If the USDL is loaded go to the final step, application selection
             if (!error) {
                 userForm = new BindResourcesForm({});
-                userForm.getUserResources(this.showResourcesForm.bind(this), this.offeringInfo.open);
+                userForm.getUserResources(this.showResourcesForm.bind(this), this.offeringInfo.open, true);
             } else {
                 fillErrorMessage(msg, errElems);
             }

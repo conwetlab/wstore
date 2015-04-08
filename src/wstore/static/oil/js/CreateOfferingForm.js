@@ -479,7 +479,7 @@
             // Make the request
             this.offeringInfo.applications = appsSelected;
             userForm = new BindResourcesForm({});
-            userForm.getUserResources(this.showResourcesForm.bind(this), this.offeringInfo.open);
+            userForm.getUserResources(this.showResourcesForm.bind(this), this.offeringInfo.open, true);
         }.bind(this));
     };
 
