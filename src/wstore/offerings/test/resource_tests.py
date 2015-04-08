@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 
 import base64
 import os
+import wstore
 from StringIO import StringIO
 from mock import MagicMock
 from nose_parameterized import parameterized
@@ -39,10 +40,79 @@ from wstore.store_commons.errors import ConflictError
 __test__ = False
 
 
+RESOURCE_DATA1 = {
+    'name': 'Resource1',
+    'version': '1.0',
+    'description': 'Test resource 1',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': False,
+    'link': 'http://localhost/media/resources/resource1',
+    'resource_type': 'API',
+    'metadata': {}
+}
+
+RESOURCE_DATA2 = {
+    'name': 'Resource2',
+    'version': '2.0',
+    'description': 'Test resource 2',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': False,
+    'link': 'http://localhost/media/resources/resource2',
+    'resource_type': 'API',
+    'metadata': {}
+}
+
+RESOURCE_DATA3 = {
+    'name': 'Resource3',
+    'version': '2.0',
+    'description': 'Test resource 3',
+    'content_type': 'text/plain',
+    'state': 'created',
+    'open': True,
+    'link': 'http://localhost/media/resources/resource3',
+    'resource_type': 'API',
+    'metadata': {}
+}
+
+RESOURCE_DATA4 = {
+    'name': 'Resource4',
+    'version': '1.0',
+    'description': 'Test resource 4',
+    'content_type': 'text/plain',
+    'state': 'used',
+    'open': True,
+    'link': 'http://localhost/media/resources/resource4',
+    'resource_type': 'API',
+    'metadata': {}
+}
+
+RESOURCE_IN_USE_DATA = {
+    'description': 'Test resource 4',
+}
+
+RESOURCE_CONTENT = {
+    'content': {
+        'name': 'test_usdl.rdf',
+        'data': ''
+    },
+}
+
+
+class FakePlugin():
+    pass
+
+
 class ResourceRegisteringTestCase(TestCase):
 
     tags = ('fiware-ut-3',)
     fixtures = ['reg_res.json']
+
+    @classmethod
+    def tearDownClass(cls):
+        reload(wstore.offerings.resource_plugins.decorators)
+        reload(resources_management)
 
     def _basic_encoder(self, data):
         f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
@@ -66,13 +136,14 @@ class ResourceRegisteringTestCase(TestCase):
                 'name': 'test_usdl.rdf',
                 'data': ''
             },
+            'resource_type': 'Downloadable',
             'content_type': 'application/rdf+xml'
         }, _basic_encoder),
         ({
             'name': 'History Mod',
             'version': '1.0',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'https://historymod.com/download',
             'content_type': 'text/plain'
         },),
@@ -80,21 +151,21 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'History Mod',
             'version': '1.0',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'content_type': 'text/plain'
         }, None, True),
         ({
             'name': 'Existing',
             'version': '1.0',
             'description': '',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'https://existing.com/download'
         }, _fill_provider, False, ConflictError, 'The resource Existing already exists. Please upgrade the resource if you want to provide new content'),
         ({
             'name': 'Invalid',
             'version': '1.0a',
             'description': '',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'content_type': 'text/plain',
             'link': 'https://existing.com/download'
         }, None, False, ValueError, 'Invalid version format'),
@@ -102,7 +173,7 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'invalidname$',
             'version': '1.0',
             'description': '',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'https://existing.com/download',
             'content_type': 'text/plain'
         }, None, False, ValueError, 'Invalid name format'),
@@ -110,7 +181,7 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'InvalidURL',
             'version': '1.0',
             'description': '',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'not an uri',
             'content_type': 'text/plain'
         }, None, False, ValueError, 'Invalid resource link format'),
@@ -122,12 +193,13 @@ class ResourceRegisteringTestCase(TestCase):
                 'name': 'test_usd$&.rdf',
                 'data': ''
             },
+            'resource_type': 'Downloadable',
             'content_type': 'application/rdf+xml'
         }, _basic_encoder, False, ValueError, 'Invalid file name format: Unsupported character'),
         ({
             'version': '1.1',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'link': 'https://historymod.com/download',
             'content_type': 'text/plain'
         }, None, False, ValueError, 'Invalid request: Missing required field'),
@@ -135,7 +207,7 @@ class ResourceRegisteringTestCase(TestCase):
             'name': 'Download',
             'version': '1.1',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
-            'type': 'download',
+            'resource_type': 'Downloadable',
             'content_type': 'text/plain'
         }, None, False, ValueError, 'Invalid request: Missing resource content'),
     ])
@@ -184,57 +256,93 @@ class ResourceRegisteringTestCase(TestCase):
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
 
+    def _not_existing_plugin(self, data):
+        data['resource_type'] = 'not_existing'
 
-RESOURCE_DATA1 = {
-    'name': 'Resource1',
-    'version': '1.0',
-    'description': 'Test resource 1',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': False,
-    'link': 'http://localhost/media/resources/resource1'
-}
+    def _url_format(self, data):
+        del(data['content'])
+        data['link'] = 'http://resourcelink.com'
 
-RESOURCE_DATA2 = {
-    'name': 'Resource2',
-    'version': '2.0',
-    'description': 'Test resource 2',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': False,
-    'link': 'http://localhost/media/resources/resource2'
-}
+    def _change_type(self, data):
+        data['resource_type'] = 'test_plugin2'
 
-RESOURCE_DATA3 = {
-    'name': 'Resource3',
-    'version': '2.0',
-    'description': 'Test resource 3',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': True,
-    'link': 'http://localhost/media/resources/resource3'
-}
+    def _invalid_media(self, data):
+        data['content_type'] = 'inv_type'
 
-RESOURCE_DATA4 = {
-    'name': 'Resource4',
-    'version': '1.0',
-    'description': 'Test resource 4',
-    'content_type': 'text/plain',
-    'state': 'used',
-    'open': True,
-    'link': 'http://localhost/media/resources/resource4',
-}
+    def _change_type_api(self, data):
+        self._basic_encoder(data)
+        data['resource_type'] = 'API'
 
-RESOURCE_IN_USE_DATA = {
-    'description': 'Test resource 4',
-}
+    @parameterized.expand([
+        ('file_format', _basic_encoder),
+        ('not_existing', _not_existing_plugin, ValueError, 'Invalid request: The specified resource type is not registered'),
+        ('invalid_format_url', _url_format, ValueError, 'Invalid plugin format: URL not allowed for the resource type'),
+        ('invalid_format_file', _change_type, ValueError, 'Invalid plugin format: File not allowed for the resource type'),
+        ('invalid_media_type', _invalid_media, ValueError, 'Invalid media type: inv_type is not allowed for the resource type'),
+        ('invalid_api_format', _change_type_api, ValueError, 'Invalid plugin format: File not allowed for the resource type')
+    ])
+    def test_resource_registering_plugin(self, name, encoder=None, err_type=None, err_msg=None):
 
-RESOURCE_CONTENT = {
-    'content': {
-        'name': 'test_usdl.rdf',
-        'data': ''
-    },
-}
+        data = {
+            'name': 'Download',
+            'version': '1.0',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'content': {
+                'name': 'test_usdl.rdf',
+                'data': ''
+            },
+            'resource_type': 'test_plugin',
+            'content_type': 'application/x-widget'
+        }
+
+        # Create plugin module mocks
+        plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = plugin_mock
+        reload(resources_management)
+
+        if encoder is not None:
+            encoder(self, data)
+
+        provider = User.objects.get(username='test_user')
+
+        error = None
+        try:
+            resources_management.register_resource(provider, data)
+        except Exception as e:
+            error = e
+
+        if err_type is None:
+            self.assertEquals(error, None)
+            # Check event calls
+            expected_data = {
+                'name': 'Download',
+                'meta': {},
+                'content_path': '/media/resources/test_user__Download__1.0__test_usdl.rdf',
+                'version': '1.0',
+                'link': '',
+                'content_type': 'application/x-widget',
+                'open': False,
+                'resource_type': 'test_plugin',
+                'description': 'This service is in charge of maintaining historical info for Smart Cities'
+            }
+            plugin_mock.on_pre_create.assert_called_once_with(provider.userprofile.current_organization, expected_data)
+
+            res = Resource.objects.get(name=data['name'], version=data['version'])
+            plugin_mock.on_post_create.assert_called_once_with(res)
+
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(error), err_msg)
+
+    def test_load_plugin_module(self):
+        module = 'wstore.offerings.test.resource_tests.FakePlugin'
+        from wstore.offerings.resource_plugins.decorators import load_plugin_module
+
+        loaded_module = load_plugin_module(module)
+
+        # Check loaded module
+        self.assertTrue(isinstance(loaded_module, FakePlugin))
 
 
 class ResourceRetrievingTestCase(TestCase):
@@ -251,6 +359,8 @@ class ResourceRetrievingTestCase(TestCase):
         resource1.state = 'created'
         resource1.open = False
         resource1.get_url.return_value = 'http://localhost/media/resources/resource1'
+        resource1.resource_type = 'API'
+        resource1.meta_info = {}
 
         resource2 = MagicMock()
         resource2.name = 'Resource2'
@@ -260,6 +370,8 @@ class ResourceRetrievingTestCase(TestCase):
         resource2.state = 'created'
         resource2.open = False
         resource2.get_url.return_value = 'http://localhost/media/resources/resource2'
+        resource2.resource_type = 'API'
+        resource2.meta_info = {}
 
         resource3 = MagicMock()
         resource3.name = 'Resource3'
@@ -269,6 +381,8 @@ class ResourceRetrievingTestCase(TestCase):
         resource3.state = 'created'
         resource3.open = True
         resource3.get_url.return_value = 'http://localhost/media/resources/resource3'
+        resource3.resource_type = 'API'
+        resource3.meta_info = {}
 
         resource4 = MagicMock()
         resource4.name = 'Resource4'
@@ -278,7 +392,9 @@ class ResourceRetrievingTestCase(TestCase):
         resource4.state = 'created'
         resource4.open = True
         resource4.get_url.return_value = 'http://localhost/media/resources/resource4'
+        resource4.resource_type = 'API'
         resource4.offerings = ['1111', '2222']
+        resource4.meta_info = {}
 
         resources_management.Resource = MagicMock()
         resources_management.Resource.objects.filter.return_value = [
@@ -301,16 +417,16 @@ class ResourceRetrievingTestCase(TestCase):
         ([RESOURCE_DATA1, RESOURCE_DATA2, RESOURCE_DATA3, RESOURCE_DATA4],),
         ([RESOURCE_DATA3, RESOURCE_DATA4], 'true'),
         ([RESOURCE_DATA1, RESOURCE_DATA2], 'false'),
-        ([RESOURCE_DATA1], None, {"start":1, "limit":1}),
-        ([RESOURCE_DATA2, RESOURCE_DATA3], None, {"start":2, "limit":2}),
-        ([RESOURCE_DATA3, RESOURCE_DATA4], None, {"start":3, "limit":8}),
-        ([], None, {"start":6}, ValueError,"Missing required parameter in pagination"),
-        ([], None, {"limit":8}, ValueError,"Missing required parameter in pagination"),
-        ([], None, {"start":0, "limit":8}, ValueError,"Invalid pagination limits"),
-        ([], None, {"start":2, "limit":0}, ValueError,"Invalid pagination limits"),
-        ([], None, {"start":6, "limit":-1}, ValueError,"Invalid pagination limits"),
-        ([], None, {"start":-6, "limit":2}, ValueError,"Invalid pagination limits"),
-        ([], None, {"start":0, "limit":0}, ValueError,"Invalid pagination limits")
+        ([RESOURCE_DATA1], None, {"start": 1, "limit": 1}),
+        ([RESOURCE_DATA2, RESOURCE_DATA3], None, {"start": 2, "limit": 2}),
+        ([RESOURCE_DATA3, RESOURCE_DATA4], None, {"start": 3, "limit": 8}),
+        ([], None, {"start": 6}, ValueError, "Missing required parameter in pagination"),
+        ([], None, {"limit": 8}, ValueError, "Missing required parameter in pagination"),
+        ([], None, {"start": 0, "limit": 8}, ValueError, "Invalid pagination limits"),
+        ([], None, {"start": 2, "limit": 0}, ValueError, "Invalid pagination limits"),
+        ([], None, {"start": 6, "limit": -1}, ValueError, "Invalid pagination limits"),
+        ([], None, {"start": -6, "limit": 2}, ValueError, "Invalid pagination limits"),
+        ([], None, {"start": 0, "limit": 0}, ValueError, "Invalid pagination limits")
     ])
     def test_resource_retrieving(self, expected_result, filter_=None, pagination=None, err_type=None, err_msg=None):
 
@@ -332,12 +448,6 @@ class ResourceRetrievingTestCase(TestCase):
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
 
-    def test_resource_errors(self):
-        try:
-            result = resources_management.get_provider_resources(self.user, pagination={"no_start":1, "limit":8})
-        except:
-            pass
-
 
 class ResourceDeletionTestCase(TestCase):
 
@@ -346,11 +456,13 @@ class ResourceDeletionTestCase(TestCase):
     def setUp(self):
         self.resource = MagicMock()
         self.resource.pk = '4444'
+        self.resource.resource_type = 'API'
         resources_management.Offering = MagicMock()
 
     @classmethod
     def tearDownClass(cls):
         reload(os)
+        reload(wstore.offerings.resource_plugins.decorators)
         reload(resources_management)
         super(ResourceDeletionTestCase, cls).tearDownClass()
 
@@ -402,6 +514,10 @@ class ResourceDeletionTestCase(TestCase):
         os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
         self.resource.delete.assert_called_once_with()
 
+    def _check_events(self):
+        self.plugin_mock.on_pre_delete.assert_called_once_with(self.resource)
+        self.plugin_mock.on_post_delete.assert_called_once_with(self.resource)
+
     def _res_url(self):
         self.resource.offerings = []
         self.resource.resource_path = ''
@@ -415,11 +531,22 @@ class ResourceDeletionTestCase(TestCase):
     def _deleted_res(self):
         self.resource.state = 'deleted'
 
+    def _res_plugin(self):
+        self.resource.resource_type = 'test_plugin'
+
+        # Create plugin module mocks
+        self.plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
+        reload(resources_management)
+
     @parameterized.expand([
         (_res_in_use, _check_in_use),
         (_res_in_use_uploaded, _check_deleted),
         (_res_file, _check_deleted),
         (_res_url, _check_url),
+        (_res_plugin, _check_events),
         (_deleted_res, None, PermissionDenied, 'The resource is already deleted')
     ])
     def test_resource_deletion(self, res_builder, check=None, err_type=None, err_msg=None):
@@ -460,11 +587,13 @@ class ResourceUpdateTestCase(TestCase):
         self.resource = MagicMock()
         self.resource.offerings = []
         self.resource.resource_path = ''
+        self.resource.resource_type = 'API'
         resources_management.Resource = MagicMock()
         resources_management.Resource.objects.filter.return_value = []
 
     @classmethod
     def tearDownClass(cls):
+        reload(wstore.offerings.resource_plugins.decorators)
         reload(resources_management)
         reload(os)
         super(ResourceUpdateTestCase, cls).tearDownClass()
@@ -474,6 +603,25 @@ class ResourceUpdateTestCase(TestCase):
 
     def _res_in_use(self):
         self.resource.offerings = ['111', '222']
+
+    def _res_plugin_type(self):
+        self.resource.resource_type = 'test_plugin'
+        self.plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
+        reload(resources_management)
+
+    def _invalid_media(self):
+        self.resource.resource_type = 'test_plugin'
+        self.plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
+
+        mock_model = MagicMock(name="ResourcePluginModel")
+        mock_model.media_types = ['application/x-widget']
+
+        wstore.offerings.resource_plugins.decorators._get_plugin_model.return_value = mock_model
+        reload(resources_management)
 
     def _check_in_use(self):
         self.assertEquals(self.resource.description, 'Test resource 4')
@@ -492,11 +640,21 @@ class ResourceUpdateTestCase(TestCase):
         self.assertEquals(self.resource.open, False)
         self.assertEquals(self.resource.resource_path, '')
 
+    def _check_plugin_type(self):
+        self._check_complete()
+        # Check event calls
+        self.plugin_mock.on_pre_update.assert_called_once_with(self.resource)
+        self.plugin_mock.on_post_update.assert_called_once_with(self.resource)
+        wstore.offerings.resource_plugins.decorators._get_plugin_model.assert_called_once_with('test_plugin')
+
+
     @parameterized.expand([
         (RESOURCE_IN_USE_DATA, _check_in_use, _res_in_use),
         (UPDATE_DATA1, _check_complete),
         (UPDATE_DATA2, _check_no_description),
         ({'description': 'Modified description'}, _check_description),
+        (UPDATE_DATA1, _check_plugin_type, _res_plugin_type),
+        (UPDATE_DATA1, None, _invalid_media, ValueError, 'Invalid media type: text/plain is not allowed for the resource type'),
         ({'name': 'name'}, None, None, ValueError, 'Name field cannot be updated since is used to identify the resource'),
         ({'version': '1.0'}, None, None, ValueError, 'Version field cannot be updated since is used to identify the resource'),
         ({'content_type': 3}, None, None, TypeError, 'Invalid type for content_type field'),
@@ -562,6 +720,7 @@ class ResourceUpgradeTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        reload(wstore.offerings.resource_plugins.decorators)
         reload(resources_management)
         super(ResourceUpgradeTestCase, cls).tearDownClass()
 
@@ -574,6 +733,7 @@ class ResourceUpgradeTestCase(TestCase):
         self.resource.provider = org
         self.resource.download_link = ''
         self.resource.resource_path = '/media/resources/test_res1.0.rdf'
+        self.resource.resource_type = 'Downloadable'
         self.resource.version = '0.1'
         self.resource.old_versions = []
 
@@ -584,10 +744,34 @@ class ResourceUpgradeTestCase(TestCase):
         resources_management._save_resource_file = MagicMock()
         resources_management._save_resource_file.return_value = '/media/resources/test_usdl.rdf'
 
+    def _mock_res_plugin(self):
+        self.resource.resource_type = 'test_plugin'
+        self.plugin_mock = MagicMock(name="test_plugin")
+        wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
+        self.mock_model = MagicMock()
+        self.mock_model.formats = ['FILE']
+        wstore.offerings.resource_plugins.decorators._get_plugin_model.return_value = self.mock_model
+        wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
+        wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
+
+        reload(resources_management)
+        self._mock_save_file()
+
+    def _mock_res_api(self):
+        self.resource.resource_type = 'API'
+
+    def _mock_file_not_allowed(self):
+        self._mock_res_plugin()
+        self.mock_model.formats = ["URL"]
+
     @parameterized.expand([
         (UPGRADE_CONTENT, False, _mock_save_file),
         ({'version': '1.0'}, True, _mock_save_file),
         (UPGRADE_LINK,),
+        (UPGRADE_CONTENT, False, _mock_res_plugin),
+        (UPGRADE_CONTENT, False, _mock_res_api, ValueError, 'Invalid plugin format: File not allowed for the resource type'),
+        (UPGRADE_LINK, False, _mock_res_plugin, ValueError, 'Invalid plugin format: URL not allowed for the resource type'),
+        (UPGRADE_CONTENT, False, _mock_file_not_allowed, ValueError, 'Invalid plugin format: File not allowed for the resource type'),
         ({}, False, None, ValueError, 'Missing a required field: Version'),
         ({'version': '1.0a'}, False, None, ValueError, 'Invalid version format'),
         ({'version': '1.0'}, False, _deleted_res, PermissionDenied, 'Deleted resources cannot be upgraded'),
@@ -618,7 +802,7 @@ class ResourceUpgradeTestCase(TestCase):
             # Check new version
             self.assertEquals(self.resource.version, data['version'])
             # Check new resource contents
-            if not 'link' in data:
+            if 'link' not in data:
                 self.assertEquals(self.resource.resource_path, '/media/resources/test_usdl.rdf')
                 self.assertEquals(self.resource.download_link, '')
 
@@ -647,6 +831,11 @@ class ResourceUpgradeTestCase(TestCase):
             self.assertEquals(old_ver.version, '0.1')
             self.assertEquals(old_ver.resource_path, '/media/resources/test_res1.0.rdf')
             self.assertEquals(old_ver.download_link, '')
+
+            # Check events calls if needed
+            if self.resource.resource_type != 'Downloadable':
+                self.plugin_mock.on_pre_upgrade.assert_called_once_with(self.resource)
+                self.plugin_mock.on_post_upgrade.assert_called_once_with(self.resource)
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)

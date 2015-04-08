@@ -26,7 +26,36 @@
             "state": "uploaded",
             "download_link": "",
             "resource_path": "/media/resources/test_user__test_resource__1.0",
+            "resource_type": "Downloadable",
             "offerings": ["61000aba8e05ac2115f022f0"]
+        }
+    },
+    {
+        "pk": "61000bba8e05ac2188888888",
+        "model": "wstore.ResourcePlugin",
+        "fields": {
+            "name": "test_plugin",
+            "version": "1.0",
+            "author": "Test author",
+            "form": {},
+            "module": "wstore.offerings.resource_tests.FakePlugin",
+            "media_types": ["application/x-widget"],
+            "formats": ["FILE"],
+            "options": {}
+        }
+    },
+    {
+        "pk": "61000bba8e05ac2199999999",
+        "model": "wstore.ResourcePlugin",
+        "fields": {
+            "name": "test_plugin2",
+            "version": "1.0",
+            "author": "Test author",
+            "form": {},
+            "module": "wstore.offerings.resource_tests.FakePlugin",
+            "media_types": [],
+            "formats": ["URL"],
+            "options": {}
         }
     }
 ]

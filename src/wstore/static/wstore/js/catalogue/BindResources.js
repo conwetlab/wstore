@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2014-2015 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * This file is part of WStore.
  *
@@ -120,7 +120,7 @@
                 function(){}
             );
         this.pagination.setElemSpace(0);
-        this.pagination.configurePaginationParams(233, 2);
+        this.pagination.setElementsPage(2);
 
         // Remove possible listeners existing in the scroll
         this.pagination.removeListeners();
@@ -138,17 +138,14 @@
         if(this.resources === undefined){
             this.resources = resources;  
             if(!this.viewOnly) {
-            // Set listener
-            $('.modal-footer > .btn').click((function () {
-                this.bindResources();
-            }).bind(this));
-        }  
+                // Set listener
+                $('.modal-footer > .btn').click((function () {
+                    this.bindResources();
+                }).bind(this));
+            }
+        } else {
+            this.resources = this.resources.concat(resources);
         }
-        else{
-            this.resources=this.resources.concat(resources);
-        }
-        
-
 
         var labels = {
             'deleted': 'label-important',
@@ -295,6 +292,12 @@
         });
     };
 
+    var onHiddenHandler = function onHiddenHandler() {
+        // Override hidden behaviour
+        $('#sec-message').off('hidden');
+        $('#sec-message').on('hidden', this.showModal.bind(this));
+    }
+
     /**
      * Set the different listeners included in the resource details
      * view, including the back button, the edit button and the remove
@@ -324,12 +327,8 @@
                 hideModal();
 
                 // Create the new form
-                regRes = buildRegisterResourceForm('edit', this.resource, '#sec-message', this);
-                regRes.display($('#new-container'));
+                openResourceView('edit', this.resource, '#sec-message', this, $('#new-container'), onHiddenHandler.bind(this));
 
-                // Override hidden behaviour
-                $('#sec-message').off('hidden');
-                $('#sec-message').on('hidden', this.showModal.bind(this));
             }.bind(this));
 
             // Set upgade listener
@@ -338,12 +337,8 @@
 
                 hideModal();
                 // Create the new form
-                regRes = buildRegisterResourceForm('upgrade', this.resource, '#sec-message', this);
-                regRes.display($('#new-container'));
+                openResourceView('upgrade', this.resource, '#sec-message', this, $('#new-container'), onHiddenHandler.bind(this));
 
-                // Override hidden behaviour
-                $('#sec-message').off('hidden');
-                $('#sec-message').on('hidden', this.showModal.bind(this));
             }.bind(this));
         }
     };
@@ -355,8 +350,22 @@
         // Clean modal body
         $('.modal-body').empty()
 
+        var labels = {
+            'deleted': 'label-important',
+            'used': 'label-info',
+            'created': ''
+        };
+
         $.template('resourceDetails', $('#resource_details_template'));
-        $.tmpl('resourceDetails', this.resource).appendTo('.modal-body');
+        var templ = $.tmpl('resourceDetails', this.resource).appendTo('.modal-body');
+
+        // Fill label class
+        $('#res-state').addClass(labels[this.resource.state]);
+
+        // Include open label if needed
+        if (this.resource.open) {
+            $('span:contains("Open")').removeClass('hide');
+        }
 
         // If the resource is deleted remove options
         if (this.resource.state == 'deleted') {

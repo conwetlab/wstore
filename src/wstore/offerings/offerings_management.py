@@ -103,7 +103,8 @@ def get_offering_info(offering, user):
             'version': resource.version,
             'description': resource.description,
             'content_type': resource.content_type,
-            'open': resource.open
+            'open': resource.open,
+            'metadata': resource.meta_info
         }
 
         if (state == 'purchased' or state == 'rated' or offering.open):

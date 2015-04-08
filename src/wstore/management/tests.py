@@ -29,8 +29,10 @@ from nose_parameterized import parameterized
 from django.test import TestCase
 from django.conf import settings
 from django.core.management import call_command
+from django.core.management.base import CommandError
 
-from wstore.management.commands import configureproject, createindexes, createtags
+from wstore.management.commands import configureproject, createindexes,\
+  createtags, loadplugin, removeplugin
 
 
 class ConfigureProjectTestCase(TestCase):
@@ -195,3 +197,67 @@ class CreateTagIndexesTestCase(IndexTestCase):
             'module': 'social'
         }
         self._index_tst(info, input_=input_, side_effect=side_effect, completed=completed)
+
+
+class FakeCommandError(Exception):
+    pass
+
+
+class PluginManagementTestCase(TestCase):
+
+    tags = ('management',)
+
+    def _install_plugin_error(self):
+        self.loader_mock.install_plugin.side_effect = Exception('Error installing plugin')
+
+    def _unistall_plugin_error(self):
+        self.loader_mock.uninstall_plugin.side_effect = Exception('Error uninstalling plugin')
+
+    def _check_loaded(self):
+        self.loader_mock.install_plugin.assert_called_once_with('test_plugin.zip')
+
+    def _check_removed(self):
+        self.loader_mock.uninstall_plugin.assert_called_once_with('test_plugin')
+
+    def _test_plugin_command(self, module, module_name, args, checker=None, side_effect=None, err_msg=None):
+        # Create Mocks
+        module.stout = MagicMock()
+        module.CommandError = FakeCommandError
+        module.PluginLoader = MagicMock(name="PluginLoader")
+
+        self.loader_mock = MagicMock()
+        module.PluginLoader.return_value = self.loader_mock
+
+        if side_effect is not None:
+            side_effect(self)
+
+        opts = {}
+        error = None
+        try:
+            call_command(module_name, *args, **opts)
+        except Exception as e:
+            error = e
+
+        if err_msg is None:
+            self.assertEquals(error, None)
+            checker(self)
+        else:
+            self.assertTrue(isinstance(error, FakeCommandError))
+            self.assertEquals(unicode(e), err_msg)
+
+    @parameterized.expand([
+        ('correct', ['test_plugin.zip'], _check_loaded),
+        ('inv_argument', ['test1', 'test2'], None,  None, "Error: Please specify the path to the plugin package"),
+        ('exception', ['test_plugin.zip'], None, _install_plugin_error, 'Error installing plugin')
+    ])
+    def test_load_plugin(self, name, args, checker=None, side_effect=None, err_msg=None):
+        self._test_plugin_command(loadplugin, 'loadplugin', args, checker, side_effect, err_msg)
+
+    @parameterized.expand([
+        ('correct', ['test_plugin'], _check_removed),
+        ('inv_argument_mul', ['test1', 'test2'], None, None, "Error: Please specify only one plugin to be deleted"),
+        ('inv_argument', [], None, None, "Error: Please specify the plugin to be deleted"),
+        ('exception', ['test_plugin'], None, _unistall_plugin_error, 'Error uninstalling plugin')
+    ])
+    def test_remove_plugin(self, name, args, checker=None, side_effect=None, err_msg=None):
+        self._test_plugin_command(removeplugin, 'removeplugin', args, checker, side_effect, err_msg)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -95,6 +95,8 @@ class Resource(models.Model):
     offerings = ListField(models.ForeignKey(Offering))
     open = models.BooleanField(default=False)
     old_versions = ListField(EmbeddedModelField(ResourceVersion))
+    resource_type = models.CharField(max_length=100)
+    meta_info = DictField()
 
     def get_url(self):
         url = None
@@ -114,3 +116,21 @@ class Resource(models.Model):
     class Meta:
         app_label = 'wstore'
         unique_together = ('name', 'provider')
+
+
+class ResourcePlugin(models.Model):
+    plugin_id = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+    version = models.CharField(max_length=50)
+    author = models.CharField(max_length=100)
+    form = DictField()
+    module = models.CharField(max_length=200)
+    media_types = ListField(models.CharField(max_length=100))
+    formats = ListField(models.CharField(max_length=10))
+    options = DictField()
+
+    def __unicode__(self):
+        return self.plugin_id
+
+    class Meta:
+        app_label = 'wstore'

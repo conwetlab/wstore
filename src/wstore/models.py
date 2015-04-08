@@ -81,7 +81,7 @@ class Organization(models.Model):
         return found
 
 
-from wstore.offerings.models import Offering, Resource
+from wstore.offerings.models import Offering, Resource, ResourcePlugin
 from wstore.contracting.models import Purchase
 
 
