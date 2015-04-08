@@ -435,7 +435,7 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
 
         # Wait until the end purchase button is loaded
         element = WebDriverWait(self.driver, 5).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "btn-danger"))
+            EC.element_to_be_clickable((By.CLASS_NAME, "btn-danger"))
         )
         # End the purchase
         element.click()
