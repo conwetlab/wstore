@@ -48,6 +48,7 @@ import unittest
 
 TESTING_PORT = 8989
 
+
 def _fill_offering_description(pk, usdl_info, owner):
     offering = Offering.objects.get(pk=pk)
 
@@ -105,6 +106,7 @@ def _create_tags():
     tm.update_tags(offering1, ['service', 'tag'])
     tm.update_tags(offering2, ['dataset', 'tag'])
     tm.update_tags(offering3, ['widget'])
+
 
 @unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class BasicSearchTestCase(WStoreSeleniumTestCase):
@@ -258,6 +260,7 @@ class BasicSearchTestCase(WStoreSeleniumTestCase):
 
 class AdministrationTestCase(WStoreSeleniumTestCase):
     pass
+
 
 @unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class OfferingManagementTestCase(WStoreSeleniumTestCase):
@@ -439,10 +442,11 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
 
         # Check redirection
         WebDriverWait(self.driver, 5).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "a"))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "hr"))
         )
         expected_url = 'http://localhost:' + unicode(TESTING_PORT) + '/'
         self.assertEquals(self.driver.current_url, expected_url)
+
 
 @unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class ResourceManagementTestCase(WStoreSeleniumTestCase):
