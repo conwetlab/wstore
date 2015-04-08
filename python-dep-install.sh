@@ -1,6 +1,6 @@
 #!/bin/bash
 # Download and install Python dependencies
-pip install lxml "rdflib>=3.2.0" pymongo
+pip install lxml "rdflib>=3.2.0" "pymongo==2.8"
 pip install https://github.com/django-nonrel/django/archive/nonrel-1.4.zip
 pip install https://github.com/django-nonrel/djangotoolbox/archive/toolbox-1.4.zip
 pip install https://github.com/django-nonrel/mongodb-engine/archive/mongodb-engine-1.4-beta.zip
