@@ -28,7 +28,8 @@
         "model": "wstore.Marketplace",
         "fields": {
             "name": "test_market1",
-            "host": "http://examplemarketplace1.com/"
+            "host": "http://examplemarketplace1.com/",
+            "api_version": 1
         }
     },
     {
@@ -36,7 +37,8 @@
         "model": "wstore.Marketplace",
         "fields": {
             "name": "test_market2",
-            "host": "http://examplemarketplace2.com/"
+            "host": "http://examplemarketplace2.com/",
+            "api_version": 1
         }
     },
     {
@@ -44,7 +46,8 @@
         "model": "wstore.Marketplace",
         "fields": {
             "name": "test_market3",
-            "host": "http://examplemarketplace3.com/"
+            "host": "http://examplemarketplace3.com/",
+            "api_version": 2
         }
     }
 ]
