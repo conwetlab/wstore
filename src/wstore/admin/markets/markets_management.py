@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -35,30 +35,29 @@ def get_marketplaces():
     for market in marketplaces:
         result.append({
             'name': market.name,
-            'host': market.host
+            'host': market.host,
+            'api_version': market.api_version
         })
 
     return result
 
 
-def register_on_market(name, host, site):
-
-    # Check that the market name is not in use
-    existing = True
+def register_on_market(name, host, api_version, site):
 
     if host[-1] != '/':
         host += '/'
 
-    try:
-        Marketplace.objects.get(name=name)
-        Marketplace.objects.get(host=host)
-    except:
-        existing = False
-
-    if existing:
+    # Check if the marketplace already exists
+    if len(Marketplace.objects.filter(name=name) | Marketplace.objects.filter(host=host)) > 0:
         raise PermissionDenied('Marketplace already registered')
 
     store_name = settings.STORE_NAME
+
+    marketplace = Marketplace(
+        name=name,
+        host=host,
+        api_version=api_version
+    )
 
     marketadaptor = MarketAdaptor(host)
 
@@ -67,14 +66,11 @@ def register_on_market(name, host, site):
         'store_uri': site,
     }
 
-    try:
-        marketadaptor.add_store(store_info)
-    except HTTPError:
-        raise Exception('Bad Gateway')
+    marketadaptor.add_store(store_info)
 
     try:
-        Marketplace.objects.create(name=name, host=host)
-    except Exception, e:
+        marketplace.save()
+    except Exception as e:
         # If the marketplace model creation fails it is necesary to unregister the store
         # in order to avoid an inconsistent state
         marketadaptor.delete_store(store_name)

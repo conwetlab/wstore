@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -19,9 +19,11 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
+from urllib2 import HTTPError
 
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.url import is_valid_url
@@ -40,17 +42,20 @@ class MarketplaceCollection(Resource):
     @authentication_required
     @supported_request_mime_types(('application/json',))
     def create(self, request):
-        if not request.user.is_staff:  # Only an admin could register the store in a marketplace
-            return build_response(request, 403, 'Forbidden')
+
+        if not request.user.is_staff:  # Only an admin can register the store in a marketplace
+            return build_response(request, 403, 'You are not allowed to register WStore in a Marketplace')
 
         name = None
         host = None
+        api_version = None
 
         # Get contents from the request
         try:
             content = json.loads(request.raw_post_data)
             name = content['name']
             host = content['host']
+            api_version = content['api_version']
         except:
             msg = "Request body is not valid JSON data"
             return build_response(request, 400, msg)
@@ -61,19 +66,29 @@ class MarketplaceCollection(Resource):
 
         if not is_valid_url(host):
             return build_response(request, 400, 'Invalid URL format')
-        
+
+        if not api_version.isdigit():
+            return build_response(request, 400, 'Invalid API version')
+
+        api_version = int(api_version)
+
+        if api_version != 1 and api_version != 2:
+            return build_response(request, 400, 'Invalid API version')
+
         code = 201
         msg = 'Created'
         try:
             # Register the store in the selected marketplace
-            register_on_market(name, host, get_current_site(request).domain)
-        except Exception, e:
-            if e.message == 'Bad Gateway':
-                code = 502
-                msg = e.message
-            else:
-                code = 400
-                msg = 'Bad request'
+            register_on_market(name, host, api_version, get_current_site(request).domain)
+        except HTTPError:
+            code = 502
+            msg = "The Marketplace has failed registering the store"
+        except PermissionDenied as e:
+            code = 403
+            msg = unicode(e)
+        except Exception as e:
+            code = 500
+            msg = unicode(e)
 
         return build_response(request, code, msg)
 
