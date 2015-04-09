@@ -35,7 +35,7 @@ from django.template import Context as TmplContext
 from django.core.exceptions import PermissionDenied
 
 from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
-from wstore.market_adaptor.marketadaptor import MarketAdaptor
+from wstore.market_adaptor.marketadaptor import marketadaptor_factory
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
 from wstore.models import Offering, Repository, Resource
@@ -745,7 +745,7 @@ def publish_offering(offering, data):
         except:
             raise ValueError('Publication error: The marketplace ' + market + ' does not exist')
 
-        market_adaptor = MarketAdaptor(m.host)
+        market_adaptor = marketadaptor_factory(m)
         info = {
             'name': offering.name,
             'url': offering.description_url
@@ -805,7 +805,7 @@ def delete_offering(offering):
     # it is marked as deleted in order to allow customers that
     # have purchased the offering to install it if needed
 
-    #delete the usdl description from the repository
+    # delete the usdl description from the repository
     if offering.state == 'deleted':
         raise PermissionDenied('The offering is already deleted')
 
@@ -834,7 +834,7 @@ def delete_offering(offering):
         # Delete the offering from marketplaces
         for market in offering.marketplaces:
             m = Marketplace.objects.get(pk=market)
-            market_adaptor = MarketAdaptor(m.host)
+            market_adaptor = marketadaptor_factory(m)
             market_adaptor.delete_service(settings.STORE_NAME, offering.name)
 
         # Update offering indexes

@@ -27,7 +27,35 @@ from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils.url import url_fix
 
 
-class MarketAdaptor(object):
+def marketadaptor_factory(marketplace):
+    """
+    Returns the corresponding MarketAdaptor depending on the API version
+    """
+
+    adaptors = {
+        1: MarketAdaptorV1,
+        2: MarketAdaptorV2
+    }
+
+    return adaptors[marketplace.api_version](marketplace.host)
+
+
+class MarketAdaptor():
+
+    def add_store(self, store_info):
+        pass
+
+    def delete_store(self, store):
+        pass
+
+    def add_service(self, store, service_info):
+        pass
+
+    def delete_service(self, store, service):
+        pass
+
+
+class MarketAdaptorV1(MarketAdaptor):
 
     _marketplace_uri = None
     _session_id = None
@@ -73,7 +101,7 @@ class MarketAdaptor(object):
         headers = {'content-type': 'application/xml', 'Cookie': session_cookie}
 
         opener = urllib2.build_opener()
-        request = MethodRequest("PUT", urljoin(self._marketplace_uri, "registration/store/"), params, headers)
+        request = MethodRequest("PUT", urljoin(self._marketplace_uri, "v1/registration/store/"), params, headers)
         try:
             response = opener.open(request)
         except HTTPError, e:
@@ -91,9 +119,6 @@ class MarketAdaptor(object):
         if response.code != 201:
             raise HTTPError(response.url, response.code, response.msg, None, None)
 
-    def update_store(self, store_info):
-        pass
-
     def delete_store(self, store):
 
         if self._session_id is None:
@@ -102,7 +127,7 @@ class MarketAdaptor(object):
         opener = urllib2.build_opener()
         session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
         headers = {'content-type': 'application/xml', 'Cookie': session_cookie}
-        url = urljoin(self._marketplace_uri, "registration/store/" + store)
+        url = urljoin(self._marketplace_uri, "v1/registration/store/" + store)
 
         url = url_fix(url)
 
@@ -133,7 +158,7 @@ class MarketAdaptor(object):
         params = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="' + service_info['name'] + '" ><url>' + service_info['url'] + '</url></resource>'
         session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
         headers = {'content-type': 'application/xml', 'Cookie': session_cookie}
-        url = urljoin(self._marketplace_uri, "offering/store/" + store + "/offering")
+        url = urljoin(self._marketplace_uri, "v1/offering/store/" + store + "/offering")
 
         url = url_fix(url)
 
@@ -156,9 +181,6 @@ class MarketAdaptor(object):
         if response.code != 201:
             raise HTTPError(response.url, response.code, response.msg, None, None)
 
-    def update_service(self, store, service_info):
-        pass
-
     def delete_service(self, store, service):
 
         if self._session_id is None:
@@ -167,7 +189,7 @@ class MarketAdaptor(object):
         opener = urllib2.build_opener()
         session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
         headers = {'Cookie': session_cookie}
-        url = urljoin(self._marketplace_uri, "offering/store/" + store + "/offering/" + service)
+        url = urljoin(self._marketplace_uri, "v1/offering/store/" + store + "/offering/" + service)
 
         url = url_fix(url)
 
@@ -189,3 +211,7 @@ class MarketAdaptor(object):
 
         if response.code != 200:
             raise HTTPError(response.url, response.code, response.msg, None, None)
+
+
+class MarketAdaptorV2(MarketAdaptor):
+    pass

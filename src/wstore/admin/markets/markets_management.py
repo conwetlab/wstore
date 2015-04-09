@@ -24,7 +24,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
 from wstore.models import Marketplace
-from wstore.market_adaptor.marketadaptor import MarketAdaptor
+from wstore.market_adaptor.marketadaptor import marketadaptor_factory
 
 
 def get_marketplaces():
@@ -59,7 +59,7 @@ def register_on_market(name, host, api_version, site):
         api_version=api_version
     )
 
-    marketadaptor = MarketAdaptor(host)
+    marketadaptor = marketadaptor_factory(marketplace)
 
     store_info = {
         'store_name': store_name,
@@ -89,7 +89,7 @@ def unregister_from_market(market):
     if host[-1] != '/':
         host += '/'
 
-    marketadaptor = MarketAdaptor(host)
+    marketadaptor = marketadaptor_factory(marketplace)
 
     try:
         marketadaptor.delete_store(settings.STORE_NAME)
