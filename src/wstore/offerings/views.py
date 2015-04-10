@@ -204,7 +204,7 @@ class OfferingEntry(Resource):
 
         # Delete the offering
         try:
-            delete_offering(offering)
+            delete_offering(request.user, offering)
         except Exception, e:
             return build_response(request, 400, unicode(e))
 
@@ -235,7 +235,7 @@ class PublishEntry(Resource):
         if content_type == 'application/json':
             try:
                 data = json.loads(request.raw_post_data)
-                publish_offering(offering, data)
+                publish_offering(request.user, offering, data)
             except HTTPError:
                 return build_response(request, 502, 'Bad gateway')
             except Exception, e:

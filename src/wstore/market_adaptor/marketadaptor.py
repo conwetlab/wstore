@@ -20,17 +20,18 @@
 
 from __future__ import unicode_literals
 
+import json
 import urllib2
 from urllib2 import HTTPError
-from urllib import urlencode
-from urlparse import urljoin, urlparse
+from urlparse import urljoin
 from base64 import b64encode
 
 from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils.url import url_fix
+from wstore.models import Marketplace
 
 
-def marketadaptor_factory(marketplace):
+def marketadaptor_factory(marketplace, current_user=None):
     """
     Returns the corresponding MarketAdaptor depending on the API version
     """
@@ -40,45 +41,66 @@ def marketadaptor_factory(marketplace):
         2: MarketAdaptorV2
     }
 
-    return adaptors[marketplace.api_version](marketplace.host)
+    return adaptors[marketplace.api_version](
+        marketplace.host,
+        user=marketplace.credentials.username,
+        passwd=marketplace.credentials.passwd,
+        current_user=current_user
+    )
 
 
 class MarketAdaptor():
 
-    def __init__(self, marketplace_uri, user='store_conwet', passwd='store_conwet'):
+    _marketplace_uri = None
+
+    def __init__(self, marketplace_uri, user='store_conwet', passwd='store_conwet', current_user=None):
         self._marketplace_uri = marketplace_uri
         self._user = user
         self._passwd = passwd
+        self._current_user = current_user
 
-    def add_store(self, store_info):
+    def _get_store_name(self):
+        market = Marketplace.objects.get(host=self._marketplace_uri)
+        return market.store_id
+
+    def _get_local_token(self):
+        token = b64encode(self._user + ':' + self._passwd)
+        return 'Basic ' + token
+
+    def _get_token(self):
         pass
-
-    def delete_store(self, store):
-        pass
-
-    def add_service(self, store, service_info):
-        pass
-
-    def delete_service(self, store, service):
-        pass
-
-
-class MarketAdaptorV1(MarketAdaptor):
-
-    _marketplace_uri = None
 
     def _make_request(self, method, url, params, headers, code):
         opener = urllib2.build_opener()
 
         # Include credentials in the header
-        token = b64encode(self._user + ':' + self._passwd)
-        headers['Authorization'] = 'Basic ' + token
+        headers['Authorization'] = self._get_token()
 
         request = MethodRequest(method, url, params, headers)
         response = opener.open(request)
 
         if response.code != code:
             raise HTTPError(response.url, response.code, response.msg, None, None)
+
+        return response
+
+    def add_store(self, store_info):
+        pass
+
+    def delete_store(self):
+        pass
+
+    def add_service(self, service_info):
+        pass
+
+    def delete_service(self, service):
+        pass
+
+
+class MarketAdaptorV1(MarketAdaptor):
+
+    def _get_token(self):
+        return self._get_local_token()
 
     def add_store(self, store_info):
 
@@ -88,14 +110,18 @@ class MarketAdaptorV1(MarketAdaptor):
         url = urljoin(self._marketplace_uri, "v1/registration/store/")
         self._make_request('PUT', url, params, headers, 201)
 
-    def delete_store(self, store):
+        return store_info['store_name']
+
+    def delete_store(self):
+        store = self._get_store_name()
 
         url = urljoin(self._marketplace_uri, "v1/registration/store/" + store)
 
         url = url_fix(url)
         self._make_request('DELETE', url, '', {}, 200)
 
-    def add_service(self, store, service_info):
+    def add_service(self, service_info):
+        store = self._get_store_name()
 
         params = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="' + service_info['name'] + '" ><url>' + service_info['url'] + '</url></resource>'
         headers = {'content-type': 'application/xml'}
@@ -104,7 +130,8 @@ class MarketAdaptorV1(MarketAdaptor):
         url = url_fix(url)
         self._make_request('PUT', url, params, headers, 201)
 
-    def delete_service(self, store, service):
+    def delete_service(self, service):
+        store = self._get_store_name()
 
         url = urljoin(self._marketplace_uri, "v1/offering/store/" + store + "/offering/" + service)
         url = url_fix(url)
@@ -114,9 +141,40 @@ class MarketAdaptorV1(MarketAdaptor):
 
 class MarketAdaptorV2(MarketAdaptor):
 
-    def add_store(self, store_info):
+    def _get_token(self):
+        result = None
+        if not self._user:
+            result = 'Bearer ' + self._current_user.userprofile.access_token
+        else:
+            result = self._get_local_token()
 
-        opener = urllib2.build_opener()
+        return result
+
+    def add_store(self, store_info):
+        url = urljoin(self._marketplace_uri, "/api/v2/store")
+
+        params = {
+            'displayName': store_info['store_name'],
+            'url': store_info['store_uri'],
+            'description': "WStore instance deployed in " + store_info['store_uri']
+        }
         headers = {
             'Content-type': 'application/json'
         }
+
+        response = self._make_request('POST', url, json.dumps(params), headers, 201)
+
+        store_uri = response.headers.getheader('Location')
+
+        if store_uri.endswith('/'):
+            store_uri = store_uri[:-1]
+
+        return store_uri.split('/')[-1]
+
+    def delete_store(self):
+        # Get WStore name in the marketplace
+        store = self._get_store_name()
+
+        url = urljoin(self._marketplace_uri, "/api/v2/store/" + store)
+        url = url_fix(url)
+        self._make_request('DELETE', url, '', {}, 204)

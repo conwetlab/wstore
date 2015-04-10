@@ -24,6 +24,7 @@ from urllib2 import HTTPError
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
+from django.conf import settings
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.url import is_valid_url
@@ -75,11 +76,25 @@ class MarketplaceCollection(Resource):
         if api_version != 1 and api_version != 2:
             return build_response(request, 400, 'Invalid API version')
 
+        credentials = None
+        # Validate credentials if required
+        if api_version == 1 or not settings.OILAUTH:
+            if 'credentials' not in content:
+                return build_response(request, 400, 'Missing required field credentials')
+
+            if 'username' not in content['credentials']:
+                return build_response(request, 400, 'Missing required field username in credentials')
+
+            if 'passwd' not in content['credentials']:
+                return build_response(request, 400, 'Missing required field username in credentials')
+
+            credentials = content['credentials']
+
         code = 201
         msg = 'Created'
         try:
             # Register the store in the selected marketplace
-            register_on_market(name, host, api_version, get_current_site(request).domain)
+            register_on_market(request.user, name, host, api_version, credentials, get_current_site(request).domain)
         except HTTPError:
             code = 502
             msg = "The Marketplace has failed registering the store"
@@ -94,7 +109,6 @@ class MarketplaceCollection(Resource):
 
     @authentication_required
     def read(self, request):
-
         try:
             response = json.dumps(get_marketplaces())
         except:
@@ -112,7 +126,7 @@ class MarketplaceEntry(Resource):
             return build_response(request, 403, 'Forbidden')
 
         try:
-            unregister_from_market(market)
+            unregister_from_market(request.user, market)
         except Exception, e:
             if e.message == 'Bad Gateway':
                 code = 502

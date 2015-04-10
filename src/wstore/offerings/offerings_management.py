@@ -722,7 +722,7 @@ def update_offering(offering, data):
     se.update_index(offering)
 
 
-def publish_offering(offering, data):
+def publish_offering(user, offering, data):
 
     # Validate data
     if not 'marketplaces' in data:
@@ -745,12 +745,12 @@ def publish_offering(offering, data):
         except:
             raise ValueError('Publication error: The marketplace ' + market + ' does not exist')
 
-        market_adaptor = marketadaptor_factory(m)
+        market_adaptor = marketadaptor_factory(m, user)
         info = {
             'name': offering.name,
             'url': offering.description_url
         }
-        market_adaptor.add_service(settings.STORE_NAME, info)
+        market_adaptor.add_service(info)
         offering.marketplaces.append(m.pk)
 
     offering.state = 'published'
@@ -800,7 +800,8 @@ def _remove_offering(offering, se):
 
     offering.delete()
 
-def delete_offering(offering):
+
+def delete_offering(user, offering):
     # If the offering has been purchased it is not deleted
     # it is marked as deleted in order to allow customers that
     # have purchased the offering to install it if needed
@@ -835,7 +836,7 @@ def delete_offering(offering):
         for market in offering.marketplaces:
             m = Marketplace.objects.get(pk=market)
             market_adaptor = marketadaptor_factory(m)
-            market_adaptor.delete_service(settings.STORE_NAME, offering.name)
+            market_adaptor.delete_service(offering.name)
 
         # Update offering indexes
         if not offering.open:
