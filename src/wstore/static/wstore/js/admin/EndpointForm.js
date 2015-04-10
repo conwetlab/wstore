@@ -35,7 +35,7 @@
             nameReg = new RegExp(/^[\w\s-]+$/);
             if (!nameReg.test(name)) {
                 validation.valid = false;
-                msg += 'Invalid name format';
+                msg += 'Invalid name format <br/>';
                 errFields.push($('#elem-name').parent().parent())
             }
                 
@@ -43,7 +43,7 @@
             var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
             if (!urlReg.test(host)) {
                 validation.valid = false;
-                msg += 'Invalid URL format';
+                msg += 'Invalid URL format <br/>';
                 errFields.push($('#elem-host').parent().parent());
             }
 
@@ -59,7 +59,7 @@
             }
         } else {
             validation.valid = false;
-            validation.msg = "Both fields are required";
+            validation.msg = "Name and Host are required </br>";
             validation.errFields = []
 
             // Include fields with errors
@@ -115,7 +115,7 @@
     MarketplaceForm = function MarketplaceForm (argument) {
     };
 
-    MarketplaceForm.prototype = new AdminForm('MARKET_ENTRY', 'MARKET_COLLECTION', $('#form_template'), {'title': 'Marketplace'});
+    MarketplaceForm.prototype = new AdminForm('MARKET_ENTRY', 'MARKET_COLLECTION', $('#marketplace_form_template'), {'title': 'Marketplace'});
     MarketplaceForm.prototype.constructor = MarketplaceForm;
 
     MarketplaceForm.prototype.fillListInfo = function fillListInfo(elements) {
@@ -129,16 +129,56 @@
 
     MarketplaceForm.prototype.validateFields = function validateFields() {
         var validation = basicValidation();
+        var api_version = $('#api-version').val();
+
+        // Check credentials if needed
+        if (api_version == '1' || !IDMAUTH) {
+            var username = $.trim($('#cred-username').val());
+            var passwd = $.trim($('#cred-passwd').val());
+            var passwdConf = $.trim($('#cred-passwd-conf').val());
+
+            if (!username || !passwd || !passwdConf) {
+                validation.valid = false;
+                validation.msg += 'All credentials fields are required </br>'
+
+            } else if (passwd != passwdConf) {
+                validation.valid = false;
+                validation.msg += "Pasword and password confirmation don't match";
+            } else {
+                validation.data.credentials = {
+                    'username': username,
+                    'passwd': passwd
+                }
+            }
+
+            if (!validation.valid) {
+                if (!validation.errFields) {
+                    validation.errFields = [];
+                }
+
+                validation.errFields.push($('#cred-username').parent().parent());
+            }
+        }
 
         // Include api version
         if (validation.valid) {
-            validation.data.api_version = $('#api-version').val();
+            validation.data.api_version = api_version;
         }
 
         return validation;
     }
 
     MarketplaceForm.prototype.setFormListeners = function setFormListeners() {
-        $('#api-version-grp').removeClass('hide');
+        // Check if the credentials field is needed
+        if (IDMAUTH) {
+            // Set listeners for hiding credentials for API version 2
+            $('#api-version').change(function () {
+                if ($(this).val() == '2') {
+                    $('#market-cred').addClass('hide');
+                } else {
+                    $('#market-cred').removeClass('hide');
+                }
+            });
+        }
     }
 })();
