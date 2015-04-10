@@ -24,6 +24,7 @@ import urllib2
 from urllib2 import HTTPError
 from urllib import urlencode
 from urlparse import urljoin, urlparse
+from base64 import b64encode
 
 from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils.url import url_fix
@@ -65,124 +66,50 @@ class MarketAdaptor():
 class MarketAdaptorV1(MarketAdaptor):
 
     _marketplace_uri = None
-    _session_id = None
 
-    def authenticate(self):
-
+    def _make_request(self, method, url, params, headers, code):
         opener = urllib2.build_opener()
 
-        # submit field is required
-        credentials = urlencode({'j_username': self._user, 'j_password': self._passwd, 'submit': 'Submit'})
-        headers = {'content-type': 'application/x-www-form-urlencoded'}
-
-        market_path = urlparse(self._marketplace_uri)[2].split('/')[1]
-        request = MethodRequest("POST", urljoin(self._marketplace_uri, "/" + market_path + "/j_spring_security_check"), credentials, headers)
-
-        parsed_url = None
-        try:
-            response = opener.open(request)
-            parsed_url = urlparse(response.url)
-
-        except HTTPError, e:
-            # Marketplace can return an error code but authenticate
-            parsed_url = urlparse(e.filename)
-
-        if parsed_url[4] != 'login_error' and parsed_url[3][:10] == 'jsessionid':
-            # parsed_url[3] params field, contains jsessionid
-            self._session_id = parsed_url[3][11:]
-        else:
-            raise Exception('Marketplace login error')
-
-    def _make_request(self, method, url, params, headers, code, redirect_info):
-        opener = urllib2.build_opener()
+        # Include credentials in the header
+        token = b64encode(self._user + ':' + self._passwd)
+        headers['Authorization'] = 'Basic ' + token
 
         request = MethodRequest(method, url, params, headers)
-        try:
-            response = opener.open(request)
-        except HTTPError as e:
-            # Marketplace redirects to a login page (sprint_security_login) if
-            # the session expires. In addition, python don't follow
-            # redirections when issuing DELETE requests, so we have to check for
-            # a 302 status code
-            if e.code == 302:
-                self._session_id = None
-                redirect_info['method'](*redirect_info['args'])
-                return
-            else:
-                raise e
+        response = opener.open(request)
 
         if response.code != code:
             raise HTTPError(response.url, response.code, response.msg, None, None)
 
     def add_store(self, store_info):
 
-        if self._session_id is None:
-            self.authenticate()
-
         params = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="' + store_info['store_name'] + '" ><url>' + store_info['store_uri'] + '</url></resource>'
-        session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
-        headers = {'content-type': 'application/xml', 'Cookie': session_cookie}
+        headers = {'content-type': 'application/xml'}
 
         url = urljoin(self._marketplace_uri, "v1/registration/store/")
-
-        redirect_info = {
-            'method': self.add_store,
-            'args': (store_info, )
-        }
-
-        self._make_request('PUT', url, params, headers, 201, redirect_info)
+        self._make_request('PUT', url, params, headers, 201)
 
     def delete_store(self, store):
 
-        if self._session_id is None:
-            self.authenticate()
-
-        session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
-        headers = {'content-type': 'application/xml', 'Cookie': session_cookie}
         url = urljoin(self._marketplace_uri, "v1/registration/store/" + store)
 
         url = url_fix(url)
-
-        redirect_info = {
-            'method': self.delete_store,
-            'args': (store, )
-        }
-        self._make_request('DELETE', url, '', headers, 200, redirect_info)
+        self._make_request('DELETE', url, '', {}, 200)
 
     def add_service(self, store, service_info):
 
-        if self._session_id is None:
-            self.authenticate()
-
         params = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="' + service_info['name'] + '" ><url>' + service_info['url'] + '</url></resource>'
-        session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
-        headers = {'content-type': 'application/xml', 'Cookie': session_cookie}
+        headers = {'content-type': 'application/xml'}
         url = urljoin(self._marketplace_uri, "v1/offering/store/" + store + "/offering")
 
         url = url_fix(url)
-
-        redirect_info = {
-            'method': self.add_service,
-            'args': (store, service_info)
-        }
-        self._make_request('PUT', url, params, headers, 201, redirect_info)
+        self._make_request('PUT', url, params, headers, 201)
 
     def delete_service(self, store, service):
 
-        if self._session_id is None:
-            self.authenticate()
-
-        session_cookie = 'JSESSIONID=' + self._session_id + ';' + ' Path=/FiwareMarketplace'
-        headers = {'Cookie': session_cookie}
         url = urljoin(self._marketplace_uri, "v1/offering/store/" + store + "/offering/" + service)
-
         url = url_fix(url)
 
-        redirect_info = {
-            'method': self.delete_service,
-            'args': (store, service)
-        }
-        self._make_request('DELETE', url, '', headers, 200, redirect_info)
+        self._make_request('DELETE', url, '', {}, 200)
 
 
 class MarketAdaptorV2(MarketAdaptor):

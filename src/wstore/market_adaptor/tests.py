@@ -124,45 +124,6 @@ class MarketAdaptorTestCase(TestCase):
     def tearDown(self):
         reload(marketadaptor)
 
-    def authentication(self):
-            raise Exception('Redirection')
-
-    def test_authentication_v1(self):
-        self.marketplace.host = 'http://authentication_marketplace/FiwareMarketplace/'
-
-        market_adaptor = marketadaptor.marketadaptor_factory(self.marketplace)
-        market_adaptor._user = 'test_user'
-        market_adaptor._passwd = 'test_passwd'
-
-        market_adaptor.authenticate()
-
-        opener = self.fake_urllib._opener
-        self.assertEqual(opener._url, 'http://authentication_marketplace/FiwareMarketplace/j_spring_security_check')
-        self.assertEqual(opener._method, 'POST')
-        self.assertEqual(opener._username, 'test_user')
-        self.assertEqual(opener._passwd, 'test_passwd')
-
-        self.assertEqual(market_adaptor._session_id, '1111')
-
-    def test_authentication_error_v1(self):
-
-        self.marketplace.host = 'http://authentication_error/FiwareMarketplace/'
-
-        market_adaptor = marketadaptor.marketadaptor_factory(self.marketplace)
-        market_adaptor._user = 'test_user'
-        market_adaptor._passwd = 'test_passwd'
-
-        error = False
-        msg = None
-        try:
-            market_adaptor.authenticate()
-        except Exception as e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, 'Marketplace login error')
-
     def _get_marketadaptor(self, host):
         self.marketplace.host = host
         market_adaptor = marketadaptor.marketadaptor_factory(self.marketplace)
@@ -210,25 +171,6 @@ class MarketAdaptorTestCase(TestCase):
 
     test_add_store_error_v1.tags = ('fiware-ut-7',)
 
-    def test_add_store_redirection_v1(self):
-        store_info = {
-            'store_name': 'store',
-            'store_uri': 'http://store_uri.com'
-        }
-        market_adaptor = self._get_marketadaptor('http://add_store_redirection/')
-
-        market_adaptor.authenticate = self.authentication
-        redirected = False
-        try:
-            market_adaptor.add_store(store_info)
-        except Exception, e:
-            if e.message == 'Redirection':
-                redirected = True
-
-        self.assertTrue(redirected)
-
-    test_add_store_redirection_v1.tags = ('fiware-ut-7',)
-
     def test_delete_store_v1(self):
         market_adaptor = self._get_marketadaptor('http://delete_store_marketplace/')
 
@@ -251,19 +193,6 @@ class MarketAdaptorTestCase(TestCase):
 
         self.assertTrue(error)
         self.assertEqual(msg, 'Error delete store')
-
-    def test_delete_store_redirection_v1(self):
-        market_adaptor = self._get_marketadaptor('http://delete_store_redirection/')
-
-        market_adaptor.authenticate = self.authentication
-        redirected = False
-        try:
-            market_adaptor.delete_store('test_store')
-        except Exception as e:
-            if e.message == 'Redirection':
-                redirected = True
-
-        self.assertTrue(redirected)
 
     def test_add_service_v1(self):
         expected_body = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="test_service" ><url>http://test_service_uri.com</url></resource>'
@@ -305,25 +234,6 @@ class MarketAdaptorTestCase(TestCase):
 
     test_add_service_error_v1.tags = ('fiware-ut-4',)
 
-    def test_add_service_redirection_v1(self):
-        service_info = {
-            'name': 'test_service',
-            'url': 'http://test_service_uri.com'
-        }
-        market_adaptor = self._get_marketadaptor('http://add_service_redirection/')
-
-        market_adaptor.authenticate = self.authentication
-        redirected = False
-        try:
-            market_adaptor.add_service('test_store', service_info)
-        except Exception, e:
-            if e.message == 'Redirection':
-                redirected = True
-
-        self.assertTrue(redirected)
-
-    test_add_service_redirection_v1.tags = ('fiware-ut-4',)
-
     def test_delete_service_v1(self):
         market_adaptor = self._get_marketadaptor('http://delete_service_marketplace/')
 
@@ -350,18 +260,3 @@ class MarketAdaptorTestCase(TestCase):
         self.assertEqual(msg, 'Error delete service')
 
     test_delete_service_error_v1.tags = ('fiware-ut-9',)
-
-    def test_delete_service_redirection_v1(self):
-        market_adaptor = self._get_marketadaptor('http://delete_service_redirection/')
-
-        market_adaptor.authenticate = self.authentication
-        redirected = False
-        try:
-            market_adaptor.delete_service('test_store', 'test_service')
-        except Exception, e:
-            if e.message == 'Redirection':
-                redirected = True
-
-        self.assertTrue(redirected)
-
-    test_delete_service_redirection_v1.tags = ('fiware-ut-9',)
