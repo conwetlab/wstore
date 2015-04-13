@@ -86,7 +86,7 @@ class MarketplaceCollection(Resource):
                 return build_response(request, 400, 'Missing required field username in credentials')
 
             if 'passwd' not in content['credentials']:
-                return build_response(request, 400, 'Missing required field username in credentials')
+                return build_response(request, 400, 'Missing required field passwd in credentials')
 
             credentials = content['credentials']
 

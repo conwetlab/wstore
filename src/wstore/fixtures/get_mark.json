@@ -29,7 +29,12 @@
         "fields": {
             "name": "test_market1",
             "host": "http://examplemarketplace1.com/",
-            "api_version": 1
+            "api_version": 1,
+            "store_id": "test_store",
+            "credentials": {
+                "username": "test_user",
+                "passwd": "test_passwd"
+            }
         }
     },
     {
@@ -38,7 +43,12 @@
         "fields": {
             "name": "test_market2",
             "host": "http://examplemarketplace2.com/",
-            "api_version": 1
+            "api_version": 1,
+            "store_id": "test_store",
+            "credentials": {
+                "username": "test_user",
+                "passwd": "test_passwd"
+            }
         }
     },
     {
@@ -47,7 +57,12 @@
         "fields": {
             "name": "test_market3",
             "host": "http://examplemarketplace3.com/",
-            "api_version": 2
+            "api_version": 2,
+            "store_id": "test_store",
+            "credentials": {
+                "username": "",
+                "passwd": ""
+            }
         }
     }
 ]

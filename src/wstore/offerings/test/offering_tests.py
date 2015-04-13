@@ -25,7 +25,7 @@ import os
 import base64
 import json
 import rdflib
-from mock import MagicMock, call
+from mock import MagicMock
 from nose_parameterized import parameterized
 from datetime import datetime
 from bson.objectid import ObjectId
@@ -915,6 +915,7 @@ class OfferingPublicationTestCase(TestCase):
         offerings_management.marketadaptor_factory = MagicMock()
         self._adaptor_obj = MagicMock()
         offerings_management.marketadaptor_factory.return_value = self._adaptor_obj
+        self._user = MagicMock()
 
     def _published(self, offering):
         offering.state = 'published'
@@ -956,7 +957,7 @@ class OfferingPublicationTestCase(TestCase):
 
         error_found = None
         try:
-            offerings_management.publish_offering(offering, data)
+            offerings_management.publish_offering(self._user, offering, data)
         except Exception as e:
             error_found = e
 
@@ -979,12 +980,12 @@ class OfferingPublicationTestCase(TestCase):
 
                 for m in data['marketplaces']:
                     market = Marketplace.objects.get(name=m)
-                    offerings_management.marketadaptor_factory.assert_any_call(market)
+                    offerings_management.marketadaptor_factory.assert_any_call(market, self._user)
                     info = {
                         'name': offering.name,
                         'url': offering.description_url
                     }
-                    self._adaptor_obj.add_service.assert_any_call(settings.STORE_NAME, info)
+                    self._adaptor_obj.add_service.assert_any_call(info)
 
                 self.assertEquals(offerings_management.marketadaptor_factory.call_count, len(data['marketplaces']))
                 self.assertEquals(self._adaptor_obj.add_service.call_count, len(data['marketplaces']))
@@ -1140,6 +1141,8 @@ class OfferingDeletionTestCase(TestCase):
         self.context_obj.top_rated = []
         offerings_management.Context.objects.all.return_value = [self.context_obj]
 
+        self._user = MagicMock()
+
     def tearDown(self):
         reload(offerings_management)
         TestCase.tearDown(self)
@@ -1193,7 +1196,7 @@ class OfferingDeletionTestCase(TestCase):
         # Call the tested method
         error = None
         try:
-            offerings_management.delete_offering(offering)
+            offerings_management.delete_offering(self._user, offering)
         except Exception as e:
             error = e
 
@@ -1221,9 +1224,9 @@ class OfferingDeletionTestCase(TestCase):
 
             if market_pub:
                 market = Marketplace.objects.get(name="test_marketplace")
-                offerings_management.marketadaptor_factory.assert_called_once_with(market)
+                offerings_management.marketadaptor_factory.assert_called_once_with(market, self._user)
 
-                self._adaptor_obj.delete_service.assert_called_once_with(settings.STORE_NAME, offering_name)
+                self._adaptor_obj.delete_service.assert_called_once_with(offering_name)
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(error), err_msg)

@@ -33,6 +33,7 @@ from wstore.admin.markets import views
 from wstore.store_commons.utils import http
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
     decorator_mock_callable, HTTPResponseMock
+from wstore.models import MarketCredentials
 
 
 __test__ = False
@@ -42,14 +43,19 @@ BASIC_MARKET_DATA = {
     'name': 'test_market',
     'host': 'http://testmarket.com',
     'site': 'http://currentsite.com',
-    'api_version': 1
+    'api_version': '1',
+    'credentials': {
+        'username': 'test_user',
+        'passwd': 'test_passwd'
+    }
 }
 
 BASIC_MARKET_DATA1 = {
     'name': 'test_market1',
     'host': 'http://testmarket.com/',
     'site': 'http://currentsite.com/',
-    'api_version': 2
+    'api_version': '2',
+    'credentials': None
 }
 
 
@@ -76,6 +82,8 @@ class RegisteringOnMarketplaceTestCase(TestCase):
         self.filter_mock.__len__.return_value = 0
         markets_management.Marketplace.objects.filter.return_value = self.filter_mock
 
+        self._user = MagicMock()
+
     def _internal_market_error(self):
         self.adaptor_object.add_store.side_effect = HTTPError('site', 500, 'Internal server error', None, None)
 
@@ -87,6 +95,7 @@ class RegisteringOnMarketplaceTestCase(TestCase):
 
     @parameterized.expand([
         (BASIC_MARKET_DATA,),
+        (BASIC_MARKET_DATA1,),
         (BASIC_MARKET_DATA1, _internal_market_error, Exception, 'HTTP Error 500: Internal server error'),
         (BASIC_MARKET_DATA, _existing, PermissionDenied, 'Marketplace already registered'),
         (BASIC_MARKET_DATA, _creation_error, Exception, 'Creation error')
@@ -98,7 +107,7 @@ class RegisteringOnMarketplaceTestCase(TestCase):
 
         error = None
         try:
-            markets_management.register_on_market(data['name'], data['host'], data['api_version'], data['site'])
+            markets_management.register_on_market(self._user, data['name'], data['host'], data['api_version'], data['credentials'], data['site'])
         except Exception as e:
             error = e
 
@@ -106,13 +115,24 @@ class RegisteringOnMarketplaceTestCase(TestCase):
             self.assertEquals(error, None)
 
             # Check calls
+            usr = None
+            passwd = None
+            if data['credentials'] is not None:
+                usr = data['credentials']['username']
+                passwd = data['credentials']['passwd']
+
+            cred = MarketCredentials(
+                username=usr,
+                passwd=passwd
+            )
             markets_management.Marketplace.assert_called_with(
                 name=data['name'],
                 host='http://testmarket.com/',
-                api_version=data['api_version']
+                api_version=data['api_version'],
+                credentials=cred
             )
 
-            markets_management.marketadaptor_factory.assert_called_with(self._market_obj)
+            markets_management.marketadaptor_factory.assert_called_with(self._market_obj, self._user)
 
             calls = [call(name=data['name']), call(host='http://testmarket.com/')]
             markets_management.Marketplace.objects.filter.assert_has_calls(calls)
@@ -161,22 +181,25 @@ class UnregisteringFromMarketplaceTestCase(TestCase):
 
     def setUp(self):
         markets_management.Marketplace = MagicMock()
+
         self.adaptor_object = MagicMock()
         markets_management.marketadaptor_factory = MagicMock()
         markets_management.marketadaptor_factory.return_value = self.adaptor_object
 
     def _market_mock(self):
-        mock_market = MagicMock()
-        mock_market.host = 'http://testmarket.org/'
-        markets_management.Marketplace.objects.get.return_value = mock_market
+        self._mock_market = MagicMock()
+        self._mock_market.host = 'http://testmarket.org/'
+        markets_management.Marketplace.objects.get.return_value = self._mock_market
+        self._user = MagicMock()
 
     def test_basic_unregistering_from_market(self):
         # Build the related Mock
         self._market_mock()
-        markets_management.unregister_from_market('test_market')
+        markets_management.unregister_from_market(self._user, 'test_market')
 
         markets_management.Marketplace.objects.get.assert_called_with(name='test_market')
-        self.adaptor_object.delete_store.assert_called_with('test_store')
+        markets_management.marketadaptor_factory.assert_called_once_with(self._mock_market, self._user)
+        self.adaptor_object.delete_store.assert_called_with()
 
     def test_unregistering_already_unregistered(self):
 
@@ -184,7 +207,7 @@ class UnregisteringFromMarketplaceTestCase(TestCase):
         markets_management.Marketplace.objects.get.side_effect = Exception('Not found')
         error = False
         try:
-            markets_management.unregister_from_market('test_market1')
+            markets_management.unregister_from_market(self._user, 'test_market1')
         except:
             error = True
 
@@ -199,14 +222,15 @@ class UnregisteringFromMarketplaceTestCase(TestCase):
         error = False
         msg = None
         try:
-            markets_management.unregister_from_market('test_market')
+            markets_management.unregister_from_market(self._user, 'test_market')
         except Exception as e:
             error = True
             msg = e.message
 
         self.assertTrue(error)
         self.assertEquals(msg, 'Bad Gateway')
-        self.adaptor_object.delete_store.assert_called_with('test_store')
+        self.adaptor_object.delete_store.assert_called_with()
+        markets_management.marketadaptor_factory.assert_called_once_with(self._mock_market, self._user)
 
 
 class MarketplaceViewTestCase(TestCase):
@@ -263,31 +287,15 @@ class MarketplaceViewTestCase(TestCase):
         views.register_on_market.side_effect = PermissionDenied('Existing Marketplace')
 
     @parameterized.expand([
-        ({
-            'name': 'test_market',
-            'host': 'http://testmarket.com',
-            'api_version': '1'
-        }, (201, 'Created', 'correct'), False),
-        ({
-            'name': 'test_market',
-            'host': 'http://testmarket.com',
-            'api_version': '1'
-        }, (403, 'You are not allowed to register WStore in a Marketplace', 'error'), True, _forbidden),
+        (BASIC_MARKET_DATA, (201, 'Created', 'correct'), False),
+        (BASIC_MARKET_DATA, (403, 'You are not allowed to register WStore in a Marketplace', 'error'), True, _forbidden),
         ({
             'invalid': 'test_market',
             'host': 'http://testmarket.com',
             'api_version': '1'
         }, (400, 'Request body is not valid JSON data', 'error'), True),
-        ({
-            'name': 'test_market',
-            'host': 'http://testmarket.com',
-            'api_version': '1'
-        }, (502, 'The Marketplace has failed registering the store', 'error'), True, _market_failure),
-        ({
-            'name': 'test_market',
-            'host': 'http://testmarket.com',
-            'api_version': '1'
-        }, (500, 'Bad request', 'error'), True, _bad_request),
+        (BASIC_MARKET_DATA, (502, 'The Marketplace has failed registering the store', 'error'), True, _market_failure),
+        (BASIC_MARKET_DATA, (500, 'Bad request', 'error'), True, _bad_request),
         ({
             'name': 'test_market$',
             'host': 'http://testmarket.com',
@@ -308,11 +316,28 @@ class MarketplaceViewTestCase(TestCase):
             'host': 'http://testmarket.com',
             'api_version': '3'
         }, (400, 'Invalid API version', 'error'), True),
+        (BASIC_MARKET_DATA, (403, 'Existing Marketplace', 'error'), True, _existing),
         ({
             'name': 'test_market',
             'host': 'http://testmarket.com',
             'api_version': '1'
-        }, (403, 'Existing Marketplace', 'error'), True, _existing),
+        }, (400, 'Missing required field credentials', 'error'), True),
+        ({
+            'name': 'test_market',
+            'host': 'http://testmarket.com',
+            'api_version': '1',
+            'credentials': {
+                'passwd': 'test_passwd'
+            }
+        }, (400, 'Missing required field username in credentials', 'error'), True),
+        ({
+            'name': 'test_market',
+            'host': 'http://testmarket.com',
+            'api_version': '1',
+            'credentials': {
+                'username': 'test_username'
+            }
+        }, (400, 'Missing required field passwd in credentials', 'error'), True),
     ])
     def test_market_api_create(self, data, exp_resp, error, side_effect=None):
         # Create request data
@@ -334,7 +359,14 @@ class MarketplaceViewTestCase(TestCase):
 
         # Check calls
         if not error:
-            views.register_on_market.assert_called_with(data['name'], data['host'], int(data['api_version']), 'http://teststore.org')
+            views.register_on_market.assert_called_with(
+                self.request.user,
+                data['name'],
+                data['host'],
+                int(data['api_version']),
+                data['credentials'],
+                'http://teststore.org'
+            )
 
     @parameterized.expand([
         (False,),

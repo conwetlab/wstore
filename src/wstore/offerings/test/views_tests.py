@@ -908,7 +908,7 @@ class PublishEntryTestCase(TestCase):
 
         response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
 
-        views.publish_offering.assert_called_once_with(offering, self.data)
+        views.publish_offering.assert_called_once_with(self.user, offering, self.data)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
@@ -1004,7 +1004,7 @@ class PublishEntryTestCase(TestCase):
         # Call the view
         response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
 
-        views.publish_offering.assert_called_once_with(offering, self.data)
+        views.publish_offering.assert_called_once_with(self.user, offering, self.data)
 
         self.assertEqual(response.status_code, 502)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
@@ -1040,7 +1040,7 @@ class PublishEntryTestCase(TestCase):
         # Call the view
         response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
 
-        views.publish_offering.assert_called_once_with(offering, self.data)
+        views.publish_offering.assert_called_once_with(self.user, offering, self.data)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')

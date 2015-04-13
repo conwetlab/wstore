@@ -120,6 +120,12 @@ class MarketAdaptorTestCase(TestCase):
         self.marketplace = MagicMock()
         self.marketplace.name = 'test_market'
         self.marketplace.api_version = 1
+        self.marketplace.store_id = 'test_store'
+        self.marketplace.credentials.username = 'test_user'
+        self.marketplace.credentials.passwd = 'testpasswd'
+
+        marketadaptor.Marketplace = MagicMock()
+        marketadaptor.Marketplace.objects.get.return_value = self.marketplace
 
     def tearDown(self):
         reload(marketadaptor)
@@ -174,11 +180,12 @@ class MarketAdaptorTestCase(TestCase):
     def test_delete_store_v1(self):
         market_adaptor = self._get_marketadaptor('http://delete_store_marketplace/')
 
-        market_adaptor.delete_store('test_store')
+        market_adaptor.delete_store()
 
         opener = self.fake_urllib._opener
         self.assertEqual(opener._url, 'http://delete_store_marketplace/v1/registration/store/test_store')
         self.assertEqual(opener._method, 'DELETE')
+        marketadaptor.Marketplace.objects.get.assert_called_once_with(host="http://delete_store_marketplace/")
 
     def test_delete_store_error_v1(self):
         market_adaptor = self._get_marketadaptor('http://delete_store_error/')
@@ -186,7 +193,7 @@ class MarketAdaptorTestCase(TestCase):
         error = False
         msg = None
         try:
-            market_adaptor.delete_store('test_store')
+            market_adaptor.delete_store()
         except HTTPError, e:
             error = True
             msg = str(e.reason)
@@ -204,12 +211,13 @@ class MarketAdaptorTestCase(TestCase):
 
         market_adaptor = self._get_marketadaptor('http://add_service_marketplace/')
 
-        market_adaptor.add_service('test_store', service_info)
+        market_adaptor.add_service(service_info)
 
         opener = self.fake_urllib._opener
         self.assertEqual(opener._url, 'http://add_service_marketplace/v1/offering/store/test_store/offering')
         self.assertEqual(opener._method, 'PUT')
         self.assertEqual(opener._body, expected_body)
+        marketadaptor.Marketplace.objects.get.assert_called_once_with(host="http://add_service_marketplace/")
 
     test_add_service_v1.tags = ('fiware-ut-4',)
 
@@ -224,7 +232,7 @@ class MarketAdaptorTestCase(TestCase):
         error = False
         msg = None
         try:
-            market_adaptor.add_service('test_store', service_info)
+            market_adaptor.add_service(service_info)
         except HTTPError, e:
             error = True
             msg = str(e.reason)
@@ -237,11 +245,12 @@ class MarketAdaptorTestCase(TestCase):
     def test_delete_service_v1(self):
         market_adaptor = self._get_marketadaptor('http://delete_service_marketplace/')
 
-        market_adaptor.delete_service('test_store', 'test_service')
+        market_adaptor.delete_service('test_service')
 
         opener = self.fake_urllib._opener
         self.assertEqual(opener._url, 'http://delete_service_marketplace/v1/offering/store/test_store/offering/test_service')
         self.assertEqual(opener._method, 'DELETE')
+        marketadaptor.Marketplace.objects.get.assert_called_once_with(host="http://delete_service_marketplace/")
 
     test_delete_service_v1.tags = ('fiware-ut-9',)
 
@@ -251,7 +260,7 @@ class MarketAdaptorTestCase(TestCase):
         error = False
         msg = None
         try:
-            market_adaptor.delete_service('test_store', 'test_service')
+            market_adaptor.delete_service('test_service')
         except HTTPError, e:
             error = True
             msg = str(e.reason)

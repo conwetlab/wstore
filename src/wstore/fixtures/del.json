@@ -36,7 +36,13 @@
         "model": "wstore.Marketplace",
         "fields": { 
             "name": "test_marketplace",
-            "host": "http://testmarketplace/"
+            "host": "http://testmarketplace/",
+            "api_version": 1,
+            "store_id": "test_store",
+            "credentials": {
+                "username": "test_user",
+                "passwd": "test_passwd"
+            }
         }
     },
     {
