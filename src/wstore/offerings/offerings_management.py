@@ -835,7 +835,7 @@ def delete_offering(user, offering):
         # Delete the offering from marketplaces
         for market in offering.marketplaces:
             m = Marketplace.objects.get(pk=market)
-            market_adaptor = marketadaptor_factory(m)
+            market_adaptor = marketadaptor_factory(m, user)
             market_adaptor.delete_service(offering.name)
 
         # Update offering indexes
