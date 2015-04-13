@@ -151,12 +151,12 @@ class MarketAdaptorV2(MarketAdaptor):
         return result
 
     def add_store(self, store_info):
-        url = urljoin(self._marketplace_uri, "/api/v2/store")
+        url = urljoin(self._marketplace_uri, "api/v2/store")
 
         params = {
             'displayName': store_info['store_name'],
             'url': store_info['store_uri'],
-            'description': "WStore instance deployed in " + store_info['store_uri']
+            'comment': "WStore instance deployed in " + store_info['store_uri']
         }
         headers = {
             'Content-type': 'application/json'
@@ -175,6 +175,6 @@ class MarketAdaptorV2(MarketAdaptor):
         # Get WStore name in the marketplace
         store = self._get_store_name()
 
-        url = urljoin(self._marketplace_uri, "/api/v2/store/" + store)
+        url = urljoin(self._marketplace_uri, "api/v2/store/" + store)
         url = url_fix(url)
         self._make_request('DELETE', url, '', {}, 204)
