@@ -130,6 +130,8 @@ class MarketAdaptorV1(MarketAdaptor):
         url = url_fix(url)
         self._make_request('PUT', url, params, headers, 201)
 
+        return service_info['name']
+
     def delete_service(self, service):
         store = self._get_store_name()
 
@@ -150,6 +152,14 @@ class MarketAdaptorV2(MarketAdaptor):
 
         return result
 
+    def _get_id(self, response):
+        uri = response.headers.getheader('Location')
+
+        if uri.endswith('/'):
+            uri = store_uri[:-1]
+
+        return uri.split('/')[-1]
+
     def add_store(self, store_info):
         url = urljoin(self._marketplace_uri, "api/v2/store")
 
@@ -164,17 +174,35 @@ class MarketAdaptorV2(MarketAdaptor):
 
         response = self._make_request('POST', url, json.dumps(params), headers, 201)
 
-        store_uri = response.headers.getheader('Location')
-
-        if store_uri.endswith('/'):
-            store_uri = store_uri[:-1]
-
-        return store_uri.split('/')[-1]
+        return self._get_id(response)
 
     def delete_store(self):
         # Get WStore name in the marketplace
         store = self._get_store_name()
 
         url = urljoin(self._marketplace_uri, "api/v2/store/" + store)
+        url = url_fix(url)
+        self._make_request('DELETE', url, '', {}, 204)
+
+    def add_service(self, service_info):
+        store = self._get_store_name()
+
+        url = urljoin(self._marketplace_uri, "api/v2/store/" + store + "/description")
+        params = {
+            "displayName": service_info['name'],
+            "url": service_info['url']
+        }
+        headers = {
+            'Content-type': 'application/json'
+        }
+
+        response = self._make_request('POST', url, json.dumps(params), headers, 201)
+
+        return self._get_id(response)
+
+    def delete_service(self, service):
+        store = self._get_store_name()
+
+        url = urljoin(self._marketplace_uri, "api/v2/store/" + store + "/description/" + service)
         url = url_fix(url)
         self._make_request('DELETE', url, '', {}, 204)

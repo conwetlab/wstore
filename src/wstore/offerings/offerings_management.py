@@ -39,7 +39,7 @@ from wstore.market_adaptor.marketadaptor import marketadaptor_factory
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
 from wstore.models import Offering, Repository, Resource
-from wstore.models import Marketplace
+from wstore.models import Marketplace, MarketOffering
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
@@ -750,8 +750,12 @@ def publish_offering(user, offering, data):
             'name': offering.name,
             'url': offering.description_url
         }
-        market_adaptor.add_service(info)
-        offering.marketplaces.append(m.pk)
+
+        off_market_name = market_adaptor.add_service(info)
+        offering.marketplaces.append(MarketOffering(
+            marketplace=m,
+            offering_name=off_market_name
+        ))
 
     offering.state = 'published'
     offering.publication_date = datetime.now()
@@ -834,9 +838,8 @@ def delete_offering(user, offering):
 
         # Delete the offering from marketplaces
         for market in offering.marketplaces:
-            m = Marketplace.objects.get(pk=market)
-            market_adaptor = marketadaptor_factory(m, user)
-            market_adaptor.delete_service(offering.name)
+            market_adaptor = marketadaptor_factory(market.marketplace, user)
+            market_adaptor.delete_service(market.offering_name)
 
         # Update offering indexes
         if not offering.open:

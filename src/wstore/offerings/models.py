@@ -27,6 +27,10 @@ from wstore.models import Marketplace
 from wstore.models import Organization, Context
 
 
+class MarketOffering(models.Model):
+    marketplace = models.ForeignKey(Marketplace)
+    offering_name = models.CharField(max_length=100)
+
 # An application is an offering composed by some
 # backend comopents and some resources
 class Offering(models.Model):
@@ -38,7 +42,7 @@ class Offering(models.Model):
     version = models.CharField(max_length=20)
     state = models.CharField(max_length=50)
     description_url = models.CharField(max_length=200)
-    marketplaces = ListField(models.ForeignKey(Marketplace))
+    marketplaces = ListField(EmbeddedModelField(MarketOffering))
     resources = ListField()
     rating = models.FloatField(default=0)
     comments = ListField()

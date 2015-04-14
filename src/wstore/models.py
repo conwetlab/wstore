@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -81,7 +81,7 @@ class Organization(models.Model):
         return found
 
 
-from wstore.offerings.models import Offering, Resource, ResourcePlugin
+from wstore.offerings.models import Offering, Resource, ResourcePlugin, MarketOffering
 from wstore.contracting.models import Purchase
 
 
