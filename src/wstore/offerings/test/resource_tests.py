@@ -438,6 +438,7 @@ class ResourceRetrievingTestCase(TestCase):
         ([RESOURCE_DATA3, RESOURCE_DATA4], True),
         ([RESOURCE_DATA1, RESOURCE_DATA2], False),
         ([RESOURCE_DATA1], None, {"start": 1, "limit": 1}),
+        ([RESOURCE_DATA3], True, {"start": 1, "limit": 1}),
         ([RESOURCE_DATA2, RESOURCE_DATA3], None, {"start": 2, "limit": 2}),
         ([RESOURCE_DATA3, RESOURCE_DATA4], None, {"start": 3, "limit": 8}),
         ([], None, {"start": 6}, ValueError, "Missing required parameter in pagination"),

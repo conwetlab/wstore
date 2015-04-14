@@ -587,7 +587,16 @@ class ResourceCollectionTestCase(TestCase):
             'provider': 'test_user',
             'version': '1.0'
         }],),
+        ([{
+            'name': 'test_resource',
+            'provider': 'test_user',
+            'version': '1.0'
+        }], None, None, 200, None, {
+            'start': '1',
+            'limit': '1'
+        }),
         ([], None, _no_provider, 403, 'Forbidden'),
+        ([], 'inv', None, 400, 'Invalid open param'),
         ([], None, _call_exception, 400, 'Getting resources error')
     ])
     def test_get_resources(self, return_value, filter_=None, side_effect=None, code=200, error_msg=None, pagination=None):
@@ -601,6 +610,14 @@ class ResourceCollectionTestCase(TestCase):
         path = '/api/offering/resources'
         if filter_ is not None:
             path += '?open=' + filter_
+
+        if pagination is not None:
+            if filter_ is None:
+                path += '?'
+            else:
+                path += '&'
+
+            path += 'start=' + pagination['start'] + '&limit=' + pagination['limit']
 
         request = self.factory.get(path, HTTP_ACCEPT='application/json')
 
@@ -626,7 +643,7 @@ class ResourceCollectionTestCase(TestCase):
                 if filter_ == 'true':
                     expected_filter = True
 
-            views.get_provider_resources.assert_called_once_with(self.user, pagination=None, filter_=expected_filter)
+            views.get_provider_resources.assert_called_once_with(self.user, pagination=pagination, filter_=expected_filter)
             self.assertEquals(type(body_response), list)
             self.assertEquals(body_response, return_value)
         else:
