@@ -195,11 +195,35 @@ class UnregisteringFromMarketplaceTestCase(TestCase):
     def test_basic_unregistering_from_market(self):
         # Build the related Mock
         self._market_mock()
+
+        # Mock offering info
+        mock_off1 = MagicMock()
+        mock_off1.marketplaces = []
+
+        mock_market_off = MagicMock()
+        mock_market_off2 = MagicMock()
+        mock_market_off2.marketplace = self._mock_market
+
+        mock_off2 = MagicMock()
+        mock_off2.marketplaces = [mock_market_off]
+
+        mock_off3 = MagicMock()
+        mock_off3.marketplaces = [mock_market_off, mock_market_off2]
+
+        markets_management.Offering = MagicMock()
+        markets_management.Offering.objects.all.return_value = [mock_off1, mock_off2, mock_off3]
+
         markets_management.unregister_from_market(self._user, 'test_market')
 
         markets_management.Marketplace.objects.get.assert_called_with(name='test_market')
         markets_management.marketadaptor_factory.assert_called_once_with(self._mock_market, self._user)
         self.adaptor_object.delete_store.assert_called_with()
+
+        # Check that marketplace info has been removed from the corresponding offering
+        self.assertEquals(mock_off1.marketplaces, [])
+        self.assertEquals(mock_off2.marketplaces, [mock_market_off])
+        self.assertEquals(mock_off3.marketplaces, [mock_market_off])
+        mock_off3.save.assert_called_once_with()
 
     def test_unregistering_already_unregistered(self):
 
