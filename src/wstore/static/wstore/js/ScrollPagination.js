@@ -94,6 +94,10 @@
         this.elementsPage = elementsPage;
     }
 
+    ScrollPagination.prototype.setExtraQuery = function setsetExtraQuery (extraQuery) {
+        this.extraQuery = extraQuery;
+    }
+
     /**
      * Handler for get elements response
      */

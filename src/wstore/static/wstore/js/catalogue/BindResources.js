@@ -122,6 +122,9 @@
         this.pagination.setElemSpace(0);
         this.pagination.setElementsPage(2);
 
+        if (this.offeringElem.isOpen()) {
+            this.pagination.setExtraQuery('&open=true');
+        }
         // Remove possible listeners existing in the scroll
         this.pagination.removeListeners();
         this.pagination.createListeners();
