@@ -20,6 +20,8 @@
 
 from __future__ import unicode_literals
 
+import json
+
 import urlparse
 from urllib2 import HTTPError
 from mock import MagicMock
@@ -87,21 +89,28 @@ class FakeUrllib2():
                 self._body = request.data
                 return self._response
 
-            elif request.get_host() == 'delete_store_marketplace':
+            elif request.get_host().startswith('delete_store_marketplace'):
                 self._url = request.get_full_url()
                 self._method = request.get_method()
                 self._response.code = 200
+                if request.get_host().endswith('v2'):
+                    self._response.code = 204
                 return self._response
 
-            elif request.get_host() == 'delete_service_marketplace':
+            elif request.get_host().startswith('delete_service_marketplace'):
                 self._url = request.get_full_url()
                 self._method = request.get_method()
                 self._response.code = 200
+                if request.get_host().endswith('v2'):
+                    self._response.code = 204
                 return self._response
 
     class Response():
-        url = 'http://response.com/v1/FiwareMarketplace;jsessionid=1111'
-        code = 201
+        def __init__(self):
+            self.url = 'http://response.com/v1/FiwareMarketplace;jsessionid=1111'
+            self.code = 201
+            self.headers = MagicMock()
+            self.headers.getheader.return_value = 'http://examplemarket.com/wstore'
 
     def __init__(self):
         self._opener = self.Opener(self.Response())
@@ -177,15 +186,21 @@ class MarketAdaptorTestCase(TestCase):
 
     test_add_store_error_v1.tags = ('fiware-ut-7',)
 
-    def test_delete_store_v1(self):
-        market_adaptor = self._get_marketadaptor('http://delete_store_marketplace/')
+    def _delete_store(self, market_url, expected_url):
+        market_adaptor = self._get_marketadaptor(market_url)
 
         market_adaptor.delete_store()
 
         opener = self.fake_urllib._opener
-        self.assertEqual(opener._url, 'http://delete_store_marketplace/v1/registration/store/test_store')
+        self.assertEqual(opener._url, expected_url)
         self.assertEqual(opener._method, 'DELETE')
-        marketadaptor.Marketplace.objects.get.assert_called_once_with(host="http://delete_store_marketplace/")
+        marketadaptor.Marketplace.objects.get.assert_called_once_with(host=market_url)
+
+    def test_delete_store_v1(self):
+        self._delete_store(
+            'http://delete_store_marketplace',
+            'http://delete_store_marketplace/v1/registration/store/test_store'
+        )
 
     def test_delete_store_error_v1(self):
         market_adaptor = self._get_marketadaptor('http://delete_store_error/')
@@ -242,15 +257,21 @@ class MarketAdaptorTestCase(TestCase):
 
     test_add_service_error_v1.tags = ('fiware-ut-4',)
 
-    def test_delete_service_v1(self):
-        market_adaptor = self._get_marketadaptor('http://delete_service_marketplace/')
+    def _delete_service(self, market_url, expected_url):
+        market_adaptor = self._get_marketadaptor(market_url)
 
         market_adaptor.delete_service('test_service')
 
         opener = self.fake_urllib._opener
-        self.assertEqual(opener._url, 'http://delete_service_marketplace/v1/offering/store/test_store/offering/test_service')
+        self.assertEqual(opener._url, expected_url)
         self.assertEqual(opener._method, 'DELETE')
-        marketadaptor.Marketplace.objects.get.assert_called_once_with(host="http://delete_service_marketplace/")
+        marketadaptor.Marketplace.objects.get.assert_called_once_with(host=market_url)
+
+    def test_delete_service_v1(self):
+        self._delete_service(
+            'http://delete_service_marketplace',
+            'http://delete_service_marketplace/v1/offering/store/test_store/offering/test_service'
+        )
 
     test_delete_service_v1.tags = ('fiware-ut-9',)
 
@@ -269,3 +290,66 @@ class MarketAdaptorTestCase(TestCase):
         self.assertEqual(msg, 'Error delete service')
 
     test_delete_service_error_v1.tags = ('fiware-ut-9',)
+
+    def test_add_store_v2(self):
+        self.marketplace.api_version = 2
+        market_adaptor = self._get_marketadaptor('http://add_store_marketplace/')
+
+        expected_body = {
+            "displayName": "store",
+            "url": "http://store_uri.com",
+            "comment": "WStore instance deployed in http://store_uri.com"
+        }
+
+        store_info = {
+            'store_name': 'store',
+            'store_uri': 'http://store_uri.com'
+        }
+
+        market_adaptor = self._get_marketadaptor('http://add_store_marketplace/')
+
+        store_id = market_adaptor.add_store(store_info)
+
+        self.assertEquals(store_id, 'wstore')
+
+        opener = self.fake_urllib._opener
+        self.assertEqual(opener._url, 'http://add_store_marketplace/api/v2/store')
+        self.assertEqual(opener._method, 'POST')
+        self.assertEqual(json.loads(opener._body), expected_body)
+
+    def test_delete_store_v2(self):
+        self.marketplace.api_version = 2
+        self._delete_store(
+            'http://delete_store_marketplace_v2',
+            'http://delete_store_marketplace_v2/api/v2/store/test_store'
+        )
+
+    def test_add_service_v2(self):
+        self.marketplace.api_version = 2
+        market_adaptor = self._get_marketadaptor('http://add_service_marketplace/')
+
+        expected_body = {
+            "displayName": "test_service",
+            "url": "http://test_service_uri.com",
+        }
+
+        service_info = {
+            'name': 'test_service',
+            'url': 'http://test_service_uri.com'
+        }
+
+        store_id = market_adaptor.add_service(service_info)
+
+        self.assertEquals(store_id, 'wstore')
+
+        opener = self.fake_urllib._opener
+        self.assertEqual(opener._url, 'http://add_service_marketplace/api/v2/store/test_store/description')
+        self.assertEqual(opener._method, 'POST')
+        self.assertEqual(json.loads(opener._body), expected_body)
+
+    def test_delete_service_v2(self):
+        self.marketplace.api_version = 2
+        self._delete_service(
+            'http://delete_service_marketplace_v2',
+            'http://delete_service_marketplace_v2/api/v2/store/test_store/description/test_service'
+        )

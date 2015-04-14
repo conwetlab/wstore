@@ -156,7 +156,7 @@ class MarketAdaptorV2(MarketAdaptor):
         uri = response.headers.getheader('Location')
 
         if uri.endswith('/'):
-            uri = store_uri[:-1]
+            uri = uri[:-1]
 
         return uri.split('/')[-1]
 
