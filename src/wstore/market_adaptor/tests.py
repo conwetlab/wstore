@@ -327,6 +327,9 @@ class MarketAdaptorTestCase(TestCase):
     def test_add_service_v2(self):
         self.marketplace.api_version = 2
         market_adaptor = self._get_marketadaptor('http://add_service_marketplace/')
+        market_adaptor._user = None
+        market_adaptor._current_user = MagicMock()
+        market_adaptor._current_user.userprofile.access_token = 'access_token'
 
         expected_body = {
             "displayName": "test_service",
