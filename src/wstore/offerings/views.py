@@ -340,9 +340,16 @@ class ResourceCollection(Resource):
         if filter_ and filter_ != 'true' and filter_ != 'false':
             return build_response(request, 400, 'Invalid open param')
 
+        open_res = None
+        if filter_ is not None:
+            open_res = False
+
+            if filter_ == 'true':
+                open_res = True
+
         if 'provider' in profile.get_current_roles():
             try:
-                response = get_provider_resources(request.user, filter_=filter_, pagination=pagination)
+                response = get_provider_resources(request.user, filter_=open_res, pagination=pagination)
             except Exception, e:
                 return build_response(request, 400, e.message)
         else:

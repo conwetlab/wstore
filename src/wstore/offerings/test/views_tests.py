@@ -576,18 +576,33 @@ class ResourceCollectionTestCase(TestCase):
             'name': 'test_resource',
             'provider': 'test_user',
             'version': '1.0'
+        }], 'true'),
+        ([{
+            'name': 'test_resource',
+            'provider': 'test_user',
+            'version': '1.0'
+        }], 'false'),
+        ([{
+            'name': 'test_resource',
+            'provider': 'test_user',
+            'version': '1.0'
         }],),
-        ([], _no_provider, 403, 'Forbidden'),
-        ([], _call_exception, 400, 'Getting resources error')
+        ([], None, _no_provider, 403, 'Forbidden'),
+        ([], None, _call_exception, 400, 'Getting resources error')
     ])
-    def test_get_resources(self, return_value, side_effect=None, code=200, error_msg=None, pagination=None):
+    def test_get_resources(self, return_value, filter_=None, side_effect=None, code=200, error_msg=None, pagination=None):
 
         # Mock get offerings method
         resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))
         views.get_provider_resources = MagicMock(name='get_provider_resources')
 
         views.get_provider_resources.return_value = return_value
-        request = self.factory.get('/api/offering/resources', HTTP_ACCEPT='application/json')
+
+        path = '/api/offering/resources'
+        if filter_ is not None:
+            path += '?open=' + filter_
+
+        request = self.factory.get(path, HTTP_ACCEPT='application/json')
 
         request.user = self.user
 
@@ -604,7 +619,14 @@ class ResourceCollectionTestCase(TestCase):
 
         if not error_msg:
             # Check correct call
-            views.get_provider_resources.assert_called_once_with(self.user, pagination=None, filter_=None)
+            expected_filter = None
+            if filter_ is not None:
+                expected_filter = False
+
+                if filter_ == 'true':
+                    expected_filter = True
+
+            views.get_provider_resources.assert_called_once_with(self.user, pagination=None, filter_=expected_filter)
             self.assertEquals(type(body_response), list)
             self.assertEquals(body_response, return_value)
         else:
@@ -620,7 +642,6 @@ class ResourceCollectionTestCase(TestCase):
         (RESOURCE_DATA, True, _creation_exception, True, 400, 'Resource creation exception'),
         (RESOURCE_DATA, True, _creation_exception, True, 400, 'Resource creation exception'),
         (RESOURCE_DATA, True, _existing, True, 409, 'Resource exists')
-        
     ])
     def test_create_resource(self, data, file_=False, side_effect=None, error=False, code=201, msg='Created'):
 

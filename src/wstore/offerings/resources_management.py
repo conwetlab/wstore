@@ -286,15 +286,18 @@ def get_provider_resources(provider, filter_=None, pagination=None):
     if pagination:
         x = int(pagination['start']) - 1
         y = x + int(pagination['limit'])
-        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)[x:y]
+
+        if filter_ is not None:
+            resources = Resource.objects.filter(provider=provider.userprofile.current_organization, open=filter_)[x:y]
+        else:
+            resources = Resource.objects.filter(provider=provider.userprofile.current_organization)[x:y]
     else:
-        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
+        if filter_ is not None:
+            resources = Resource.objects.filter(provider=provider.userprofile.current_organization, open=filter_)
+        else:
+            resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
 
     for res in resources:
-        # Filter by open property if needed
-        if (filter_ == 'true' and not res.open) or (filter_ == 'false' and res.open):
-            continue
-
         state = res.state
         if state != 'deleted' and len(res.offerings):
             state = 'used'

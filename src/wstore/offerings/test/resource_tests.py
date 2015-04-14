@@ -397,12 +397,32 @@ class ResourceRetrievingTestCase(TestCase):
         resource4.meta_info = {}
 
         resources_management.Resource = MagicMock()
-        resources_management.Resource.objects.filter.return_value = [
-            resource1,
-            resource2,
-            resource3,
-            resource4
-        ]
+
+        def resource_filter(provider=None, open=None):
+            if provider != self.org:
+                return []
+
+            if open is None:
+                result = [
+                    resource1,
+                    resource2,
+                    resource3,
+                    resource4
+                ]
+            elif not open:
+                result = [
+                    resource1,
+                    resource2
+                ]
+            else:
+                result = [
+                    resource3,
+                    resource4
+                ]
+            return result
+
+        resources_management.Resource.objects.filter = resource_filter
+
         self.user = MagicMock()
         self.org = MagicMock()
         self.user.userprofile.current_organization = self.org
@@ -415,8 +435,8 @@ class ResourceRetrievingTestCase(TestCase):
 
     @parameterized.expand([
         ([RESOURCE_DATA1, RESOURCE_DATA2, RESOURCE_DATA3, RESOURCE_DATA4],),
-        ([RESOURCE_DATA3, RESOURCE_DATA4], 'true'),
-        ([RESOURCE_DATA1, RESOURCE_DATA2], 'false'),
+        ([RESOURCE_DATA3, RESOURCE_DATA4], True),
+        ([RESOURCE_DATA1, RESOURCE_DATA2], False),
         ([RESOURCE_DATA1], None, {"start": 1, "limit": 1}),
         ([RESOURCE_DATA2, RESOURCE_DATA3], None, {"start": 2, "limit": 2}),
         ([RESOURCE_DATA3, RESOURCE_DATA4], None, {"start": 3, "limit": 8}),
@@ -440,8 +460,6 @@ class ResourceRetrievingTestCase(TestCase):
         if not err_type:
             # Assert that no error occurs
             self.assertEquals(error, None)
-            # Check calls
-            resources_management.Resource.objects.filter.assert_called_once_with(provider=self.org)
             # Check result
             self.assertEquals(result, expected_result)
         else:
