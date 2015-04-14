@@ -40,7 +40,7 @@ from wstore.offerings import offerings_management
 from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.models import UserProfile
 from wstore.models import Offering
-from wstore.models import Marketplace
+from wstore.models import Marketplace, MarketOffering
 from wstore.models import Resource
 from wstore.models import Organization
 
@@ -912,8 +912,10 @@ class OfferingPublicationTestCase(TestCase):
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
+
         offerings_management.marketadaptor_factory = MagicMock()
         self._adaptor_obj = MagicMock()
+        self._adaptor_obj.add_service.return_value = "published_offering"
         offerings_management.marketadaptor_factory.return_value = self._adaptor_obj
         self._user = MagicMock()
 
@@ -969,9 +971,10 @@ class OfferingPublicationTestCase(TestCase):
 
             self.assertEquals(len(offering.marketplaces), len(data['marketplaces']))
 
-            for m_id in offering.marketplaces:
-                market = Marketplace.objects.get(pk=m_id)
+            for m in offering.marketplaces:
+                market = m.marketplace
                 self.assertTrue(market.name in data['marketplaces'])
+                self.assertEquals(m.offering_name, "published_offering")
 
             self.se_object.update_index.assert_called_with(offering)
 
@@ -1142,6 +1145,13 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.Context.objects.all.return_value = [self.context_obj]
 
         self._user = MagicMock()
+        market = Marketplace.objects.get(pk="61000aba8e05ac2115f022ff")
+        off = Offering.objects.get(name="test_offering3")
+        off.marketplaces = [MarketOffering(
+            marketplace=market,
+            offering_name="test_offering3"
+        )]
+        off.save()
 
     def tearDown(self):
         reload(offerings_management)
