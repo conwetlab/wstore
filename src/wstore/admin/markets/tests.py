@@ -27,6 +27,7 @@ from nose_parameterized import parameterized
 
 from django.test import TestCase
 from django.core.exceptions import PermissionDenied
+from django.test.utils import override_settings
 
 from wstore.admin.markets import markets_management
 from wstore.admin.markets import views
@@ -311,7 +312,7 @@ class MarketplaceViewTestCase(TestCase):
         views.register_on_market.side_effect = PermissionDenied('Existing Marketplace')
 
     @parameterized.expand([
-        (BASIC_MARKET_DATA, (201, 'Created', 'correct'), False),
+        (BASIC_MARKET_DATA1, (201, 'Created', 'correct'), False),
         (BASIC_MARKET_DATA, (403, 'You are not allowed to register WStore in a Marketplace', 'error'), True, _forbidden),
         ({
             'invalid': 'test_market',
@@ -363,6 +364,7 @@ class MarketplaceViewTestCase(TestCase):
             }
         }, (400, 'Missing required field passwd in credentials', 'error'), True),
     ])
+    @override_settings(OILAUTH=True)
     def test_market_api_create(self, data, exp_resp, error, side_effect=None):
         # Create request data
         self.request.raw_post_data = json.dumps(data)
