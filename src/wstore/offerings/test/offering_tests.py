@@ -985,7 +985,7 @@ class OfferingPublicationTestCase(TestCase):
                     market = Marketplace.objects.get(name=m)
                     offerings_management.marketadaptor_factory.assert_any_call(market, self._user)
                     info = {
-                        'name': offering.name,
+                        'name': offering.owner_organization.name + ' ' + offering.name + ' ' + offering.version,
                         'url': offering.description_url
                     }
                     self._adaptor_obj.add_service.assert_any_call(info)

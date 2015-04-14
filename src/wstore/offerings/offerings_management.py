@@ -746,8 +746,9 @@ def publish_offering(user, offering, data):
             raise ValueError('Publication error: The marketplace ' + market + ' does not exist')
 
         market_adaptor = marketadaptor_factory(m, user)
+        offering_id = offering.owner_organization.name + ' ' + offering.name + ' ' + offering.version
         info = {
-            'name': offering.name,
+            'name': offering_id,
             'url': offering.description_url
         }
 
