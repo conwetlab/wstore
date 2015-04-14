@@ -23,7 +23,7 @@ from urllib2 import HTTPError
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
-from wstore.models import Marketplace, MarketCredentials
+from wstore.models import Marketplace, MarketCredentials, Offering
 from wstore.market_adaptor.marketadaptor import marketadaptor_factory
 
 
@@ -93,21 +93,32 @@ def register_on_market(user, name, host, api_version, credentials, site):
 
 def unregister_from_market(user, market):
 
+    # Get the Marketplace object
     marketplace = None
     try:
         marketplace = Marketplace.objects.get(name=market)
     except:
         raise Exception('Not found')
 
-    host = marketplace.host
-    if host[-1] != '/':
-        host += '/'
-
+    # Unregister WStore from the Marketplace
     marketadaptor = marketadaptor_factory(marketplace, user)
 
     try:
         marketadaptor.delete_store()
     except HTTPError:
         raise Exception('Bad Gateway')
+
+    # Remove the Marketplace from Offerings
+    for o in Offering.objects.all():
+        if len(o.marketplaces) > 0:
+            old = []
+
+            for m in o.marketplaces:
+                if m.marketplace != marketplace:
+                    old.append(m)
+
+            if len(old) < len(o.marketplaces):
+                o.marketplaces = old
+                o.save()
 
     marketplace.delete()
