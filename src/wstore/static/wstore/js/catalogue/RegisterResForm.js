@@ -504,6 +504,14 @@
         $(this.msgId + ' #open-help').remove();
         $(this.msgId + ' span:contains( Open Resource )').remove();
 
+        if (this.plugin.overrides.indexOf('VERSION') != -1) {
+            $(this.msgId + ' [name="res-version"]').prop('disabled', true);
+            MessageManager.showAlertWarning(
+                'Warning',
+                'For ' + this.resourceInfo.resource_type + ' resources, version is automatically filled',
+                $(this.msgId + ' #error-container')
+            )
+        }
         // Include upload forms
         fillProvideResourceForm(this);
     };
