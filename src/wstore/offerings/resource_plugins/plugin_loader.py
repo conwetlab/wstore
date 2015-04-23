@@ -117,7 +117,8 @@ class PluginLoader():
             module=module,
             formats=json_info['formats'],
             media_types=json_info.get('media_types', []),
-            form=json_info.get('form', {})
+            form=json_info.get('form', {}),
+            overrides=json_info.get('overrides', [])
         )
 
         return plugin_id

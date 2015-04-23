@@ -297,6 +297,7 @@ class ResourceRegisteringTestCase(TestCase):
 
         # Create plugin module mocks
         plugin_mock = MagicMock(name="test_plugin")
+        plugin_mock.on_pre_create_validation.return_value = data
         wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = plugin_mock
         reload(resources_management)

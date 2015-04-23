@@ -44,6 +44,30 @@ def _get_plugin_model(name):
     return plugin_model
 
 
+def register_resource_validation_events(func):
+
+    @wraps(func)
+    def wrapper(provider, data, file_=None):
+        if 'resource_type' not in data:
+            raise ValueError('Invalid request: Missing required field resource_type')
+
+        new_data = data
+        if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
+            plugin_model = _get_plugin_model(data['resource_type'])
+            plugin_module = load_plugin_module(plugin_model.module)
+
+            new_data = plugin_module.on_pre_create_validation(provider, data, file_=file_)
+
+        resource_data = func(provider, new_data, file_=None)
+
+        if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
+            plugin_module.on_post_create_validation(provider, data, file_=file)
+
+        return resource_data
+
+    return wrapper
+
+
 def register_resource_events(func):
 
     @wraps(func)

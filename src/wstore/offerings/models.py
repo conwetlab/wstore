@@ -131,6 +131,7 @@ class ResourcePlugin(models.Model):
     module = models.CharField(max_length=200)
     media_types = ListField(models.CharField(max_length=100))
     formats = ListField(models.CharField(max_length=10))
+    overrides = ListField(models.CharField(max_length=10))
     options = DictField()
 
     def __unicode__(self):

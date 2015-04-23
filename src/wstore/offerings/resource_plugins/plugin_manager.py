@@ -62,6 +62,16 @@ class PluginManager():
 
         return reason
 
+    def _check_list_field(self, valids, given):
+        valid = True
+        i = 0
+
+        while valid and i < len(given):
+            if not given[i] in valids:
+                valid = False
+            i += 1
+        return (valid, i)
+
     def validate_plugin_info(self, plugin_info):
         """
         Validates the structure of the package.json file of a plugin
@@ -103,17 +113,14 @@ class PluginManager():
 
         # Validate formats
         if reason is None:
-            valid_formats = ['FILE', 'URL']
-            valid_format = True
-            i = 0
-
-            while valid_format and i < len(plugin_info['formats']):
-                if not plugin_info['formats'][i] in valid_formats:
-                    valid_format = False
-                i += 1
+            valid_format, i = self._check_list_field(['FILE', 'URL'], plugin_info['formats'])
 
             if not valid_format or (i < 1 and i > 2):
                 reason = 'Format must contain at least one format of: FILE, URL'
+
+        # Validate overrides
+        if reason is None and 'overrides' in plugin_info and not self._check_list_field(["NAME", "VERSION", "OPEN"], plugin_info['overrides'])[0]:
+            reason = "Override values are: NAME, VERSION and OPEN"
 
         if reason is None and 'media_types' in plugin_info and not isinstance(plugin_info['media_types'], list):
             reason = 'Plugin media_types must be a list'

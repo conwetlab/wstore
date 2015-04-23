@@ -22,7 +22,6 @@ from __future__ import unicode_literals
 
 import base64
 import os
-import re
 from bson import ObjectId
 
 from django.conf import settings
@@ -36,7 +35,8 @@ from wstore.store_commons.utils.version import Version
 from wstore.store_commons.errors import ConflictError
 from wstore.offerings.resource_plugins.plugins.ckan_validation import validate_dataset
 from wstore.offerings.resource_plugins.decorators import register_resource_events, \
-    upgrade_resource_events, update_resource_events, delete_resource_events
+    upgrade_resource_events, update_resource_events, delete_resource_events, \
+    register_resource_validation_events
 
 
 def _save_resource_file(provider, name, version, file_):
@@ -80,10 +80,8 @@ def _create_resource_model(provider, resource_data):
     )
 
 
-def register_resource(provider, data, file_=None):
-    """
-    Registers a new resource for the given provider
-    """
+@register_resource_validation_events
+def _validate_resource_info(provider, data, file_=None):
 
     # Check if the resource already exists
     existing = True
@@ -109,17 +107,26 @@ def register_resource(provider, data, file_=None):
     if not is_valid_id(data['name']):
         raise ValueError('Invalid name format')
 
-    resource_data = {
+    return ({
         'name': data['name'],
         'version': data['version'],
         'description': data['description'],
         'content_type': data['content_type'],
-        'resource_type': data['resource_type']
-    }
+        'resource_type': data['resource_type'],
+        'open': data.get('open', False)
+    }, current_organization)
+
+
+def register_resource(provider, data, file_=None):
+    """
+    Registers a new resource for the given provider
+    """
+
+    resource_data, current_organization = _validate_resource_info(provider, data, file_=file_)
 
     if not file_:
         if 'content' in data:
-            resource_data['content_path'] = _save_resource_file(current_organization.name, data['name'], data['version'], data['content'])
+            resource_data['content_path'] = _save_resource_file(current_organization.name, resource_data['name'], resource_data['version'], data['content'])
             resource_data['link'] = ''
 
         elif 'link' in data:
@@ -139,11 +146,9 @@ def register_resource(provider, data, file_=None):
             raise ValueError('Invalid request: Missing resource content')
 
     else:
-        resource_data['content_path'] = _save_resource_file(current_organization.name, data['name'], data['version'], file_)
+        resource_data['content_path'] = _save_resource_file(current_organization.name, resource_data['name'], resource_data['version'], file_)
         resource_data['link'] = ''
 
-    # Include missing info in resource data
-    resource_data['open'] = data.get('open', False)
     resource_data['meta'] = data.get('meta', {})
 
     # Create the resource entry in the database
