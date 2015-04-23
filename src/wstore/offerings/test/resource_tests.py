@@ -168,7 +168,7 @@ class ResourceRegisteringTestCase(TestCase):
             'resource_type': 'Downloadable',
             'content_type': 'text/plain',
             'link': 'https://existing.com/download'
-        }, None, False, ValueError, 'Invalid version format'),
+        }, None, False, ValueError, "Invalid version number '1.0a'"),
         ({
             'name': 'invalidname$',
             'version': '1.0',
@@ -792,7 +792,7 @@ class ResourceUpgradeTestCase(TestCase):
         (UPGRADE_LINK, False, _mock_res_plugin, ValueError, 'Invalid plugin format: URL not allowed for the resource type'),
         (UPGRADE_CONTENT, False, _mock_file_not_allowed, ValueError, 'Invalid plugin format: File not allowed for the resource type'),
         ({}, False, None, ValueError, 'Missing a required field: Version'),
-        ({'version': '1.0a'}, False, None, ValueError, 'Invalid version format'),
+        ({'version': '1.0a'}, False, None, ValueError, "Invalid version number '1.0a'"),
         ({'version': '1.0'}, False, _deleted_res, PermissionDenied, 'Deleted resources cannot be upgraded'),
         ({'version': '0.0.1'}, False, None, ValueError, 'The new version cannot be lower that the current version: 0.0.1 - 0.1'),
         ({'version': '0.1'}, False, None, ValueError, 'The new version cannot be lower that the current version: 0.1 - 0.1'),

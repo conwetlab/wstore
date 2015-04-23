@@ -32,7 +32,7 @@ from wstore.models import Resource, Offering
 from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
-from wstore.store_commons.utils.version import is_lower_version
+from wstore.store_commons.utils.version import Version
 from wstore.store_commons.errors import ConflictError
 from wstore.offerings.resource_plugins.plugins.ckan_validation import validate_dataset
 from wstore.offerings.resource_plugins.decorators import register_resource_events, \
@@ -102,9 +102,8 @@ def register_resource(provider, data, file_=None):
     'resource_type' not in data:
         raise ValueError('Invalid request: Missing required field')
 
-    # Check version format
-    if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
-        raise ValueError('Invalid version format')
+    # Create version object to validate resource version format
+    Version(data['version'])
 
     # Check name format
     if not is_valid_id(data['name']):
@@ -175,11 +174,11 @@ def upgrade_resource(resource, data, file_=None):
     if'version' not in data:
         raise ValueError('Missing a required field: Version')
 
-    # Check version format
-    if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
-        raise ValueError('Invalid version format')
+    # Create version objects
+    version = Version(data['version'])
+    old_version = Version(resource.version)
 
-    if not is_lower_version(resource.version, data['version']):
+    if old_version >= version:
         raise ValueError('The new version cannot be lower that the current version: ' + data['version'] + ' - ' + resource.version)
 
     # Check resource state
