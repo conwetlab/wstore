@@ -14,3 +14,4 @@ pip install django-crontab
 pip install Whoosh
 pip install Stemming
 pip install requests
+pip install regex
