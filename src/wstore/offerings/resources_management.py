@@ -36,7 +36,7 @@ from wstore.store_commons.errors import ConflictError
 from wstore.offerings.resource_plugins.plugins.ckan_validation import validate_dataset
 from wstore.offerings.resource_plugins.decorators import register_resource_events, \
     upgrade_resource_events, update_resource_events, delete_resource_events, \
-    register_resource_validation_events
+    register_resource_validation_events, upgrade_resource_validation_events
 
 
 def _save_resource_file(provider, name, version, file_):
@@ -170,11 +170,8 @@ def _get_decorated_save(action):
     return save_resource
 
 
-def upgrade_resource(resource, data, file_=None):
-    """
-    Upgrades an existing resource to a new version
-    """
-
+@upgrade_resource_validation_events
+def _validate_upgrade_resource_info(resource, data, file_=None):
     # Validate data
     if'version' not in data:
         raise ValueError('Missing a required field: Version')
@@ -189,6 +186,16 @@ def upgrade_resource(resource, data, file_=None):
     # Check resource state
     if resource.state == 'deleted':
         raise PermissionDenied('Deleted resources cannot be upgraded')
+
+    return data
+
+
+def upgrade_resource(resource, data, file_=None):
+    """
+    Upgrades an existing resource to a new version
+    """
+
+    data = _validate_upgrade_resource_info(resource, data, file_=None)
 
     # Save the old version
     resource.old_versions.append(ResourceVersion(

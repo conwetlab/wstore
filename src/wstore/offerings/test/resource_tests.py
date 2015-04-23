@@ -757,16 +757,17 @@ class ResourceUpgradeTestCase(TestCase):
         self.resource.version = '0.1'
         self.resource.old_versions = []
 
-    def _deleted_res(self):
+    def _deleted_res(self, data):
         self.resource.state = 'deleted'
 
-    def _mock_save_file(self):
+    def _mock_save_file(self, data):
         resources_management._save_resource_file = MagicMock()
         resources_management._save_resource_file.return_value = '/media/resources/test_usdl.rdf'
 
-    def _mock_res_plugin(self):
+    def _mock_res_plugin(self, data):
         self.resource.resource_type = 'test_plugin'
         self.plugin_mock = MagicMock(name="test_plugin")
+        self.plugin_mock.on_pre_upgrade_validation.return_value = data
         wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
         self.mock_model = MagicMock()
         self.mock_model.formats = ['FILE']
@@ -775,13 +776,13 @@ class ResourceUpgradeTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
 
         reload(resources_management)
-        self._mock_save_file()
+        self._mock_save_file(data)
 
-    def _mock_res_api(self):
+    def _mock_res_api(self, data):
         self.resource.resource_type = 'API'
 
-    def _mock_file_not_allowed(self):
-        self._mock_res_plugin()
+    def _mock_file_not_allowed(self, data):
+        self._mock_res_plugin(data)
         self.mock_model.formats = ["URL"]
 
     @parameterized.expand([
@@ -803,7 +804,7 @@ class ResourceUpgradeTestCase(TestCase):
     def test_resource_upgrade(self, data, file_used=False, side_effect=None, err_type=None, err_msg=None):
 
         if side_effect:
-            side_effect(self)
+            side_effect(self, data)
 
         res_file = None
         if file_used:

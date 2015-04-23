@@ -42,6 +42,12 @@ class Plugin():
     def on_post_update(self, resource):
         pass
 
+    def on_pre_upgrade_validation(self, resource, data, file_=None):
+        return data
+
+    def on_post_upgrade_validation(self, resource, data, file_=None):
+        pass
+
     def on_pre_upgrade(self, resource):
         pass
 

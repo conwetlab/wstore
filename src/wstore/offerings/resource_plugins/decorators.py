@@ -108,6 +108,27 @@ def register_resource_events(func):
     return wrapper
 
 
+def upgrade_resource_validation_events(func):
+
+    @wraps(func)
+    def wrapper(resource, data, file_=None):
+        new_data = data
+        if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
+            plugin_model = _get_plugin_model(resource.resource_type)
+            plugin_module = load_plugin_module(plugin_model.module)
+
+            new_data = plugin_module.on_pre_upgrade_validation(resource, data, file_=file_)
+
+        resource_data = func(resource, new_data, file_=None)
+
+        if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
+            plugin_module.on_post_upgrade_validation(resource, data, file_=file)
+
+        return resource_data
+
+    return wrapper
+
+
 def upgrade_resource_events(func):
 
     @wraps(func)
