@@ -127,6 +127,7 @@
         $(self.msgId + ' #upload').on('change', self.handleResourceSelection.bind(self));
 
         // Fill new listener
+        $(self.msgId + ' .modal-footer .btn').text('Accept');
         $(self.msgId + ' .modal-footer > .btn').off();
         $(self.msgId + ' .modal-footer > .btn').click(function(evnt) {
             var errFields = [];
@@ -187,13 +188,16 @@
         description = $.trim($(this.msgId + ' [name="res-description"]').val());
 
         if (!name || !version) {
-            error = true;
-            msg += 'Missing required field(s):';
-            if (!name) {
-                msg += ' Name';
+            if (!name && !$(this.msgId + ' [name="res-name"]').prop('disabled')) {
+                error = true;
+                msg += 'Missing required field(s): Name';
                 errFields.push($(this.msgId + ' [name="res-name"]'));
             }
-            if (!version) {
+            if (!version && !$(this.msgId + ' [name="res-version"]').prop('disabled')) {
+                error = true;
+                if (!msg.length) {
+                    msg += 'Missing required field(s):';
+                }
                 msg += ' Version';
                 errFields.push($(this.msgId + ' [name="res-version"]'));
             }
@@ -231,13 +235,42 @@
     };
 
     var createResource = function createResource(self) {
+        $(self.msgId).modal('hide');
         self.client.create(self.request, function (response) {
-            $(this.msgId).modal('hide');
             MessageManager.showMessage('Created', 'The resource has been registered');
         }.bind(self));
     };
 
+    var manageOverrides = function manageOverrides(self, field, input) {
+        if (self.plugin.overrides.indexOf(field) != -1) {
+            input.prop('disabled', true);
+        } else {
+            input.prop('disabled', false);
+        }
+    };
+
     ResourceCreator.prototype.fillResourceInfo = function fillResourceInfo() {
+        // Include listers for plugins overriding elements
+        $('#resource-type').change(function(self) {
+            $(this.msgId + ' .error').removeClass('error');
+            this.setPlugin($(this.msgId + ' #resource-type').val());
+            // Disable fields to be overriden
+            manageOverrides(this, 'NAME', $(this.msgId + ' [name="res-name"]'));
+            manageOverrides(this, 'VERSION', $(this.msgId + ' [name="res-version"]'));
+            manageOverrides(this, 'OPEN', $(this.msgId + ' #res-open'));
+
+            // Include a warning message if needed
+            if (this.plugin.overrides.length > 0) {
+                MessageManager.showAlertWarning(
+                    'Warning',
+                    'For the selected resource type, the disabled fields will be automatically filled using the provided resource',
+                    $(this.msgId + ' #error-container')
+                )
+            } else {
+                $(this.msgId + ' .alert-warning').remove();
+            }
+        }.bind(this));
+        $(this.msgId + ' .modal-footer .btn').text('Next');
     };
 
 })();
