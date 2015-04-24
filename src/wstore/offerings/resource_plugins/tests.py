@@ -213,7 +213,8 @@ class PluginValidatorTestCase(TestCase):
         ('invalid_form_missing_type', INVALID_FORM_MISSING_TYPE, 'Invalid form field: Missing type in name entry'),
         ('invalid_form_inv_type', INVALID_FORM_INV_TYPE, 'Invalid form field: type invalid in name entry is not a valid type'),
         ('invalid_form_inv_name', INVALID_FORM_INVALID_NAME, 'Invalid form field: inv&name is not a valid name'),
-        ('invalid_form_checkbox_def', INVALID_FORM_CHECKBOX_DEF, 'Invalid form field: default field in check entry must be a boolean')
+        ('invalid_form_checkbox_def', INVALID_FORM_CHECKBOX_DEF, 'Invalid form field: default field in check entry must be a boolean'),
+        ('invalid_overrides', INVALID_OVERRIDES, 'Override values should be one of: NAME, VERSION and OPEN')
     ])
     def test_plugin_info_validation(self, name, plugin_info, validation_msg=None):
 

@@ -290,3 +290,13 @@ INVALID_FORM_CHECKBOX_DEF = {
         }
     }
 }
+
+INVALID_OVERRIDES = {
+    "name": "plugin name",
+    "author": "test author",
+    "version": "1.0",
+    "module": "test.TestPlugin",
+    "media_types": ["text/plain"],
+    "formats": ["FILE", "URL"],
+    "overrides": ["INVALID"]
+}

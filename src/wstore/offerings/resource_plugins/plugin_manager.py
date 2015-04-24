@@ -120,7 +120,7 @@ class PluginManager():
 
         # Validate overrides
         if reason is None and 'overrides' in plugin_info and not self._check_list_field(["NAME", "VERSION", "OPEN"], plugin_info['overrides'])[0]:
-            reason = "Override values are: NAME, VERSION and OPEN"
+            reason = "Override values should be one of: NAME, VERSION and OPEN"
 
         if reason is None and 'media_types' in plugin_info and not isinstance(plugin_info['media_types'], list):
             reason = 'Plugin media_types must be a list'
