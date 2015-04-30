@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -41,12 +41,13 @@ def logout(request):
             origin = request.META['HTTP_ORIGIN']
             origin = add_slash(origin)
 
-            from wstore.views import ACCOUNT_PORTAL_URL, CLOUD_PORTAL_URL, MASHUP_PORTAL_URL
+            from wstore.views import ACCOUNT_PORTAL_URL, CLOUD_PORTAL_URL, MASHUP_PORTAL_URL, DATA_PORTAL_URL
 
             allowed_origins = [
                 add_slash(ACCOUNT_PORTAL_URL),
                 add_slash(CLOUD_PORTAL_URL),
-                add_slash(MASHUP_PORTAL_URL)
+                add_slash(MASHUP_PORTAL_URL),
+                add_slash(DATA_PORTAL_URL)
             ]
 
             if origin in allowed_origins:
