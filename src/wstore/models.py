@@ -54,6 +54,7 @@ class Context(models.Model):
                     break
         return valid
 
+
 class Organization(models.Model):
 
     name = models.CharField(max_length=50, unique=True)
@@ -64,7 +65,13 @@ class Organization(models.Model):
     payment_info = DictField()
     tax_address = DictField()
     managers = ListField()
-    actor_id = models.IntegerField(null=True, blank=True)
+
+    # The type of the actorId field will depend on the version of the idm API
+    if settings.FIWARE_IDM_API_VERSION == 1:
+        actor_id = models.IntegerField(null=True, blank=True)
+    else:
+        actor_id = models.CharField(null=True, blank=True, max_length=100)
+
     expenditure_limits = DictField()
 
     def has_rated_offering(self, user, offering):
@@ -96,7 +103,13 @@ class UserProfile(models.Model):
     tax_address = DictField()
     complete_name = models.CharField(max_length=100)
     payment_info = DictField()
-    actor_id = models.IntegerField(null=True, blank=True)
+
+    # The type of the actorId field will depend on the version of the idm API
+    if settings.FIWARE_IDM_API_VERSION == 1:
+        actor_id = models.IntegerField(null=True, blank=True)
+    else:
+        actor_id = models.CharField(null=True, blank=True, max_length=100)
+
     access_token = models.CharField(max_length=150, null=True, blank=True)
     refresh_token = models.CharField(max_length=150, null=True, blank=True)
     provider_requested = models.BooleanField(default=False)
@@ -184,7 +197,7 @@ def create_context(sender, instance, created, **kwargs):
         context.save()
 
 
-#Creates a new user profile when an user is created
+# Creates a new user profile when an user is created
 post_save.connect(create_user_profile, sender=User)
 
 
@@ -200,7 +213,7 @@ if settings.OILAUTH:
             for rss in RSS.objects.all():
                 rss.access_token = instance.access_token
                 rss.refresh_token = instance.refresh_token
-                rss.save() 
+                rss.save()
 
     # Maintain consistency of admin credentials
     post_save.connect(set_tokens, sender=UserProfile)
