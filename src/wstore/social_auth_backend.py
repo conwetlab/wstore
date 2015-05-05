@@ -139,7 +139,7 @@ def _create_private_org(user, roles):
     return user_org
 
 
-def _create_organizations(user, user_org, idm_organizations, id_field):
+def _create_organizations(user, user_org, idm_organizations, id_field, name_field):
     organizations = []
     user_roles = ['customer', 'provider']
 
@@ -157,7 +157,7 @@ def _create_organizations(user, user_org, idm_organizations, id_field):
         if len(org_model) == 0:
             # Create the organization
             org_model = Organization.objects.create(
-                name=org['displayName'],
+                name=org[name_field],
                 private=False,
                 actor_id=org[id_field]
             )

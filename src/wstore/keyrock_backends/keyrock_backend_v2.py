@@ -61,4 +61,4 @@ def fill_internal_user_info(*arg, **kwargs):
     if 'organizations' in response:
         idm_organizations = response['organizations']
 
-    _create_organizations(kwargs['user'], user_org, idm_organizations, 'id')
+    _create_organizations(kwargs['user'], user_org, idm_organizations, 'id', 'name')
