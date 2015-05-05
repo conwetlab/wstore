@@ -32,6 +32,7 @@ By default account id and token expiration time are stored in extra_data
 field, check OAuthBackend class for details on how to extend it.
 """
 
+import base64
 from urllib import urlencode
 from urlparse import urljoin
 
@@ -41,7 +42,7 @@ from django.conf import settings
 from social_auth.utils import dsa_urlopen
 from social_auth.backends import BaseOAuth2
 from wstore.keyrock_backends import FIWARE_AUTHORIZATION_URL, FIWARE_ACCESS_TOKEN_URL,\
- FiwareBackend, fill_internal_user_info
+ FiwareBackend, fill_internal_user_info, FIWARE_LOGOUT_URL
 from wstore.models import Organization
 
 # idm configuration
@@ -53,7 +54,6 @@ FIWARE_DEVELOPER_ROLE = 'ST Developer'
 FIWARE_USER_DATA_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/user')
 FIWARE_NOTIFICATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/purchases')
 FIWARE_APPLICATIONS_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/applications.json')
-FIWARE_LOGOUT_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/users/sign_out')
 
 
 class FiwareAuth(BaseOAuth2):
@@ -70,6 +70,14 @@ class FiwareAuth(BaseOAuth2):
     SCOPE_VAR_NAME = 'FIWARE_EXTENDED_PERMISSIONS'
 
     FIWARE_ORGANIZATION = getattr(settings, 'FIWARE_ORGANIZATION', None)
+
+    @classmethod
+    def auth_headers(cls):
+        return {
+            'Authorization': 'Basic %s' % base64.urlsafe_b64encode(
+                '%s:%s' % cls.get_key_and_secret()
+            )
+        }
 
     def user_data(self, access_token, *args, **kwargs):
         """Loads user data from service"""
@@ -161,15 +169,15 @@ def _create_organizations(user, user_org, idm_organizations, id_field):
         org_roles = []
 
         for role in idm_org_roles:
-            if role['name'] == 'Owner':
+            if role['name'].lower() == 'Owner':
                 if user.pk not in org_model.managers:
                     org_model.managers.append(user.pk)
                     org_model.save()
-            elif role['name'] == FIWARE_PROVIDER_ROLE:
+            elif role['name'].lower() == FIWARE_PROVIDER_ROLE.lower():
                 org_roles.append('provider')
-            elif role['name'] == FIWARE_CUSTOMER_ROLE:
+            elif role['name'].lower() == FIWARE_CUSTOMER_ROLE.lower():
                 org_roles.append('customer')
-            elif role['name'] == FIWARE_DEVELOPER_ROLE:
+            elif role['name'].lower() == FIWARE_DEVELOPER_ROLE.lower():
                 org_roles.append('developer')
 
         organizations.append({

@@ -25,11 +25,10 @@ from urlparse import urljoin
 from social_auth.backends import OAuthBackend
 from django.conf import settings
 
-from wstore.models import Organization
-
 
 FIWARE_AUTHORIZATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/oauth2/authorize')
 FIWARE_ACCESS_TOKEN_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/oauth2/token')
+FIWARE_LOGOUT_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/auth/logout')
 
 
 class FiwareBackend(OAuthBackend):

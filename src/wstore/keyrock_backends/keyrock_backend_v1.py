@@ -28,6 +28,7 @@ from django.conf import settings
 
 FIWARE_AUTHORIZATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/authorize')
 FIWARE_ACCESS_TOKEN_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/token')
+FIWARE_LOGOUT_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/users/sign_out')
 
 
 class FiwareBackend(OAuthBackend):
