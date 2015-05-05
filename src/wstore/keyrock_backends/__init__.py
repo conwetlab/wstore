@@ -25,7 +25,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 if settings.FIWARE_IDM_API_VERSION == 1:
     from wstore.keyrock_backends.keyrock_backend_v1 import FIWARE_AUTHORIZATION_URL, \
-        FIWARE_ACCESS_TOKEN_URL, FiwareBackend, fill_internal_user_info
+        FIWARE_ACCESS_TOKEN_URL, FiwareBackend, fill_internal_user_info, FIWARE_LOGOUT_URL
 
 elif settings.FIWARE_IDM_API_VERSION == 2:
     from wstore.keyrock_backends.keyrock_backend_v2 import FIWARE_AUTHORIZATION_URL, \
