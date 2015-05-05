@@ -125,14 +125,14 @@ def _create_private_org(user, roles):
     wstore_roles = []
     # Include new roles in the private organization
     for role in roles:
-        wstore_roles.append(role['name'])
+        wstore_roles.append(role['name'].lower())
 
     # Check if the user is an admin
-    if 'Provider' in wstore_roles and not user.is_staff:
+    if 'provider' in wstore_roles and not user.is_staff:
         user.is_staff = True
         user.save()
 
-    elif 'Provider' not in wstore_roles and user.is_staff:
+    elif 'provider' not in wstore_roles and user.is_staff:
         user.is_staff = False
         user.save()
 
