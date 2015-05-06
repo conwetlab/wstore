@@ -31,6 +31,7 @@ class MarketOffering(models.Model):
     marketplace = models.ForeignKey(Marketplace)
     offering_name = models.CharField(max_length=100)
 
+
 # An application is an offering composed by some
 # backend comopents and some resources
 class Offering(models.Model):
