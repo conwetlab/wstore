@@ -42,7 +42,7 @@ from django.conf import settings
 from social_auth.utils import dsa_urlopen
 from social_auth.backends import BaseOAuth2
 from wstore.keyrock_backends import FIWARE_AUTHORIZATION_URL, FIWARE_ACCESS_TOKEN_URL,\
- FiwareBackend, fill_internal_user_info, FIWARE_LOGOUT_URL, get_applications
+ FiwareBackend, fill_internal_user_info, FIWARE_LOGOUT_URL, get_applications, notify_acquisition
 from wstore.models import Organization
 
 # idm configuration

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -19,12 +19,10 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 import json
-import urllib2
 import requests
 
 from django.conf import settings
 
-from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.models import Resource
 
 
@@ -80,42 +78,6 @@ def notify_provider(purchase):
 
     # if the oil authentication is enabled, notify the idM the new purchase
     if settings.OILAUTH and len(purchase.offering.applications) > 0:
-        data['applications'] = purchase.offering.applications
 
-        token = purchase.customer.userprofile.access_token
-        body = json.dumps(data)
-        headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
-
-        from wstore.social_auth_backend import FIWARE_NOTIFICATION_URL
-
-        request = MethodRequest('POST', FIWARE_NOTIFICATION_URL, body, headers)
-
-        opener = urllib2.build_opener()
-
-        try:
-            response = opener.open(request)
-        except Exception , e:
-            if e.code == 401:
-                try:
-                    # Try to refresh the access_token
-                    social = purchase.customer.social_auth.filter(provider='fiware')[0]
-                    social.refresh_token()
-
-                    # update user information
-                    social = purchase.customer.social_auth.filter(provider='fiware')[0]
-                    new_credentials = social.extra_data
-
-                    purchase.customer.userprofile.access_token = new_credentials['access_token']
-                    purchase.customer.userprofile.refresh_token = new_credentials['refresh_token']
-                    purchase.customer.userprofile.save()
-                    token = purchase.customer.userprofile.access_token
-
-                    # Make the request
-                    headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
-                    request = MethodRequest('POST', FIWARE_NOTIFICATION_URL, body, headers)
-
-                    opener.open(request)
-                except:
-                    pass
-            else:
-                pass
+        from wstore.social_auth_backend import notify_acquisition
+        notify_acquisition(purchase)

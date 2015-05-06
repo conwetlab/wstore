@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import json
 from urlparse import urljoin
-from urllib2 import HTTPError
+from requests.exceptions import HTTPError
 
 from social_auth.backends import OAuthBackend
 from django.conf import settings
@@ -86,11 +86,34 @@ def get_applications(user):
     try:
         resp = _make_app_request(user)
     except HTTPError as e:
-        if e.code == 401:
+        if e.response.status_code == 401:
             try:
                 user.userprofile.refresh_token()
                 _make_app_request(user)
             except:
                 pass
+    except:
+        pass
 
     return json.dumps(resp)
+
+
+def _make_purchaser_request(purchase):
+    k = KeystoneClient(settings.FIWARE_KEYSTONE_ENDPOINT, purchase.offering.owner_admin_user.userprofile.access_token)
+
+    for app in purchase.offering.applications:
+        k.set_purchaser_role(purchase.owner_organization.actor_id, app['id'], is_org=purchase.organization_owned)
+
+
+def notify_acquisition(purchase):
+    try:
+        _make_purchaser_request(purchase)
+    except HTTPError as e:
+        if e.response.status_code == 401:
+            try:
+                purchase.offering.owner_admin_user.userprofile.refresh_token()
+                _make_purchaser_request(purchase)
+            except:
+                pass
+    except:
+        pass

@@ -112,5 +112,41 @@ def get_applications(user):
                 resp = json.dumps([])
         else:
             resp = json.dumps([])
+    except:
+        resp = json.dumps([])
 
     return resp
+
+
+def notify_acquisition(purchase):
+
+    data = {
+        'applications': purchase.offering.applications
+    }
+
+    token = purchase.customer.userprofile.access_token
+    body = json.dumps(data)
+    headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
+
+    request = MethodRequest('POST', FIWARE_NOTIFICATION_URL, body, headers)
+    opener = urllib2.build_opener()
+
+    try:
+        opener.open(request)
+    except HTTPError as e:
+        if e.code == 401:
+            try:
+                purchase.customer.userprofile.refresh_token()
+                token = purchase.customer.userprofile.access_token
+
+                # Make the request
+                headers = {'Content-type': 'application/json', 'Authorization': 'Bearer ' + token}
+                request = MethodRequest('POST', FIWARE_NOTIFICATION_URL, body, headers)
+
+                opener.open(request)
+            except:
+                pass
+        else:
+            pass
+    except:
+        pass
