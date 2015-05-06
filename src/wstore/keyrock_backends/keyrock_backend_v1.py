@@ -20,15 +20,23 @@
 
 from __future__ import unicode_literals
 
+import json
+import urllib2
 from urlparse import urljoin
+from urllib2 import HTTPError
 
 from social_auth.backends import OAuthBackend
 from django.conf import settings
+
+from wstore.store_commons.utils.method_request import MethodRequest
 
 
 FIWARE_AUTHORIZATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/authorize')
 FIWARE_ACCESS_TOKEN_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/token')
 FIWARE_LOGOUT_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/users/sign_out')
+
+FIWARE_NOTIFICATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/purchases')
+FIWARE_APPLICATIONS_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/applications.json')
 
 
 class FiwareBackend(OAuthBackend):
@@ -66,3 +74,43 @@ def fill_internal_user_info(*arg, **kwargs):
         idm_organizations = response['organizations']
 
     _create_organizations(kwargs['user'], user_org, idm_organizations, 'actorId', 'displayName')
+
+
+def _make_app_request(user, actor_id):
+
+    token = user.userprofile.access_token
+
+    url = FIWARE_APPLICATIONS_URL
+    url += '?actor_id=' + str(actor_id)
+    url += '&access_token=' + token
+
+    req = MethodRequest('GET', url)
+
+    # Call idm
+    opener = urllib2.build_opener()
+
+    resp = []
+    response = opener.open(req)
+    # Make the request
+    resp = response.read()
+    return resp
+
+
+def get_applications(user):
+
+    actor_id = user.userprofile.current_organization.actor_id
+
+    try:
+        _make_app_request(user, actor_id)
+
+    except HTTPError as e:
+        if e.code == 401:
+            try:
+                user.userprofile.refresh_token()
+                resp = _make_app_request(user, actor_id)
+            except:
+                resp = json.dumps([])
+        else:
+            resp = json.dumps([])
+
+    return resp

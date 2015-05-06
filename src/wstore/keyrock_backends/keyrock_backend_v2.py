@@ -20,10 +20,14 @@
 
 from __future__ import unicode_literals
 
+import json
 from urlparse import urljoin
+from urllib2 import HTTPError
 
 from social_auth.backends import OAuthBackend
 from django.conf import settings
+
+from wstore.keyrock_backends.keystone_client import KeystoneClient
 
 
 FIWARE_AUTHORIZATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/oauth2/authorize')
@@ -62,3 +66,31 @@ def fill_internal_user_info(*arg, **kwargs):
         idm_organizations = response['organizations']
 
     _create_organizations(kwargs['user'], user_org, idm_organizations, 'id', 'name')
+
+
+def _make_app_request(user):
+    # Build keystone client
+    k = KeystoneClient(settings.FIWARE_KEYSTONE_ENDPOINT, user.userprofile.access_token)
+
+    if user.userprofile.is_user_org():
+        resp = k.get_provider_apps(user.userprofile.actor_id)
+    else:
+        resp = k.get_organization_apps(user.userprofile.current_organization.actor_id)
+
+    return resp
+
+
+def get_applications(user):
+
+    resp = []
+    try:
+        resp = _make_app_request(user)
+    except HTTPError as e:
+        if e.code == 401:
+            try:
+                user.userprofile.refresh_token()
+                _make_app_request(user)
+            except:
+                pass
+
+    return json.dumps(resp)

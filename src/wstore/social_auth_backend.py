@@ -42,7 +42,7 @@ from django.conf import settings
 from social_auth.utils import dsa_urlopen
 from social_auth.backends import BaseOAuth2
 from wstore.keyrock_backends import FIWARE_AUTHORIZATION_URL, FIWARE_ACCESS_TOKEN_URL,\
- FiwareBackend, fill_internal_user_info, FIWARE_LOGOUT_URL
+ FiwareBackend, fill_internal_user_info, FIWARE_LOGOUT_URL, get_applications
 from wstore.models import Organization
 
 # idm configuration
@@ -50,10 +50,7 @@ FIWARE_PROVIDER_ROLE = 'ST Provider'
 FIWARE_CUSTOMER_ROLE = 'ST Customer'
 FIWARE_DEVELOPER_ROLE = 'ST Developer'
 
-
 FIWARE_USER_DATA_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/user')
-FIWARE_NOTIFICATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/purchases')
-FIWARE_APPLICATIONS_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/applications.json')
 
 
 class FiwareAuth(BaseOAuth2):

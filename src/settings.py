@@ -202,7 +202,10 @@ AUTHENTICATION_BACKENDS = (
 FIWARE_APP_ID = '<app_id>'
 FIWARE_API_SECRET = '<app_secret>'
 FIWARE_IDM_ENDPOINT = 'https://account.lab.fiware.org/'
-FIWARE_IDM_API_VERSION = 1
+
+FIWARE_IDM_API_VERSION = 2
+FIWARE_KEYSTONE_ENDPOINT = 'http://cloud.lab.fi-ware.org:4731'
+
 
 SOCIAL_AUTH_ENABLED_BACKENDS = ('fiware',)
 
