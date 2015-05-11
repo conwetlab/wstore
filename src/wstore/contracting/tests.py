@@ -46,6 +46,7 @@ from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.charging_engine.models import Contract
 from wstore.contracting import views
+from wstore.keyrock_backends import keyrock_backend_v1
 
 
 __test__ = False
@@ -643,7 +644,7 @@ class FakeUrlib2Notify():
             self._response = response
 
         def open(self, request):
-            if  request.get_header('Authorization') == 'Bearer bca':
+            if request.get_header('Authorization') == 'Bearer bca':
                 raise HTTPError('', 401, '', None, None)
 
             self._method = request.get_method()
@@ -673,6 +674,7 @@ class ProviderNotificationTestCase(TestCase):
         super(ProviderNotificationTestCase, cls).setUpClass()
 
     def setUp(self):
+        notify_provider.notify_acquisition = MagicMock(name="notify_acquisition")
         self.user = User.objects.create_user(username='test_user', email='', password='passwd')
         self.user.userprofile.user = self.user
         self.user.userprofile.save()
@@ -680,6 +682,7 @@ class ProviderNotificationTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        reload(keyrock_backend_v1)
         settings.OILAUTH = cls.prev_value
         super(ProviderNotificationTestCase, cls).tearDownClass()
 
@@ -697,7 +700,7 @@ class ProviderNotificationTestCase(TestCase):
             },
             'customer': 'test_organization1',
             'reference': '61005aba8e05ac2115f022f0',
-             "resources": [{
+            'resources': [{
                 "url": "http://antares.ls.fi.upm.es:8000/media/resources/test_user__test_resource__1.0",
                 "version": "1.0",
                 "name": "test_resource",
@@ -709,13 +712,14 @@ class ProviderNotificationTestCase(TestCase):
             'Content-type': 'application/json'
         }
         notify_provider.notify_provider(purchase)
+        notify_provider.requests.post.assert_called_with(
+            purchase.offering.notification_url,
+            data=json.dumps(expected_data),
+            headers=headers,
+            cert=(settings.NOTIF_CERT_FILE, settings.NOTIF_CERT_KEY_FILE)
+        )
 
-        notify_provider.requests.post.assert_called_with(purchase.offering.notification_url, data=json.dumps(expected_data), headers=headers, cert=(settings.NOTIF_CERT_FILE, settings.NOTIF_CERT_KEY_FILE))
-
-    def test_identity_manager_notification(self):
-
-        settings.OILAUTH = True
-        
+    def _build_mock_purchase(self, org_data):
         # Mock purchase info
         purchase = MagicMock()
         purchase.offering.notification_url = ''
@@ -723,8 +727,10 @@ class ProviderNotificationTestCase(TestCase):
             'id': 1,
             'name': 'test_app1'
         }]
-        purchase.organization_owned = False
-        purchase.owner_organization.actor_id = 1
+
+        purchase.organization_owned = org_data['owned']
+        purchase.owner_organization.actor_id = org_data['actor_id']
+
         purchase.owner_organization.name = 'test_user'
         purchase.offering.owner_organization.name = 'test_user'
         purchase.offering.version = '1.0'
@@ -736,73 +742,9 @@ class ProviderNotificationTestCase(TestCase):
         self.user.userprofile.save()
         purchase.customer = self.user
 
-        notify_provider.notify_provider(purchase)
-        opener = self._urllib._opener
+        return purchase
 
-        content = json.loads(opener._body)
-
-        self.assertEquals(len(content['applications']), 1)
-        self.assertEquals(content['applications'][0]['id'], 1)
-        self.assertEquals(content['applications'][0]['name'], 'test_app1')
-        self.assertEquals(content['customer'], 1)
-        
-
-    test_identity_manager_notification.tags = ('fiware-ut-23', 'prov-not')
-
-    def test_identity_manager_notification_org(self):
-
-        settings.OILAUTH = True
-        
-        # Mock purchase info
-        purchase = MagicMock()
-        purchase.offering.notification_url = ''
-        purchase.offering.applications = [{
-            'id': 1,
-            'name': 'test_app1'
-        }]
-        purchase.organization_owned = True
-        purchase.offering.owner_organization.name = 'test_user'
-        purchase.owner_organization.actor_id = 2
-        purchase.owner_organization.name = 'test_organization'
-        purchase.offering.version = '1.0'
-        purchase.offering.name = 'test_offering'
-        purchase.ref = '11111'
-
-        self.user.userprofile.access_token = 'aaa'
-        self.user.userprofile.save()
-        purchase.customer = self.user
-
-        notify_provider.notify_provider(purchase)
-        opener = self._urllib._opener
-
-        content = json.loads(opener._body)
-
-        self.assertEquals(len(content['applications']), 1)
-        self.assertEquals(content['applications'][0]['id'], 1)
-        self.assertEquals(content['applications'][0]['name'], 'test_app1')
-        self.assertEquals(content['customer'], 2)
-
-    test_identity_manager_notification_org.tags = ('fiware-ut-23', 'prov-not')
-
-    def test_identity_manager_notification_token_refresh(self):
-
-        settings.OILAUTH = True
-        
-        # Mock purchase info
-        purchase = MagicMock()
-        purchase.offering.notification_url = ''
-        purchase.offering.applications = [{
-            'id': 1,
-            'name': 'test_app1'
-        }]
-        purchase.organization_owned = True
-        purchase.offering.owner_organization.name = 'test_user'
-        purchase.owner_organization.actor_id = 2
-        purchase.owner_organization.name = 'test_organization'
-        purchase.offering.version = '1.0'
-        purchase.offering.name = 'test_offering'
-        purchase.ref = '11111'
-
+    def _set_expired_token(self):
         self.user.userprofile.access_token = 'bca'
         self.user.userprofile.save()
 
@@ -818,23 +760,44 @@ class ProviderNotificationTestCase(TestCase):
         user_social_auth.save()
         self.user.social_auth = [user_social_auth]
 
-        purchase.customer = self.user
+    @parameterized.expand([
+        ('basic', {
+            'owned': False,
+            'actor_id': 1
+        }),
+        ('org', {
+            'owned': False,
+            'actor_id': 1
+        }),
+        ('refresh', {
+            'owned': False,
+            'actor_id': 1
+        }, True)
+    ])
+    def test_identity_manager_notification_v1(self, name, org_data, refresh=False):
+        keyrock_backend_v1.urllib2 = FakeUrlib2Notify()
 
-        # Call the tested method
-        notify_provider.notify_provider(purchase)
-        opener = self._urllib._opener
+        settings.OILAUTH = True
+
+        purchase = self._build_mock_purchase(org_data)
+
+        if refresh:
+            self._set_expired_token()
+
+        keyrock_backend_v1.notify_acquisition(purchase)
+        opener = keyrock_backend_v1.urllib2._opener
 
         content = json.loads(opener._body)
 
-        UserSocialAuth.refresh_token.assert_any_call()
+        if refresh:
+            UserSocialAuth.refresh_token.assert_any_call()
+
         self.assertEquals(len(content['applications']), 1)
         self.assertEquals(content['applications'][0]['id'], 1)
         self.assertEquals(content['applications'][0]['name'], 'test_app1')
-        self.assertEquals(content['customer'], 2)
+        self.assertEquals(content['customer'], org_data['actor_id'])
 
-    test_identity_manager_notification_org.tags = ('fiware-ut-23', 'prov-not')
-
-    test_identity_manager_notification_token_refresh.tags = ('fiware-ut-23', 'prov-not')
+    test_identity_manager_notification_v1.tags = ('fiware-ut-23', 'prov-not')
 
 
 class UpdatingPurchasesTestCase(TestCase):

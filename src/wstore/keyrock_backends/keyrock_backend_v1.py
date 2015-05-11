@@ -121,6 +121,7 @@ def get_applications(user):
 def notify_acquisition(purchase):
 
     data = {
+        'customer': purchase.owner_organization.actor_id,
         'applications': purchase.offering.applications
     }
 
