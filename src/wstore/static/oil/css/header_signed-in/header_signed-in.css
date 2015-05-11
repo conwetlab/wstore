@@ -43,7 +43,8 @@
 }
 
 #oil-nav ul.nav li a img{
-  width: 20px;
+  width: 24px;
+  margin-right: 2px;
 }
 
 #oil-nav ul.nav li a span{

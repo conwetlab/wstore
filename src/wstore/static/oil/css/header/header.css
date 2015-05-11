@@ -8,9 +8,15 @@ a:hover{
   text-decoration: none;
 }
 
+.navbar a {
+  font-family:  NeoTech !important;
+  font-size: 14px !important;
+  color: rgb(119, 119, 119) !important;
+}
+
 header{
   display: block;
-  background-color: #f4f4f4;
+  background-color: rgb(241, 241, 242);
   padding: 1px 10px 1px;
   border-bottom: 1px solid #F2F2F2;
   -moz-box-shadow: 0px 1px 8px rgba(50, 51, 51, 0.15);
@@ -18,10 +24,11 @@ header{
   box-shadow: 0px 1px 8px rgba(50, 51, 51, 0.15);
   position: fixed;
   width: 96%;
-  height: 35px;
+  height: 40px;
   padding: 1px 2% 1px;
   z-index: 3;
   top: 0px;
+  box-shadow: rgba(50, 51, 51, 0.14902) 0px 1px 8px 0px;
 }
 
  nav.navbar-inner{
@@ -29,7 +36,12 @@ header{
   background-color: transparent;
   background-image: none;
   border: none;
-  box-shadow: none;  
+  box-shadow: none;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1170px;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 nav.navbar-inner .logo-header{
@@ -54,7 +66,7 @@ nav.navbar-inner .logo-header{
   padding: 0;
   width: auto;
   float: left;
-  margin: 15px 5px 0 3px;
+  margin: 16px 11px 0 4px;
   font-size: 23px;
   color: rgb(96, 193, 207);
   font-family: NeoTech;
@@ -101,7 +113,7 @@ ul.oil-portal{
 
 ul.oil-portal li{
   display: inline-block;
-  padding: 14px 18px 9px;
+  padding: 15px 13px 9px;
 }
 
 ul.oil-portal li:hover{
@@ -122,14 +134,10 @@ ul.oil-portal li a:hover{
 
 ul.oil-portal li.active{
   background-color: #fcfcfc;
-  height: 18px;
-  -moz-box-shadow: 0px 9px 0px -1px #FCFCFC;
-  -webkit-box-shadow: 0px 9px 0px -1px #FCFCFC;
-  box-shadow: 0px 9px 0px -1px #FCFCFC;
 }
 
 ul.oil-portal li.active a{
-  color: rgb(96, 193, 207);
+  color: rgb(25, 59, 107) !important;
 }
 
 ul.pull-right {
@@ -182,12 +190,25 @@ ul.pull-right {
   color: #555;
   height: 20px;
   line-height: 20px;
-  font-size: 14px;
+  font-size: 13px;
   text-shadow: rgb(255, 255, 255) 0px 1px 0px;
+  font-family: Verdana, sans-serif;
+  color: rgb(25, 59, 107) !important;
 }
 
 #oil-usr:hover {
   color: #555;
+}
+
+.navbar a.dropdown-toggle{
+  font-size: 13px !important;
+  margin-top: 3px;
+  padding-left: 0 !important;
+  color: rgb(25, 59, 107) !important;
+}
+
+#usr-grp-info {
+  margin-right: -6px;
 }
 
 @media (max-width: 767px){
