@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -38,6 +38,7 @@ from wstore.offerings.resources_management import register_resource, get_provide
 update_resource, upgrade_resource
 from wstore.social.reviews.review_manager import ReviewManager
 from wstore.store_commons.errors import ConflictError
+from wstore.social_auth_backend import get_applications
 
 
 ####################################################################################################
@@ -613,8 +614,6 @@ class ApplicationCollection(Resource):
         if 'provider' not in request.user.userprofile.get_current_roles():
             return build_response(request, 403, 'Forbidden')
 
-        # Make idm request
-        from wstore.social_auth_backend import get_applications
         resp = get_applications(request.user)
 
         return HttpResponse(resp, status=200, mimetype='application/json;charset=UTF-8')
