@@ -193,10 +193,6 @@ h2 {
     right: 0px;
 }
 
-#settings-menu .icon-wrench {
-  margin-right: 7px;
-}
-
 .float-right {
     float: right !important;
 }
@@ -1354,3 +1350,22 @@ header {
   background: linear-gradient(to right, rgba(252, 252, 252, 0), rgb(252, 252, 252)) !important;
 }
 
+#settings-menu, .switch-org {
+  border-radius: 0px;
+  background-color: rgb(241, 241, 242);
+  border: 2px solid rgb(255, 255, 255) !important;
+}
+
+#settings-menu li {
+  height: 32px !important;
+  display: inline;
+}
+
+#settings-menu a {
+  height: 12px !important;
+}
+
+#settings-menu a:hover {
+  color: rgb(249, 249, 249) !important;
+  background-color: rgb(175, 175, 181) !important;
+}

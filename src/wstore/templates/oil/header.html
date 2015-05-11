@@ -113,21 +113,27 @@
             <ul class="dropdown-menu"  id="settings-menu">
               <li class="settings-menu">
                 <a id="conf-link">
+                  <i class="icon-gear"></i>
                   Settings
                 </a>
               </li>
               {% if user.is_staff %}
-                  <li><a href="/administration">Administration</a></li>
+                  <li>
+                    <a href="/administration">
+                      <i class="icon-wrench"></i>
+                      Administration
+                    </a>
+                  </li>
               {% endif %}
-              <li class="divider">
-              </li>
               <li>
                 {% if portal %}
                 <a href="#" onclick="Fiware.signOut('store'); return false">
+                  <i class="icon-signout"></i>
                   Sign Out
                 </a>
                 {% else %}
                   <a href="/logout">
+                  <i class="icon-signout"></i>
                   Sign Out
                 </a>
                 {% endif %}

@@ -56,9 +56,10 @@ nav.navbar-inner .logo-header{
 }
 
 .portal-brand {
-  width: 169px !important;
-  margin-left: -11px;
+  width: 153px !important;
+  margin-left: -3px;
   margin-top: -13px !important;
+  height: 37px;
 }
 
 .logo-header .brand{
