@@ -1,6 +1,5 @@
 body{
   background-color: #fcfcfc;
-  font-family: OpenSans, Arial, sans-serif;
 }
 
 a:hover{
@@ -66,7 +65,7 @@ nav.navbar-inner .logo-header{
   padding: 0;
   width: auto;
   float: left;
-  margin: 16px 11px 0 4px;
+  margin: 16px 9px 0 4px;
   font-size: 23px;
   color: rgb(96, 193, 207);
   font-family: NeoTech;
@@ -112,8 +111,9 @@ ul.oil-portal{
 }
 
 ul.oil-portal li{
-  display: inline-block;
-  padding: 15px 13px 9px;
+  display: block;
+  float: left;
+  padding: 15px 15px 9px;
 }
 
 ul.oil-portal li:hover{
