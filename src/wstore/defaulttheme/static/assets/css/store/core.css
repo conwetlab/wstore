@@ -1256,8 +1256,13 @@ footer {
   text-align: center;
   font-size:13px;
   color: rgb(140, 140, 140);
-  padding-bottom: 10px;
   font-family: OpenSans, Verdana, sans-serif;
+  height: 50px;
+  border-top: 1px solid rgb(72, 185, 201);
+}
+
+footer > div {
+  padding-top: 12px;
 }
 
 header {
