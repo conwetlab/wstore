@@ -22,8 +22,10 @@ from __future__ import unicode_literals
 
 import json
 import urllib2
+import requests
 from urlparse import urljoin
 from urllib2 import HTTPError
+from requests.exceptions import HTTPError as HTTPErrorReq
 
 from social_auth.backends import OAuthBackend
 from django.conf import settings
@@ -81,18 +83,15 @@ def _make_app_request(user, actor_id):
     token = user.userprofile.access_token
 
     url = FIWARE_APPLICATIONS_URL
-    url += '?actor_id=' + str(actor_id)
-    url += '&access_token=' + token
+    payload = {
+        'actor_id': str(actor_id),
+        'access_token': token
+    }
 
-    req = MethodRequest('GET', url)
+    response = requests.get(url, params=payload)
 
-    # Call idm
-    opener = urllib2.build_opener()
-
-    resp = []
-    response = opener.open(req)
     # Make the request
-    resp = response.read()
+    resp = response.text()
     return resp
 
 
@@ -101,10 +100,10 @@ def get_applications(user):
     actor_id = user.userprofile.current_organization.actor_id
 
     try:
-        _make_app_request(user, actor_id)
+        resp = _make_app_request(user, actor_id)
 
-    except HTTPError as e:
-        if e.code == 401:
+    except HTTPErrorReq as e:
+        if e.response.status_code == 401:
             try:
                 user.userprofile.refresh_token()
                 resp = _make_app_request(user, actor_id)
