@@ -1,23 +1,23 @@
 <footer>
-    <div style="
-    border-top: 1px solid rgb(242, 232, 38);
-">
-        {% if portal %}
-        <div>
-            2015 &#169;
-            <a href="http://fiware.org/">FIWARE</a>
-            The use of FIWARE Lab services is subject to the acceptance of
-            <a href="https://forge.fiware.org/plugins/mediawiki/wiki/fiware/index.php/FIWARE_LAB_Terms_and_Conditions">Terms and conditions</a>
-            ,
-            <a href="http://forge.fiware.org/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Personal_Data_Protection_Policy">Personal Data Protection Policy</a>
-            and
-            <a href="https://forge.fiware.org/plugins/mediawiki/wiki/fiware/index.php/Cookies_Policy_FIWARE_Lab">Cookies Policy</a>
+    <div style="border-top: 2px solid rgb(242, 232, 38);">
+        <div style="border-top: 2px solid rgb(0, 43, 103);">
+            {% if portal %}
+            <div>
+                2015 &#169;
+                <a href="http://fiware.org/">FIWARE</a>
+                The use of FIWARE Lab services is subject to the acceptance of
+                <a href="https://forge.fiware.org/plugins/mediawiki/wiki/fiware/index.php/FIWARE_LAB_Terms_and_Conditions">Terms and conditions</a>
+                ,
+                <a href="http://forge.fiware.org/plugins/mediawiki/wiki/fiware/index.php/FI-LAB_Personal_Data_Protection_Policy">Personal Data Protection Policy</a>
+                and
+                <a href="https://forge.fiware.org/plugins/mediawiki/wiki/fiware/index.php/Cookies_Policy_FIWARE_Lab">Cookies Policy</a>
+            </div>
+            {% else %}
+            <div>
+                &#169; 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
+                <a href="https://github.com/conwetlab/wstore">GitHub</a>
+            </div>
+            {% endif %}
         </div>
-        {% else %}
-        <div>
-            &#169; 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
-            <a href="https://github.com/conwetlab/wstore">GitHub</a>
-        </div>
-        {% endif %}
     </div>
 </footer>
