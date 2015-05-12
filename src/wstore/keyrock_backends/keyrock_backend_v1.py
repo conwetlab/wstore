@@ -105,7 +105,7 @@ def get_applications(user):
     except HTTPErrorReq as e:
         if e.response.status_code == 401:
             try:
-                user.userprofile.refresh_token()
+                user.userprofile.refreshing_token()
                 resp = _make_app_request(user, actor_id)
             except:
                 resp = json.dumps([])
@@ -136,7 +136,7 @@ def notify_acquisition(purchase):
     except HTTPError as e:
         if e.code == 401:
             try:
-                purchase.customer.userprofile.refresh_token()
+                purchase.customer.userprofile.refreshing_token()
                 token = purchase.customer.userprofile.access_token
 
                 # Make the request

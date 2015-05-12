@@ -156,7 +156,7 @@ class UserProfile(models.Model):
 
         return result
 
-    def refresh_token(self):
+    def refreshing_token(self):
         # Try to refresh the access token
         social = self.user.social_auth.filter(provider='fiware')[0]
         social.refresh_token()

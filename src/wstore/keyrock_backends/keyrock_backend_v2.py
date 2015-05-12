@@ -88,7 +88,7 @@ def get_applications(user):
     except HTTPError as e:
         if e.response.status_code == 401:
             try:
-                user.userprofile.refresh_token()
+                user.userprofile.refreshing_token()
                 _make_app_request(user)
             except:
                 pass
@@ -111,7 +111,7 @@ def notify_acquisition(purchase):
     except HTTPError as e:
         if e.response.status_code == 401:
             try:
-                purchase.offering.owner_admin_user.userprofile.refresh_token()
+                purchase.offering.owner_admin_user.userprofile.refreshing_token()
                 _make_purchaser_request(purchase)
             except:
                 pass
