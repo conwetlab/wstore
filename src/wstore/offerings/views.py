@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -21,7 +21,6 @@
 from __future__ import unicode_literals
 
 import json
-import urllib2
 from urllib2 import HTTPError
 
 from django.http import HttpResponse
@@ -30,16 +29,16 @@ from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response, get_content_type, supported_request_mime_types, \
-authentication_required
+authentication_required, identity_manager_required
 from wstore.models import Offering, Organization, Resource as OfferingResource
 from wstore.models import Context
 from wstore.offerings.offerings_management import create_offering, get_offerings, get_offering_info, delete_offering,\
 publish_offering, bind_resources, count_offerings, update_offering
 from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource,\
 update_resource, upgrade_resource
-from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.social.reviews.review_manager import ReviewManager
 from wstore.store_commons.errors import ConflictError
+from wstore.social_auth_backend import get_applications
 
 
 ####################################################################################################
@@ -204,7 +203,7 @@ class OfferingEntry(Resource):
 
         # Delete the offering
         try:
-            delete_offering(offering)
+            delete_offering(request.user, offering)
         except Exception, e:
             return build_response(request, 400, unicode(e))
 
@@ -235,9 +234,9 @@ class PublishEntry(Resource):
         if content_type == 'application/json':
             try:
                 data = json.loads(request.raw_post_data)
-                publish_offering(offering, data)
+                publish_offering(request.user, offering, data)
             except HTTPError:
-                return build_response(request, 502, 'Bad gateway')
+                return build_response(request, 502, 'The Marketplace has failed publishing the offering')
             except Exception, e:
                 return build_response(request, 400, unicode(e))
 
@@ -340,9 +339,16 @@ class ResourceCollection(Resource):
         if filter_ and filter_ != 'true' and filter_ != 'false':
             return build_response(request, 400, 'Invalid open param')
 
+        open_res = None
+        if filter_ is not None:
+            open_res = False
+
+            if filter_ == 'true':
+                open_res = True
+
         if 'provider' in profile.get_current_roles():
             try:
-                response = get_provider_resources(request.user, filter_=filter_, pagination=pagination)
+                response = get_provider_resources(request.user, filter_=open_res, pagination=pagination)
             except Exception, e:
                 return build_response(request, 400, e.message)
         else:
@@ -601,66 +607,13 @@ class ApplicationCollection(Resource):
 
     # Get idm applications
     @authentication_required
+    @identity_manager_required
     def read(self, request):
 
         # Check user roles
-        if not 'provider' in request.user.userprofile.get_current_roles():
+        if 'provider' not in request.user.userprofile.get_current_roles():
             return build_response(request, 403, 'Forbidden')
 
-        # Make idm request
-        from wstore.social_auth_backend import FIWARE_APPLICATIONS_URL
-        url = FIWARE_APPLICATIONS_URL
-
-        if request.user.userprofile.is_user_org():
-            actor_id = request.user.userprofile.actor_id
-        else:
-            actor_id = request.user.userprofile.current_organization.actor_id
-
-        token = request.user.userprofile.access_token
-
-        url += '?actor_id=' + str(actor_id)
-        url += '&access_token=' + token
-
-        req = MethodRequest('GET', url)
-
-        # Call idm
-        opener = urllib2.build_opener()
-
-        resp = []
-        try:
-            response = opener.open(req)
-            # Make the response
-            resp = response.read()
-        except Exception, e:
-
-            if e.code == 401:
-                try:
-                    # Try to refresh the access token
-                    social = request.user.social_auth.filter(provider='fiware')[0]
-                    social.refresh_token()
-
-                    # Update credentials
-                    social = request.user.social_auth.filter(provider='fiware')[0]
-                    credentials = social.extra_data
-
-                    request.user.userprofile.access_token = credentials['access_token']
-                    request.user.userprofile.refresh_token = credentials['refresh_token']
-                    request.user.userprofile.save()
-
-                    # Try to connect again
-                    token = request.user.userprofile.access_token
-                    url += '?actor_id=' + str(actor_id)
-                    url += '&access_token=' + token
-
-                    req = MethodRequest('GET', url)
-                
-                    response = opener.open(req)
-                    # Make the response
-                    resp = response.read()
-                except:
-                    resp = json.dumps([])
-            else:
-                resp = json.dumps([])
+        resp = get_applications(request.user)
 
         return HttpResponse(resp, status=200, mimetype='application/json;charset=UTF-8')
-

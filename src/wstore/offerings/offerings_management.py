@@ -35,11 +35,11 @@ from django.template import Context as TmplContext
 from django.core.exceptions import PermissionDenied
 
 from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
-from wstore.market_adaptor.marketadaptor import MarketAdaptor
+from wstore.market_adaptor.marketadaptor import marketadaptor_factory
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
 from wstore.models import Offering, Repository, Resource
-from wstore.models import Marketplace
+from wstore.models import Marketplace, MarketOffering
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
 from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
@@ -103,7 +103,8 @@ def get_offering_info(offering, user):
             'version': resource.version,
             'description': resource.description,
             'content_type': resource.content_type,
-            'open': resource.open
+            'open': resource.open,
+            'metadata': resource.meta_info
         }
 
         if (state == 'purchased' or state == 'rated' or offering.open):
@@ -713,7 +714,7 @@ def update_offering(offering, data):
     se.update_index(offering)
 
 
-def publish_offering(offering, data):
+def publish_offering(user, offering, data):
 
     # Validate data
     if 'marketplaces' not in data:
@@ -736,13 +737,18 @@ def publish_offering(offering, data):
         except:
             raise ValueError('Publication error: The marketplace ' + market + ' does not exist')
 
-        market_adaptor = MarketAdaptor(m.host)
+        market_adaptor = marketadaptor_factory(m, user)
+        offering_id = offering.owner_organization.name + ' ' + offering.name + ' ' + offering.version
         info = {
-            'name': offering.name,
+            'name': offering_id,
             'url': offering.description_url
         }
-        market_adaptor.add_service(settings.STORE_NAME, info)
-        offering.marketplaces.append(m.pk)
+
+        off_market_name = market_adaptor.add_service(info)
+        offering.marketplaces.append(MarketOffering(
+            marketplace=m,
+            offering_name=off_market_name
+        ))
 
     offering.state = 'published'
     offering.publication_date = datetime.now()
@@ -792,7 +798,7 @@ def _remove_offering(offering, se):
     offering.delete()
 
 
-def delete_offering(offering):
+def delete_offering(user, offering):
     # If the offering has been purchased it is not deleted
     # it is marked as deleted in order to allow customers that
     # have purchased the offering to install it if needed
@@ -825,9 +831,8 @@ def delete_offering(offering):
 
         # Delete the offering from marketplaces
         for market in offering.marketplaces:
-            m = Marketplace.objects.get(pk=market)
-            market_adaptor = MarketAdaptor(m.host)
-            market_adaptor.delete_service(settings.STORE_NAME, offering.name)
+            market_adaptor = marketadaptor_factory(market.marketplace, user)
+            market_adaptor.delete_service(market.offering_name)
 
         # Update offering indexes
         if not offering.open:

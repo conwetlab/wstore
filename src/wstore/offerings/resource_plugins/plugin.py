@@ -24,6 +24,12 @@ from __future__ import unicode_literals
 
 class Plugin():
 
+    def on_pre_create_validation(self, provider, data, file_=None):
+        return data
+
+    def on_post_create_validation(self, provider, data, file_=None):
+        pass
+
     def on_pre_create(self, provider, data):
         pass
 
@@ -34,6 +40,12 @@ class Plugin():
         pass
 
     def on_post_update(self, resource):
+        pass
+
+    def on_pre_upgrade_validation(self, resource, data, file_=None):
+        return data
+
+    def on_post_upgrade_validation(self, resource, data, file_=None):
         pass
 
     def on_pre_upgrade(self, resource):

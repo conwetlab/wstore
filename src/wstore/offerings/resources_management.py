@@ -22,7 +22,6 @@ from __future__ import unicode_literals
 
 import base64
 import os
-import re
 from bson import ObjectId
 from urlparse import urljoin
 
@@ -36,11 +35,12 @@ from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
-from wstore.store_commons.utils.version import is_lower_version
+from wstore.store_commons.utils.version import Version
 from wstore.store_commons.errors import ConflictError
 from wstore.offerings.resource_plugins.plugins.ckan_validation import validate_dataset
 from wstore.offerings.resource_plugins.decorators import register_resource_events, \
-    upgrade_resource_events, update_resource_events, delete_resource_events
+    upgrade_resource_events, update_resource_events, delete_resource_events, \
+    register_resource_validation_events, upgrade_resource_validation_events
 
 
 def _save_resource_file(provider, name, version, file_):
@@ -50,6 +50,7 @@ def _save_resource_file(provider, name, version, file_):
         content = base64.b64decode(file_['data'])
     else:
         f_name = file_.name
+        file_.seek(0)
         content = file_.read()
 
     # Check file name
@@ -120,10 +121,8 @@ def _create_resource_model(provider, resource_data):
     _upload_usdl(resource)
 
 
-def register_resource(provider, data, file_=None):
-    """
-    Registers a new resource for the given provider
-    """
+@register_resource_validation_events
+def _validate_resource_info(provider, data, file_=None):
 
     # Check if the resource already exists
     existing = True
@@ -142,25 +141,33 @@ def register_resource(provider, data, file_=None):
     'resource_type' not in data:
         raise ValueError('Invalid request: Missing required field')
 
-    # Check version format
-    if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
-        raise ValueError('Invalid version format')
+    # Create version object to validate resource version format
+    Version(data['version'])
 
     # Check name format
     if not is_valid_id(data['name']):
         raise ValueError('Invalid name format')
 
-    resource_data = {
+    return ({
         'name': data['name'],
         'version': data['version'],
         'description': data['description'],
         'content_type': data['content_type'],
-        'resource_type': data['resource_type']
-    }
+        'resource_type': data['resource_type'],
+        'open': data.get('open', False)
+    }, current_organization)
+
+
+def register_resource(provider, data, file_=None):
+    """
+    Registers a new resource for the given provider
+    """
+
+    resource_data, current_organization = _validate_resource_info(provider, data, file_=file_)
 
     if not file_:
         if 'content' in data:
-            resource_data['content_path'] = _save_resource_file(current_organization.name, data['name'], data['version'], data['content'])
+            resource_data['content_path'] = _save_resource_file(current_organization.name, resource_data['name'], resource_data['version'], data['content'])
             resource_data['link'] = ''
 
         elif 'link' in data:
@@ -180,11 +187,9 @@ def register_resource(provider, data, file_=None):
             raise ValueError('Invalid request: Missing resource content')
 
     else:
-        resource_data['content_path'] = _save_resource_file(current_organization.name, data['name'], data['version'], file_)
+        resource_data['content_path'] = _save_resource_file(current_organization.name, resource_data['name'], resource_data['version'], file_)
         resource_data['link'] = ''
 
-    # Include missing info in resource data
-    resource_data['open'] = data.get('open', False)
     resource_data['meta'] = data.get('meta', {})
 
     # Create the resource entry in the database
@@ -207,25 +212,32 @@ def _get_decorated_save(action):
     return save_resource
 
 
-def upgrade_resource(resource, data, file_=None):
-    """
-    Upgrades an existing resource to a new version
-    """
-
+@upgrade_resource_validation_events
+def _validate_upgrade_resource_info(resource, data, file_=None):
     # Validate data
     if'version' not in data:
         raise ValueError('Missing a required field: Version')
 
-    # Check version format
-    if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
-        raise ValueError('Invalid version format')
+    # Create version objects
+    version = Version(data['version'])
+    old_version = Version(resource.version)
 
-    if not is_lower_version(resource.version, data['version']):
+    if old_version >= version:
         raise ValueError('The new version cannot be lower that the current version: ' + data['version'] + ' - ' + resource.version)
 
     # Check resource state
     if resource.state == 'deleted':
         raise PermissionDenied('Deleted resources cannot be upgraded')
+
+    return data
+
+
+def upgrade_resource(resource, data, file_=None):
+    """
+    Upgrades an existing resource to a new version
+    """
+
+    data = _validate_upgrade_resource_info(resource, data, file_=None)
 
     # Save the old version
     resource.old_versions.append(ResourceVersion(
@@ -347,16 +359,20 @@ def get_provider_resources(provider, filter_=None, pagination=None):
     if pagination:
         x = int(pagination['start']) - 1
         y = x + int(pagination['limit'])
-        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)[x:y]
+
+        if filter_ is not None:
+            resources = Resource.objects.filter(provider=provider.userprofile.current_organization, open=filter_)[x:y]
+        else:
+            resources = Resource.objects.filter(provider=provider.userprofile.current_organization)[x:y]
     else:
-        resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
+        if filter_ is not None:
+            resources = Resource.objects.filter(provider=provider.userprofile.current_organization, open=filter_)
+        else:
+            resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
 
     for res in resources:
-        # Filter by open property if needed
-        if (filter_ == 'true' and not res.open) or (filter_ == 'false' and res.open):
-            continue
-
         response.append(get_resource_info(res))
+
     return response
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -19,11 +19,11 @@
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
 """
-FI-WARE IdM OAuth2 support.
+FIWARE IdM OAuth2 support.
 
-This contribution adds support for FI-WARE IdM OAuth2 service. The settings
+This contribution adds support for FIWARE IdM OAuth2 service. The settings
 FIWARE_APP_ID and FIWARE_API_SECRET must be defined with the values
-given by FI-WARE IdM application registration process.
+given by FIWARE IdM application registration process.
 
 Extended permissions are supported by defining FIWARE_EXTENDED_PERMISSIONS
 setting, it must be a list of values to request.
@@ -31,6 +31,8 @@ setting, it must be a list of values to request.
 By default account id and token expiration time are stored in extra_data
 field, check OAuthBackend class for details on how to extend it.
 """
+
+import base64
 from urllib import urlencode
 from urlparse import urljoin
 
@@ -38,43 +40,17 @@ from django.utils import simplejson
 from django.conf import settings
 
 from social_auth.utils import dsa_urlopen
-from social_auth.backends import BaseOAuth2, OAuthBackend
+from social_auth.backends import BaseOAuth2
+from wstore.keyrock_backends import FIWARE_AUTHORIZATION_URL, FIWARE_ACCESS_TOKEN_URL,\
+ FiwareBackend, fill_internal_user_info, FIWARE_LOGOUT_URL, get_applications, notify_acquisition
 from wstore.models import Organization
 
-
 # idm configuration
-FIWARE_AUTHORIZATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/authorize')
-FIWARE_ACCESS_TOKEN_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/token')
-FIWARE_USER_DATA_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/user')
-FIWARE_NOTIFICATION_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/purchases')
-FIWARE_APPLICATIONS_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/applications.json')
-FIWARE_LOGOUT_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/users/sign_out')
-
 FIWARE_PROVIDER_ROLE = 'ST Provider'
 FIWARE_CUSTOMER_ROLE = 'ST Customer'
 FIWARE_DEVELOPER_ROLE = 'ST Developer'
 
-
-
-class FiwareBackend(OAuthBackend):
-    """FI-WARE IdM OAuth authentication backend"""
-    name = 'fiware'
-    # Default extra data to store
-    EXTRA_DATA = [
-        ('nickName', 'username'),
-        ('actorId', 'uid'),
-    ]
-
-    def get_user_id(self, details, response):
-        """Return the user id, FI-WARE IdM only provides username as a unique
-        identifier"""
-        return response['actorId']
-
-    def get_user_details(self, response):
-        """Return user details from FI-WARE account"""
-        return {'username': response.get('nickName'),
-                'email': response.get('email') or '',
-                'fullname': response.get('displayName') or ''}
+FIWARE_USER_DATA_URL = urljoin(settings.FIWARE_IDM_ENDPOINT, '/user')
 
 
 class FiwareAuth(BaseOAuth2):
@@ -92,6 +68,14 @@ class FiwareAuth(BaseOAuth2):
 
     FIWARE_ORGANIZATION = getattr(settings, 'FIWARE_ORGANIZATION', None)
 
+    @classmethod
+    def auth_headers(cls):
+        return {
+            'Authorization': 'Basic %s' % base64.urlsafe_b64encode(
+                '%s:%s' % cls.get_key_and_secret()
+            )
+        }
+
     def user_data(self, access_token, *args, **kwargs):
         """Loads user data from service"""
         url = FIWARE_USER_DATA_URL + '?' + urlencode({
@@ -106,56 +90,53 @@ class FiwareAuth(BaseOAuth2):
         return data
 
 
-def fill_internal_user_info(*arg, **kwargs):
-
-    # Update user info
-    response = kwargs['response']
-
-    # This roles will be user organization roles
-    roles = response['roles']
-    wstore_roles = []
-
-    # Include the user actor id
-    kwargs['user'].userprofile.actor_id = response['actorId']
-
+def _fill_user_info(response, user, id_):
+    user.userprofile.actor_id = id_
     # Save the current access token for future calls
-    kwargs['user'].userprofile.access_token = response['access_token']
+    user.userprofile.access_token = response['access_token']
 
     if 'refresh_token' in response:
-        kwargs['user'].userprofile.refresh_token = response['refresh_token']
+        user.userprofile.refresh_token = response['refresh_token']
 
-        social = kwargs['user'].social_auth.filter(provider='fiware')[0]
+        social = user.social_auth.filter(provider='fiware')[0]
         social.extra_data['refresh_token'] = response['refresh_token']
         social.save()
 
-    kwargs['user'].userprofile.complete_name = response['displayName']
-    kwargs['user'].userprofile.save()
+    user.userprofile.complete_name = response['displayName']
+    user.userprofile.save()
 
+
+def _create_private_org(user, roles):
     # Get user private organization
-    user_org = Organization.objects.filter(actor_id=kwargs['user'].userprofile.actor_id)
+    user_org = Organization.objects.filter(actor_id=user.userprofile.actor_id)
     if len(user_org) == 0:
-        user_org = Organization.objects.get(name=kwargs['user'].username)
-        user_org.actor_id = kwargs['user'].userprofile.actor_id
+        user_org = Organization.objects.get(name=user.username)
+        user_org.actor_id = user.userprofile.actor_id
         user_org.save()
     else:
         user_org = user_org[0]
 
-    kwargs['user'].userprofile.current_organization = user_org
-    kwargs['user'].userprofile.save()
+    user.userprofile.current_organization = user_org
+    user.userprofile.save()
 
+    wstore_roles = []
     # Include new roles in the private organization
     for role in roles:
-        wstore_roles.append(role['name'])
+        wstore_roles.append(role['name'].lower())
 
     # Check if the user is an admin
-    if 'Provider' in wstore_roles and not kwargs['user'].is_staff:
-        kwargs['user'].is_staff = True
-        kwargs['user'].save()
+    if 'provider' in wstore_roles and not user.is_staff:
+        user.is_staff = True
+        user.save()
 
-    elif not 'Provider' in wstore_roles and kwargs['user'].is_staff:
-        kwargs['user'].is_staff = False
-        kwargs['user'].save()
+    elif 'provider' not in wstore_roles and user.is_staff:
+        user.is_staff = False
+        user.save()
 
+    return user_org
+
+
+def _create_organizations(user, user_org, idm_organizations, id_field, name_field):
     organizations = []
     user_roles = ['customer', 'provider']
 
@@ -165,21 +146,17 @@ def fill_internal_user_info(*arg, **kwargs):
     })
 
     # Check organizations info
-    idm_organizations = []
-    if 'organizations' in response:
-        idm_organizations = response['organizations']
-
     for org in idm_organizations:
 
         # Check if the organization exist
-        org_model = Organization.objects.filter(actor_id=org['actorId'])
+        org_model = Organization.objects.filter(actor_id=org[id_field])
 
         if len(org_model) == 0:
             # Create the organization
             org_model = Organization.objects.create(
-                name=org['displayName'],
+                name=org[name_field],
                 private=False,
-                actor_id=org['actorId']
+                actor_id=org[id_field]
             )
         else:
             org_model = org_model[0]
@@ -189,15 +166,15 @@ def fill_internal_user_info(*arg, **kwargs):
         org_roles = []
 
         for role in idm_org_roles:
-            if role['name'] == 'Owner':
-                if not kwargs['user'].pk in org_model.managers:
-                    org_model.managers.append(kwargs['user'].pk)
+            if role['name'].lower() == 'Owner':
+                if user.pk not in org_model.managers:
+                    org_model.managers.append(user.pk)
                     org_model.save()
-            elif role['name'] == FIWARE_PROVIDER_ROLE:
+            elif role['name'].lower() == FIWARE_PROVIDER_ROLE.lower():
                 org_roles.append('provider')
-            elif role['name'] == FIWARE_CUSTOMER_ROLE:
+            elif role['name'].lower() == FIWARE_CUSTOMER_ROLE.lower():
                 org_roles.append('customer')
-            elif role['name'] == FIWARE_DEVELOPER_ROLE:
+            elif role['name'].lower() == FIWARE_DEVELOPER_ROLE.lower():
                 org_roles.append('developer')
 
         organizations.append({
@@ -205,8 +182,8 @@ def fill_internal_user_info(*arg, **kwargs):
             'roles': org_roles
         })
 
-    kwargs['user'].userprofile.organizations = organizations
-    kwargs['user'].userprofile.save()
+    user.userprofile.organizations = organizations
+    user.userprofile.save()
 
 
 # Backend definition

@@ -40,7 +40,7 @@ def installPluginRollback(func):
     def wrapper(self, path, logger=None):
         try:
             logger = Logger()
-            func(self, path, logger=logger)
+            result = func(self, path, logger=logger)
         except Exception as e:
             # Remove directory if existing
             if 'PATH' in logger.get_state():
@@ -48,5 +48,6 @@ def installPluginRollback(func):
 
             # Raise the exception
             raise(e)
+        return result
 
     return wrapper

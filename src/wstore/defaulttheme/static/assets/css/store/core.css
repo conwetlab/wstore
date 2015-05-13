@@ -1,3 +1,7 @@
+body {
+  font-family: NeoTech;
+}
+
 h1 {
   font-family: NeoTech;
   font-weight: normal;
@@ -165,21 +169,21 @@ h2 {
 
 .return-button {
   position: fixed;
-  top: 51px;
-  left: 238px;
+  top: 54px;
+  left: 253px;
   z-index: 6;
 }
 
 #title-shadow {
-  width: 226px;
+  width: 245px;
   height: 23px;
   position: absolute;
-  top: 37px;
+  top: 41px;
   left: 0;
-  background-color: rgb(244, 244, 244);
+  background-color: rgb(241, 241, 242);
   z-index: -1;
   border-radius: 0 0 10px 0;
-  box-shadow: 4px 5px 8px rgba(50, 51, 51, 0.15);
+  box-shadow: 2px 4px 8px rgba(50, 51, 51, 0.15);
 }
 
 .navigation {
@@ -187,10 +191,6 @@ h2 {
     position: absolute;
     top: 60px;
     right: 0px;
-}
-
-#settings-menu .icon-wrench {
-  margin-right: 7px;
 }
 
 .float-right {
@@ -1256,8 +1256,13 @@ footer {
   text-align: center;
   font-size:13px;
   color: rgb(140, 140, 140);
-  padding-bottom: 10px;
   font-family: OpenSans, Verdana, sans-serif;
+  height: 50px;
+  border-top: 2px solid rgb(72, 185, 201);
+}
+
+footer > div > div{
+  padding-top: 12px;
 }
 
 header {
@@ -1345,3 +1350,26 @@ header {
   background: linear-gradient(to right, rgba(252, 252, 252, 0), rgb(252, 252, 252)) !important;
 }
 
+#settings-menu, .switch-org {
+  border-radius: 0px;
+  background-color: rgb(241, 241, 242);
+  border: 2px solid rgb(255, 255, 255) !important;
+}
+
+#settings-menu li {
+  height: 32px !important;
+  display: inline;
+}
+
+#settings-menu a {
+  height: 12px !important;
+}
+
+#settings-menu a:hover {
+  color: rgb(249, 249, 249) !important;
+  background-color: rgb(175, 175, 181) !important;
+}
+
+.non-portal-navbar {
+  max-width: none !important;
+}

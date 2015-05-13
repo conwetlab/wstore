@@ -31,6 +31,7 @@ from nose_parameterized import parameterized
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -47,6 +48,7 @@ import unittest
 
 
 TESTING_PORT = 8989
+
 
 def _fill_offering_description(pk, usdl_info, owner):
     offering = Offering.objects.get(pk=pk)
@@ -105,6 +107,7 @@ def _create_tags():
     tm.update_tags(offering1, ['service', 'tag'])
     tm.update_tags(offering2, ['dataset', 'tag'])
     tm.update_tags(offering3, ['widget'])
+
 
 @unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class BasicSearchTestCase(WStoreSeleniumTestCase):
@@ -259,6 +262,7 @@ class BasicSearchTestCase(WStoreSeleniumTestCase):
 class AdministrationTestCase(WStoreSeleniumTestCase):
     pass
 
+
 @unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class OfferingManagementTestCase(WStoreSeleniumTestCase):
 
@@ -392,6 +396,21 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
 
         WStoreSeleniumTestCase.tearDown(self)
 
+    def get_modal_wait(self, locator):
+        def not_present_modal(driver):
+            element = False
+            try:
+                self.driver.implicitly_wait(0)
+                driver.find_element_by_id(locator)
+            except NoSuchElementException:
+                element = driver.find_element_by_css_selector('.btn-danger')
+            finally:
+                self.driver.implicitly_wait(5)
+
+            return element
+
+        return not_present_modal
+
     def test_remote_purchase_form(self):
         token = self.oauth2_login()
 
@@ -430,19 +449,27 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
 
         self.driver.find_element_by_css_selector('.modal-footer .btn-basic').click()
 
-        # Wait until the end purchase button is loaded
-        element = WebDriverWait(self.driver, 5).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "btn-danger"))
-        )
+        # Wait until the purchase modal dissapears
+        element = WebDriverWait(self.driver, 5).until(self.get_modal_wait('postal'))
+
+        # Close download resources modal
+        WebDriverWait(self.driver, 5).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, '.modal-footer .btn-basic'))
+        ).click()
+
+        # Wait until the dowload modal dissapears
+        element = WebDriverWait(self.driver, 5).until(self.get_modal_wait('message'))
+
         # End the purchase
         element.click()
 
         # Check redirection
         WebDriverWait(self.driver, 5).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "a"))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "hr"))
         )
         expected_url = 'http://localhost:' + unicode(TESTING_PORT) + '/'
         self.assertEquals(self.driver.current_url, expected_url)
+
 
 @unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class ResourceManagementTestCase(WStoreSeleniumTestCase):

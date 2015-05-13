@@ -42,13 +42,15 @@ class PluginCollection(Resource):
             'author': 'Wstore',
             'version': '1',
             'media_types': [],
-            'formats': ['FILE', 'URL']
+            'formats': ['FILE', 'URL'],
+            'overrides': []
         }, {
             'name': 'API',
             'author': 'Wstore',
             'version': '1',
             'media_types': [],
-            'formats': ['URL']
+            'formats': ['URL'],
+            'overrides': []
         }]
 
         # Get resource plugins
@@ -60,7 +62,8 @@ class PluginCollection(Resource):
                 'author': plugin.author,
                 'version': plugin.version,
                 'media_types': plugin.media_types,
-                'formats': plugin.formats
+                'formats': plugin.formats,
+                'overrides': plugin.overrides
             }
             if plugin.form:
                 plugin_info['form'] = plugin.form

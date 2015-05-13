@@ -255,7 +255,8 @@ class PluginManagementTestCase(TestCase):
 
     @parameterized.expand([
         ('correct', ['test_plugin'], _check_removed),
-        ('inv_argument', ['test1', 'test2'], None, None, "Error: Please specify the plugin to be deleted"),
+        ('inv_argument_mul', ['test1', 'test2'], None, None, "Error: Please specify only one plugin to be deleted"),
+        ('inv_argument', [], None, None, "Error: Please specify the plugin to be deleted"),
         ('exception', ['test_plugin'], None, _unistall_plugin_error, 'Error uninstalling plugin')
     ])
     def test_remove_plugin(self, name, args, checker=None, side_effect=None, err_msg=None):

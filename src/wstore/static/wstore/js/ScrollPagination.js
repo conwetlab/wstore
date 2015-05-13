@@ -94,6 +94,10 @@
         this.elementsPage = elementsPage;
     }
 
+    ScrollPagination.prototype.setExtraQuery = function setsetExtraQuery (extraQuery) {
+        this.extraQuery = extraQuery;
+    }
+
     /**
      * Handler for get elements response
      */
@@ -159,7 +163,7 @@
         this.scrollContainer.off('scroll');
         // Create scroll listener
         this.scrollContainer.scroll(function(evnt) {
-           if ((this.scrollContainer.height() + this.scrollContainer.scrollTop()) >= this.content.height()) {
+           if ((this.scrollContainer.height() + this.scrollContainer.scrollTop()) >= this.content.height() - 100) {
                this.getNextPage();
            }
            this.scrollHandler(evnt);

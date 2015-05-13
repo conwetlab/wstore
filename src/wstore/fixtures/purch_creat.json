@@ -75,7 +75,10 @@
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "marketplaces": [{
+                "marketplace": "61000bba8e05ac2115f022f9",
+                "offering_name": "test_offering3"
+            }],
             "rating": "0",
             "comments": [],
             "tags": [],

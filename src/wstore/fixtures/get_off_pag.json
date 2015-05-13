@@ -73,7 +73,10 @@
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "marketplaces": [{
+                "marketplace": "61000bba8e05ac2115f022f9",
+                "offering_name": "test_offering3"
+            }],
             "rating": "0",
             "comments": [],
             "tags": [],
@@ -95,7 +98,10 @@
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "marketplaces": [{
+                "marketplace": "61000bba8e05ac2115f022f9",
+                "offering_name": "test_offering4"
+            }],
             "rating": "0",
             "comments": [],
             "tags": [],
@@ -117,7 +123,10 @@
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "marketplaces": [{
+                "marketplace": "61000bba8e05ac2115f022f9",
+                "offering_name": "test_offering5"
+            }],
             "rating": "0",
             "comments": [],
             "tags": [],
@@ -139,7 +148,10 @@
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "marketplaces": [{
+                "marketplace": "61000bba8e05ac2115f022f9",
+                "offering_name": "test_offering6"
+            }],
             "rating": "0",
             "comments": [],
             "tags": [],
@@ -161,7 +173,10 @@
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "marketplaces": [{
+                "marketplace": "61000bba8e05ac2115f022f9",
+                "offering_name": "test_offering7"
+            }],
             "rating": "0",
             "comments": [],
             "tags": [],
@@ -183,7 +198,10 @@
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "marketplaces": [{
+                "marketplace": "61000bba8e05ac2115f022f9",
+                "offering_name": "test_offering8"
+            }],
             "rating": "0",
             "comments": [],
             "tags": [],
@@ -205,7 +223,10 @@
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "marketplaces": [{
+                "marketplace": "61000bba8e05ac2115f022f9",
+                "offering_name": "test_offering9"
+            }],
             "rating": "0",
             "comments": [],
             "tags": [],
@@ -227,7 +248,10 @@
             "owner_admin_user": "51000aba8e05ac2115f022f9",
             "version": "1.0",
             "state": "published",
-            "marketplaces": ["61000bba8e05ac2115f022f9"],
+            "marketplaces": [{
+                "marketplace": "61000bba8e05ac2115f022f9",
+                "offering_name": "test_offering10"
+            }],
             "rating": "0",
             "comments": [],
             "tags": [],
@@ -246,7 +270,13 @@
         "model": "wstore.Marketplace",
         "fields": {
             "name": "test_market",
-            "host": "http://examplemarketplace.com/"
+            "host": "http://examplemarketplace.com/",
+            "api_version": 1,
+            "store_id": "test_store",
+            "credentials": {
+                "username": "test_user",
+                "passwd": "test_passwd"
+            }
         }
     },
     {

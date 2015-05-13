@@ -34,8 +34,10 @@ class Command(BaseCommand):
         """
 
         # Check arguments
-        if len(args) != 1:
+        if len(args) < 1:
             raise CommandError("Error: Please specify the plugin to be deleted")
+        elif len(args) > 1:
+            raise CommandError("Error: Please specify only one plugin to be deleted")
 
         try:
             name = args[0]

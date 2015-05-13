@@ -22,18 +22,19 @@ from __future__ import unicode_literals
 
 import json
 from urllib2 import HTTPError
-from mock import MagicMock
+from mock import MagicMock, call
 from nose_parameterized import parameterized
 
 from django.test import TestCase
 from django.core.exceptions import PermissionDenied
+from django.test.utils import override_settings
 
 from wstore.admin.markets import markets_management
 from wstore.admin.markets import views
 from wstore.store_commons.utils import http
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
-decorator_mock_callable, HTTPResponseMock
-from wstore.store_commons.utils import http
+    decorator_mock_callable, HTTPResponseMock
+from wstore.models import MarketCredentials
 
 
 __test__ = False
@@ -42,14 +43,22 @@ __test__ = False
 BASIC_MARKET_DATA = {
     'name': 'test_market',
     'host': 'http://testmarket.com',
-    'site': 'http://currentsite.com'
+    'site': 'http://currentsite.com',
+    'api_version': '1',
+    'credentials': {
+        'username': 'test_user',
+        'passwd': 'test_passwd'
+    }
 }
 
 BASIC_MARKET_DATA1 = {
     'name': 'test_market1',
     'host': 'http://testmarket.com/',
-    'site': 'http://currentsite.com/'
+    'site': 'http://currentsite.com/',
+    'api_version': '2',
+    'credentials': None
 }
+
 
 class RegisteringOnMarketplaceTestCase(TestCase):
 
@@ -63,23 +72,32 @@ class RegisteringOnMarketplaceTestCase(TestCase):
 
     def setUp(self):
         self.adaptor_object = MagicMock()
-        markets_management.MarketAdaptor = MagicMock()
-        markets_management.MarketAdaptor.return_value = self.adaptor_object
+        markets_management.marketadaptor_factory = MagicMock()
+        markets_management.marketadaptor_factory.return_value = self.adaptor_object
+
         markets_management.Marketplace = MagicMock()
-        markets_management.Marketplace.objects.get.side_effect = Exception('Not found')
+        self._market_obj = MagicMock()
+        markets_management.Marketplace.return_value = self._market_obj
+
+        self.filter_mock = MagicMock()
+        self.filter_mock.__len__.return_value = 0
+        markets_management.Marketplace.objects.filter.return_value = self.filter_mock
+
+        self._user = MagicMock()
 
     def _internal_market_error(self):
         self.adaptor_object.add_store.side_effect = HTTPError('site', 500, 'Internal server error', None, None)
 
     def _existing(self):
-        markets_management.Marketplace.objects.get.side_effect = None
+        self.filter_mock.__or__.return_value = ['m']
 
     def _creation_error(self):
-        markets_management.Marketplace.objects.create.side_effect = Exception('Creation error')
+        self._market_obj.save.side_effect = Exception('Creation error')
 
     @parameterized.expand([
         (BASIC_MARKET_DATA,),
-        (BASIC_MARKET_DATA1, _internal_market_error, Exception, 'Bad Gateway'),
+        (BASIC_MARKET_DATA1,),
+        (BASIC_MARKET_DATA1, _internal_market_error, Exception, 'HTTP Error 500: Internal server error'),
         (BASIC_MARKET_DATA, _existing, PermissionDenied, 'Marketplace already registered'),
         (BASIC_MARKET_DATA, _creation_error, Exception, 'Creation error')
     ])
@@ -90,20 +108,43 @@ class RegisteringOnMarketplaceTestCase(TestCase):
 
         error = None
         try:
-            markets_management.register_on_market(data['name'], data['host'], data['site'])
+            markets_management.register_on_market(self._user, data['name'], data['host'], data['api_version'], data['credentials'], data['site'])
         except Exception as e:
             error = e
 
         if not err_type:
             self.assertEquals(error, None)
+
             # Check calls
-            markets_management.MarketAdaptor.assert_called_with('http://testmarket.com/')
-            markets_management.Marketplace.objects.get.assert_called_with(name=data['name'])
+            usr = None
+            passwd = None
+            if data['credentials'] is not None:
+                usr = data['credentials']['username']
+                passwd = data['credentials']['passwd']
+
+            cred = MarketCredentials(
+                username=usr,
+                passwd=passwd
+            )
+            markets_management.Marketplace.assert_called_with(
+                name=data['name'],
+                host='http://testmarket.com/',
+                api_version=data['api_version'],
+                credentials=cred
+            )
+
+            markets_management.marketadaptor_factory.assert_called_with(self._market_obj, self._user)
+
+            calls = [call(name=data['name']), call(host='http://testmarket.com/')]
+            markets_management.Marketplace.objects.filter.assert_has_calls(calls)
+            self.assertEquals(markets_management.Marketplace.objects.filter.call_count, 2)
+
             self.adaptor_object.add_store.assert_called_with({
                 'store_name': 'test_store',
                 'store_uri': data['site']
             })
-            markets_management.Marketplace.objects.create.assert_called_with(name=data['name'], host='http://testmarket.com/')
+            self._market_obj.save.assert_called_once_with()
+
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
@@ -120,10 +161,13 @@ class MarketPlacesRetievingTestCase(TestCase):
         self.assertEquals(len(markets), 3)
         self.assertEquals(markets[0]['name'], 'test_market1')
         self.assertEquals(markets[0]['host'], 'http://examplemarketplace1.com/')
+        self.assertEquals(markets[0]['api_version'], 1)
         self.assertEquals(markets[1]['name'], 'test_market2')
         self.assertEquals(markets[1]['host'], 'http://examplemarketplace2.com/')
+        self.assertEquals(markets[1]['api_version'], 1)
         self.assertEquals(markets[2]['name'], 'test_market3')
         self.assertEquals(markets[2]['host'], 'http://examplemarketplace3.com/')
+        self.assertEquals(markets[2]['api_version'], 2)
 
 
 class UnregisteringFromMarketplaceTestCase(TestCase):
@@ -138,40 +182,57 @@ class UnregisteringFromMarketplaceTestCase(TestCase):
 
     def setUp(self):
         markets_management.Marketplace = MagicMock()
+
         self.adaptor_object = MagicMock()
-        markets_management.MarketAdaptor = MagicMock()
-        markets_management.MarketAdaptor.return_value = self.adaptor_object
+        markets_management.marketadaptor_factory = MagicMock()
+        markets_management.marketadaptor_factory.return_value = self.adaptor_object
 
-    def _market_mock1(self):
-        mock_market = MagicMock()
-        mock_market.host = 'http://testmarket.org'
-        markets_management.Marketplace.objects.get.return_value = mock_market
+    def _market_mock(self):
+        self._mock_market = MagicMock()
+        self._mock_market.host = 'http://testmarket.org/'
+        markets_management.Marketplace.objects.get.return_value = self._mock_market
+        self._user = MagicMock()
 
-    def _market_mock2(self):
-        mock_market = MagicMock()
-        mock_market.host = 'http://testmarket.org/'
-        markets_management.Marketplace.objects.get.return_value = mock_market
-
-    @parameterized.expand([
-    (_market_mock1,),
-    (_market_mock2,),
-    ])
-    def test_basic_unregistering_from_market(self, mock):
-
+    def test_basic_unregistering_from_market(self):
         # Build the related Mock
-        mock(self)
-        markets_management.unregister_from_market('test_market')
+        self._market_mock()
+
+        # Mock offering info
+        mock_off1 = MagicMock()
+        mock_off1.marketplaces = []
+
+        mock_market_off = MagicMock()
+        mock_market_off2 = MagicMock()
+        mock_market_off2.marketplace = self._mock_market
+
+        mock_off2 = MagicMock()
+        mock_off2.marketplaces = [mock_market_off]
+
+        mock_off3 = MagicMock()
+        mock_off3.marketplaces = [mock_market_off, mock_market_off2]
+
+        markets_management.Offering = MagicMock()
+        markets_management.Offering.objects.all.return_value = [mock_off1, mock_off2, mock_off3]
+
+        markets_management.unregister_from_market(self._user, 'test_market')
 
         markets_management.Marketplace.objects.get.assert_called_with(name='test_market')
-        self.adaptor_object.delete_store.assert_called_with('test_store')
+        markets_management.marketadaptor_factory.assert_called_once_with(self._mock_market, self._user)
+        self.adaptor_object.delete_store.assert_called_with()
+
+        # Check that marketplace info has been removed from the corresponding offering
+        self.assertEquals(mock_off1.marketplaces, [])
+        self.assertEquals(mock_off2.marketplaces, [mock_market_off])
+        self.assertEquals(mock_off3.marketplaces, [mock_market_off])
+        mock_off3.save.assert_called_once_with()
 
     def test_unregistering_already_unregistered(self):
 
-        self._market_mock1()
+        self._market_mock()
         markets_management.Marketplace.objects.get.side_effect = Exception('Not found')
         error = False
         try:
-            markets_management.unregister_from_market('test_market1')
+            markets_management.unregister_from_market(self._user, 'test_market1')
         except:
             error = True
 
@@ -180,20 +241,21 @@ class UnregisteringFromMarketplaceTestCase(TestCase):
     def test_unregistering_bad_gateway(self):
 
         # Mock Marketplace
-        self._market_mock1()
+        self._market_mock()
         self.adaptor_object.delete_store.side_effect = HTTPError('http://testmarket.org', 500, 'Server error', None, None)
 
         error = False
         msg = None
         try:
-            markets_management.unregister_from_market('test_market')
+            markets_management.unregister_from_market(self._user, 'test_market')
         except Exception as e:
             error = True
             msg = e.message
 
         self.assertTrue(error)
         self.assertEquals(msg, 'Bad Gateway')
-        self.adaptor_object.delete_store.assert_called_with('test_store')
+        self.adaptor_object.delete_store.assert_called_with()
+        markets_management.marketadaptor_factory.assert_called_once_with(self._mock_market, self._user)
 
 
 class MarketplaceViewTestCase(TestCase):
@@ -235,41 +297,74 @@ class MarketplaceViewTestCase(TestCase):
         self.request.user.is_staff = False
 
     def _market_failure(self):
-        views.register_on_market.side_effect = Exception('Bad Gateway')
+        views.register_on_market.side_effect = HTTPError(
+            'http://testmarket.com',
+            500,
+            'Internal server error',
+            None,
+            None
+        )
 
     def _bad_request(self):
         views.register_on_market.side_effect = Exception('Bad request')
 
+    def _existing(self):
+        views.register_on_market.side_effect = PermissionDenied('Existing Marketplace')
+
     @parameterized.expand([
-    ({
-        'name': 'test_market',
-        'host': 'http://testmarket.com'
-    }, (201, 'Created', 'correct'), False),
-    ({
-        'name': 'test_market',
-        'host': 'http://testmarket.com'
-    }, (403, 'Forbidden', 'error'), True, _forbidden),
-    ({
-        'invalid': 'test_market',
-        'host': 'http://testmarket.com'
-    }, (400, 'Request body is not valid JSON data', 'error'), True),
-    ({
-        'name': 'test_market',
-        'host': 'http://testmarket.com'
-    }, (502, 'Bad Gateway', 'error'), True, _market_failure),
-    ({
-        'name': 'test_market',
-        'host': 'http://testmarket.com'
-    }, (400, 'Bad request', 'error'), True, _bad_request),
-    ({
-        'name': 'test_market$',
-        'host': 'http://testmarket.com'
-    }, (400, 'Invalid name format', 'error'), True),
-    ({
-        'name': 'test_market',
-        'host': 'invalid_url'
-    }, (400, 'Invalid URL format', 'error'), True)
+        (BASIC_MARKET_DATA1, (201, 'Created', 'correct'), False),
+        (BASIC_MARKET_DATA, (403, 'You are not allowed to register WStore in a Marketplace', 'error'), True, _forbidden),
+        ({
+            'invalid': 'test_market',
+            'host': 'http://testmarket.com',
+            'api_version': '1'
+        }, (400, 'Request body is not valid JSON data', 'error'), True),
+        (BASIC_MARKET_DATA, (502, 'The Marketplace has failed registering the store', 'error'), True, _market_failure),
+        (BASIC_MARKET_DATA, (500, 'Bad request', 'error'), True, _bad_request),
+        ({
+            'name': 'test_market$',
+            'host': 'http://testmarket.com',
+            'api_version': '1'
+        }, (400, 'Invalid name format', 'error'), True),
+        ({
+            'name': 'test_market',
+            'host': 'invalid_url',
+            'api_version': '1'
+        }, (400, 'Invalid URL format', 'error'), True),
+        ({
+            'name': 'test_market',
+            'host': 'http://testmarket.com',
+            'api_version': '1a'
+        }, (400, 'Invalid API version', 'error'), True),
+        ({
+            'name': 'test_market',
+            'host': 'http://testmarket.com',
+            'api_version': '3'
+        }, (400, 'Invalid API version', 'error'), True),
+        (BASIC_MARKET_DATA, (403, 'Existing Marketplace', 'error'), True, _existing),
+        ({
+            'name': 'test_market',
+            'host': 'http://testmarket.com',
+            'api_version': '1'
+        }, (400, 'Missing required field credentials', 'error'), True),
+        ({
+            'name': 'test_market',
+            'host': 'http://testmarket.com',
+            'api_version': '1',
+            'credentials': {
+                'passwd': 'test_passwd'
+            }
+        }, (400, 'Missing required field username in credentials', 'error'), True),
+        ({
+            'name': 'test_market',
+            'host': 'http://testmarket.com',
+            'api_version': '1',
+            'credentials': {
+                'username': 'test_username'
+            }
+        }, (400, 'Missing required field passwd in credentials', 'error'), True),
     ])
+    @override_settings(OILAUTH=True)
     def test_market_api_create(self, data, exp_resp, error, side_effect=None):
         # Create request data
         self.request.raw_post_data = json.dumps(data)
@@ -290,11 +385,18 @@ class MarketplaceViewTestCase(TestCase):
 
         # Check calls
         if not error:
-            views.register_on_market.assert_called_with(data['name'], data['host'], 'http://teststore.org')
+            views.register_on_market.assert_called_with(
+                self.request.user,
+                data['name'],
+                data['host'],
+                int(data['api_version']),
+                data['credentials'],
+                'http://teststore.org'
+            )
 
     @parameterized.expand([
-    (False,),
-    (True,)
+        (False,),
+        (True,)
     ])
     def test_market_api_get(self, error):
         # Mock get marketplaces method
@@ -340,11 +442,11 @@ class MarketplaceViewTestCase(TestCase):
         views.unregister_from_market.side_effect = Exception('Bad request')
 
     @parameterized.expand([
-    ((204, 'No content', 'correct'),),
-    ((403, 'Forbidden', 'error'), _forbidden),
-    ((502, 'Bad Gateway', 'error'), _bad_gateway_unreg),
-    ((404, 'Not found', 'error'), _not_found_unreg),
-    ((400, 'Bad request', 'error'), _market_failure_unreg)
+        ((204, 'No content', 'correct'),),
+        ((403, 'Forbidden', 'error'), _forbidden),
+        ((502, 'Bad Gateway', 'error'), _bad_gateway_unreg),
+        ((404, 'Not found', 'error'), _not_found_unreg),
+        ((400, 'Bad request', 'error'), _market_failure_unreg)
     ])
     def test_market_api_delete(self, exp_result, side_effect=None):
         # Mock unregister_form_market

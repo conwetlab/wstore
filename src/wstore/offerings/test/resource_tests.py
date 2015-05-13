@@ -122,7 +122,7 @@ class ResourceRegisteringTestCase(TestCase):
             'resource_type': 'Downloadable',
             'content_type': 'text/plain',
             'link': 'https://existing.com/download'
-        }, None, False, ValueError, 'Invalid version format'),
+        }, None, False, ValueError, "Invalid version number '1.0a'"),
         ({
             'name': 'invalidname$',
             'version': '1.0',
@@ -252,6 +252,7 @@ class ResourceRegisteringTestCase(TestCase):
 
         # Create plugin module mocks
         plugin_mock = MagicMock(name="test_plugin")
+        plugin_mock.on_pre_create_validation.return_value = data
         wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = plugin_mock
         reload(resources_management)
@@ -354,12 +355,32 @@ class ResourceRetrievingTestCase(TestCase):
         resource4.meta_info = {}
 
         resources_management.Resource = MagicMock()
-        resources_management.Resource.objects.filter.return_value = [
-            resource1,
-            resource2,
-            resource3,
-            resource4
-        ]
+
+        def resource_filter(provider=None, open=None):
+            if provider != self.org:
+                return []
+
+            if open is None:
+                result = [
+                    resource1,
+                    resource2,
+                    resource3,
+                    resource4
+                ]
+            elif not open:
+                result = [
+                    resource1,
+                    resource2
+                ]
+            else:
+                result = [
+                    resource3,
+                    resource4
+                ]
+            return result
+
+        resources_management.Resource.objects.filter = resource_filter
+
         self.user = MagicMock()
         self.org = MagicMock()
         self.user.userprofile.current_organization = self.org
@@ -372,9 +393,10 @@ class ResourceRetrievingTestCase(TestCase):
 
     @parameterized.expand([
         ([RESOURCE_DATA1, RESOURCE_DATA2, RESOURCE_DATA3, RESOURCE_DATA4],),
-        ([RESOURCE_DATA3, RESOURCE_DATA4], 'true'),
-        ([RESOURCE_DATA1, RESOURCE_DATA2], 'false'),
+        ([RESOURCE_DATA3, RESOURCE_DATA4], True),
+        ([RESOURCE_DATA1, RESOURCE_DATA2], False),
         ([RESOURCE_DATA1], None, {"start": 1, "limit": 1}),
+        ([RESOURCE_DATA3], True, {"start": 1, "limit": 1}),
         ([RESOURCE_DATA2, RESOURCE_DATA3], None, {"start": 2, "limit": 2}),
         ([RESOURCE_DATA3, RESOURCE_DATA4], None, {"start": 3, "limit": 8}),
         ([], None, {"start": 6}, ValueError, "Missing required parameter in pagination"),
@@ -397,8 +419,6 @@ class ResourceRetrievingTestCase(TestCase):
         if not err_type:
             # Assert that no error occurs
             self.assertEquals(error, None)
-            # Check calls
-            resources_management.Resource.objects.filter.assert_called_once_with(provider=self.org)
             # Check result
             self.assertEquals(result, expected_result)
         else:
@@ -677,16 +697,17 @@ class ResourceUpgradeTestCase(TestCase):
         self.resource.old_versions = []
         resources_management._upload_usdl = MagicMock(name="_upload_usdl")
 
-    def _deleted_res(self):
+    def _deleted_res(self, data):
         self.resource.state = 'deleted'
 
-    def _mock_save_file(self):
+    def _mock_save_file(self, data):
         resources_management._save_resource_file = MagicMock()
         resources_management._save_resource_file.return_value = '/media/resources/test_usdl.rdf'
 
-    def _mock_res_plugin(self):
+    def _mock_res_plugin(self, data):
         self.resource.resource_type = 'test_plugin'
         self.plugin_mock = MagicMock(name="test_plugin")
+        self.plugin_mock.on_pre_upgrade_validation.return_value = data
         wstore.offerings.resource_plugins.decorators._get_plugin_model = MagicMock(name="_get_plugin_model")
         self.mock_model = MagicMock()
         self.mock_model.formats = ['FILE']
@@ -696,13 +717,13 @@ class ResourceUpgradeTestCase(TestCase):
 
         reload(resources_management)
         resources_management._upload_usdl = MagicMock(name="_upload_usdl")
-        self._mock_save_file()
+        self._mock_save_file(data)
 
-    def _mock_res_api(self):
+    def _mock_res_api(self, data):
         self.resource.resource_type = 'API'
 
-    def _mock_file_not_allowed(self):
-        self._mock_res_plugin()
+    def _mock_file_not_allowed(self, data):
+        self._mock_res_plugin(data)
         self.mock_model.formats = ["URL"]
 
     @parameterized.expand([
@@ -714,7 +735,7 @@ class ResourceUpgradeTestCase(TestCase):
         (UPGRADE_LINK, False, _mock_res_plugin, ValueError, 'Invalid plugin format: URL not allowed for the resource type'),
         (UPGRADE_CONTENT, False, _mock_file_not_allowed, ValueError, 'Invalid plugin format: File not allowed for the resource type'),
         ({}, False, None, ValueError, 'Missing a required field: Version'),
-        ({'version': '1.0a'}, False, None, ValueError, 'Invalid version format'),
+        ({'version': '1.0a'}, False, None, ValueError, "Invalid version number '1.0a'"),
         ({'version': '1.0'}, False, _deleted_res, PermissionDenied, 'Deleted resources cannot be upgraded'),
         ({'version': '0.0.1'}, False, None, ValueError, 'The new version cannot be lower that the current version: 0.0.1 - 0.1'),
         ({'version': '0.1'}, False, None, ValueError, 'The new version cannot be lower that the current version: 0.1 - 0.1'),
@@ -724,7 +745,7 @@ class ResourceUpgradeTestCase(TestCase):
     def test_resource_upgrade(self, data, file_used=False, side_effect=None, err_type=None, err_msg=None):
 
         if side_effect:
-            side_effect(self)
+            side_effect(self, data)
 
         res_file = None
         if file_used:

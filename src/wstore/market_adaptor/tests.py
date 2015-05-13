@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -18,14 +18,21 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
+import json
+
 import urlparse
 from urllib2 import HTTPError
+from mock import MagicMock
+
 from django.test import TestCase
 
 from wstore.market_adaptor import marketadaptor
 
 
 __test__ = False
+
 
 class FakeUrllib2():
 
@@ -82,21 +89,28 @@ class FakeUrllib2():
                 self._body = request.data
                 return self._response
 
-            elif request.get_host() == 'delete_store_marketplace':
+            elif request.get_host().startswith('delete_store_marketplace'):
                 self._url = request.get_full_url()
                 self._method = request.get_method()
                 self._response.code = 200
+                if request.get_host().endswith('v2'):
+                    self._response.code = 204
                 return self._response
 
-            elif request.get_host() == 'delete_service_marketplace':
+            elif request.get_host().startswith('delete_service_marketplace'):
                 self._url = request.get_full_url()
                 self._method = request.get_method()
                 self._response.code = 200
+                if request.get_host().endswith('v2'):
+                    self._response.code = 204
                 return self._response
 
     class Response():
-        url = 'http://response.com/v1/FiwareMarketplace;jsessionid=1111'
-        code = 201
+        def __init__(self):
+            self.url = 'http://response.com/v1/FiwareMarketplace;jsessionid=1111'
+            self.code = 201
+            self.headers = MagicMock()
+            self.headers.getheader.return_value = 'http://examplemarket.com/wstore'
 
     def __init__(self):
         self._opener = self.Opener(self.Response())
@@ -107,47 +121,32 @@ class FakeUrllib2():
 
 class MarketAdaptorTestCase(TestCase):
 
-    def authentication(self):
-            raise Exception('Redirection')
+    tags = ('market-adaptor', )
 
-    def test_authentication(self):
+    def setUp(self):
+        self.fake_urllib = FakeUrllib2()
+        marketadaptor.urllib2 = self.fake_urllib
+        self.marketplace = MagicMock()
+        self.marketplace.name = 'test_market'
+        self.marketplace.api_version = 1
+        self.marketplace.store_id = 'test_store'
+        self.marketplace.credentials.username = 'test_user'
+        self.marketplace.credentials.passwd = 'testpasswd'
 
-        marketplace = 'http://authentication_marketplace/FiwareMarketplace/v1/'
-        fake_urllib = FakeUrllib2()
+        marketadaptor.Marketplace = MagicMock()
+        marketadaptor.Marketplace.objects.get.return_value = self.marketplace
 
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace, user='test_user', passwd='test_passwd')
+    def tearDown(self):
+        reload(marketadaptor)
 
-        market_adaptor.authenticate()
+    def _get_marketadaptor(self, host):
+        self.marketplace.host = host
+        market_adaptor = marketadaptor.marketadaptor_factory(self.marketplace)
+        market_adaptor._session_id = '1111'
 
-        opener = fake_urllib._opener
-        self.assertEqual(opener._url, 'http://authentication_marketplace/FiwareMarketplace/j_spring_security_check')
-        self.assertEqual(opener._method, 'POST')
-        self.assertEqual(opener._username, 'test_user')
-        self.assertEqual(opener._passwd, 'test_passwd')
+        return market_adaptor
 
-        self.assertEqual(market_adaptor._session_id, '1111')
-
-    def test_authentcation_error(self):
-
-        marketplace = 'http://authentication_error/FiwareMarketplace/v1/'
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace, user='test_user', passwd='test_passwd')
-
-        error = False
-        msg = None
-        try:
-            market_adaptor.authenticate()
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEqual(msg, 'Marketplace login error')
-
-    def test_add_store(self):
+    def test_add_store_v1(self):
         expected_body = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="store" ><url>http://store_uri.com</url></resource>'
 
         store_info = {
@@ -155,35 +154,24 @@ class MarketAdaptorTestCase(TestCase):
             'store_uri': 'http://store_uri.com'
         }
 
-        marketplace = 'http://add_store_marketplace/'
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
+        market_adaptor = self._get_marketadaptor('http://add_store_marketplace/')
 
         market_adaptor.add_store(store_info)
 
-        opener = fake_urllib._opener
-        self.assertEqual(opener._url, 'http://add_store_marketplace/registration/store/')
+        opener = self.fake_urllib._opener
+        self.assertEqual(opener._url, 'http://add_store_marketplace/v1/registration/store/')
         self.assertEqual(opener._method, 'PUT')
         self.assertEqual(opener._body, expected_body)
 
-    test_add_store.tags = ('fiware-ut-7',)
+    test_add_store_v1.tags = ('fiware-ut-7',)
 
-    def test_add_store_error(self):
-        marketplace = 'http://add_store_error/'
-
+    def test_add_store_error_v1(self):
         store_info = {
             'store_name': 'store',
             'store_uri': 'http://store_uri.com'
         }
 
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
+        market_adaptor = self._get_marketadaptor('http://add_store_error/')
 
         error = False
         msg = None
@@ -196,61 +184,31 @@ class MarketAdaptorTestCase(TestCase):
         self.assertTrue(error)
         self.assertEqual(msg, 'Error add store')
 
-    test_add_store_error.tags = ('fiware-ut-7',)
+    test_add_store_error_v1.tags = ('fiware-ut-7',)
 
-    def test_add_store_redirection(self):
-        marketplace = 'http://add_store_redirection/'
+    def _delete_store(self, market_url, expected_url):
+        market_adaptor = self._get_marketadaptor(market_url)
 
-        store_info = {
-            'store_name': 'store',
-            'store_uri': 'http://store_uri.com'
-        }
+        market_adaptor.delete_store()
 
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
-
-        market_adaptor.authenticate = self.authentication
-        redirected = False
-        try:
-            market_adaptor.add_store(store_info)
-        except Exception, e:
-            if e.message == 'Redirection':
-                redirected = True
-
-        self.assertTrue(redirected)
-
-    test_add_store_redirection.tags = ('fiware-ut-7',)
-
-    def test_delete_store(self):
-        marketplace = 'http://delete_store_marketplace/'
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
-
-        market_adaptor.delete_store('test_store')
-
-        opener = fake_urllib._opener
-        self.assertEqual(opener._url, 'http://delete_store_marketplace/registration/store/test_store')
+        opener = self.fake_urllib._opener
+        self.assertEqual(opener._url, expected_url)
         self.assertEqual(opener._method, 'DELETE')
+        marketadaptor.Marketplace.objects.get.assert_called_once_with(host=market_url)
 
-    def test_delete_store_error(self):
+    def test_delete_store_v1(self):
+        self._delete_store(
+            'http://delete_store_marketplace',
+            'http://delete_store_marketplace/v1/registration/store/test_store'
+        )
 
-        marketplace = 'http://delete_store_error/'
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
+    def test_delete_store_error_v1(self):
+        market_adaptor = self._get_marketadaptor('http://delete_store_error/')
 
         error = False
         msg = None
         try:
-            market_adaptor.delete_store('test_store')
+            market_adaptor.delete_store()
         except HTTPError, e:
             error = True
             msg = str(e.reason)
@@ -258,27 +216,7 @@ class MarketAdaptorTestCase(TestCase):
         self.assertTrue(error)
         self.assertEqual(msg, 'Error delete store')
 
-    def test_delete_store_redirection(self):
-
-        marketplace = 'http://delete_store_redirection/'
-
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
-
-        market_adaptor.authenticate = self.authentication
-        redirected = False
-        try:
-            market_adaptor.delete_store('test_store')
-        except Exception, e:
-            if e.message == 'Redirection':
-                redirected = True
-
-        self.assertTrue(redirected)
-
-    def test_add_service(self):
+    def test_add_service_v1(self):
         expected_body = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="test_service" ><url>http://test_service_uri.com</url></resource>'
 
         service_info = {
@@ -286,41 +224,30 @@ class MarketAdaptorTestCase(TestCase):
             'url': 'http://test_service_uri.com'
         }
 
-        marketplace = 'http://add_service_marketplace/'
-        fake_urllib = FakeUrllib2()
+        market_adaptor = self._get_marketadaptor('http://add_service_marketplace/')
 
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
+        market_adaptor.add_service(service_info)
 
-        market_adaptor.add_service('test_store', service_info)
-
-        opener = fake_urllib._opener
-        self.assertEqual(opener._url, 'http://add_service_marketplace/offering/store/test_store/offering')
+        opener = self.fake_urllib._opener
+        self.assertEqual(opener._url, 'http://add_service_marketplace/v1/offering/store/test_store/offering')
         self.assertEqual(opener._method, 'PUT')
         self.assertEqual(opener._body, expected_body)
+        marketadaptor.Marketplace.objects.get.assert_called_once_with(host="http://add_service_marketplace/")
 
-    test_add_service.tags = ('fiware-ut-4',)
+    test_add_service_v1.tags = ('fiware-ut-4',)
 
-    def test_add_service_error(self):
-
-        marketplace = 'http://add_service_error/'
-
+    def test_add_service_error_v1(self):
         service_info = {
             'name': 'test_service',
             'url': 'http://test_service_uri.com'
         }
 
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
+        market_adaptor = self._get_marketadaptor('http://add_service_error/')
 
         error = False
         msg = None
         try:
-            market_adaptor.add_service('test_store', service_info)
+            market_adaptor.add_service(service_info)
         except HTTPError, e:
             error = True
             msg = str(e.reason)
@@ -328,65 +255,33 @@ class MarketAdaptorTestCase(TestCase):
         self.assertTrue(error)
         self.assertEqual(msg, 'Error add service')
 
-    test_add_service_error.tags = ('fiware-ut-4',)
+    test_add_service_error_v1.tags = ('fiware-ut-4',)
 
-    def test_add_service_redirection(self):
+    def _delete_service(self, market_url, expected_url):
+        market_adaptor = self._get_marketadaptor(market_url)
 
-        marketplace = 'http://add_service_redirection/'
+        market_adaptor.delete_service('test_service')
 
-        service_info = {
-            'name': 'test_service',
-            'url': 'http://test_service_uri.com'
-        }
-
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
-
-        market_adaptor.authenticate = self.authentication
-        redirected = False
-        try:
-            market_adaptor.add_service('test_store', service_info)
-        except Exception, e:
-            if e.message == 'Redirection':
-                redirected = True
-
-        self.assertTrue(redirected)
-
-    test_add_service_redirection.tags = ('fiware-ut-4',)
-
-    def test_delete_service(self):
-
-        marketplace = 'http://delete_service_marketplace/'
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
-
-        market_adaptor.delete_service('test_store', 'test_service')
-
-        opener = fake_urllib._opener
-        self.assertEqual(opener._url, 'http://delete_service_marketplace/offering/store/test_store/offering/test_service')
+        opener = self.fake_urllib._opener
+        self.assertEqual(opener._url, expected_url)
         self.assertEqual(opener._method, 'DELETE')
+        marketadaptor.Marketplace.objects.get.assert_called_once_with(host=market_url)
 
-    test_delete_service.tags = ('fiware-ut-9',)
+    def test_delete_service_v1(self):
+        self._delete_service(
+            'http://delete_service_marketplace',
+            'http://delete_service_marketplace/v1/offering/store/test_store/offering/test_service'
+        )
 
-    def test_delete_service_error(self):
+    test_delete_service_v1.tags = ('fiware-ut-9',)
 
-        marketplace = 'http://delete_service_error/'
-        fake_urllib = FakeUrllib2()
-
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
+    def test_delete_service_error_v1(self):
+        market_adaptor = self._get_marketadaptor('http://delete_service_error/')
 
         error = False
         msg = None
         try:
-            market_adaptor.delete_service('test_store', 'test_service')
+            market_adaptor.delete_service('test_service')
         except HTTPError, e:
             error = True
             msg = str(e.reason)
@@ -394,25 +289,70 @@ class MarketAdaptorTestCase(TestCase):
         self.assertTrue(error)
         self.assertEqual(msg, 'Error delete service')
 
-    test_delete_service_error.tags = ('fiware-ut-9',)
+    test_delete_service_error_v1.tags = ('fiware-ut-9',)
 
-    def test_delete_service_redirection(self):
-        marketplace = 'http://delete_service_redirection/'
+    def test_add_store_v2(self):
+        self.marketplace.api_version = 2
+        market_adaptor = self._get_marketadaptor('http://add_store_marketplace/')
 
-        fake_urllib = FakeUrllib2()
+        expected_body = {
+            "displayName": "store",
+            "url": "http://store_uri.com",
+            "comment": "WStore instance deployed in http://store_uri.com"
+        }
 
-        marketadaptor.urllib2 = fake_urllib
-        market_adaptor = marketadaptor.MarketAdaptor(marketplace)
-        market_adaptor._session_id = '1111'
+        store_info = {
+            'store_name': 'store',
+            'store_uri': 'http://store_uri.com'
+        }
 
-        market_adaptor.authenticate = self.authentication
-        redirected = False
-        try:
-            market_adaptor.delete_service('test_store', 'test_service')
-        except Exception, e:
-            if e.message == 'Redirection':
-                redirected = True
+        market_adaptor = self._get_marketadaptor('http://add_store_marketplace/')
 
-        self.assertTrue(redirected)
+        store_id = market_adaptor.add_store(store_info)
 
-    test_delete_service_redirection.tags = ('fiware-ut-9',)
+        self.assertEquals(store_id, 'wstore')
+
+        opener = self.fake_urllib._opener
+        self.assertEqual(opener._url, 'http://add_store_marketplace/api/v2/store')
+        self.assertEqual(opener._method, 'POST')
+        self.assertEqual(json.loads(opener._body), expected_body)
+
+    def test_delete_store_v2(self):
+        self.marketplace.api_version = 2
+        self._delete_store(
+            'http://delete_store_marketplace_v2',
+            'http://delete_store_marketplace_v2/api/v2/store/test_store'
+        )
+
+    def test_add_service_v2(self):
+        self.marketplace.api_version = 2
+        market_adaptor = self._get_marketadaptor('http://add_service_marketplace/')
+        market_adaptor._user = None
+        market_adaptor._current_user = MagicMock()
+        market_adaptor._current_user.userprofile.access_token = 'access_token'
+
+        expected_body = {
+            "displayName": "test_service",
+            "url": "http://test_service_uri.com",
+        }
+
+        service_info = {
+            'name': 'test_service',
+            'url': 'http://test_service_uri.com'
+        }
+
+        store_id = market_adaptor.add_service(service_info)
+
+        self.assertEquals(store_id, 'wstore')
+
+        opener = self.fake_urllib._opener
+        self.assertEqual(opener._url, 'http://add_service_marketplace/api/v2/store/test_store/description')
+        self.assertEqual(opener._method, 'POST')
+        self.assertEqual(json.loads(opener._body), expected_body)
+
+    def test_delete_service_v2(self):
+        self.marketplace.api_version = 2
+        self._delete_service(
+            'http://delete_service_marketplace_v2',
+            'http://delete_service_marketplace_v2/api/v2/store/test_store/description/test_service'
+        )

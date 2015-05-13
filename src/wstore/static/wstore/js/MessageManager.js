@@ -77,7 +77,7 @@
         });
     };
 
-    MessageManager.showAlertWarnig = function showAlertWarnig(title, msg, messageCont) {
+    MessageManager.showAlertWarning = function showAlertWarning(title, msg, messageCont) {
         var container = $('#message-container');
         var template;
 

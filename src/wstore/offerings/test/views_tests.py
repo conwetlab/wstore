@@ -26,6 +26,7 @@ from StringIO import StringIO
 from nose_parameterized import parameterized
 
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.test.client import RequestFactory, MULTIPART_CONTENT
 from django.contrib.auth.models import User
 
@@ -576,18 +577,50 @@ class ResourceCollectionTestCase(TestCase):
             'name': 'test_resource',
             'provider': 'test_user',
             'version': '1.0'
+        }], 'true'),
+        ([{
+            'name': 'test_resource',
+            'provider': 'test_user',
+            'version': '1.0'
+        }], 'false'),
+        ([{
+            'name': 'test_resource',
+            'provider': 'test_user',
+            'version': '1.0'
         }],),
-        ([], _no_provider, 403, 'Forbidden'),
-        ([], _call_exception, 400, 'Getting resources error')
+        ([{
+            'name': 'test_resource',
+            'provider': 'test_user',
+            'version': '1.0'
+        }], None, None, 200, None, {
+            'start': '1',
+            'limit': '1'
+        }),
+        ([], None, _no_provider, 403, 'Forbidden'),
+        ([], 'inv', None, 400, 'Invalid open param'),
+        ([], None, _call_exception, 400, 'Getting resources error')
     ])
-    def test_get_resources(self, return_value, side_effect=None, code=200, error_msg=None, pagination=None):
+    def test_get_resources(self, return_value, filter_=None, side_effect=None, code=200, error_msg=None, pagination=None):
 
         # Mock get offerings method
         resource_collection = views.ResourceCollection(permitted_methods=('GET', 'POST'))
         views.get_provider_resources = MagicMock(name='get_provider_resources')
 
         views.get_provider_resources.return_value = return_value
-        request = self.factory.get('/api/offering/resources', HTTP_ACCEPT='application/json')
+
+        path = '/api/offering/resources'
+        if filter_ is not None:
+            path += '?open=' + filter_
+
+        if pagination is not None:
+            if filter_ is None:
+                path += '?'
+            else:
+                path += '&'
+
+            path += 'start=' + pagination['start'] + '&limit=' + pagination['limit']
+
+        request = self.factory.get(path, HTTP_ACCEPT='application/json')
 
         request.user = self.user
 
@@ -604,7 +637,14 @@ class ResourceCollectionTestCase(TestCase):
 
         if not error_msg:
             # Check correct call
-            views.get_provider_resources.assert_called_once_with(self.user, pagination=None, filter_=None)
+            expected_filter = None
+            if filter_ is not None:
+                expected_filter = False
+
+                if filter_ == 'true':
+                    expected_filter = True
+
+            views.get_provider_resources.assert_called_once_with(self.user, pagination=pagination, filter_=expected_filter)
             self.assertEquals(type(body_response), list)
             self.assertEquals(body_response, return_value)
         else:
@@ -620,7 +660,6 @@ class ResourceCollectionTestCase(TestCase):
         (RESOURCE_DATA, True, _creation_exception, True, 400, 'Resource creation exception'),
         (RESOURCE_DATA, True, _creation_exception, True, 400, 'Resource creation exception'),
         (RESOURCE_DATA, True, _existing, True, 409, 'Resource exists')
-        
     ])
     def test_create_resource(self, data, file_=False, side_effect=None, error=False, code=201, msg='Created'):
 
@@ -908,7 +947,7 @@ class PublishEntryTestCase(TestCase):
 
         response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
 
-        views.publish_offering.assert_called_once_with(offering, self.data)
+        views.publish_offering.assert_called_once_with(self.user, offering, self.data)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
@@ -1004,7 +1043,7 @@ class PublishEntryTestCase(TestCase):
         # Call the view
         response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
 
-        views.publish_offering.assert_called_once_with(offering, self.data)
+        views.publish_offering.assert_called_once_with(self.user, offering, self.data)
 
         self.assertEqual(response.status_code, 502)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
@@ -1040,7 +1079,7 @@ class PublishEntryTestCase(TestCase):
         # Call the view
         response = publish_entry.create(self.request, 'test_user', 'test_offering', '1.0')
 
-        views.publish_offering.assert_called_once_with(offering, self.data)
+        views.publish_offering.assert_called_once_with(self.user, offering, self.data)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
@@ -1059,133 +1098,50 @@ class ApplicationCollectionTestCase(TestCase):
         # Create request factory
         self.factory = RequestFactory()
         # Create testing user
-        self.user = User.objects.create_user(username='test_user', email='', password='passwd')
+        self.user = MagicMock()
+        self.user.is_anonymous.return_value = False
         self.request = self.factory.get(
             '/offering/applications',
             HTTP_ACCEPT='application/json'
         )
         self.request.user = self.user
-
-    def _test_call(self, refresh=False):
-        # Mock server calls
-        views.urllib2 = MagicMock()
-
-        mock_response = MagicMock()
-
-        response_data = [{
+        views.get_applications = MagicMock(name="get_applications")
+        views.get_applications.return_value = json.dumps([{
             'id': 1,
-            'name': 'test_app1',
-            'roles': []
-        }, {
-            'id': 2,
-            'name': 'test_app2',
-            'roles': []
-        }]
+            'url': 'http://appurl.com'
+        }])
 
-        opener = MagicMock()
+    @parameterized.expand([
+        ('basic', [{
+            'id': 1,
+            'url': 'http://appurl.com'
+        }], 200),
+        ('forbidden', {
+            'result': 'error',
+            'message': 'Forbidden'
+        }, 403, True)
+    ])
+    @override_settings(OILAUTH=True)
+    def test_get_applications(self, name, exp_content, status, error=False):
 
-        if not refresh:
-            mock_response.read.return_value = json.dumps(response_data)
+        # Load specific user info
+        self.request.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
+        self.request.user.userprofile.is_user_org = MagicMock(name='is_user_org')
+        self.request.user.userprofile.is_user_org.return_value = True
+        self.request.user.userprofile.actor_id = 1
+        self.request.user.userprofile.access_token = 'aaa'
 
-            # Mock urllib openers
-            opener.open.return_value = mock_response
-            views.urllib2.build_opener.return_value = opener
-
+        if error:
+            self.request.user.userprofile.get_current_roles.return_value = []
         else:
-            # Create a mock opener able to raise an exception
-            # or a response depending on the url
-            class fake_opener:
-
-                def open(self, request):
-                    url = request.get_full_url()
-                    if url.endswith('aaa'):
-                        raise HTTPError('', 401, '', None, None)
-                    else:
-                        mock_response.read.return_value = json.dumps(response_data)
-                        return mock_response
-
-            # Mock social auth methods
-            UserSocialAuth.refresh_token = MagicMock()
-            user_social_auth = UserSocialAuth.objects.create(user=self.request.user, provider='fiware')
-
-            user_social_auth.extra_data = {
-                'access_token': 'bbb',
-                'refresh_token': 'ccc'
-            }
-
-            user_social_auth.save()
-            self.request.user.social_auth = [user_social_auth]
-
-            views.urllib2.build_opener.return_value = fake_opener()
+            self.request.user.userprofile.get_current_roles.return_value = ['provider']
 
         applications_collection = views.ApplicationCollection(permitted_methods=('GET',))
         response = applications_collection.read(self.request)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get('Content-type'), 'application/json;charset=UTF-8')
-        body_response = json.loads(response.content)
+        if not error:
+            views.get_applications.assert_called_once_with(self.user)
 
-        self.assertEqual(type(body_response), list)
-        self.assertEqual(len(body_response), 2)
-        self.assertEqual(body_response[0]['id'], 1)
-        self.assertEqual(body_response[0]['name'], 'test_app1')
-        self.assertEqual(body_response[1]['id'], 2)
-        self.assertEqual(body_response[1]['name'], 'test_app2')
-
-    def test_get_applications(self):
-
-        # Load specific user info
-        self.request.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
-        self.request.user.userprofile.get_current_roles.return_value = ['provider']
-        self.request.user.userprofile.is_user_org = MagicMock(name='is_user_org')
-        self.request.user.userprofile.is_user_org.return_value = True
-        self.request.user.userprofile.actor_id = 1
-        self.request.user.userprofile.access_token = 'aaa'
-
-        self.request.user.userprofile.save()
-        self._test_call()
-
-    def test_get_application_organization(self):
-
-        # Load specific user info
-        self.request.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
-        self.request.user.userprofile.get_current_roles.return_value = ['provider']
-        self.request.user.userprofile.is_user_org = MagicMock(name='is_user_org')
-        self.request.user.userprofile.is_user_org.return_value = False
-        self.request.user.userprofile.current_organization.actor_id = 1
-        self.request.user.userprofile.access_token = 'aaa'
-
-        self.request.user.userprofile.save()
-        self._test_call()
-
-    def test_get_applications_refresh_token(self):
-
-        # Load specific user info
-        self.request.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
-        self.request.user.userprofile.get_current_roles.return_value = ['provider']
-        self.request.user.userprofile.is_user_org = MagicMock(name='is_user_org')
-        self.request.user.userprofile.is_user_org.return_value = True
-        self.request.user.userprofile.actor_id = 1
-        self.request.user.userprofile.access_token = 'aaa'
-        self.request.user.userprofile.refresh_token = 'aaa'
-
-        self.request.user.userprofile.save()
-        self._test_call(refresh=True)
-
-    def test_get_applications_exceptions(self):
-
-        self.request.user.userprofile.get_current_roles = MagicMock(name='get_current_roles')
-        self.request.user.userprofile.get_current_roles.return_value = ['customer']
-        self.request.user.userprofile.is_user_org = MagicMock(name='is_user_org')
-        self.request.user.userprofile.is_user_org.return_value = True
-
-        applications_collection = views.ApplicationCollection(permitted_methods=('GET',))
-        response = applications_collection.read(self.request)
-
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
-        body_response = json.loads(response.content)
-
-        self.assertEqual(type(body_response), dict)
-        self.assertEqual(body_response['message'], 'Forbidden')
-        self.assertEqual(body_response['result'], 'error')
+        content = json.loads(response.content)
+        self.assertEquals(content, exp_content)
+        self.assertEquals(response.status_code, status)

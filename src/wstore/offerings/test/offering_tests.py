@@ -40,7 +40,7 @@ from wstore.offerings import offerings_management
 from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.models import UserProfile
 from wstore.models import Offering
-from wstore.models import Marketplace
+from wstore.models import Marketplace, MarketOffering
 from wstore.models import Resource
 from wstore.models import Organization
 
@@ -78,18 +78,6 @@ class FakeRepositoryAdaptor():
             'content_type': 'application/rdf+xml',
             'data': f.read()
         }
-
-
-class FakeMarketAdaptor():
-
-    def __init__(self, url):
-        pass
-
-    def add_service(self, store, info):
-        pass
-
-    def delete_service(self, store, ser):
-        pass
 
 
 class FakeUsdlParser():
@@ -917,7 +905,6 @@ class OfferingPublicationTestCase(TestCase):
         # Create database connection and load initial data
         connection = pymongo.MongoClient()
         cls._db = connection.test_database
-        offerings_management.MarketAdaptor = FakeMarketAdaptor
 
         super(OfferingPublicationTestCase, cls).setUpClass()
 
@@ -925,6 +912,12 @@ class OfferingPublicationTestCase(TestCase):
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
+
+        offerings_management.marketadaptor_factory = MagicMock()
+        self._adaptor_obj = MagicMock()
+        self._adaptor_obj.add_service.return_value = "published_offering"
+        offerings_management.marketadaptor_factory.return_value = self._adaptor_obj
+        self._user = MagicMock()
 
     def _published(self, offering):
         offering.state = 'published'
@@ -966,7 +959,7 @@ class OfferingPublicationTestCase(TestCase):
 
         error_found = None
         try:
-            offerings_management.publish_offering(offering, data)
+            offerings_management.publish_offering(self._user, offering, data)
         except Exception as e:
             error_found = e
 
@@ -978,11 +971,27 @@ class OfferingPublicationTestCase(TestCase):
 
             self.assertEquals(len(offering.marketplaces), len(data['marketplaces']))
 
-            for m_id in offering.marketplaces:
-                market = Marketplace.objects.get(pk=m_id)
+            for m in offering.marketplaces:
+                market = m.marketplace
                 self.assertTrue(market.name in data['marketplaces'])
+                self.assertEquals(m.offering_name, "published_offering")
 
             self.se_object.update_index.assert_called_with(offering)
+
+            # Check marketplace calls
+            if len(data['marketplaces']):
+
+                for m in data['marketplaces']:
+                    market = Marketplace.objects.get(name=m)
+                    offerings_management.marketadaptor_factory.assert_any_call(market, self._user)
+                    info = {
+                        'name': offering.owner_organization.name + ' ' + offering.name + ' ' + offering.version,
+                        'url': offering.description_url
+                    }
+                    self._adaptor_obj.add_service.assert_any_call(info)
+
+                self.assertEquals(offerings_management.marketadaptor_factory.call_count, len(data['marketplaces']))
+                self.assertEquals(self._adaptor_obj.add_service.call_count, len(data['marketplaces']))
         else:
             self.assertTrue(isinstance(error_found, err_type))
             self.assertEquals(unicode(error_found), err_msg)
@@ -1107,6 +1116,7 @@ class OfferingBindingTestCase(TestCase):
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
 
+
 class OfferingDeletionTestCase(TestCase):
 
     tags = ('fiware-ut-5',)
@@ -1116,7 +1126,11 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.os = MagicMock()
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
-        offerings_management.MarketAdaptor = FakeMarketAdaptor
+
+        offerings_management.marketadaptor_factory = MagicMock()
+        self._adaptor_obj = MagicMock()
+        offerings_management.marketadaptor_factory.return_value = self._adaptor_obj
+
         offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
         offerings_management.SearchEngine.return_value = self.se_object
 
@@ -1129,6 +1143,15 @@ class OfferingDeletionTestCase(TestCase):
         self.context_obj.newest = []
         self.context_obj.top_rated = []
         offerings_management.Context.objects.all.return_value = [self.context_obj]
+
+        self._user = MagicMock()
+        market = Marketplace.objects.get(pk="61000aba8e05ac2115f022ff")
+        off = Offering.objects.get(name="test_offering3")
+        off.marketplaces = [MarketOffering(
+            marketplace=market,
+            offering_name="test_offering3"
+        )]
+        off.save()
 
     def tearDown(self):
         reload(offerings_management)
@@ -1174,6 +1197,7 @@ class OfferingDeletionTestCase(TestCase):
         # Get offering
         offering = Offering.objects.get(name=offering_name)
         tagged = len(offering.tags) > 0
+        market_pub = len(offering.marketplaces) > 0
 
         pk = offering.pk
         if side_effect:
@@ -1182,7 +1206,7 @@ class OfferingDeletionTestCase(TestCase):
         # Call the tested method
         error = None
         try:
-            offerings_management.delete_offering(offering)
+            offerings_management.delete_offering(self._user, offering)
         except Exception as e:
             error = e
 
@@ -1207,6 +1231,12 @@ class OfferingDeletionTestCase(TestCase):
                 offering = Offering.objects.get(name=offering_name)
                 self.assertEqual(offering.state, 'deleted')
                 self.se_object.update_index.assert_called_with(offering)
+
+            if market_pub:
+                market = Marketplace.objects.get(name="test_marketplace")
+                offerings_management.marketadaptor_factory.assert_called_once_with(market, self._user)
+
+                self._adaptor_obj.delete_service.assert_called_once_with(offering_name)
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(error), err_msg)

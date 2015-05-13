@@ -34,7 +34,6 @@ from django.conf import settings
 from django.test.testcases import LiveServerTestCase
 
 from wstore.store_commons.utils.method_request import MethodRequest
-from wstore.selenium_tests.test_server import TestServer
 
 
 class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
@@ -111,7 +110,6 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         token = json.loads(response.read())['access_token']
 
         return token
-
 
     def logout(self):
         self.driver.find_element_by_class_name('arrow-down-settings').click()
@@ -222,7 +220,7 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
             'url': self._fill_usdl_url
         }
         methods[usdl_info['type']](usdl_info)
-        
+
     def register_resource(self, resource_info):
         pass
 

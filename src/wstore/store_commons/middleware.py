@@ -152,7 +152,13 @@ def get_api_user(request):
             user_info = json.loads(response.read())
             # Try to get an internal user
             try:
-                user = User.objects.get(username=user_info['nickName'])
+                user_id = None
+                if settings.FIWARE_IDM_API_VERSION == 1:
+                    user_id = user_info['nickName']
+                else:
+                    user_id = user_info['id']
+
+                user = User.objects.get(username=user_id)
             except:
                 # The user is valid but she has never accessed wstore so
                 # internal models should be created

@@ -37,12 +37,14 @@ class Command(BaseCommand):
         if len(args) != 1:
             raise CommandError("Error: Please specify the path to the plugin package")
 
+        plugin_id = None
         try:
             path = args[0]
             # Load plugin
             plugin_loader = PluginLoader()
-            plugin_loader.install_plugin(path)
+            plugin_id = plugin_loader.install_plugin(path)
         except Exception as e:
             raise CommandError(unicode(e))
 
-        self.stdout.write("The plugin has been loaded\n")
+        self.stdout.write("Your plugin has been loaded with id: " + plugin_id + "\n")
+        self.stdout.write("If you want to retrieve the existing plugins, execute: python manage.py listplugins\n")

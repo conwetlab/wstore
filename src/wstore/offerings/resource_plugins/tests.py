@@ -58,8 +58,7 @@ class PluginLoaderTestCase(TestCase):
         # Remove created plugin dir if needed
         try:
             os.remove(os.path.join(self.plugin_dir, '__init__.py'))
-
-            self._remove_plugin_dir(self._to_remove.split('.')[0])
+            self._remove_plugin_dir(self._to_remove.split('.')[0].replace('_', '-'))
         except:
             pass
 
@@ -70,7 +69,13 @@ class PluginLoaderTestCase(TestCase):
         self.manager_mock.validate_plugin_info.return_value = 'validation error'
 
     def _existing_plugin(self):
-        os.mkdir(os.path.join(self.plugin_dir, 'test_plugin'))
+        ResourcePlugin.objects.create(
+            name='test plugin',
+            plugin_id='test-plugin',
+            version='1.0',
+            author='test author',
+            module='test-plugin.TestPlugin'
+        )
 
     @parameterized.expand([
         ('correct', 'test_plugin.zip', PLUGIN_INFO),
@@ -80,7 +85,7 @@ class PluginLoaderTestCase(TestCase):
         ('not_plugin_imp', 'test_plugin_3.zip', None, None, PluginError, 'Plugin Error: No Plugin implementation has been found'),
         ('inv_json', 'test_plugin_4.zip', None, None,  PluginError, 'Plugin Error: Invalid format in package.json file. JSON cannot be parsed'),
         ('validation_err', 'test_plugin.zip', None,  _inv_plugin_info, PluginError, 'Plugin Error: Invalid format in package.json file. validation error'),
-        ('existing', 'test_plugin.zip', None,  _existing_plugin, PluginError, 'Plugin Error: A plugin with the same name already exists')
+        ('existing', 'test_plugin.zip', None,  _existing_plugin, PluginError, 'Plugin Error: A plugin with the same id (test-plugin) already exists')
     ])
     def test_plugin_installation(self, name, zip_file, expected=None, side_effect=None, err_type=None, err_msg=None):
         # Build plugin loader
@@ -113,23 +118,23 @@ class PluginLoaderTestCase(TestCase):
             # Check calls
             self.manager_mock.validate_plugin_info.assert_called_once_with(expected)
 
-            # Check plugin files
-            dir_name = zip_file.split('.')[0]
-            test_plugin_dir = os.path.join(self.plugin_dir, dir_name)
-            self.assertTrue(os.path.isdir(test_plugin_dir))
-            self.assertTrue(os.path.isfile(os.path.join(test_plugin_dir, 'package.json')))
-            self.assertTrue(os.path.isfile(os.path.join(test_plugin_dir, 'test.py')))
-
             # Check plugin model
             plugin_model = ResourcePlugin.objects.all()[0]
             self.assertEquals(plugin_model.name, expected['name'])
+            self.assertEquals(plugin_model.plugin_id, expected['name'].lower().replace(' ', '-'))
             self.assertEquals(plugin_model.author, expected['author'])
             self.assertEquals(plugin_model.version, expected['version'])
             self.assertEquals(plugin_model.formats, expected['formats'])
 
-            self.assertEquals(plugin_model.module, 'wstore.test.' + dir_name + '.' + expected['module'])
+            self.assertEquals(plugin_model.module, 'wstore.test.' + plugin_model.plugin_id + '.' + expected['module'])
             self.assertEquals(plugin_model.media_types, expected.get('media_types', []))
             self.assertEquals(plugin_model.form, expected.get('form', {}))
+
+            # Check plugin files
+            test_plugin_dir = os.path.join(self.plugin_dir, plugin_model.plugin_id)
+            self.assertTrue(os.path.isdir(test_plugin_dir))
+            self.assertTrue(os.path.isfile(os.path.join(test_plugin_dir, 'package.json')))
+            self.assertTrue(os.path.isfile(os.path.join(test_plugin_dir, 'test.py')))
 
         else:
             self.assertTrue(isinstance(error, err_type))
@@ -175,7 +180,7 @@ class PluginLoaderTestCase(TestCase):
         if err_type is None:
             self.assertEquals(error, None)
             # Check calls
-            plugin_loader.ResourcePlugin.objects.get.assert_called_once_with(name='test_plugin')
+            plugin_loader.ResourcePlugin.objects.get.assert_called_once_with(plugin_id='test_plugin')
             plugin_loader.rmtree.assert_called_once_with(os.path.join(plugin_l._plugins_path, 'test_plugin'))
             plugin_mock.delete.assert_called_once_with()
         else:
@@ -208,7 +213,8 @@ class PluginValidatorTestCase(TestCase):
         ('invalid_form_missing_type', INVALID_FORM_MISSING_TYPE, 'Invalid form field: Missing type in name entry'),
         ('invalid_form_inv_type', INVALID_FORM_INV_TYPE, 'Invalid form field: type invalid in name entry is not a valid type'),
         ('invalid_form_inv_name', INVALID_FORM_INVALID_NAME, 'Invalid form field: inv&name is not a valid name'),
-        ('invalid_form_checkbox_def', INVALID_FORM_CHECKBOX_DEF, 'Invalid form field: default field in check entry must be a boolean')
+        ('invalid_form_checkbox_def', INVALID_FORM_CHECKBOX_DEF, 'Invalid form field: default field in check entry must be a boolean'),
+        ('invalid_overrides', INVALID_OVERRIDES, 'Override values should be one of: NAME, VERSION and OPEN')
     ])
     def test_plugin_info_validation(self, name, plugin_info, validation_msg=None):
 

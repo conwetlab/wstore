@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * This file is part of WStore.
  *
@@ -145,7 +145,7 @@
     MarketplaceForm = function MarketplaceForm (argument) {
     };
 
-    MarketplaceForm.prototype = new AdminForm('MARKET_ENTRY', 'MARKET_COLLECTION', $('#form_template'), {'title': 'Marketplace'});
+    MarketplaceForm.prototype = new AdminForm('MARKET_ENTRY', 'MARKET_COLLECTION', $('#marketplace_form_template'), {'title': 'Marketplace'});
     MarketplaceForm.prototype.constructor = MarketplaceForm;
 
     MarketplaceForm.prototype.fillListInfo = function fillListInfo(elements) {
@@ -158,7 +158,57 @@
     };
 
     MarketplaceForm.prototype.validateFields = function validateFields() {
-        return basicValidation();
+        var validation = basicValidation();
+        var api_version = $('#api-version').val();
+
+        // Check credentials if needed
+        if (api_version == '1' || !IDMAUTH) {
+            var username = $.trim($('#cred-username').val());
+            var passwd = $.trim($('#cred-passwd').val());
+            var passwdConf = $.trim($('#cred-passwd-conf').val());
+
+            if (!username || !passwd || !passwdConf) {
+                validation.valid = false;
+                validation.msg += 'All credentials fields are required </br>'
+
+            } else if (passwd != passwdConf) {
+                validation.valid = false;
+                validation.msg += "Pasword and password confirmation don't match";
+            } else {
+                validation.data.credentials = {
+                    'username': username,
+                    'passwd': passwd
+                }
+            }
+
+            if (!validation.valid) {
+                if (!validation.errFields) {
+                    validation.errFields = [];
+                }
+
+                validation.errFields.push($('#cred-username').parent().parent());
+            }
+        }
+
+        // Include api version
+        if (validation.valid) {
+            validation.data.api_version = api_version;
+        }
+
+        return validation;
     }
 
+    MarketplaceForm.prototype.setFormListeners = function setFormListeners() {
+        // Check if the credentials field is needed
+        if (IDMAUTH) {
+            // Set listeners for hiding credentials for API version 2
+            $('#api-version').change(function () {
+                if ($(this).val() == '2') {
+                    $('#market-cred').addClass('hide');
+                } else {
+                    $('#market-cred').removeClass('hide');
+                }
+            });
+        }
+    }
 })();

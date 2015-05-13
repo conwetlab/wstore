@@ -104,11 +104,25 @@
         if (validation.valid) {
             this.mainClient.create(validation.data, this.elementInfoRequest.bind(this));
         } else {
-            MessageManager.showAlertError('Error', validation.msg, $('#admin-err-cont'));
+            MessageManager.showAlertError('Error', '', $('#admin-err-cont'));
+            var msgCont = $('<span class="msg-value"></span>');
+            $('.alert-error').append(msgCont);
+            msgCont[0].innerHTML = validation.msg;
+
             // Mark invalid elements
             for (var i = 0; i < validation.errFields.length; i++) {
-                validation.errFields[i].addClass('error');
+                validation.errFields[i].addClass('error').children().change(function() {
+                    $(this).parent().removeClass('error');
+                    if (!$('.error').length) {
+                        $('.alert-error').alert('close');
+                    }
+                });
             }
+
+            // Create listeners
+            $('.alert-error').on('closed', function () {
+                $('.error').removeClass('error');
+            });
         }
     };
 

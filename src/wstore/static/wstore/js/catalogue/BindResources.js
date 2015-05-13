@@ -43,16 +43,21 @@
     /**
      * Gets the user resources
      */
-    BindResourcesForm.prototype.getUserResources = function getUserResources (callback, open) {
+    BindResourcesForm.prototype.getUserResources = function getUserResources (callback, open, all) {
         var qstring = '';
-        if (open) {
-            qstring = '&open=true';
-        }
         var url = EndpointManager.getEndpoint('RESOURCE_COLLECTION');
-        var queryString = '?start=1&limit=8'+qstring;
+
+        if (!all) {
+            qstring = '?start=1&limit=8';
+        }
+
+        if (open) {
+            qstring += qstring ? '&' : '?';
+            qstring += 'open=true';
+        }
 
         this.client = new ServerClient('',url, true);
-        this.client.get(callback,'', queryString); 
+        this.client.get(callback,'', qstring); 
     };
 
     /**
@@ -117,6 +122,9 @@
         this.pagination.setElemSpace(0);
         this.pagination.setElementsPage(2);
 
+        if (this.offeringElem.isOpen()) {
+            this.pagination.setExtraQuery('&open=true');
+        }
         // Remove possible listeners existing in the scroll
         this.pagination.removeListeners();
         this.pagination.createListeners();

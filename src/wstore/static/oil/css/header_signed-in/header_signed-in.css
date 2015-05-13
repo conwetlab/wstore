@@ -43,7 +43,8 @@
 }
 
 #oil-nav ul.nav li a img{
-  width: 20px;
+  width: 24px;
+  margin-right: 2px;
 }
 
 #oil-nav ul.nav li a span{
@@ -57,7 +58,6 @@
 #oil-nav .dropdown-menu>li>a:hover, #oil-nav .dropdown-menu>li>a:focus, #oil-nav .dropdown-submenu:hover>a, #oil-nav .dropdown-submenu:focus>a {
   color: rgb(255, 255, 255);
   text-decoration: none;
-  background-color: rgb(0, 45, 103);
   background-image: none !important;
 }
 

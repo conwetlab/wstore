@@ -37,10 +37,10 @@
         if (organizations.length > 1) {
             var ul, userElem;
             var leftMenu = $('<li></li>').addClass('dropdown-submenu pull-left');
-            $('<a></a>').text('Switch session').appendTo(leftMenu);
-            $('<i></i>').addClass('icon-caret-right').appendTo(leftMenu);
+            var icon = $('<i></i>').addClass('icon-double-angle-left');
+            $('<a></a>').text(' Switch session').prepend(icon).appendTo(leftMenu);
 
-            ul = $('<ul></ul>').addClass('dropdown-menu dropdown-menu-header').appendTo(leftMenu);
+            ul = $('<ul></ul>').addClass('switch-org dropdown-menu dropdown-menu-header').appendTo(leftMenu);
 
             for (var i = 0; i < organizations.length; i++) {
                 if (organizations[i].name != USERPROFILE.getCurrentOrganization()) {
@@ -52,10 +52,10 @@
 
                     if (organizations[i].name == USERPROFILE.getUsername()) {
                         span.text(USERPROFILE.getCompleteName());
-                        a.prepend($('<img></img>').attr('src', '/static/oil/img/user.png').css('width', '20px'));
+                        a.prepend($('<img></img>').attr('src', '/static/oil/img/user.png').css('width', '20px').css('margin-top', '-3px'));
                         ul.prepend(li);
                     } else {
-                        a.prepend($('<img></img>').attr('src', '/static/oil/img/group.png').css('width', '20px'));
+                        a.prepend($('<img></img>').attr('src', '/static/oil/img/group.png').css('width', '20px').css('margin-top', '-3px'));
                         ul.append(li);
                     }
                     // Set listeners for organizations switching
@@ -71,7 +71,7 @@
             if ($('#oil-bar').length) {
                 ul.css('display', 'none');
                 ul.css('position', 'absolute');
-                ul.css('top', '10px');
+                ul.css('top', '5px');
                 ul.css('right', '157px');
                 userElem = $('#oil-usr');
 
