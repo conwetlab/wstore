@@ -236,7 +236,7 @@ class PublishEntry(Resource):
                 data = json.loads(request.raw_post_data)
                 publish_offering(request.user, offering, data)
             except HTTPError:
-                return build_response(request, 502, 'Bad gateway')
+                return build_response(request, 502, 'The Marketplace has failed publishing the offering')
             except Exception, e:
                 return build_response(request, 400, unicode(e))
 

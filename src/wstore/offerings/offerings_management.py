@@ -725,12 +725,12 @@ def update_offering(offering, data):
 def publish_offering(user, offering, data):
 
     # Validate data
-    if not 'marketplaces' in data:
+    if 'marketplaces' not in data:
         raise ValueError('Publication error: missing required field, marketplaces')
 
     # Validate the state of the offering
     if not offering.state == 'uploaded':
-        raise PermissionDenied('Publication error: The offering ' + offering.name + ' ' + offering.version +' cannot be published')
+        raise PermissionDenied('Publication error: The offering ' + offering.name + ' ' + offering.version + ' cannot be published')
 
     # Validate the offering has enough content to be published
     # Open offerings cannot be published in they do not contain

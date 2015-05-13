@@ -75,6 +75,7 @@ class MarketAdaptor():
 
         # Include credentials in the header
         headers['Authorization'] = self._get_token()
+        headers['Accept'] = 'application/json'
 
         request = MethodRequest(method, url, params, headers)
         response = opener.open(request)
@@ -185,8 +186,8 @@ class MarketAdaptorV2(MarketAdaptor):
         self._make_request('DELETE', url, '', {}, 204)
 
     def add_service(self, service_info):
-        store = self._get_store_name()
 
+        store = self._get_store_name()
         url = urljoin(self._marketplace_uri, "api/v2/store/" + store + "/description")
         params = {
             "displayName": service_info['name'],
