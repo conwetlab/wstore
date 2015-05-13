@@ -64,7 +64,7 @@ class ApplicationsTestCase(TestCase):
         def ref_token():
             self.user.userprofile.access_token = '222'
 
-        self.user.userprofile.refresh_token = ref_token
+        self.user.userprofile.refreshing_token = ref_token
 
         def get_call(url, params=None):
             if params['access_token'] == '222':

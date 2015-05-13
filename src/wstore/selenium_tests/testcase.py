@@ -112,7 +112,7 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         return token
 
     def logout(self):
-        self.driver.find_element_by_class_name('arrow-down-settings').click()
+        self.driver.find_element_by_class_name('icon-double-angle-down').click()
         options = self.driver.find_elements_by_css_selector('#settings-menu > li')
 
         options[-1].click()
