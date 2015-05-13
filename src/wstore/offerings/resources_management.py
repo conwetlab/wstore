@@ -46,6 +46,7 @@ def _save_resource_file(provider, name, version, file_):
         content = base64.b64decode(file_['data'])
     else:
         f_name = file_.name
+        file_.seek(0)
         content = file_.read()
 
     # Check file name
