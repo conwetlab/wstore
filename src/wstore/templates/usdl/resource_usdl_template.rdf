@@ -5,13 +5,14 @@
     xmlns:dcterms="http://purl.org/dc/terms/" 
     xmlns:usdl="http://www.linked-usdl.org/ns/usdl-core#" 
     xmlns:skos="http://www.w3.org/2004/02/skos/core#"
-    xmlns:gr="http://purl.org/goodrelations/v1#">
+    xmlns:gr="http://purl.org/goodrelations/v1#"
+    xmlns:pav="http://purl.org/pav/">
 
     <usdl:Service xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ resource_uri }}">
         <usdl:hasClassification rdf:nodeID="{{ base_id }}01" />
         <dcterms:title>{{ name }}</dcterms:title>
         <dcterms:description>{{ description }}</dcterms:description>
-        <dcterms:hasVersion>{{ version }}</dcterms:hasVersion>
+        <pav:version>{{ version }}</pav:version>
         <dcterms:format rdf:nodeID="{{ base_id }}02" />
         <gr:hasManufacturer rdf:nodeID="{{ base_id }}03" />
     </usdl:Service>
