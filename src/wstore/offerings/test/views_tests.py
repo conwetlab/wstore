@@ -1050,7 +1050,7 @@ class PublishEntryTestCase(TestCase):
         body_response = json.loads(response.content)
 
         self.assertEqual(type(body_response), dict)
-        self.assertEqual(body_response['message'], 'Bad gateway')
+        self.assertEqual(body_response['message'], 'The Marketplace has failed publishing the offering')
         self.assertEqual(body_response['result'], 'error')
 
     def test_publish_entry_exception(self):
