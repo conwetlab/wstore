@@ -108,36 +108,6 @@
         readImages(imagesList);
     };
 
-    /**
-     * Handles the uploading of an USDL document
-     * @param evnt Event thrown by the file input
-     */
-    var handleUSDLFileSelection = function handleUSDLFileSelection(evnt) {
-        var f = evnt.target.files[0];
-        var reader = new FileReader();
-
-        reader.onload = (function(self, file) {
-            return function(e) {
-                var type = file.type;
-                if (!type) {
-                    if (file.name.match(/\.n3/i)) {
-                        type = "text/n3";
-                    } else if (file.name.match(/\.ttl/i)) {
-                        type = "text/turtle";
-                    }
-
-                }
-                if (type == 'application/rdf+xml' || type == 'text/n3' || type == 'text/turtle') {
-                    this.usdl = {
-                        'content_type': type,
-                        'data': e.target.result
-                    };
-                }
-            }.bind(self);
-        })(this, f);
-        reader.readAsText(f);
-    };
-
     var helpHandler = function helpHandler(evnt) {
         var helpId = evnt.target;
         if (!$(helpId).prop('displayed')) {
@@ -198,34 +168,6 @@
     };
 
     /**
-     * Displays the form for uploading a USDL document
-     */
-    CreateOfferingForm.prototype.displayUploadUSDLForm = function displayUploadUSDLForm(repositories) {
-        var i, repLength = repositories.length;
-        var helpMsg = "Upload an USDL document containing the offering info";
-
-        $('#upload-help').attr('data-content', helpMsg);
-        $('#usdl-container').empty();
-        $.template('usdlFormTemplate', $('#upload_usdl_form_template'));
-        $.tmpl('usdlFormTemplate', {}).appendTo('#usdl-container');
-
-        for(i=0; i<repLength; i+=1) {
-            $.template('radioTemplate', $('#radio_template'));
-            $.tmpl('radioTemplate', {
-                'name': 'rep-radio',
-                'id': 'rep-radio' + i,
-                'value': repositories[i].name,
-                'text': repositories[i].name}).appendTo('#repositories');
-        }
-
-        $('#usdl-editor').click(function(event) {
-            window.open(USDLEDITOR, 'USDL editor');
-        });
-
-        $('#usdl-doc').change(handleUSDLFileSelection.bind(this));
-    };
-
-    /**
      * Displays the form for creating a simple USDL document
      */
     CreateOfferingForm.prototype.displayCreateUSDLForm = function displayCreateUSDLForm(repositories) {
@@ -278,28 +220,6 @@
         }
         // The create USDL form is displayed by default
         this.displayCreateUSDLForm(repositories);
-
-        // Listener for USDL field
-        $('#usdl-sel').change(function(self) {
-            return function() {
-                if($(this).val() == "0") {
-                    self.displayCreateUSDLForm(repositories);
-                } else if($(this).val() == "1") {
-                    self.displayUploadUSDLForm(repositories);
-                } else {
-                    $('#usdl-container').empty()
-                }
-                // Quit the help menu if needed
-                if ($('#upload-help').prop('displayed')) {
-                    $('#upload-help').popover('hide');
-                    $('#upload-help').prop('displayed', false);
-                    $('#upload-help').removeClass('question-sing-sel');
-                }
-            };
-        }(this));
-
-        $('#upload-help').popover({'trigger': 'manual'});
-        $('#upload-help').click(helpHandler);
         
         // Listener for application selection
         $('.modal-footer').empty();
@@ -310,74 +230,61 @@
             var msg = [];
             var errElems = [];
             var error = false;
+            var description;
+            var pricing = {};
+            var legal = {};
+            var rep = $('#repositories').val();
 
             event.preventDefault();
             event.stopPropagation();
 
-            if ($('#upload-help').prop('displayed')) {
-                $('#upload-help').popover('hide');
-                $('#upload-help').prop('displayed', false);
-                $('#upload-help').removeClass('question-sing-sel');
-                $(document).unbind('click');
+            // Check provided info
+            description = $.trim($('#description').val());
+
+            if (description == '') {
+                error = true;
+                msg.push('The description is required');
+                errElems.push($('#description'));
             }
-            // Get usdl info
-            if (this.usdl && ($('#usdl-doc').length > 0)) {
-                var rep = $('#repositories').val();
-                this.offeringInfo.offering_description = this.usdl;
-                this.offeringInfo.repository = rep;
-            } else if ($('#pricing-select').length > 0) {
-                var description;
-                var pricing = {};
-                var legal = {};
-                var rep = $('#repositories').val();
-                // Check provided info
-                description = $.trim($('#description').val());
+            pricing.price_model = $('#pricing-select').val();
 
-                if (description == '') {
+            // If a payment model is selected the price is required
+            if (pricing.price_model == 'single_payment') {
+                var price = $.trim($('#price-input').val());
+                if (price == '') {
                     error = true;
-                    msg.push('The description is required');
-                    errElems.push($('#description'));
+                    msg.push('The price is required for a single payment model');
+                    errElems.push($('#price-input'));
+                } else if (!$.isNumeric(price)){
+                    error = true;
+                    msg.push('The price must be a number');
+                    errElems.push($('#price-input'));
+                } else {
+                    pricing.price = price;
                 }
-                pricing.price_model = $('#pricing-select').val();
+            }
+            legal.title = $.trim($('#legal-title').val());
+            legal.text = $.trim($('#legal-text').val());
 
-                // If a payment model is selected the price is required
-                if (pricing.price_model == 'single_payment') {
-                    var price = $.trim($('#price-input').val());
-                    if (price == '') {
-                        error = true;
-                        msg.push('The price is required for a single payment model');
-                        errElems.push($('#price-input'));
-                    } else if (!$.isNumeric(price)){
-                        error = true;
-                        msg.push('The price must be a number');
-                        errElems.push($('#price-input'));
-                    } else {
-                        pricing.price = price;
-                    }
-                }
-                legal.title = $.trim($('#legal-title').val());
-                legal.text = $.trim($('#legal-text').val());
-
-                if (legal.title && !legal.text) {
-                    error = true;
-                    msg.push('A legal clause needs both title and text');
-                    errElems.push($('#legal-text'));
-                }
-                if (legal.text && !legal.title) {
-                    error = true;
-                    msg.push('A legal clause needs both title and text');
-                    errElems.push($('#legal-title'));
-                }
-                // Include the info
-                this.offeringInfo.offering_info = {
-                    'description': description,
-                    'pricing': pricing
-                }
-                this.offeringInfo.repository = rep;
-                // Include the legal info if conpleted
-                if (legal.title && legal.text) {
-                    this.offeringInfo.offering_info.legal = legal
-                }
+            if (legal.title && !legal.text) {
+                error = true;
+                msg.push('A legal clause needs both title and text');
+                errElems.push($('#legal-text'));
+            }
+            if (legal.text && !legal.title) {
+                error = true;
+                msg.push('A legal clause needs both title and text');
+                errElems.push($('#legal-title'));
+            }
+            // Include the info
+            this.offeringInfo.offering_info = {
+                'description': description,
+                'pricing': pricing
+            }
+            this.offeringInfo.repository = rep;
+            // Include the legal info if conpleted
+            if (legal.title && legal.text) {
+                this.offeringInfo.offering_info.legal = legal
             }
 
             // If the USDL is loaded go to the final step, application selection
