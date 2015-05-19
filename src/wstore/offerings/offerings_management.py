@@ -153,7 +153,6 @@ def _get_purchased_offerings(user, db, pagination=None, sort=None):
 
     if not user.userprofile.is_user_org():
         user_purchased = organization['offerings_purchased']
-
     else:
         # If the current organization is the user organization, load
         # all user offerings
@@ -166,7 +165,6 @@ def _get_purchased_offerings(user, db, pagination=None, sort=None):
                 user_purchased.append(offer)
 
     # Check sorting
-
     if sort == 'creation_date':
         user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).creation_date, reverse=True)
     elif sort == 'publication_date':
@@ -416,6 +414,7 @@ def create_offering(provider, data):
 
     created = datetime.now()
     offering_info['created'] = unicode(created)
+    offering_info['modified'] = unicode(created)
 
     usdl_generator = USDLGenerator()
     usdl_generator.validate_info(offering_info, open_=is_open)
@@ -492,80 +491,30 @@ def update_offering(offering, data):
             _save_encoded_image(path, img['name'], img['data'])
             offering.related_images.append(settings.MEDIA_URL + dir_name + '/' + img['name'])
 
-    new_usdl = False
-    # Update the USDL description
-    if 'offering_description' in data:
-        usdl_info = data['offering_description']
-
-        repository_adaptor = RepositoryAdaptor(offering.description_url)
-
-        usdl = usdl_info['data']
-        repository_adaptor.upload(usdl_info['content_type'], usdl)
-        new_usdl = True
-
-    elif 'offering_info' in data:
-        usdl_info = {
-            'content_type': 'application/rdf+xml'
-        }
-        # Validate USDL info
-        if 'description' not in data['offering_info'] or 'pricing' not in data['offering_info']:
-            raise ValueError('Invalid USDL info')
-
+    if 'offering_info' in data:
+        # Create offering USDL
         offering_info = data['offering_info']
         offering_info['image_url'] = offering.image_url
-
         offering_info['name'] = offering.name
+        offering_info['version'] = offering.version
+        offering_info['organization'] = offering.owner_organization.name
+        offering_info['base_id'] = offering.pk
+        offering_info['open'] = offering.open
 
-        splited_desc_url = offering.description_url.split('/')
+        offering_info['created'] = unicode(offering.creation_date)
+        offering_info['modified'] = unicode(datetime.now())
 
-        base_uri = splited_desc_url[0] + '//'
-        splited_desc_url.remove(splited_desc_url[0])
-        splited_desc_url.remove(splited_desc_url[0])
-        splited_desc_url.remove(splited_desc_url[-1])
-        splited_desc_url.remove(splited_desc_url[-1])
+        usdl_generator = USDLGenerator()
+        usdl_generator.validate_info(offering_info, open_=offering.opne)
 
-        for p in splited_desc_url:
-            base_uri += (p + '/')
+        offering.offering_description = data['offering_info']
 
-        offering_info['base_uri'] = base_uri
-
-        usdl = _create_basic_usdl(offering_info)
-        usdl_info = {
-            'content_type': 'application/rdf+xml'
-        }
-
-        repository_adaptor = RepositoryAdaptor(offering.description_url)
-        repository_adaptor.upload(usdl_info['content_type'], usdl)
-        new_usdl = True
-
-    # If the USDL has changed store the new description
-    # in the offering model
-    if new_usdl:
-        # Validate the USDL
-        valid = validate_usdl(usdl, usdl_info['content_type'], {
-            'name': offering.name,
-            'organization': offering.owner_organization
-        })
-
-        if not valid[0]:
-            raise ValueError(valid[1])
-
-        # Serialize and store USDL info in json-ld format
-        graph = rdflib.Graph()
-
-        rdf_format = usdl_info['content_type']
-
-        if usdl_info['content_type'] == 'text/turtle' or usdl_info['content_type'] == 'text/plain':
-            rdf_format = 'n3'
-        elif usdl_info['content_type'] == 'application/json':
-            rdf_format = 'json-ld'
-
-        off_description = usdl
-        if rdf_format != 'json-ld':
-            graph.parse(data=usdl, format=rdf_format)
-            off_description = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(off_description)
+        if offering.open and offering.state == 'published':
+            repository_adaptor = RepositoryAdaptor(offering.description_url)
+            repository_adaptor.upload(
+                'application/rdf+xml',
+                usdl_generator.generate_offering_usdl(offering_info)
+            )
 
     offering.save()
 

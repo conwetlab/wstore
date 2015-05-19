@@ -40,7 +40,7 @@ class USDLGenerator():
                 or 'organization' not in offering_info or 'name' not in offering_info \
                 or 'version' not in offering_info or 'image_url' not in offering_info \
                 or 'created' not in offering_info or 'abstract' not in offering_info \
-                or 'pricing' not in offering_info:
+                or 'pricing' not in offering_info or 'modified' not in offering_info:
 
             raise ValueError('Invalid offering info: Missing a required field')
 
@@ -230,6 +230,7 @@ class USDLGenerator():
             'description': offering_info['description'],
             'abstract': offering_info['abstract'],
             'created': offering_info['created'],
+            'modified': offering_info['modified'],
             'base_id': offering_info['base_id']
         }
 
