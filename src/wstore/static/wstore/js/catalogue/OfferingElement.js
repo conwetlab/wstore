@@ -51,7 +51,7 @@
         this.legal = offeringData.offering_description.legal;
 
         if (this.legal === undefined) {
-            this.legal = [];
+            this.legal = {};
         }
 
         this.sla = offeringData.offering_description.sla;

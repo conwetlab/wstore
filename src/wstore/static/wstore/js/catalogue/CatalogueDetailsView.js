@@ -389,7 +389,7 @@
         }
 
         // Legal conditions
-        if (this.offeringElement.getLegal().length > 0) {
+        if (!$.isEmptyObject(this.offeringElement.getLegal())) {
             setTab(this, 'legal-tab', 'Legal', this.paintLegal.bind(this));
         }
 
@@ -414,16 +414,6 @@
         }
     };
 
-    CatalogueDetailsView.prototype.paintLegalClauses = function paintLegalClauses (clauses, dom) {
-        if (clauses.length > 0) {
-            $.template('legalClausesTemplate', $('#legal_clauses_template'));
-            for (var i = 0; i < clauses.length; i++) {
-                var clause = $.tmpl('legalClausesTemplate', clauses[i]).appendTo(dom);
-                var repText = clause.find('p').text().split('\n').join('<br />');
-                clause.find('p')[0].innerHTML = repText;
-            }
-        }
-    };
 
     CatalogueDetailsView.prototype.paintLegal = function paintLegal () {
         if (!this.legalLoaded) {
@@ -432,20 +422,11 @@
             this.legalLoaded = true;
             // Create the tab for legal conditions
             $('<h2></h2>').text('Legal conditions').appendTo('#legal-tab');
-            $.template('legalTemplate', $('#legal_template'));
 
-            for (var i = 0; i < legal.length; i++) {
-                var dom;
-
-                dom = $.tmpl('legalTemplate', {
-                    'name': legal[i].name,
-                    'description': legal[i].description
-                })
-                dom.appendTo('#legal-tab');
-                if('clauses' in legal[i]) {
-                    this.paintLegalClauses(legal[i].clauses, dom.find('.clauses'));
-                }
-            }
+            $.template('legalClausesTemplate', $('#legal_clauses_template'))
+            var clause = $.tmpl('legalClausesTemplate', legal).appendTo('#legal-tab');
+            var repText = clause.find('p').text().split('\n').join('<br />');
+            clause.find('p')[0].innerHTML = repText;
         }
     };
 
