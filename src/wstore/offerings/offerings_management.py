@@ -40,7 +40,6 @@ from wstore.models import Offering, Resource
 from wstore.models import Marketplace, MarketOffering
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
-from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.url import is_valid_url
@@ -413,12 +412,13 @@ def create_offering(provider, data):
     offering_info['version'] = data['version']
     offering_info['organization'] = organization.name
     offering_info['base_id'] = 'pk'
+    offering_info['open'] = is_open
 
     created = datetime.now()
     offering_info['created'] = unicode(created)
 
     usdl_generator = USDLGenerator()
-    usdl_generator._validate_info(offering_info)
+    usdl_generator.validate_info(offering_info, open_=is_open)
 
     # Create the offering
     offering = Offering(
