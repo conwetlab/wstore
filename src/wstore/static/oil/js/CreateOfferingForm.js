@@ -231,9 +231,13 @@
             var errElems = [];
             var error = false;
             var description;
-            var pricing = {};
+            var pricing = {
+                'price_plans': []
+            };
+            var plan = {};
             var legal = {};
             var rep = $('#repositories').val();
+            var model;
 
             event.preventDefault();
             event.stopPropagation();
@@ -246,10 +250,11 @@
                 msg.push('The description is required');
                 errElems.push($('#description'));
             }
-            pricing.price_model = $('#pricing-select').val();
+            model = $('#pricing-select').val();
 
             // If a payment model is selected the price is required
-            if (pricing.price_model == 'single_payment') {
+            if (model == 'single_payment') {
+                var component = {}
                 var price = $.trim($('#price-input').val());
                 if (price == '') {
                     error = true;
@@ -260,16 +265,29 @@
                     msg.push('The price must be a number');
                     errElems.push($('#price-input'));
                 } else {
-                    pricing.price = price;
-                }
+                    plan.title = 'Single payment price plan'
+                    plan.description = 'This price plan defines a single payment for the current offering';
+                    component.title = 'Single payment';
+                    component.description = '';
+                    component.value = price;
+                    component.unit = 'single payment';
+                    component.currency = 'EUR';
+                    plan.price_components = [component];
+                    pricing.price_plans.push(plan);
+                } 
+            } else if (model == 'free' && !this.offeringInfo.open){
+                plan.title = 'Free use price plan';
+                plan.description = 'The current offering can be acquired for free';
+                pricing.price_plans.push(plan);
             }
+            
             legal.title = $.trim($('#legal-title').val());
             legal.text = $.trim($('#legal-text').val());
 
             if (legal.title && !legal.text) {
                 error = true;
                 msg.push('A legal clause needs both title and text');
-                errElems.push($('#legal-text'));
+            errElems.push($('#legal-text'));
             }
             if (legal.text && !legal.title) {
                 error = true;
@@ -279,6 +297,7 @@
             // Include the info
             this.offeringInfo.offering_info = {
                 'description': description,
+                'abstract': description,
                 'pricing': pricing
             }
             this.offeringInfo.repository = rep;
@@ -286,6 +305,7 @@
             if (legal.title && legal.text) {
                 this.offeringInfo.offering_info.legal = legal
             }
+
 
             // If the USDL is loaded go to the final step, application selection
             if (!error) {

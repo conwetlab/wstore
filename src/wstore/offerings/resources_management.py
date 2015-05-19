@@ -137,8 +137,8 @@ def _validate_resource_info(provider, data, file_=None):
 
     # Check contents
     if 'name' not in data or 'version' not in data or\
-    'description' not in data or 'content_type' not in data or\
-    'resource_type' not in data:
+            'description' not in data or 'content_type' not in data or\
+            'resource_type' not in data:
         raise ValueError('Invalid request: Missing required field')
 
     # Create version object to validate resource version format

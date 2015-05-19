@@ -42,7 +42,7 @@ class Offering(models.Model):
     # support_admin_user
     version = models.CharField(max_length=20)
     state = models.CharField(max_length=50)
-    description_url = models.CharField(max_length=200)
+    description_url = models.CharField(max_length=200, null=True, blank=True)
     marketplaces = ListField(EmbeddedModelField(MarketOffering))
     resources = ListField()
     rating = models.FloatField(default=0)

@@ -38,22 +38,42 @@
         this.tags = offeringData.tags;
         this.screenshots = offeringData.related_images;
 
-        this.servicesOffered = offeringData.offering_description.services_included;
-
-        this.shortDescription = this.servicesOffered[0].short_description;
-        this.updated = this.servicesOffered[0].modified;
+        this.shortDescription = offeringData.offering_description.abstract;
         this.created = offeringData.creation_date;
 
         // Display only publication date (not hour or seconds)
         if (offeringData.publication_date) {
             this.published = offeringData.publication_date.substring(0, 10);
         }
-        this.description = this.servicesOffered[0].long_description;
+        this.description = offeringData.offering_description.description;
         this.offeringDescriptionURL = offeringData.description_url;
-        this.legal = this.servicesOffered[0].legal;
-        this.sla = this.servicesOffered[0].sla;
-        this.interactions = this.servicesOffered[0].interactions;
+
+        this.legal = offeringData.offering_description.legal;
+
+        if (this.legal === undefined) {
+            this.legal = [];
+        }
+
+        this.sla = offeringData.offering_description.sla;
+
+        if (this.sla === undefined) {
+            this.sla = [];
+        }
+
+        this.interactions = offeringData.offering_description.interactions;
+
+        if (this.interactions === undefined) {
+            this.interactions = [];
+        }
+
         this.pricing = offeringData.offering_description.pricing;
+
+        if (this.pricing === undefined) {
+            this.pricing = {
+                price_plans: []
+            };
+        }
+
         this.bill = [];
         this.open = offeringData.open;
 
