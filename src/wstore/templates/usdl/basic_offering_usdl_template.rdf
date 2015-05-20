@@ -21,6 +21,10 @@
         {% if legal %}
         <gr:hasBusinessFunction xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="{{ base_id }}01" />
         {% endif %}
+
+        {% for res in resources %}
+        <usdl:includes rdf:resource="{{ res }}"/>
+        {% endfor %}
     </usdl:ServiceOffering>
 
     {% if legal %}

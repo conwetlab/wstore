@@ -20,8 +20,6 @@
 
 from __future__ import unicode_literals
 
-import json
-import rdflib
 import re
 import base64
 import os
@@ -516,7 +514,7 @@ def update_offering(offering, data):
             repository_adaptor = RepositoryAdaptor(offering.description_url)
             repository_adaptor.upload(
                 'application/rdf+xml',
-                usdl_generator.generate_offering_usdl(offering_info)
+                usdl_generator.generate_offering_usdl(offering)
             )
 
     offering.save()
@@ -623,15 +621,17 @@ def delete_offering(user, offering):
     if offering.state == 'deleted':
         raise PermissionDenied('The offering is already deleted')
 
-    parsed_url = urlparse(offering.description_url)
-    path = parsed_url.path
-    host = parsed_url.scheme + '://' + parsed_url.netloc
-    path = path.split('/')
-    host += '/' + path[1] + '/' + path[2]
-    collection = path[3]
+    if offering.state == 'published':
 
-    repository_adaptor = RepositoryAdaptor(host, collection)
-    repository_adaptor.delete(path[4])
+        parsed_url = urlparse(offering.description_url)
+        path = parsed_url.path
+        host = parsed_url.scheme + '://' + parsed_url.netloc
+        path = path.split('/')
+        host += '/' + path[1] + '/' + path[2]
+        collection = path[3]
+
+        repository_adaptor = RepositoryAdaptor(host, collection)
+        repository_adaptor.delete(path[4])
 
     index_path = os.path.join(settings.BASEDIR, 'wstore')
     index_path = os.path.join(index_path, 'search')
@@ -701,7 +701,7 @@ def delete_offering(user, offering):
 def bind_resources(offering, data, provider):
 
     # Check that the offering supports binding
-    if offering.state != 'uploaded' and not offering.open:
+    if offering.state != 'uploaded' and not (offering.open and offering.state == 'published'):
         raise PermissionDenied('This offering cannot be modified')
 
     added_resources = []

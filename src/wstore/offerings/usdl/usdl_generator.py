@@ -26,7 +26,7 @@ from urlparse import urljoin
 from django.template import loader
 from django.template import Context as TmplContext
 
-from wstore.models import Context
+from wstore.models import Context, Resource
 from wstore.charging_engine.models import Unit
 
 
@@ -213,11 +213,12 @@ class USDLGenerator():
 
                 self._validate_currency(pricing_info['currency'])
 
-    def generate_offering_usdl(self, offering_info, format_='xml'):
+    def generate_offering_usdl(self, offering, format_='xml'):
 
         if format_ not in self._allowed_formats:
             raise ValueError('The specified format (' + format_ + ') is not a valid format')
 
+        offering_info = offering.offering_description
         self.validate_info(offering_info, offering_info['open'])
 
         # Get the template
@@ -228,6 +229,12 @@ class USDLGenerator():
         offering_uri = urljoin(site, 'api/offering/offerings/' + offering_info['organization'] + '/' + offering_info['name'] + '/' + offering_info['version'])
         image_url = urljoin(site, offering_info['image_url'])
 
+        # Include resources
+        resources = []
+        for r in offering.resources:
+            res = Resource.objects.get(pk=unicode(r))
+            resources.append(res.resource_uri)
+
         context = {
             'offering_uri': offering_uri,
             'image_url': image_url,
@@ -237,7 +244,8 @@ class USDLGenerator():
             'abstract': offering_info['abstract'],
             'created': offering_info['created'],
             'modified': offering_info['modified'],
-            'base_id': offering_info['base_id']
+            'base_id': offering_info['base_id'],
+            'resources': resources
         }
 
         if 'legal' in offering_info:
@@ -248,6 +256,10 @@ class USDLGenerator():
         # Render the template
         usdl = usdl_template.render(TmplContext(context))
 
+        # If a pricing model has been included generate it
+        if len(offering_info['pricing']['price_plans']) > 0:
+            usdl = self._generate_pricing(usdl, offering_info['pricing'])
+
         # Return the usdl in the spified format
         if format_ != 'xml':
             graph = rdflib.Graph()
@@ -257,5 +269,5 @@ class USDLGenerator():
         # Return the USDL document
         return usdl
 
-    def generate_pricing(self, pricing_info):
+    def _generate_pricing(self, pricing_info):
         self._validate_pricing(pricing_info)

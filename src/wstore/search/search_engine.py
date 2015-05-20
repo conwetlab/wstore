@@ -44,13 +44,11 @@ class SearchEngine():
         Create a single string for creating the index by extracting text fields
         from the USDL document of the offering
         """
-
-        usdl_document = offering.offering_description
         graph = rdflib.ConjunctiveGraph()
 
         generator = USDLGenerator()
         graph.parse(
-            data=generator.generate_offering_usdl(usdl_document),
+            data=generator.generate_offering_usdl(offering),
             format='application/rdf+xml'
         )
 
