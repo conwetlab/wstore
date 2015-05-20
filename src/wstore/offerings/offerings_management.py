@@ -442,6 +442,9 @@ def create_offering(provider, data):
 
     offering.save()
 
+    offering.offering_description['base_id'] = offering.pk
+    offering.save()
+
     if 'resources' in data and len(data['resources']) > 0:
         bind_resources(offering, data['resources'], profile.user)
 
