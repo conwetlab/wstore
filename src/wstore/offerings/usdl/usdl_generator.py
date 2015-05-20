@@ -172,12 +172,6 @@ class USDLGenerator():
         if not isinstance(pricing_info['price_plans'], list):
             raise TypeError('Invalid pricing info: price_plans field must be a list')
 
-        # Validate currency
-        if 'currency' not in pricing_info:
-            raise ValueError('Invalid pricing info: Missing currency field')
-
-        self._validate_currency(pricing_info['currency'])
-
         if open_ and len(pricing_info['price_plans']) > 0:
             raise ValueError('Invalid pricing info: Open offerings cannot define price plans')
 
@@ -186,6 +180,7 @@ class USDLGenerator():
         labels = []
 
         for plan in pricing_info['price_plans']:
+
             if 'title' not in plan:
                 raise ValueError('Invalid pricing info: Missing title field in price plan')
 
@@ -201,11 +196,22 @@ class USDLGenerator():
 
                 labels.append(plan['label'])
 
+            currency_required = False
             if 'price_components' in plan:
+                currency_required = len(plan['price_components']) > 0
                 self._validate_components(plan['price_components'])
 
             if 'deductions' in plan:
+                currency_required = currency_required or len(plan['deductions']) > 0
                 self._validate_components(plan['deductions'], is_deduction=True)
+
+            # Validate currency
+            if currency_required:
+
+                if 'currency' not in plan:
+                    raise ValueError('Invalid pricing info: Missing currency field')
+
+                self._validate_currency(pricing_info['currency'])
 
     def generate_offering_usdl(self, offering_info, format_='xml'):
 

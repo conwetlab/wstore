@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * This file is part of WStore.
  *
@@ -270,11 +270,11 @@
                     component.description = '';
                     component.value = price;
                     component.unit = 'single payment';
-                    component.currency = 'EUR';
+                    plan.currency = 'EUR';
                     plan.price_components = [component];
                     pricing.price_plans.push(plan);
                 } 
-            } else if (model == 'free' && !this.offeringInfo.open){
+            } else if (model == 'free' && !this.offeringInfo.open) {
                 plan.title = 'Free use price plan';
                 plan.description = 'The current offering can be acquired for free';
                 pricing.price_plans.push(plan);
