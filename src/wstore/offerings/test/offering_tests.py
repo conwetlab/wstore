@@ -56,11 +56,11 @@ class FakeRepositoryAdaptor():
 
     def __init__(self, url, collection=None):
         self._url = url
-        if collection != None:
+        if collection is not None:
             self._collection = collection
 
     def upload(self, cont, data, name=None):
-        if name != None:
+        if name is not None:
             url = self._url + self._collection + '/' + name
         else:
             url = self._url
@@ -89,7 +89,7 @@ class FakeUsdlParser():
         return {
             'pricing': {
                 'price_plans': [{
-                    'price_components':[]
+                    'price_components': []
                 }]
             }
         }
@@ -136,8 +136,6 @@ class OfferingCreationTestCase(TestCase):
         cls._auth = settings.OILAUTH
 
         settings.OILAUTH = False
-        # Capture repository calls
-        offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
         offerings_management.SearchEngine = FakeSearchEngine
         offerings_management.OfferingRollback = FakeOfferingRollback
         # loads test image
@@ -205,14 +203,8 @@ class OfferingCreationTestCase(TestCase):
         offering_data['image']['data'] = self._image
         return offering_data
 
-    def _fill_image_err(self, offering_data):
-        offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = 'invalid usdl'
-        return offering_data
-
     def _fill_basic_images(self, offering_data):
         offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = self._usdl
         return offering_data
 
     def _fill_screenshots(self, offering_data):
@@ -237,13 +229,11 @@ class OfferingCreationTestCase(TestCase):
             screen_shots.append(scr)
 
         offering_data['related_images'] = screen_shots
-        offering_data['offering_description']['data'] = self._usdl
 
         return offering_data
 
     def _fill_previous_version(self, offering_data):
         offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = self._usdl
 
         self._create_offering({
             'name': offering_data['name'],
@@ -255,13 +245,11 @@ class OfferingCreationTestCase(TestCase):
     def _fill_applications(self, offering_data):
         settings.OILAUTH = True
         offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = self._usdl
         offerings_management.bind_resources = MagicMock()
         return offering_data
 
     def _fill_notification_url(self, offering_data):
         offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = self._usdl
         org = Organization.objects.get(name='test_organization')
         org.notification_url = 'http://notification_url.com'
         org.save()
@@ -273,47 +261,26 @@ class OfferingCreationTestCase(TestCase):
         graph.parse(data=self._usdl, format='application/rdf+xml')
         return graph.serialize(format=type_, auto_compact=True)
 
-    def _fill_turtle(self, offering_data):
-        offering_data['image']['data'] = self._image
-        offering_data['offering_description']['content_type']= 'text/turtle'
-        offering_data['offering_description']['data'] = self._serialize('n3')
-        return offering_data
-
-    def _fill_json(self, offering_data):
-        offering_data['image']['data'] = self._image
-        offering_data['offering_description']['content_type']= 'application/json'
-        offering_data['offering_description']['data'] = self._serialize('json-ld')
-        return offering_data
-
     @parameterized.expand([
-        (BASIC_OFFERING, BASIC_EXPECTED, _fill_json),
+        (BASIC_OFFERING, BASIC_EXPECTED, _fill_image),
         (OFFERING_WITH_IMAGES, EXPECTED_WITH_IMAGES, _fill_screenshots),
         (OFFERING_BIGGER_VERSION, EXPECTED_BIGGER_VERSION, _fill_previous_version),
         (OFFERING_APPLICATIONS_RESOURCES, BASIC_EXPECTED, _fill_applications),
-        (OFFERING_NOTIFY_URL, EXPECTED_NOTIFY_URL, _fill_turtle),
+        (OFFERING_NOTIFY_URL, EXPECTED_NOTIFY_URL, _fill_image),
         (OFFERING_NOTIFY_DEFAULT, EXPECTED_NOTIFY_URL, _fill_notification_url),
-        (OFFERING_USDL_DATA, BASIC_EXPECTED, _fill_image),
-        (OFFERING_USDL_DATA_COMPLETE, BASIC_EXPECTED, _fill_image),
         (OFFERING_INVALID_NAME, None, None, ValueError, 'Invalid name format'),
         (BASIC_OFFERING, None, _fill_previous_version, ValueError, 'A bigger version of the current offering exists'),
         (OFFERING_INVALID_VERSION, None, None, ValueError, 'Invalid version format'),
-        (OFFERING_INVALID_JSON, None, _fill_basic_images, ValueError, 'Missing required fields'),
-        (BASIC_OFFERING, None, _fill_image_err, Exception, 'Malformed USDL'),
-        (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering already exists'),
+        (OFFERING_INVALID_JSON, None, _fill_basic_images, ValueError, 'Missing required fields: name'),
+        (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering test_offering_fail version 1.0 already exists'),
         (OFFERING_NOTIFY_DEFAULT, None, _fill_basic_images, ValueError, 'There is not a default notification URL defined for the organization test_organization. To configure a default notification URL provide it in the settings menu'),
         (OFFERING_NOTIFY_URL_INVALID, None, _fill_basic_images, ValueError, "Invalid notification URL format: It doesn't seem to be an URL"),
-        (OFFERING_NO_USDL, None, _fill_image, Exception, 'No USDL description provided'),
-        (OFFERING_NO_IMAGE, None, None, ValueError, 'Missing required field: Logo'),
+        (OFFERING_NO_USDL, None, _fill_image, Exception, 'Missing required fields: offering_info'),
+        (OFFERING_NO_IMAGE, None, None, ValueError, 'Missing required fields: image'),
+        (OFFERING_NO_VERSION, None, None, ValueError, 'Missing required fields: version'),
         (OFFERING_IMAGE_MISSING, None, None, ValueError, 'Missing required field in image'),
         (OFFERING_IMAGE_INVALID, None, None, TypeError, 'Invalid image type'),
-        (OFFERING_USDL_DATA_INVALID, None, _fill_image, ValueError, 'Invalid USDL info: Missing a required field'),
-        (OFFERING_USDL_DATA_INVALID_1, None, _fill_image, ValueError, 'Invalid USDL info: Description field cannot be empty'),
-        (OFFERING_USDL_DATA_INVALID_2, None, _fill_image, ValueError, 'Invalid USDL info: Title and text fields are required if providing legal info'),
-        (OFFERING_USDL_DATA_INVALID_3, None, _fill_image, ValueError, 'Invalid USDL info: Title and text fields cannot be empty in legal info'),
-        (OFFERING_USDL_DATA_INVALID_4, None, _fill_image, ValueError, 'Invalid USDL info: The pricing field must define a pricing model'),
-        (OFFERING_USDL_DATA_INVALID_5, None, _fill_image, ValueError, 'Invalid USDL info: Missing price for single payment model'),
-        (OFFERING_USDL_DATA_INVALID_6, None, _fill_image, ValueError, 'Invalid USDL info: Price cannot be empty in single payment models'),
-        (OFFERING_USDL_DATA_INVALID_7, None, _fill_image, ValueError, 'Invalid USDL info: Invalid pricing model'),
+        (OFFERING_APPLICATIONS_INVALID, None, _fill_applications, ValueError, 'Missing a required field in application definition'),
     ])
     def test_offering_creation(self, offering_data, expected_data, data_filler=None, err_type=None, err_msg=None):
 
@@ -348,7 +315,7 @@ class OfferingCreationTestCase(TestCase):
             self.assertEqual(content['version'], offering_data['version'])
             self.assertEqual(content['state'], 'uploaded')
             self.assertEqual(content['image_url'], expected_data['image'])
-            self.assertEqual(content['description_url'], expected_data['description_url'])
+            self.assertEqual(content['description_url'], None)
 
             if 'screenshots' in expected_data:
                 self.assertEquals(content['related_images'], expected_data['screenshots'])

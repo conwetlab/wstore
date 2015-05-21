@@ -29,15 +29,18 @@ BASIC_OFFERING = {
         'data': '',
     },
     'related_images': [],
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
 BASIC_EXPECTED = {
     'image': '/media/test_organization__test_offering__1.0/test_image.png',
-    'description_url': 'http://testrepository/storeOfferingCollection/test_organization__test_offering__1.0'
+    'description_url': ''
 }
 
 OFFERING_BIGGER_VERSION = {
@@ -48,9 +51,12 @@ OFFERING_BIGGER_VERSION = {
         'name': 'test_image.png',
         'data': '',
     },
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -70,14 +76,16 @@ OFFERING_WITH_IMAGES = {
     'related_images': [{
         'name': 'test_screen1.png',
         'data': ''
-    },
-    {
+    }, {
         'name': 'test_screen2.png',
         'data': ''
     }],
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -88,45 +96,6 @@ EXPECTED_WITH_IMAGES = {
         '/media/test_organization__test_offering__1.0/test_screen1.png',
         '/media/test_organization__test_offering__1.0/test_screen2.png'
     ]
-}
-
-OFFERING_USDL_DATA = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'offering_info': {
-        'description': 'Test offering',
-        'pricing': {
-            'price_model': 'free'
-        }
-    }
-}
-
-OFFERING_USDL_DATA_COMPLETE = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'offering_info': {
-        'description': 'Test offering',
-        'pricing': {
-            'price_model': 'single_payment',
-            'price': 5
-        },
-        'legal': {
-            'title': 'legal title',
-            'text': 'legal text'
-        }
-    }
 }
 
 EXPECTED_URL = {
@@ -143,9 +112,12 @@ OFFERING_APPLICATIONS_RESOURCES = {
         'data': '',
     },
     'related_images': [],
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     },
     'applications': [{
         'name': 'test_app1',
@@ -159,6 +131,29 @@ OFFERING_APPLICATIONS_RESOURCES = {
     }]
 }
 
+OFFERING_APPLICATIONS_INVALID = {
+    'name': 'test_offering',
+    'version': '1.0',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
+    },
+    'applications': [{
+        'name': 'test_app1',
+        'url': 'http://test_app1.com',
+        'description': 'a test application'
+    }],
+}
+
 OFFERING_NOTIFY_URL = {
     'name': 'test_offering',
     'version': '1.0',
@@ -168,9 +163,12 @@ OFFERING_NOTIFY_URL = {
         'data': '',
     },
     'notification_url': 'http://notification_url.com',
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -183,9 +181,12 @@ OFFERING_NOTIFY_DEFAULT = {
         'data': '',
     },
     'notification_url': 'default',
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -204,9 +205,12 @@ OFFERING_INVALID_VERSION = {
         'data': '',
     },
     'related_images': [],
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -219,9 +223,12 @@ OFFERING_INVALID_NAME = {
         'data': '',
     },
     'related_images': [],
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -234,9 +241,12 @@ OFFERING_INVALID_JSON = {
         'data': '',
     },
     'related_images': [],
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -249,9 +259,12 @@ OFFERING_NOTIFY_URL_INVALID = {
         'data': '',
     },
     'notification_url': 'invalid url',
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -264,9 +277,12 @@ OFFERING_EXISTING = {
         'data': '',
     },
     'related_images': [],
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -284,9 +300,29 @@ OFFERING_NO_IMAGE = {
     'name': 'test_offering',
     'version': '1.0',
     'repository': 'test_repository',
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
+    }
+}
+
+OFFERING_NO_VERSION = {
+    'name': 'test_offering',
+    'repository': 'test_repository',
+    'image': {
+        'name': 'test_image.png',
+        'data': '',
+    },
+    'related_images': [],
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -295,9 +331,12 @@ OFFERING_IMAGE_INVALID = {
     'version': '1.0',
     'repository': 'test_repository',
     'image': '',
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
+    'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
+        'pricing': {
+            'price_plans': []
+        }
     }
 }
 
@@ -307,151 +346,11 @@ OFFERING_IMAGE_MISSING = {
     'repository': 'test_repository',
     'image': {
     },
-    'offering_description': {
-        'content_type': 'application/rdf+xml',
-        'data': ''
-    }
-}
-
-OFFERING_USDL_DATA_INVALID = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
     'offering_info': {
+        'description': 'a basic offering',
+        'abstract': 'a basic ',
         'pricing': {
-            'price_model': 'free'
-        }
-    }
-}
-
-OFFERING_USDL_DATA_INVALID_1 = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'offering_info': {
-        'description': '',
-        'pricing': {
-            'price_model': 'free'
-        }
-    }
-}
-
-OFFERING_USDL_DATA_INVALID_2 = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'offering_info': {
-        'description': 'Test usdl description',
-        'pricing': {
-            'price_model': 'free'
-        },
-        'legal': {
-        }
-    }
-}
-
-OFFERING_USDL_DATA_INVALID_3 = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'offering_info': {
-        'description': 'Test usdl description',
-        'pricing': {
-            'price_model': 'free'
-        },
-        'legal': {
-            'title': '',
-            'text': 'some text'
-        }
-    }
-}
-
-OFFERING_USDL_DATA_INVALID_4 = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'offering_info': {
-        'description': 'Test usdl description',
-        'pricing': {
-            'price': 5
-        }
-    }
-}
-
-OFFERING_USDL_DATA_INVALID_5 = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'offering_info': {
-        'description': 'Test usdl description',
-        'pricing': {
-            'price_model': 'single_payment'
-        }
-    }
-}
-
-OFFERING_USDL_DATA_INVALID_6 = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'offering_info': {
-        'description': 'Test usdl description',
-        'pricing': {
-            'price_model': 'single_payment',
-            'price': ''
-        }
-    }
-}
-
-OFFERING_USDL_DATA_INVALID_7 = {
-    'name': 'test_offering',
-    'version': '1.0',
-    'repository': 'test_repository',
-    'image': {
-        'name': 'test_image.png',
-        'data': '',
-    },
-    'related_images': [],
-    'offering_info': {
-        'description': 'Test usdl description',
-        'pricing': {
-            'price_model': 'pay_per_use',
-            'price': 5
+            'price_plans': []
         }
     }
 }
