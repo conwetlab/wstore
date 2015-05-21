@@ -508,7 +508,7 @@ def update_offering(offering, data):
 
         offering.offering_description = data['offering_info']
 
-        if offering.open and offering.state == 'published':
+        if offering.open and offering.state == 'published' and len(offering.description_url):
             repository_adaptor = RepositoryAdaptor(offering.description_url)
             repository_adaptor.upload(
                 'application/rdf+xml',
@@ -601,7 +601,7 @@ def _remove_offering(offering, se):
             os.remove(file_path)
 
         os.rmdir(path)
-    except OSError as e:
+    except OSError:
         # An OS error means that offering files
         # does not exist so continue with the deletion
         pass
@@ -755,3 +755,12 @@ def bind_resources(offering, data, provider):
         offering.resources.remove(del_res)
 
     offering.save()
+
+    # Update USDL document if needed
+    if offering.open and offering.state == 'published' and len(offering.description_url):
+        usdl_generator = USDLGenerator()
+        repository_adaptor = RepositoryAdaptor(offering.description_url)
+        repository_adaptor.upload(
+            'application/rdf+xml',
+            usdl_generator.generate_offering_usdl(offering)
+        )
