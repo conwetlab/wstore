@@ -34,7 +34,7 @@ from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
 from wstore.market_adaptor.marketadaptor import marketadaptor_factory
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
-from wstore.models import Offering, Resource
+from wstore.models import Offering, Resource, Repository
 from wstore.models import Marketplace, MarketOffering
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
@@ -541,6 +541,19 @@ def publish_offering(user, offering, data):
     # digital assets (applications or resources)
     if offering.open and not len(offering.resources) and not len(offering.applications):
         raise PermissionDenied('Publication error: Open offerings cannot be published if they do not contain at least a digital asset (resource or application)')
+
+    # Upload the USDL description of the offering to the repository
+    if len(Repository.objects.all()) > 0:
+        repository = Repository.objects.get(is_default=True)
+
+        # Generate the USDL of the offering
+        generator = USDLGenerator()
+        usdl = generator.generate_offering_usdl(offering)
+
+        repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
+        offering_id = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
+
+        repository_adaptor.upload('application/rdf+xml', usdl, name=offering_id)
 
     # Publish the offering in the selected marketplaces
     for market in data['marketplaces']:
