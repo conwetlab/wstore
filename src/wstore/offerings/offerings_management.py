@@ -334,7 +334,7 @@ def create_offering(provider, data):
         if 'image' not in data:
             missing_fields += ' image'
 
-        raise ValueError('Missing required fields: ' + missing_fields)
+        raise ValueError('Missing required fields:' + missing_fields)
 
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise ValueError('Invalid version format')

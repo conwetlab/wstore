@@ -27,6 +27,9 @@ from wstore.models import Offering, Resource
 
 def rollback(provider, profile, json_data, msg):
 
+    if msg.startswith('Missing required fields'):
+        return
+
     # Check files
     dir_name = profile.current_organization.name + '__' + json_data['name'] + '__' + json_data['version']
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
