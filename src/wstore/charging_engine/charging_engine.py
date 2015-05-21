@@ -164,12 +164,12 @@ class ChargingEngine:
             raise Exception('Invalid payment method')
 
     def _generate_cdr_part(self, part, model, cdr_info):
-        # Take and increment the correlation number using
-        # the mongoDB atomic access in order to avoid race
-        # problems
         # Create connection for raw database access
         db = get_database_connection()
 
+        # Take and increment the correlation number using
+        # the mongoDB atomic access in order to avoid race
+        # problems
         corr_number = db.wstore_rss.find_and_modify(
             query={'_id': ObjectId(cdr_info['rss'].pk)},
             update={'$inc': {'correlation_number': 1}}
@@ -208,26 +208,6 @@ class ChargingEngine:
         if len(rss_collection) > 0:
             rss = RSS.objects.all()[0]
 
-            # Get the service name using direct access to the stored
-            # JSON USDL description
-
-            offering_description = self._purchase.offering.offering_description
-
-            # Get the used tag for RDF properties
-            service_tag = ''
-            dc_tag = ''
-            for k, v in offering_description['@context'].iteritems():
-                if v == 'http://www.linked-usdl.org/ns/usdl-core#':
-                    service_tag = k
-                if v == 'http://purl.org/dc/terms/':
-                    dc_tag = k
-
-            # Get the service name
-            service_name = ''
-            for node in offering_description['@graph']:
-                if node['@type'] == service_tag + ':Service':
-                    service_name = node[dc_tag + ':title']['@value']
-
             # Get the provider (Organization)
             provider = settings.STORE_NAME.lower()
 
@@ -247,7 +227,7 @@ class ChargingEngine:
             cdr_info = {
                 'rss': rss,
                 'provider': provider,
-                'service_name': service_name,
+                'service_name': offering,
                 'offering': offering,
                 'country_code': country_code,
                 'time_stamp': time_stamp,
@@ -569,8 +549,7 @@ class ChargingEngine:
     def _create_purchase_contract(self):
         # Generate the pricing model structure
         offering = self._purchase.offering
-        parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
-        parsed_usdl = parser.parse()
+        parsed_usdl = offering.offering_description
 
         usdl_pricing = {}
         # Search and validate the corresponding price plan
@@ -595,8 +574,10 @@ class ChargingEngine:
                     raise Exception('The specified plan does not exist')
 
         price_model = {}
+        # Save the general currency of the offering
+        if 'price_components' in usdl_pricing or 'deductions' in usdl_pricing:
+            price_model['general_currency'] = usdl_pricing['currency']
 
-        currency_loaded = False
         if 'price_components' in usdl_pricing:
 
             for comp in usdl_pricing['price_components']:
@@ -637,11 +618,6 @@ class ChargingEngine:
 
                     price_model['pay_per_use'].append(comp)
 
-                # Save the general currency of the offering
-                if not currency_loaded:
-                    price_model['general_currency'] = comp['currency']
-                    currency_loaded = True
-
         if 'deductions' in usdl_pricing:
 
             for deduct in usdl_pricing['deductions']:
@@ -655,10 +631,6 @@ class ChargingEngine:
                     # Deductions only can define use based discounts
                     if unit.defined_model != 'pay per use':
                         raise Exception('Invalid deduction')
-
-                    if not currency_loaded:
-                        price_model['general_currency'] = deduct['currency']
-                        currency_loaded = True
 
                 price_model['deductions'].append(deduct)
 
