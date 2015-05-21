@@ -427,7 +427,7 @@ def create_offering(provider, data):
         comments=[],
         tags=[],
         image_url=data['image_url'],
-        related_images=data['related_images'],
+        related_images=screenshots,
         notification_url=notification_url,
         creation_date=created,
         open=is_open,
