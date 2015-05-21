@@ -408,7 +408,6 @@ def create_offering(provider, data):
     offering_info['version'] = data['version']
     offering_info['organization'] = organization.name
     offering_info['base_id'] = 'pk'
-    offering_info['open'] = is_open
 
     created = datetime.now()
     offering_info['created'] = unicode(created)
@@ -500,7 +499,6 @@ def update_offering(offering, data):
         offering_info['version'] = offering.version
         offering_info['organization'] = offering.owner_organization.name
         offering_info['base_id'] = offering.pk
-        offering_info['open'] = offering.open
 
         offering_info['created'] = unicode(offering.creation_date)
         offering_info['modified'] = unicode(datetime.now())
