@@ -28,7 +28,7 @@ from urlparse import urljoin
 from django.template import loader
 from django.template import Context as TmplContext
 
-from wstore.models import Context, Resource
+from wstore.models import Context, Resource, Offering
 from wstore.charging_engine.models import Unit
 
 
@@ -43,7 +43,7 @@ class USDLGenerator():
 
     _allowed_formats = ('application/rdf+xml', 'n3', 'json-ld')
 
-    def validate_info(self, offering_info, open_=False):
+    def validate_info(self, offering_info, org, open_=False):
         # Validate USDL mandatory fields
         if 'description' not in offering_info or 'base_id' not in offering_info \
                 or 'organization' not in offering_info or 'name' not in offering_info \
@@ -65,7 +65,7 @@ class USDLGenerator():
             if not offering_info['legal']['title'] or not offering_info['legal']['text']:
                 raise ValueError('Invalid offering info: Title and text fields cannot be empty in legal info')
 
-        self._validate_pricing(offering_info['pricing'], open_=open_)
+        self._validate_pricing(offering_info['pricing'], org, offering_info['name'], open_=open_)
 
     def _validate_currency(self, currency):
         context = Context.objects.all()[0]
@@ -173,7 +173,7 @@ class USDLGenerator():
 
                 raise ValueError('Invalid pricing info: Only a pricing method (basic component or price function) is allowed in a price component')
 
-    def _validate_pricing(self, pricing_info, open_=False):
+    def _validate_pricing(self, pricing_info, org, offering_name, open_=False):
         # Validate pricing fields
         if 'price_plans' not in pricing_info:
             raise ValueError('Invalid pricing info: Missing price_plans field')
@@ -204,6 +204,10 @@ class USDLGenerator():
                     raise ValueError('Invalid pricing info: label fields in price plans must be unique')
 
                 labels.append(plan['label'])
+
+            if 'label' in plan and plan['label'].lower() == 'update' \
+                    and not len(Offering.objects.filter(owner_organization=org, name=offering_name)):
+                raise ValueError('Invalid pricing info: It is not possible to define an updating price plan without previous versions of the offering')
 
             currency_required = False
             if 'price_components' in plan:
@@ -437,7 +441,7 @@ class USDLGenerator():
             raise ValueError('The specified format (' + format_ + ') is not a valid format')
 
         offering_info = offering.offering_description
-        self.validate_info(offering_info, offering.open)
+        self.validate_info(offering_info, offering.owner_organization, offering.open)
 
         # Get the template
         usdl_template = loader.get_template('usdl/basic_offering_usdl_template.rdf')

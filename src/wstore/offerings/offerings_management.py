@@ -414,7 +414,7 @@ def create_offering(provider, data):
     offering_info['modified'] = unicode(created)
 
     usdl_generator = USDLGenerator()
-    usdl_generator.validate_info(offering_info, open_=is_open)
+    usdl_generator.validate_info(offering_info, organization, open_=is_open)
 
     # Create the offering
     offering = Offering(
@@ -504,7 +504,7 @@ def update_offering(offering, data):
         offering_info['modified'] = unicode(datetime.now())
 
         usdl_generator = USDLGenerator()
-        usdl_generator.validate_info(offering_info, open_=offering.open)
+        usdl_generator.validate_info(offering_info, offering.owner_organization, open_=offering.open)
 
         offering.offering_description = data['offering_info']
 
