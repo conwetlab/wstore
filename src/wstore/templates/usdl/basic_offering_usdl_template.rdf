@@ -19,7 +19,7 @@
         <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">{{ modified }}</dcterms:modified>
 
         {% if legal %}
-        <gr:hasBusinessFunction xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="{{ base_id }}01" />
+        <gr:hasBusinessFunction xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ID{{ base_id }}01" />
         {% endif %}
 
         {% for res in resources %}
@@ -28,7 +28,7 @@
     </usdl:ServiceOffering>
 
     {% if legal %}
-    <gr:License xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="{{ base_id }}01">
+    <gr:License xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ID{{ base_id }}01">
         <rdfs:label>{{ license_label }}</rdfs:label>
         <dcterms:description>{{ license_description }}</dcterms:description>
     </gr:License>

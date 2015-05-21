@@ -9,23 +9,23 @@
     xmlns:pav="http://purl.org/pav/">
 
     <usdl:Service xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ resource_uri }}">
-        <usdl:hasClassification rdf:nodeID="{{ base_id }}01" />
+        <usdl:hasClassification rdf:nodeID="ID{{ base_id }}01" />
         <dcterms:title>{{ name }}</dcterms:title>
         <dcterms:description>{{ description }}</dcterms:description>
         <pav:version>{{ version }}</pav:version>
-        <dcterms:format rdf:nodeID="{{ base_id }}02" />
-        <gr:hasManufacturer rdf:nodeID="{{ base_id }}03" />
+        <dcterms:format rdf:nodeID="ID{{ base_id }}02" />
+        <gr:hasManufacturer rdf:nodeID="ID{{ base_id }}03" />
     </usdl:Service>
 
-    <skos:Concept xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="{{ base_id }}01">
+    <skos:Concept xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ID{{ base_id }}01">
         <rdfs:label>{{ resource_type }}</rdfs:label>
     </skos:Concept>
 
-    <dcterms:MediaType xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="{{ base_id }}02">
+    <dcterms:MediaType xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ID{{ base_id }}02">
         <rdfs:label>{{ media_type }}</rdfs:label>
     </dcterms:MediaType>
 
-    <gr:BusinessEntity xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="{{ base_id }}03">
+    <gr:BusinessEntity xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ID{{ base_id }}03">
         <foaf:name>{{ provider }}</foaf:name>
     </gr:BusinessEntity>
 
