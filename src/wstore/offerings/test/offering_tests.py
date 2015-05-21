@@ -23,7 +23,6 @@ from __future__ import unicode_literals
 import pymongo
 import os
 import base64
-import json
 import rdflib
 from mock import MagicMock
 from nose_parameterized import parameterized
@@ -37,7 +36,6 @@ from django.core.exceptions import PermissionDenied
 from django.test.utils import override_settings
 
 from wstore.offerings import offerings_management
-from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.models import UserProfile
 from wstore.models import Offering
 from wstore.models import Marketplace, MarketOffering
@@ -380,7 +378,6 @@ class OfferingCountTestCase(TestCase):
         if side_effect:
             side_effect(self)
 
-        #import ipdb; ipdb.set_trace()
         error = None
         try:
             return_value = offerings_management.count_offerings(self.user, filter_, states)
@@ -408,6 +405,21 @@ class RemoveMock():
 
     def assertCall(self, path):
         assert path in self.calls
+
+
+BASIC_USDL_INFO = {
+    'offering_info': {
+        'description': 'Test offering',
+        'abstract': 'A test offering',
+        'pricing': {
+            'price_plans': []
+        },
+        'legal': {
+            'title': 'legal title',
+            'text': 'legal text'
+        }
+    }
+}
 
 
 @override_settings(OILAUTH=True)
@@ -442,10 +454,17 @@ class OfferingUpdateTestCase(TestCase):
         super(OfferingUpdateTestCase, cls).tearDownClass()
 
     def setUp(self):
-        offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
+        offerings_management.RepositoryAdaptor = MagicMock()
+        self._adap_object = MagicMock()
+
+        offerings_management.RepositoryAdaptor.return_value = self._adap_object
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
+        offerings_management.USDLGenerator = MagicMock()
+        self._gen_mock = MagicMock()
+        self._gen_mock.generate_offering_usdl.return_value = 'USDL offering'
+        offerings_management.USDLGenerator.return_value = self._gen_mock
 
     def tearDown(self):
         try:
@@ -456,15 +475,6 @@ class OfferingUpdateTestCase(TestCase):
             pass
         reload(offerings_management)
         settings.MEDIA_ROOT = os.path.join(settings.BASEDIR, 'media')
-
-    def _serialize(self, type_):
-        graph = rdflib.Graph()
-        graph.parse(data=self._usdl, format='application/rdf+xml')
-        return graph.serialize(format=type_, auto_compact=True)
-
-    def _fit_usdl(self, data):
-        data['offering_description']['data'] = self._usdl
-        return data
 
     def _publish_offering(self, data):
         offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
@@ -479,38 +489,14 @@ class OfferingUpdateTestCase(TestCase):
         settings.MEDIA_ROOT = os.path.join(settings.BASEDIR, 'wstore/test/')
         return data
 
-    def _invalid_usdl(self, data):
-        offerings_management.validate_usdl = MagicMock()
-        offerings_management.validate_usdl.return_value = (False, 'Invalid USDL')
-        return data
-
-    def _fit_usdl_n3(self, data):
-        data['offering_description']['data'] = self._serialize('n3')
-        return data
-
-    def _fit_usdl_json(self, data):
-        data['offering_description']['data'] = self._serialize('json-ld')
+    def _open_published(self, data):
+        self._publish_offering(data)
+        offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
+        offering.open = True
+        offering.save()
         return data
 
     @parameterized.expand([
-        ({
-            'offering_description': {
-                'content_type': 'application/rdf+xml',
-                'data': ''
-            }
-        }, _fit_usdl),
-        ({
-            'offering_description': {
-                'content_type': 'text/turtle',
-                'data': ''
-            }
-        }, _fit_usdl_n3),
-        ({
-            'offering_description': {
-                'content_type': 'application/json',
-                'data': ''
-            }
-        }, _fit_usdl_json),
         ({
             'image': {
                 'name': 'test_logo.png',
@@ -521,28 +507,9 @@ class OfferingUpdateTestCase(TestCase):
                 'data': 'encoded_data'
             }]
         }, _mock_images),
-        ({
-            'offering_info': {
-                'description': 'Test offering',
-                'pricing': {
-                    'price_model': 'single_payment',
-                    'price': 5
-                },
-                'legal': {
-                    'title': 'legal title',
-                    'text': 'legal text'
-                }
-            }
-        },),
-        ({}, _publish_offering, PermissionDenied, 'The offering cannot be edited'),
-        ({
-            'offering_info': {
-                'pricing': {
-                    'price_model': 'single_payment',
-                    'price': 5
-                }
-            }
-        }, None, ValueError, 'Invalid USDL info')
+        (BASIC_USDL_INFO, ),
+        (BASIC_USDL_INFO, _open_published),
+        ({}, _publish_offering, PermissionDenied, 'The offering cannot be edited')
     ])
     def test_offering_update(self, initial_data, data_filler=None, err_type=None, err_msg=None):
 
@@ -565,34 +532,21 @@ class OfferingUpdateTestCase(TestCase):
             new_offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
             self.se_object.update_index.assert_called_with(offering)
 
-            if 'offering_description' in data or 'description_url' in data or 'offering_info' in data:
+            if 'offering_info' in data:
                 usdl = new_offering.offering_description
-
-                parser = USDLParser(json.dumps(usdl), 'application/json')
-
-                usdl_content = parser.parse()
-                self.assertEqual(len(usdl_content['services_included']), 1)
-                service = usdl_content['services_included'][0]
-
-                if 'offering_description' in data or 'description_url' in data:
-                    self.assertEqual(service['name'], 'Map viewer')
-                    self.assertEqual(service['vendor'], 'CoNWeT')
-
-                    self.assertEqual(usdl_content['pricing']['title'], 'Map viewer free use')
-                    self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
-
-                    plan = usdl_content['pricing']['price_plans'][0]
-                    self.assertEqual(plan['title'], 'Free use')
-
-                else:
-                    self.assertEqual(service['name'], 'test_offering2')
-
-                    self.assertEqual(usdl_content['pricing']['title'], 'test_offering2')
-                    self.assertEqual(usdl_content['pricing']['description'], 'Test offering')
-                    self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
-
-                    plan = usdl_content['pricing']['price_plans'][0]
-                    self.assertEqual(plan['description'], 'This price plan defines a single payment')
+                self.assertEquals(usdl['pricing'], {
+                    'price_plans': []
+                })
+                self.assertEquals(usdl['legal'], {
+                    'title': 'legal title',
+                    'text': 'legal text'
+                })
+                self.assertEquals(usdl['description'], 'Test offering')
+                self.assertEquals(usdl['abstract'], 'A test offering')
+                self.assertEquals(usdl['name'], 'test_offering2')
+                self.assertEquals(usdl['base_id'], '61000aba8e15ac2115f022f9')
+                self.assertEquals(usdl['organization'], 'test_organization')
+                self.assertEquals(usdl['image_url'], '/wstore/test/test_organization__test_offering2__1.0/image.png')
 
             if 'image' in data:
                 # Check deletion of old image
@@ -611,6 +565,11 @@ class OfferingUpdateTestCase(TestCase):
                     f = open(os.path.join(self.test_dir, img['name']), "rb")
                     content = f.read()
                     self.assertEquals(content, 'decoded data')
+
+            if offering.open and offering.state == 'published':
+                # Check repository_call
+                self._gen_mock.generate_offering_usdl.assert_called_once_with(offering)
+                self._adap_object.upload.assert_called_once_with('application/rdf+xml', 'USDL offering')
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
