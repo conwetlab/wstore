@@ -44,7 +44,6 @@ from wstore.models import RSS
 from wstore.charging_engine.models import Contract
 from wstore.charging_engine.models import Unit
 from wstore.charging_engine.price_resolver import PriceResolver
-from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.contracting.purchase_rollback import rollback
 from wstore.rss_adaptor.rss_adaptor import RSSAdaptorThread
 from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
@@ -302,11 +301,11 @@ class ChargingEngine:
             }
             if 'single_payment' in applied_parts:
                 for part in applied_parts['single_payment']:
-                    parts['single_parts'].append((part['title'], part['value'], part['currency']))
+                    parts['single_parts'].append((part['label'], part['value'], currency))
 
             if 'subscription' in applied_parts:
                 for part in applied_parts['subscription']:
-                    parts['subs_parts'].append((part['title'], part['value'], part['currency'], part['unit'], str(part['renovation_date'])))
+                    parts['subs_parts'].append((part['label'], part['value'], currency, part['unit'], str(part['renovation_date'])))
 
             # Get the bill template
             bill_template = loader.get_template('contracting/bill_template_initial.html')
@@ -318,7 +317,7 @@ class ChargingEngine:
             }
             # If renovation, It contains subscriptions
             for part in applied_parts['subscription']:
-                parts['subs_parts'].append((part['title'], part['value'], part['currency'], part['unit'], str(part['renovation_date'])))
+                parts['subs_parts'].append((part['label'], part['value'], currency, part['unit'], str(part['renovation_date'])))
                 parts['subs_subtotal'] += float(part['value'])
 
             # Check use based charges
@@ -342,7 +341,7 @@ class ChargingEngine:
                         for sdr in part['accounting']:
                             use += int(sdr['value'])
 
-                    parts['use_parts'].append((model['title'], unit, value_unit, use, part['price']))
+                    parts['use_parts'].append((model['label'], unit, value_unit, use, part['price']))
                     parts['use_subtotal'] += part['price']
 
             # Check deductions
@@ -366,7 +365,7 @@ class ChargingEngine:
                         for sdr in part['accounting']:
                             use += int(sdr['value'])
 
-                    parts['deduct_parts'].append((model['title'], unit, value_unit, use, part['price']))
+                    parts['deduct_parts'].append((model['label'], unit, value_unit, use, part['price']))
                     parts['deduct_subtotal'] += part['price']
 
             # Get the bill template
@@ -393,7 +392,7 @@ class ChargingEngine:
                     for sdr in part['accounting']:
                         use += int(sdr['value'])
 
-                parts['use_parts'].append((model['title'], unit, value_unit, use, part['price']))
+                parts['use_parts'].append((model['label'], unit, value_unit, use, part['price']))
                 parts['use_subtotal'] += part['price']
 
             # Check deductions
@@ -417,7 +416,7 @@ class ChargingEngine:
                         for sdr in part['accounting']:
                             use += int(sdr['value'])
 
-                    parts['deduct_parts'].append((model['title'], unit, value_unit, use, part['price']))
+                    parts['deduct_parts'].append((model['label'], unit, value_unit, use, part['price']))
                     parts['deduct_subtotal'] += part['price']
 
             # Get the bill template
