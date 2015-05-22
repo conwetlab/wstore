@@ -1067,16 +1067,6 @@ class AsynchronousPaymentTestCase(TestCase):
 
     def test_basic_asynchronous_payment(self):
 
-        # Load model
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_price.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
         profile = UserProfile.objects.get(user=user)
 
@@ -1093,12 +1083,6 @@ class AsynchronousPaymentTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(json_model)
-        offering.save()
 
         # First step
         charging = charging_engine.ChargingEngine(purchase, payment_method='paypal')
@@ -1117,8 +1101,8 @@ class AsynchronousPaymentTestCase(TestCase):
 
         model = contract.pending_payment['related_model']
         self.assertEqual(len(model['single_payment']), 1)
-        self.assertEqual(model['single_payment'][0]['title'], 'Price component 1')
-        self.assertEqual(model['single_payment'][0]['value'], '5.0')
+        self.assertEqual(model['single_payment'][0]['label'], 'Price component 1')
+        self.assertEqual(model['single_payment'][0]['value'], '5')
 
         # Second step
         charging = charging_engine.ChargingEngine(purchase)
