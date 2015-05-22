@@ -28,6 +28,7 @@ import os
 from datetime import datetime
 from bson.objectid import ObjectId
 from urlparse import urlparse
+from copy import deepcopy
 
 from django.conf import settings
 from django.template import loader
@@ -130,21 +131,34 @@ def get_offering_info(offering, user):
         # With the pricing model of the contract in order to included the extra info
         # needed such as renovation dates etc.
 
-        pricing_model = purchase.contract.pricing_model
+        if len(result['offering_description']['pricing']['price_plans']) > 0:
 
-        if 'subscription' in pricing_model:
-            result['offering_description']['pricing']['price_plans'][0]['price_components'] = []
-            # Cast renovation date to string in order to avoid serialization problems
+            pricing_model = purchase.contract.pricing_model
+            related_plan = None
 
-            for subs in pricing_model['subscription']:
-                subs['renovation_date'] = str(subs['renovation_date'])
-                result['offering_description']['pricing']['price_plans'][0]['price_components'].append(subs)
+            if len(result['offering_description']['pricing']['price_plans']) > 1:
+                # Search for the related plan
+                for plan in result['offering_description']['pricing']['price_plans']:
+                    if plan['label'].lower() == pricing_model['label']:
+                        related_plan = deepcopy(plan)
+            else:
+                related_plan = deepcopy(result['offering_description']['pricing']['price_plans'][0])
+
+            related_plan['price_components'] = []
+
+            if 'subscription' in pricing_model:
+
+                for subs in pricing_model['subscription']:
+                    subs['renovation_date'] = str(subs['renovation_date'])
+                    related_plan['price_components'].append(subs)
 
             if 'single_payment' in pricing_model:
-                result['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['single_payment'])
+                related_plan['price_components'].extend(pricing_model['single_payment'])
 
             if 'pay_per_use' in pricing_model:
-                result['offering_description']['pricing']['price_plans'][0]['price_components'].extend(pricing_model['pay_per_use'])
+                related_plan['price_components'].extend(pricing_model['pay_per_use'])
+
+            result['offering_description']['pricing']['price_plans'] = [related_plan]
 
     return result
 

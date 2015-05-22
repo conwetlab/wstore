@@ -573,6 +573,7 @@ class ChargingEngine:
         parsed_usdl = parser.parse()
 
         usdl_pricing = {}
+        price_model = {}
         # Search and validate the corresponding price plan
         if len(parsed_usdl['pricing']['price_plans']) > 0:
             if len(parsed_usdl['pricing']['price_plans']) == 1:
@@ -588,13 +589,12 @@ class ChargingEngine:
                     if plan['label'].lower() == self._plan.lower():
                         usdl_pricing = plan
                         found = True
+                        price_model['label'] = plan['label'].lower()
                         break
 
                 # Validate the specified plan
                 if not found:
                     raise Exception('The specified plan does not exist')
-
-        price_model = {}
 
         currency_loaded = False
         if 'price_components' in usdl_pricing:
