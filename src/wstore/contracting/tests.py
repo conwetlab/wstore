@@ -905,14 +905,12 @@ class UpdatingPurchasesTestCase(TestCase):
         }
         views.create_purchase.assert_called_once_with(self._user, offering, org_owned=False, payment_info=payment_info)
 
-        # Test Contract creation
-        # Load usdl info
-        f = open('wstore/test/test_usdl1.ttl', 'rb')
-        g = rdflib.Graph()
-        g.parse(data=f.read(), format='n3')
-        f.close()
+        offering.offering_description = {
+            'pricing': {
+                'price_plans': []
+            }
+        }
 
-        offering.offering_description = json.loads(g.serialize(format='json-ld', auto_compact=True))
         offering.save()
 
         from wstore.charging_engine.charging_engine import ChargingEngine
@@ -923,11 +921,9 @@ class UpdatingPurchasesTestCase(TestCase):
         purchase = Purchase.objects.get(pk=purchase.pk)
         contract = purchase.contract
 
-        # Check contract pricing model
         self.assertFalse('single_payment' in contract.pricing_model)
         self.assertFalse('subscription' in contract.pricing_model)
         self.assertFalse('pay_per_use' in contract.pricing_model)
-        
 
     def test_purchase_offering_update_payment(self):
 
@@ -964,7 +960,7 @@ class UpdatingPurchasesTestCase(TestCase):
             content_type='application/json; charset=utf-8'
         )
         request.user = self._user
-        
+
         # Test purchase view
         views.create_purchase = MagicMock(name='create_purchase')
         offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")
@@ -1015,13 +1011,19 @@ class UpdatingPurchasesTestCase(TestCase):
         views.create_purchase.assert_called_once_with(self._user, offering, org_owned=True, payment_info=payment_info)
 
         # Test Contract creation
-        # Load usdl info
-        f = open('wstore/test/test_usdl2.ttl', 'rb')
-        g = rdflib.Graph()
-        g.parse(data=f.read(), format='n3')
-        f.close()
-
-        offering.offering_description = json.loads(g.serialize(format='json-ld', auto_compact=True))
+        offering.offering_description = {
+            'pricing': {
+                'price_plans': [{
+                    'title': 'Price plan',
+                    'currency': 'EUR',
+                    'price_components': [{
+                        'label': 'Price component update',
+                        'unit': 'single payment',
+                        'value': '1.0'
+                    }]
+                }]
+            }
+        }
         offering.save()
 
         from wstore.charging_engine.charging_engine import ChargingEngine
@@ -1036,7 +1038,7 @@ class UpdatingPurchasesTestCase(TestCase):
         self.assertTrue('single_payment' in contract.pricing_model)
         self.assertEquals(len(contract.pricing_model['single_payment']), 1)
         payment = contract.pricing_model['single_payment'][0]
-        self.assertEquals(payment['title'], 'Price component update')
+        self.assertEquals(payment['label'], 'Price component update')
         self.assertEquals(payment['value'], '1.0')
 
         self.assertFalse('subscription' in contract.pricing_model)
@@ -1082,14 +1084,22 @@ class UpdatingPurchasesTestCase(TestCase):
         self.assertEquals(response.status_code, 403)
 
         # Test Create contract exceptions
-        # Load usdl info
-        f = open('wstore/test/test_usdl2.ttl', 'rb')
-        g = rdflib.Graph()
-        g.parse(data=f.read(), format='n3')
-        f.close()
 
         offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")
-        offering.offering_description = json.loads(g.serialize(format='json-ld', auto_compact=True))
+        offering.offering_description = {
+            'pricing': {
+                'price_plans': [{
+                    'title': 'Plan 1',
+                    'label': 'update',
+                    'price_components': []
+                }, {
+                    'title': 'Plan 1',
+                    'label': 'regular',
+                    'price_components': []
+                }]
+            }
+        }
+
         offering.save()
 
         from datetime import datetime
