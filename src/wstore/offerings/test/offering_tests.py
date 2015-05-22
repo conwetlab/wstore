@@ -666,12 +666,6 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
     tags = ('fiware-ut-2',)
     fixtures = ['get_purch.json']
 
-    @classmethod
-    def setUpClass(cls):
-        # Create database connection and load initial data
-        offerings_management.USDLParser = FakeUsdlParser
-        super(PurchasedOfferingRetrievingTestCase, cls).setUpClass()
-
     @parameterized.expand([
         ('customer_purchased', 'purchased', [],
          [('11000aba8e05ac2115f022f9', 'purchased'), ('21000aba8e05ac2115f022ff', 'purchased')]),
@@ -717,6 +711,7 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
                     validated = validated + 1
 
         self.assertEquals(validated, len(expected_offerings))
+
 
 class OfferingPaginationTestCase(TestCase):
 
