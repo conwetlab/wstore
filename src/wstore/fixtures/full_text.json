@@ -67,7 +67,23 @@
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-01 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "publication_date": "2013-02-05 17:06:46",
+            "offering_description": {
+                "pricing": {
+                    "price_plans": [{
+                        "currency": "EUR",
+                        "price_components": [{
+                            "label": "price component 1",
+                            "unit": "per month",
+                            "value": "5"
+                        }, {
+                            "label": "price component 2",
+                            "unit": "per week",
+                            "value": "5"
+                        }]
+                    }]
+                }
+            }
         }
     },
     {
@@ -89,7 +105,23 @@
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-02 17:06:46",
-            "publication_date": "2013-02-06 17:06:46"
+            "publication_date": "2013-02-06 17:06:46",
+            "offering_description": {
+                "pricing": {
+                    "price_plans": [{
+                        "currency": "EUR",
+                        "price_components": [{
+                            "label": "price component 1",
+                            "unit": "per month",
+                            "value": "5"
+                        }, {
+                            "label": "price component 2",
+                            "unit": "per week",
+                            "value": "5"
+                        }]
+                    }]
+                }
+            }
         }
     },
     {
@@ -233,7 +265,7 @@
             "date": "2013-02-05 17:06:46",
             "offering": "61000aba8e05ac2115111111",
             "state": "paid",
-            "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
+            "bill": ["/media/bills/61005aba8e05ac2115f022f0.pdf"],
             "tax_address": {
                 "street": "test street",
                 "postal": "20000",
@@ -282,7 +314,7 @@
             "date": "2013-02-05 17:06:46",
             "offering": "61000aba8e05ac2115122222",
             "state": "paid",
-            "bill": "/media/bills/61005aba8e05ac2115f022f0.pdf",
+            "bill": ["/media/bills/61005aba8e05ac2115f022f0.pdf"],
             "tax_address": {
                 "street": "test street",
                 "postal": "20000",
