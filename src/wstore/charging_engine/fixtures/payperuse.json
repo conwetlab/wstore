@@ -308,10 +308,9 @@
         "fields": {
             "pricing_model": {
                 "pay_per_use": [{
-                    "title": "pay per use",
+                    "label": "pay per use",
                     "value": "1",
-                    "unit": "invocation",
-                    "currency": "EUR"
+                    "unit": "invocation"
                 }],
                 "general_currency": "EUR"
             },

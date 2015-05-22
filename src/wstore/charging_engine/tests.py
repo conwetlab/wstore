@@ -1652,6 +1652,7 @@ class PriceFunctionPaymentTestCase(TestCase):
     def tearDownClass(cls):
         settings.OILAUTH = cls._auth
         super(PriceFunctionPaymentTestCase, cls).tearDownClass()
+
     def test_basic_price_function_payment(self):
 
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
