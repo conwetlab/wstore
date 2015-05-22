@@ -485,19 +485,6 @@ class RecommendationProcessTestCase(TestCase):
 
         # Create recommendation offering
         main_offering = Offering.objects.get(pk="51100aba8e05ac2115f022f0")
-        # Include USDL
-        from os import path
-        from django.conf import settings
-        usdl_path = path.join(settings.BASEDIR, 'wstore')
-        usdl_path = path.join(usdl_path, 'test')
-        usdl_path = path.join(usdl_path, 'test_usdl.rdf')
-        f = open(usdl_path, 'rb')
-
-        import rdflib
-        graph = rdflib.Graph()
-        graph.parse(data=f.read())
-        main_offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
-        main_offering.save()
 
         # Launch recommendation process
         recom_manager = recommendation_manager.RecommendationManager(main_offering, set(['fiware', 'youtube']))
@@ -505,7 +492,7 @@ class RecommendationProcessTestCase(TestCase):
         recommendations = recom_manager.get_recommended_tags()
 
         # Check recommendation list
-        self.assertEquals(len(recommendations), 12)
+        self.assertEquals(len(recommendations), 9)
 
         expected_result = {
             'cloud': Decimal('0.5'),
@@ -514,12 +501,9 @@ class RecommendationProcessTestCase(TestCase):
             'multimedia': Decimal('0.5'),
             'flickr': Decimal('0.5'),
             'wikipedia': Decimal('0.5'),
-            'widget': Decimal('0.6'),
-            'wirecloud': Decimal('0.6'),
-            'map': Decimal('0.6'),
-            'service': Decimal('0.2'),
-            'pubsub': Decimal('0.2'),
-            'broker': Decimal('0.2')
+            'widget': Decimal('1'),
+            'wirecloud': Decimal('1'),
+            'map': Decimal('1')
         }
 
         for res in recommendations:
