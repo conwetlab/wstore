@@ -1404,6 +1404,7 @@ class AdaptorWrapperThread():
     def start(self):
         self._context._cdrs = self._cdr
 
+
 @override_settings(STORE_NAME='wstore')
 class CDRGeranationTestCase(TestCase):
 
@@ -1454,7 +1455,7 @@ class CDRGeranationTestCase(TestCase):
 
         cdr = self._cdrs[0]
         self.assertEqual(cdr['provider'], 'wstore')
-        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Single payment event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
@@ -1504,7 +1505,7 @@ class CDRGeranationTestCase(TestCase):
 
         cdr = self._cdrs[0]
         self.assertEqual(cdr['provider'], 'wstore')
-        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Single payment event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
@@ -1518,7 +1519,7 @@ class CDRGeranationTestCase(TestCase):
 
         cdr = self._cdrs[1]
         self.assertEqual(cdr['provider'], 'wstore')
-        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Subscription event')
         self.assertEqual(cdr['correlation'], '1')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
@@ -1572,33 +1573,33 @@ class CDRGeranationTestCase(TestCase):
         applied_parts = {
             'charges': [{
                 'accounting': [{
-                'offering': {
-                    'name': 'test_offering',
-                    'organization': 'test_organization',
-                    'version': '1.0'
+                    'offering': {
+                        'name': 'test_offering',
+                        'organization': 'test_organization',
+                        'version': '1.0'
+                    },
+                    'customer': 'test_user',
+                    'value': '15',
+                    'unit': 'invocation'
+                }, {
+                    'offering': {
+                        'name': 'test_offering',
+                        'organization': 'test_organization',
+                        'version': '1.0'
+                    },
+                    'customer': 'test_user',
+                    'value': '10',
+                    'unit': 'invocation'
+                }],
+                'model': {
+                    'title': 'example part',
+                    'unit': 'invocation',
+                    'currency': 'EUR',
+                    'value': '1'
                 },
-                'customer': 'test_user',
-                'value': '15',
-                'unit': 'invocation'
-            },
-            {
-                'offering': {
-                    'name': 'test_offering',
-                    'organization': 'test_organization',
-                    'version': '1.0'
-                },
-                'customer': 'test_user',
-                'value': '10',
-                'unit': 'invocation'
-            }],
-            'model': {
-                'title': 'example part',
-                'unit': 'invocation',
-                'currency': 'EUR',
-                'value': '1'
-            },
-            'price': 25.0
-        }]}
+                'price': 25.0
+            }]
+        }
 
         # Load usdl
         model = os.path.join(settings.BASEDIR, 'wstore')
@@ -1621,7 +1622,7 @@ class CDRGeranationTestCase(TestCase):
 
         cdr = self._cdrs[0]
         self.assertEqual(cdr['provider'], 'wstore')
-        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Pay per use event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
