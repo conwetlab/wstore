@@ -551,6 +551,7 @@ class ChargingEngine:
         parsed_usdl = offering.offering_description
 
         usdl_pricing = {}
+        price_model = {}
         # Search and validate the corresponding price plan
         if len(parsed_usdl['pricing']['price_plans']) > 0:
             if len(parsed_usdl['pricing']['price_plans']) == 1:
@@ -566,13 +567,13 @@ class ChargingEngine:
                     if plan['label'].lower() == self._plan.lower():
                         usdl_pricing = plan
                         found = True
+                        price_model['label'] = plan['label'].lower()
                         break
 
                 # Validate the specified plan
                 if not found:
                     raise Exception('The specified plan does not exist')
 
-        price_model = {}
         # Save the general currency of the offering
         if 'price_components' in usdl_pricing or 'deductions' in usdl_pricing:
             price_model['general_currency'] = usdl_pricing['currency']
