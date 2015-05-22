@@ -104,12 +104,13 @@ class PurchasesCreationTestCase(TestCase):
         purchases_management.SearchEngine.return_value = se_obj
         usdl_info = {
             'name': 'test_offering',
-            'base_uri': 'http://localhost',
+            'base_id': 'pk',
             'image_url': '/media/test_image.png',
             'pricing': {
-                'price_model': 'free'
+                'price_plans': []
             },
-            'description': 'test offering'
+            'description': 'test offering',
+            'abstract': 'test offering'
         }
         self._load_usdl(usdl_info)
 
@@ -131,23 +132,20 @@ class PurchasesCreationTestCase(TestCase):
 
     def _load_usdl(self, usdl_info):
         # Load offering description to test offering
-        from wstore.offerings.offerings_management import _create_basic_usdl
         offering = Offering.objects.get(name='test_offering')
-        usdl = _create_basic_usdl(usdl_info)
-        graph = rdflib.Graph()
-        graph.parse(data=usdl, format='application/rdf+xml')
-        offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
+        offering.offering_description = usdl_info
         offering.save()
 
     def _set_legal(self):
         usdl_info = {
             'name': 'test_offering',
-            'base_uri': 'http://localhost',
+            'base_id': 'pk',
             'image_url': '/media/test_image.png',
             'pricing': {
-                'price_model': 'free'
+                'price_plans': []
             },
             'description': 'test offering',
+            'abstract': 'test offering',
             'legal': {
                 'title': 'terms and conditions',
                 'text': 'this are the applied terms and conditions'
@@ -208,7 +206,7 @@ class PurchasesCreationTestCase(TestCase):
             }
         }, ValueError, 'The customer does not have a tax address'),
         ('invalid_tax_address', None, False, {
-           'payment_method': 'credit_card',
+            'payment_method': 'credit_card',
             'credit_card': {
                 'number': '1234123412341234',
                 'type': 'Visa',
@@ -476,7 +474,7 @@ class PurchasesCreationTestCase(TestCase):
         self.assertEqual(len(user_profile.offerings_purchased), 1)
         self.assertEqual(user_profile.offerings_purchased[0], offering.pk)
 
-    test_purchase_creation_paypal.tags = ('fiware-ut-17',)
+    test_purchase_creation_paypal.tags = ('fiware-ut-17', 'fiware-ut-16')
 
     def test_purchase_creation_organization_payment(self):
         user = User.objects.get(username='test_user')
@@ -857,7 +855,7 @@ class UpdatingPurchasesTestCase(TestCase):
             content_type='application/json; charset=utf-8'
         )
         request.user = self._user
-        
+
         # Test purchase view
         views.create_purchase = MagicMock(name='create_purchase')
         offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")

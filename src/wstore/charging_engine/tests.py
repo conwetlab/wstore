@@ -660,7 +660,7 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertEqual(loaded_sdr['unit'], 'invocation')
 
     test_sdr_feeding_some_applied.tags = ('fiware-ut-14',)
-    
+
     def test_sdr_feeding_some_pending(self):
 
         sdr = {
@@ -918,16 +918,6 @@ class PayPerUseChargingTestCase(TestCase):
 
     def test_new_purchase_use(self):
 
-        # Load model
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_use.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
         profile = UserProfile.objects.get(user=user)
 
@@ -944,12 +934,6 @@ class PayPerUseChargingTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
-
-        offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(json_model)
-        offering.save()
 
         charging = charging_engine.ChargingEngine(purchase)
 
@@ -974,10 +958,10 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertTrue('pay_per_use' in price_model)
 
         self.assertEqual(len(price_model['pay_per_use']), 1)
-        self.assertEqual(price_model['pay_per_use'][0]['title'], 'Pay per use')
+        self.assertEqual(price_model['pay_per_use'][0]['label'], 'Pay per use')
         self.assertEqual(price_model['pay_per_use'][0]['value'], '5.0')
         self.assertEqual(price_model['pay_per_use'][0]['unit'], 'invocation')
-        self.assertEqual(price_model['pay_per_use'][0]['currency'], 'EUR')
+        self.assertEqual(price_model['general_currency'], 'EUR')
 
     test_new_purchase_use.tags = ('fiware-ut-16',)
 
