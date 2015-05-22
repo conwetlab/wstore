@@ -265,16 +265,6 @@ class SubscriptionChargingTestCase(TestCase):
 
     def test_basic_subscription_charging(self):
 
-        # Load model
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_subs.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
         profile = UserProfile.objects.get(user=user)
 
@@ -290,13 +280,6 @@ class SubscriptionChargingTestCase(TestCase):
         profile.organization = org
         profile.save()
 
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(json_model)
-        offering.save()
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
 
         credit_card = {
@@ -329,12 +312,12 @@ class SubscriptionChargingTestCase(TestCase):
         self.assertFalse('pay_per_use' in pricing_model)
 
         for sub in pricing_model['subscription']:
-            if sub['title'] == 'Price component 1':
+            if sub['label'] == 'Price component 1':
                 self.assertEqual(sub['value'], '5.0')
                 self.assertEqual(sub['unit'], 'per month')
                 self.assertEqual(str(sub['renovation_date']), '2013-04-01 00:00:00')
             else:
-                self.assertEqual(sub['title'], 'Price component 2')
+                self.assertEqual(sub['label'], 'Price component 2')
                 self.assertEqual(sub['value'], '5.0')
                 self.assertEqual(sub['unit'], 'per week')
                 self.assertEqual(str(sub['renovation_date']), '2013-03-20 00:00:00')
@@ -403,12 +386,12 @@ class SubscriptionChargingTestCase(TestCase):
         self.assertFalse('pay_per_use' in pricing_model)
 
         for sub in pricing_model['subscription']:
-            if sub['title'] == 'price component 1':
+            if sub['label'] == 'price component 1':
                 self.assertEqual(sub['value'], '5')
                 self.assertEqual(sub['unit'], 'per month')
                 self.assertEqual(str(sub['renovation_date']), '2013-04-01 00:00:00')
             else:
-                self.assertEqual(sub['title'], 'price component 2')
+                self.assertEqual(sub['label'], 'price component 2')
                 self.assertEqual(sub['value'], '5')
                 self.assertEqual(sub['unit'], 'per week')
                 self.assertEqual(str(sub['renovation_date']), '2013-03-20 00:00:00')
@@ -477,7 +460,7 @@ class SubscriptionChargingTestCase(TestCase):
         self.assertFalse('pay_per_use' in pricing_model)
 
         for s in pricing_model['subscription']:
-            if s['title'] == 'price component 1':
+            if s['label'] == 'price component 1':
                 self.assertEqual(s['value'], '5')
                 self.assertEqual(s['unit'], 'per month')
                 self.assertEqual(str(s['renovation_date']), '2013-04-01 00:00:00')
