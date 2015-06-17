@@ -37,7 +37,7 @@ publish_offering, bind_resources, count_offerings, update_offering
 from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource,\
 update_resource, upgrade_resource
 from wstore.social.reviews.review_manager import ReviewManager
-from wstore.store_commons.errors import ConflictError
+from wstore.store_commons.errors import ConflictError, RepositoryError
 from wstore.social_auth_backend import get_applications
 
 
@@ -79,8 +79,8 @@ class OfferingCollection(Resource):
             try:
                 json_data = json.loads(unicode(request.raw_post_data, 'utf-8'))
                 create_offering(user, json_data)
-            except HTTPError:
-                return build_response(request, 502, 'Bad Gateway')
+            except RepositoryError as e:
+                return build_response(request, 502, unicode(e))
             except ConflictError as e:
                 return build_response(request, 409, unicode(e))
             except Exception, e:

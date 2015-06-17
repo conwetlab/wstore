@@ -23,12 +23,11 @@ from urllib2 import HTTPError
 from urlparse import urljoin
 
 from django.conf import settings
-from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
+from wstore.repository_adaptor.repositoryAdaptor import unreg_repository_adaptor_factory, repository_adaptor_factory
 from wstore.models import Offering, Repository, Resource
 
 
 def rollback(provider, profile, json_data, msg):
-
     # Check the created exceptions in order to determine if is
     # necessary to remove something
     if msg == 'Missing required fields' or msg == 'Invalid version format' \
@@ -72,7 +71,7 @@ def rollback(provider, profile, json_data, msg):
         # Check if the usdl was uploaded before the exception
         if 'offerings_description' in json_data:
             repository = Repository.objects.get(name=json_data['repository'])
-            repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
+            repository_adaptor = repository_adaptor_factory(repository)
             offering_id = profile.current_organization.name + '__' + json_data['name'] + '__' + json_data['version']
 
             uploaded = True
@@ -83,11 +82,11 @@ def rollback(provider, profile, json_data, msg):
 
             if uploaded:
                 remove = True
-                url = urljoin(repository.host, 'storeOfferingCollection')
+                url = urljoin(repository.host, repository.store_collection)
                 url = urljoin(url, offering_id)
 
     if remove:
-        repository_adaptor = RepositoryAdaptor(url)
+        repository_adaptor = unreg_repository_adaptor_factory(url)
         repository_adaptor.delete()
 
 

@@ -35,6 +35,7 @@ from wstore.store_commons.utils import http
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
     decorator_mock_callable, HTTPResponseMock
 from wstore.models import MarketCredentials
+from wstore.store_commons.errors import ConflictError
 
 
 __test__ = False
@@ -98,7 +99,7 @@ class RegisteringOnMarketplaceTestCase(TestCase):
         (BASIC_MARKET_DATA,),
         (BASIC_MARKET_DATA1,),
         (BASIC_MARKET_DATA1, _internal_market_error, Exception, 'HTTP Error 500: Internal server error'),
-        (BASIC_MARKET_DATA, _existing, PermissionDenied, 'Marketplace already registered'),
+        (BASIC_MARKET_DATA, _existing, ConflictError, 'Marketplace already registered'),
         (BASIC_MARKET_DATA, _creation_error, Exception, 'Creation error')
     ])
     def test_basic_registering_on_market(self, data, side_effect=None, err_type=None, err_msg=None):
@@ -309,7 +310,7 @@ class MarketplaceViewTestCase(TestCase):
         views.register_on_market.side_effect = Exception('Bad request')
 
     def _existing(self):
-        views.register_on_market.side_effect = PermissionDenied('Existing Marketplace')
+        views.register_on_market.side_effect = ConflictError('Existing Marketplace')
 
     @parameterized.expand([
         (BASIC_MARKET_DATA1, (201, 'Created', 'correct'), False),
@@ -341,7 +342,7 @@ class MarketplaceViewTestCase(TestCase):
             'host': 'http://testmarket.com',
             'api_version': '3'
         }, (400, 'Invalid API version', 'error'), True),
-        (BASIC_MARKET_DATA, (403, 'Existing Marketplace', 'error'), True, _existing),
+        (BASIC_MARKET_DATA, (409, 'Existing Marketplace', 'error'), True, _existing),
         ({
             'name': 'test_market',
             'host': 'http://testmarket.com',

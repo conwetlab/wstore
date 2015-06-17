@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -18,23 +18,29 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+from __future__ import unicode_literals
+
+from django.core.exceptions import ObjectDoesNotExist
+
 from wstore.models import Repository
+from wstore.store_commons.errors import ConflictError
 
 
-def register_repository(name, host):
+def register_repository(name, host, collection, api_version):
+
+    if host[-1] != '/':
+        host += '/'
 
     # Check if the repository name is in use
-    existing = True
+    if len(Repository.objects.filter(name=name) | Repository.objects.filter(host=host)) > 0:
+        raise ConflictError('The given repository is already registered')
 
-    try:
-        Repository.objects.get(name=name)
-    except:
-        existing = False
-
-    if existing:
-        raise Exception('The repository already exists')
-
-    Repository.objects.create(name=name, host=host)
+    Repository.objects.create(
+        name=name,
+        host=host,
+        store_collection=collection,
+        api_version=api_version
+    )
 
 
 def unregister_repository(repository):
@@ -42,7 +48,7 @@ def unregister_repository(repository):
     try:
         rep = Repository.objects.get(name=repository)
     except:
-        raise Exception('Not found')
+        raise ObjectDoesNotExist('The given repository does not exist')
 
     rep.delete()
 
@@ -55,7 +61,9 @@ def get_repositories():
     for rep in repositories:
         response.append({
             'name': rep.name,
-            'host': rep.host
+            'host': rep.host,
+            'store_collection': rep.store_collection,
+            'api_version': rep.api_version
         })
 
     return response

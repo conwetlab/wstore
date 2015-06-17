@@ -4,7 +4,9 @@
         "model": "wstore.Repository",
         "fields": {
             "name": "test_repository",
-            "host": "http://localhost:8989"
+            "host": "http://localhost:8989",
+            "store_collection": "storeOfferingCollection",
+            "api_version": 1
         }
     }
 ]

@@ -92,7 +92,7 @@
     };
 
 
-    RepositoryForm.prototype = new AdminForm('REPOSITORY_ENTRY', 'REPOSITORY_COLLECTION', $('#form_template'), {'title': 'Repository'});
+    RepositoryForm.prototype = new AdminForm('REPOSITORY_ENTRY', 'REPOSITORY_COLLECTION', $('#repository_form_template'), {'title': 'Repository'});
     RepositoryForm.prototype.constructor = RepositoryForm;
 
     RepositoryForm.prototype.fillListInfo = function fillListInfo(elements) {
@@ -105,7 +105,36 @@
     };
 
     RepositoryForm.prototype.validateFields = function validateFields() {
-        return basicValidation();
+        var validation = basicValidation();
+        var storeCollection = $.trim($('#store-collection').val());
+        var reg = new RegExp(/^[\w-]+$/);
+        var msg = validation.msg == undefined ? '' : validation.msg;
+        var errFields = validation.errFields == undefined ? [] : validation.errFields;
+        
+        if (!storeCollection.length) {
+            validation.valid = false;
+            msg += 'Missing required field Store Collection <br/>';
+            errFields.push($('#store-collection').parent().parent());
+        }
+
+        if (validation.valid && !reg.test(storeCollection)) {
+            // Check collection format
+            validation.valid = false;
+            msg += 'Invalid collection format <br/>';
+            errFields.push($('#store-collection').parent().parent())
+
+        }
+
+        // Include api_version in the request
+        if (validation.valid) {
+            validation.data.store_collection = storeCollection;
+            validation.data.api_version = $('#api-version').val();
+        } else {
+            validation.msg = msg;
+            validation.errFields = errFields;
+        }
+
+        return validation;
     }
 
 

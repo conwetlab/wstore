@@ -25,6 +25,7 @@ from mock import MagicMock
 from nose_parameterized import parameterized
 
 from django.test import TestCase
+from django.core.exceptions import ObjectDoesNotExist
 
 from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, get_repositories
 from wstore.models import Repository
@@ -32,6 +33,7 @@ from wstore.admin.repositories import views
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
 decorator_mock_callable, HTTPResponseMock
 from wstore.store_commons.utils import http
+from wstore.store_commons.errors import ConflictError
 
 
 __test__ = False
@@ -42,32 +44,46 @@ class RegisteringRepositoriesTestCase(TestCase):
     tags = ('fiware-ut-10',)
     fixtures = ['reg_rep.json']
 
-    def test_basic_registering_rep(self):
+    @parameterized.expand([
+        ({
+            'name': 'test_repository',
+            'host': 'http://testrepository1.com/',
+            'collection': 'storeOfferingCollection',
+            'api_version': 1
+        },),
+        ({
+            'name': 'test_repository',
+            'host': 'http://testrepository1.com',
+            'collection': 'storeOfferingCollection',
+            'api_version': 2
+        },),
+        ({
+            'name': 'test_repository1',
+            'host': 'http://testrepository.com',
+            'collection': 'storeOfferingCollection',
+            'api_version': 2
+        }, ConflictError, 'The given repository is already registered')
+    ])
+    def test_resource_registering(self, data, err_type=None, err_msg=None):
 
-        name = 'test_repository'
-        host = 'http://testrepository.com/'
-        register_repository(name, host)
-
-        rep = Repository.objects.get(name=name, host=host)
-        self.assertEqual(name, rep.name)
-        self.assertEqual(host, rep.host)
-
-    def test_register_existing_repository(self):
-
-        name = 'test_repository1'
-        host = 'http://testrepository.com/'
-
-        error = False
-        msg = None
-
+        error = None
         try:
-            register_repository(name, host)
-        except Exception, e:
-            error = True
-            msg = e.message
+            register_repository(data['name'], data['host'], data['collection'], data['api_version'])
+        except Exception as e:
+            error = e
 
-        self.assertTrue(error)
-        self.assertEqual(msg, 'The repository already exists')
+        if err_type is None:
+            rep = Repository.objects.get(name=data['name'])
+
+            if not data['host'].endswith('/'):
+                data['host'] += '/'
+
+            self.assertEqual(data['host'], rep.host)
+            self.assertEquals(data['collection'], rep.store_collection)
+            self.assertEqual(data['api_version'], rep.api_version)
+        else:
+            self.assertTrue(isinstance(error, err_type))
+            self.assertEquals(unicode(e), err_msg)
 
 
 class UnregisteringRepositoriesTestCase(TestCase):
@@ -99,7 +115,7 @@ class UnregisteringRepositoriesTestCase(TestCase):
             msg = e.message
 
         self.assertTrue(error)
-        self.assertEqual(msg, 'Not found')
+        self.assertEqual(msg, 'The given repository does not exist')
 
 
 class RepositoriesRetrievingTestCase(TestCase):
@@ -154,28 +170,70 @@ class RepositoryViewTestCase(TestCase):
     @parameterized.expand([
     ({
         'name': 'test_repo',
-        'host': 'http://testrepo.com'
+        'host': 'http://testrepo.com',
+        'store_collection': 'storeOfferingCollection',
+        'api_version': '1'
     }, (201, 'Created', 'correct'), False),
     ({
         'name': 'test_repo',
         'host': 'http://testrepo.com'
-    }, (403, 'Forbidden', 'error'), True, _forbidden),
+    }, (403, 'You are not authorized to register a repository', 'error'), True, _forbidden),
     ({
-        'invalid': 'test_repo',
-        'host': 'http://testrepo.com'
-    }, (400, 'Request body is not valid JSON data', 'error'), True),
+        'host': 'http://testrepo.com',
+        'store_collection': 'storeOfferingCollection',
+        'api_version': '1'
+    }, (400, 'Missing required field: name', 'error'), True),
     ({
         'name': 'test_repo',
-        'host': 'http://testrepo.com'
-    }, (400, 'Bad request', 'error'), True, _bad_request),
+        'store_collection': 'storeOfferingCollection',
+        'api_version': '1'
+    }, (400, 'Missing required field: host', 'error'), True),
+    ({
+        'name': 'test_repo',
+        'host': 'http://testrepo.com',
+        'api_version': '1'
+    }, (400, 'Missing required field: store_collection', 'error'), True),
+    ({
+        'name': 'test_repo',
+        'host': 'http://testrepo.com',
+        'store_collection': 'storeOfferingCollection',
+    }, (400, 'Missing required field: api_version', 'error'), True),
+    ({
+        'name': 'test_repo',
+        'host': 'http://testrepo.com',
+        'store_collection': 'storeOfferingCollection',
+        'api_version': '1'
+    }, (500, 'Bad request', 'error'), True, _bad_request),
     ({
         'name': 'test_repo$',
-        'host': 'http://testrepo.com'
+        'host': 'http://testrepo.com',
+        'store_collection': 'storeOfferingCollection',
+        'api_version': '1'
     }, (400, 'Invalid name format', 'error'), True),
     ({
         'name': 'test_repo',
-        'host': 'invalid_url'
-    }, (400, 'Invalid URL format', 'error'), True)
+        'host': 'invalid_url',
+        'store_collection': 'storeOfferingCollection',
+        'api_version': '1'
+    }, (400, 'Invalid URL format', 'error'), True),
+    ({
+        'name': 'test_repo',
+        'host': 'http://testrepo.com',
+        'store_collection': 'storeOfferingCollection',
+        'api_version': '1as'
+    }, (400, 'Invalid api_version format: must be an integer', 'error'), True),
+    ({
+        'name': 'test_repo',
+        'host': 'http://testrepo.com',
+        'store_collection': 'storeOfferingCollection',
+        'api_version': '3'
+    }, (400, 'Invalid api_version: Only versions 1 and 2 are supported', 'error'), True),
+    ({
+        'name': 'test_repo',
+        'host': 'http://testrepo.com',
+        'store_collection': 'storeOffering Collection',
+        'api_version': '1'
+    }, (400, 'Invalid store_collection format: Invalid character found', 'error'), True)
     ])
     def test_repository_api_create(self, data, exp_resp, error, side_effect=None):
         # Create request data
@@ -197,7 +255,7 @@ class RepositoryViewTestCase(TestCase):
 
         # Check calls
         if not error:
-            views.register_repository.assert_called_with(data['name'], data['host'])
+            views.register_repository.assert_called_with(data['name'], data['host'], data['store_collection'], int(data['api_version']))
 
     @parameterized.expand([
         (False,),
@@ -265,7 +323,7 @@ class RepositoryEntryTestCase(TestCase):
         self.request.user.is_staff = False
 
     def _not_found(self):
-        views.unregister_repository.side_effect = Exception('Not found')
+        views.unregister_repository.side_effect = ObjectDoesNotExist('Not found')
 
     def _call_error(self):
         views.unregister_repository.side_effect = Exception('Exception')
@@ -274,7 +332,7 @@ class RepositoryEntryTestCase(TestCase):
         ((204, 'No content', 'correct'),),
         ((403, 'Forbidden', 'error'), _forbidden),
         ((404, 'Not found', 'error'), _not_found),
-        ((400, 'Exception', 'error'), _call_error)
+        ((500, 'Exception', 'error'), _call_error)
     ])
     def test_repository_api_delete(self, expected_result, side_effect=None):
 

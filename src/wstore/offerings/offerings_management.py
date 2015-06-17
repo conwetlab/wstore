@@ -27,7 +27,6 @@ import base64
 import os
 from datetime import datetime
 from bson.objectid import ObjectId
-from urlparse import urlparse
 from copy import deepcopy
 
 from django.conf import settings
@@ -35,7 +34,7 @@ from django.template import loader
 from django.template import Context as TmplContext
 from django.core.exceptions import PermissionDenied
 
-from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
+from wstore.repository_adaptor.repositoryAdaptor import repository_adaptor_factory, unreg_repository_adaptor_factory
 from wstore.market_adaptor.marketadaptor import marketadaptor_factory
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
@@ -504,10 +503,11 @@ def create_offering(provider, json_data):
         usdl_info = json_data['offering_description']
 
         repository = Repository.objects.get(name=json_data['repository'])
-        repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
+        repository_adaptor = repository_adaptor_factory(repository)
         offering_id = organization.name + '__' + data['name'] + '__' + data['version']
 
         usdl = usdl_info['data']
+        repository_adaptor.set_credentials(profile.access_token)
         data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl_info['data'], name=offering_id)
 
     # If the USDL is going to be created
@@ -528,8 +528,9 @@ def create_offering(provider, json_data):
             'content_type': 'application/rdf+xml'
         }
 
-        repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
+        repository_adaptor = repository_adaptor_factory(repository)
         offering_id = organization.name + '__' + data['name'] + '__' + data['version']
+        repository_adaptor.set_credentials(profile.access_token)
         data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl, name=offering_id)
     else:
         raise Exception('No USDL description provided')
@@ -655,9 +656,10 @@ def update_offering(offering, data):
     if 'offering_description' in data:
         usdl_info = data['offering_description']
 
-        repository_adaptor = RepositoryAdaptor(offering.description_url)
+        repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
 
         usdl = usdl_info['data']
+        repository_adaptor.set_credentials(offering.owner_admin_user.userprofile.access_token)
         repository_adaptor.upload(usdl_info['content_type'], usdl)
         new_usdl = True
 
@@ -692,7 +694,8 @@ def update_offering(offering, data):
             'content_type': 'application/rdf+xml'
         }
 
-        repository_adaptor = RepositoryAdaptor(offering.description_url)
+        repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
+        repository_adaptor.set_credentials(offering.owner_admin_user.userprofile.access_token)
         repository_adaptor.upload(usdl_info['content_type'], usdl)
         new_usdl = True
 
@@ -829,15 +832,9 @@ def delete_offering(user, offering):
     if offering.state == 'deleted':
         raise PermissionDenied('The offering is already deleted')
 
-    parsed_url = urlparse(offering.description_url)
-    path = parsed_url.path
-    host = parsed_url.scheme + '://' + parsed_url.netloc
-    path = path.split('/')
-    host += '/' + path[1] + '/' + path[2]
-    collection = path[3]
-
-    repository_adaptor = RepositoryAdaptor(host, collection)
-    repository_adaptor.delete(path[4])
+    repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
+    repository_adaptor.set_credentials(user.userprofile.access_token)
+    repository_adaptor.delete()
 
     index_path = os.path.join(settings.BASEDIR, 'wstore')
     index_path = os.path.join(index_path, 'search')

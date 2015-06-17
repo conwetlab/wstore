@@ -21,10 +21,10 @@
 from urllib2 import HTTPError
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 
 from wstore.models import Marketplace, MarketCredentials, Offering
 from wstore.market_adaptor.marketadaptor import marketadaptor_factory
+from wstore.store_commons.errors import ConflictError
 
 
 def get_marketplaces():
@@ -49,7 +49,7 @@ def register_on_market(user, name, host, api_version, credentials, site):
 
     # Check if the marketplace already exists
     if len(Marketplace.objects.filter(name=name) | Marketplace.objects.filter(host=host)) > 0:
-        raise PermissionDenied('Marketplace already registered')
+        raise ConflictError('Marketplace already registered')
 
     store_name = settings.STORE_NAME
 

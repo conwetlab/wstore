@@ -23,7 +23,6 @@ from urllib2 import HTTPError
 
 from django.contrib.sites.models import get_current_site
 from django.http import HttpResponse
-from django.core.exceptions import PermissionDenied
 from django.conf import settings
 
 from wstore.store_commons.resource import Resource
@@ -32,6 +31,7 @@ from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types,\
  authentication_required
 from wstore.admin.markets.markets_management import get_marketplaces, register_on_market, unregister_from_market
+from wstore.store_commons.errors import ConflictError
 
 
 class MarketplaceCollection(Resource):
@@ -98,8 +98,8 @@ class MarketplaceCollection(Resource):
         except HTTPError:
             code = 502
             msg = "The Marketplace has failed registering the store"
-        except PermissionDenied as e:
-            code = 403
+        except ConflictError as e:
+            code = 409
             msg = unicode(e)
         except Exception as e:
             code = 500

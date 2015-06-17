@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -24,6 +24,8 @@ from django.db import models
 class Repository(models.Model):
     name = models.CharField(max_length=50)
     host = models.CharField(max_length=100)
+    api_version = models.IntegerField(default=1)
+    store_collection = models.CharField(max_length=100)
 
     class Meta:
         app_label = 'wstore'
