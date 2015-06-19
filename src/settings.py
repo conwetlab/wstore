@@ -50,10 +50,6 @@ OILAUTH = True
 PORTALINSTANCE = False
 
 THEME_ACTIVE = 'defaulttheme'
-# Local time zone for this installation.
-
-# Language code for this installation.
-LANGUAGE_CODE = 'en'
 
 SITE_ID=u''
 
