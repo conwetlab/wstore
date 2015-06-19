@@ -891,7 +891,7 @@ class ResourceEntryTestCase(TestCase):
         self.assertEqual(body_response['message'], msg)
 
         if not error:
-            views.delete_resource.assert_called_once_with(self.resource)
+            views.delete_resource.assert_called_once_with(self.resource, self.user)
             self.assertEqual(body_response['result'], 'correct')
         else:
             self.assertEqual(body_response['result'], 'error')
