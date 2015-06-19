@@ -412,7 +412,7 @@ class ResourceEntry(Resource):
             'provider': provider,
             'name': name,
             'version': version
-        }, delete_resource)
+        }, delete_resource, (request.user, ))
 
     @supported_request_mime_types(('application/json', 'multipart/form-data'))
     @authentication_required

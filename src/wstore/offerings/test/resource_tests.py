@@ -477,7 +477,9 @@ class ResourceDeletionTestCase(TestCase):
         self.resource = MagicMock()
         self.resource.pk = '4444'
         self.resource.resource_type = 'API'
+        self.user = MagicMock()
         resources_management.Offering = MagicMock()
+        resources_management.delete_offering = MagicMock()
 
     @classmethod
     def tearDownClass(cls):
@@ -488,11 +490,14 @@ class ResourceDeletionTestCase(TestCase):
 
     def _res_in_use(self):
 
+        self._published_offering = MagicMock()
+        self._published_offering.state = 'published'
+        self._published_offering.pk = '1111'
+
         def _mock_get(pk=None):
             result = MagicMock()
             if pk == '1111':
-                result.state = 'published'
-                result.pk = '1111'
+                result = self._published_offering
             else:
                 result.state = 'uploaded'
                 result.pk = '2222'
@@ -523,6 +528,7 @@ class ResourceDeletionTestCase(TestCase):
         self.assertEquals(self.resource.offerings, ['1111'])
         self.assertEquals(self.resource.state, 'deleted')
         self.resource.save.assert_called_once_with()
+        resources_management.delete_offering.assert_called_once_with(self.user, self._published_offering)
 
     def _res_file(self):
         self.resource.offerings = []
@@ -575,7 +581,7 @@ class ResourceDeletionTestCase(TestCase):
 
         error = None
         try:
-            resources_management.delete_resource(self.resource)
+            resources_management.delete_resource(self.resource, self.user)
         except Exception as e:
             error = e
 
@@ -598,6 +604,7 @@ UPDATE_DATA2 = {
     'content_type': 'text/plain',
     'open': False
 }
+
 
 class ResourceUpdateTestCase(TestCase):
 

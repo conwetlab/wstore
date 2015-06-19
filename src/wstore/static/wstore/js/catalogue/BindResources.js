@@ -315,7 +315,11 @@
         if (this.resource.state != 'deleted') {
             // Set delete listener
             $('.res-remove').click(function() {
-                var msg = "Are you sure that you want to remove the resource " + this.resource.name + ' version ' + this.resource.version;
+                var msg = "Are you sure that you want to remove the resource " + this.resource.name + ' version ' + this.resource.version +'?';
+
+                if (this.resource.state == 'used') {
+                    msg += " Please note that if you remove the resource, all published offerings that contain the resource will be also removed";
+                }
 
                 hideModal();
 
