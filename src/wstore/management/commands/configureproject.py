@@ -112,7 +112,7 @@ class Command(BaseCommand):
 
             print "Include WStore provider requests email: "
             settings['provider_req_email'] = read_from_cmd()
-        
+
         correct = False
         while not correct:
             # Select authentication method
@@ -139,7 +139,22 @@ class Command(BaseCommand):
             print "Include Identity manager endpoint: "
             settings['oilauth'] = True
             settings['idm_endpoint'] = read_from_cmd()
-            syn_command +=  ' --noinput'
+            syn_command += ' --noinput'
+
+            # Get idm api version
+            correct = False
+            while not correct:
+                print "Include KeyRock API version [1/2]: "
+                api_version = read_from_cmd()
+                if api_version.isdigit() and (int(api_version) == 1 or int(api_version) == 2):
+                    settings['api_version'] = int(api_version)
+                    correct = True
+                else:
+                    print "Please include 1 or 2"
+
+            if settings['api_version'] == 2:
+                print "Include KeyStone endpoint: "
+                settings['keystone_endpoint'] = read_from_cmd()
 
             correct = False
             while not correct:

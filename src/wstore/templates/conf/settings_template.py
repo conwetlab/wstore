@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -46,14 +46,10 @@ BASEDIR = path.dirname(path.abspath(__file__))
 
 STORE_NAME = '{{ store_name }}'
 AUTH_PROFILE_MODULE = 'wstore.models.UserProfile'
-PORTALINSTANCE = False
 OILAUTH = {{ oilauth }}
+PORTALINSTANCE = False
 
 THEME_ACTIVE = 'defaulttheme'
-# Local time zone for this installation.
-
-# Language code for this installation.
-LANGUAGE_CODE = 'en'
 
 SITE_ID=u'{{ site_id }}'
 
@@ -199,9 +195,13 @@ AUTHENTICATION_BACKENDS = (
 )
 
 
-FIWARE_APP_ID = {{ client_id }}
+FIWARE_APP_ID = '{{ client_id }}'
 FIWARE_API_SECRET = '{{ client_secret }}'
 FIWARE_IDM_ENDPOINT = '{{ idm_endpoint }}'
+
+FIWARE_IDM_API_VERSION = {{ idm_api_version }}
+FIWARE_KEYSTONE_ENDPOINT = '{{ keystone_endpoint }}'
+
 
 SOCIAL_AUTH_ENABLED_BACKENDS = ('fiware',)
 
@@ -229,3 +229,6 @@ CLIENTS = {
 PAYMENT_CLIENT = CLIENTS[PAYMENT_METHOD]
 
 RESOURCE_INDEX_DIR = path.join(BASEDIR, path.join('wstore', path.join('admin', 'indexes')))
+
+NOTIF_CERT_FILE = None
+NOTIF_CERT_KEY_FILE = None
