@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -50,10 +50,6 @@ OILAUTH = True
 PORTALINSTANCE = False
 
 THEME_ACTIVE = 'defaulttheme'
-# Local time zone for this installation.
-
-# Language code for this installation.
-LANGUAGE_CODE = 'en'
 
 SITE_ID=u''
 
@@ -62,7 +58,7 @@ MEDIA_ROOT = path.join(BASEDIR, 'media')
 
 BILL_ROOT = path.join(MEDIA_ROOT, 'bills')
 
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
+# URL that handles the media served from MEDIA_ROOT.
 MEDIA_URL = '/media/'
 
 # Absolute path to the directory static files should be collected to.

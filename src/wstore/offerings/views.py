@@ -37,7 +37,7 @@ publish_offering, bind_resources, count_offerings, update_offering
 from wstore.offerings.resources_management import register_resource, get_provider_resources, delete_resource,\
 update_resource, upgrade_resource
 from wstore.social.reviews.review_manager import ReviewManager
-from wstore.store_commons.errors import ConflictError
+from wstore.store_commons.errors import ConflictError, RepositoryError
 from wstore.social_auth_backend import get_applications
 
 
@@ -79,8 +79,8 @@ class OfferingCollection(Resource):
             try:
                 json_data = json.loads(unicode(request.raw_post_data, 'utf-8'))
                 create_offering(user, json_data)
-            except HTTPError:
-                return build_response(request, 502, 'Bad Gateway')
+            except RepositoryError as e:
+                return build_response(request, 502, unicode(e))
             except ConflictError as e:
                 return build_response(request, 409, unicode(e))
             except Exception, e:
@@ -368,12 +368,12 @@ def _get_resource(resource_id_info):
     return resource
 
 
-def _call_resource_entry_method(request, resource_id_info, method, data=None):
+def _call_resource_entry_method(request, resource_id_info, method, data, is_del=False):
 
-    response = build_response(request, 204, 'No Content')
+    response = build_response(request, 200, 'OK')
 
-    if data:
-        response = build_response(request, 200, 'OK')
+    if is_del:
+        response = build_response(request, 204, 'No Content')
 
     error = False
 
@@ -384,18 +384,16 @@ def _call_resource_entry_method(request, resource_id_info, method, data=None):
         response = build_response(request, 404, 'Resource not found')
 
     # Check permissions
-    if not error and (not 'provider' in request.user.userprofile.get_current_roles() or\
-      not request.user.userprofile.current_organization == resource.provider):
+    if not error and ('provider' not in request.user.userprofile.get_current_roles() or\
+            not request.user.userprofile.current_organization == resource.provider):
+
         error = True
         response = build_response(request, 403, 'Forbidden')
 
     # Try to make the specified action
     if not error:
         try:
-            args = (resource, )
-            if data:
-                args = args + data
-
+            args = (resource, ) + data
             method(*args)
         except Exception as e:
             response = build_response(request, 400, unicode(e))
@@ -412,7 +410,7 @@ class ResourceEntry(Resource):
             'provider': provider,
             'name': name,
             'version': version
-        }, delete_resource)
+        }, delete_resource, (request.user, ), True)
 
     @supported_request_mime_types(('application/json', 'multipart/form-data'))
     @authentication_required

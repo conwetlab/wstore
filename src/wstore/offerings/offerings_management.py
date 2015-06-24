@@ -25,13 +25,12 @@ import base64
 import os
 from datetime import datetime
 from bson.objectid import ObjectId
-from urlparse import urlparse
 from copy import deepcopy
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 
-from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
+from wstore.repository_adaptor.repositoryAdaptor import repository_adaptor_factory, unreg_repository_adaptor_factory
 from wstore.market_adaptor.marketadaptor import marketadaptor_factory
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
@@ -523,7 +522,7 @@ def update_offering(offering, data):
         offering.offering_description = data['offering_info']
 
         if offering.open and offering.state == 'published' and len(offering.description_url):
-            repository_adaptor = RepositoryAdaptor(offering.description_url)
+            repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
             repository_adaptor.upload(
                 'application/rdf+xml',
                 usdl_generator.generate_offering_usdl(offering)
@@ -556,6 +555,10 @@ def publish_offering(user, offering, data):
     if offering.open and not len(offering.resources) and not len(offering.applications):
         raise PermissionDenied('Publication error: Open offerings cannot be published if they do not contain at least a digital asset (resource or application)')
 
+    # Check if it possible to publish the offering in a Marketplace
+    if not len(Repository.objects.all()) > 0 and len(data['marketplaces']) > 0:
+        raise PermissionDenied('Publication error: It is not possible to publish an offering in a Markteplace if no Repositories has been registered')
+
     # Upload the USDL description of the offering to the repository
     if len(Repository.objects.all()) > 0:
         repository = Repository.objects.get(is_default=True)
@@ -564,10 +567,10 @@ def publish_offering(user, offering, data):
         generator = USDLGenerator()
         usdl = generator.generate_offering_usdl(offering)
 
-        repository_adaptor = RepositoryAdaptor(repository.host, 'storeOfferingCollection')
+        repository_adaptor = repository_adaptor_factory(repository)
         offering_id = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
 
-        repository_adaptor.upload('application/rdf+xml', usdl, name=offering_id)
+        offering.description_url = repository_adaptor.upload('application/rdf+xml', usdl, name=offering_id)
 
     # Publish the offering in the selected marketplaces
     for market in data['marketplaces']:
@@ -647,16 +650,9 @@ def delete_offering(user, offering):
         raise PermissionDenied('The offering is already deleted')
 
     if offering.state == 'published':
-
-        parsed_url = urlparse(offering.description_url)
-        path = parsed_url.path
-        host = parsed_url.scheme + '://' + parsed_url.netloc
-        path = path.split('/')
-        host += '/' + path[1] + '/' + path[2]
-        collection = path[3]
-
-        repository_adaptor = RepositoryAdaptor(host, collection)
-        repository_adaptor.delete(path[4])
+        repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
+        repository_adaptor.set_credentials(user.userprofile.access_token)
+        repository_adaptor.delete()
 
     index_path = os.path.join(settings.BASEDIR, 'wstore')
     index_path = os.path.join(index_path, 'search')

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013-2015 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -37,6 +37,7 @@ from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.version import Version
 from wstore.store_commons.errors import ConflictError
+from wstore.offerings.offerings_management import delete_offering
 from wstore.offerings.resource_plugins.plugins.ckan_validation import validate_dataset
 from wstore.offerings.resource_plugins.decorators import register_resource_events, \
     upgrade_resource_events, update_resource_events, delete_resource_events, \
@@ -398,7 +399,7 @@ def _remove_resource(resource):
 
 
 @delete_resource_events
-def _delete_resource(resource):
+def _delete_resource(resource, user):
 
     # If the resource is not included in any offering delete it
     if not len(resource.offerings):
@@ -425,10 +426,16 @@ def _delete_resource(resource):
             resource.state = 'deleted'
             resource.save()
 
+            # Remove published offerings
+            for of in used_offerings:
+                offering = Offering.objects.get(pk=of)
+                if offering.state == 'published':
+                    delete_offering(user, offering)
 
-def delete_resource(resource):
+
+def delete_resource(resource, user):
 
     if resource.state == 'deleted':
         raise PermissionDenied('The resource is already deleted')
 
-    _delete_resource(resource)
+    _delete_resource(resource, user)

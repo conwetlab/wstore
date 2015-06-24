@@ -194,7 +194,7 @@ def update_resource_events(func):
 def delete_resource_events(func):
 
     @wraps(func)
-    def wrapper(resource):
+    def wrapper(resource, user):
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
             plugin_model = _get_plugin_model(resource.resource_type)
 
@@ -205,7 +205,7 @@ def delete_resource_events(func):
             plugin_module.on_pre_delete(resource)
 
         # Call method
-        func(resource)
+        func(resource, user)
 
         # Call on post delete event handler
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':

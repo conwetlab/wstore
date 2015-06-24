@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013-2015 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -26,19 +26,19 @@ from django.core.exceptions import ObjectDoesNotExist
 from wstore.store_commons.errors import ConflictError
 from wstore.models import Repository
 
-
-def register_repository(name, host, default=False):
+def register_repository(name, host, collection, api_version, default=False):
     """
     Register a new repository in WStore, these repositories will be used for the storage
     of the USDL descriptions of offerings and resources
     """
 
+    if host[-1] != '/':
+        host += '/'
+
     # Check if the repository name is in use
-    repos = Repository.objects.filter(name=name) | Repository.objects.filter(host=host)
-
-    if len(repos) > 0:
-        raise ConflictError('The repository already exists')
-
+    if len(Repository.objects.filter(name=name) | Repository.objects.filter(host=host)) > 0:
+        raise ConflictError('The given repository is already registered')
+    
     # If the repository will be the default one modify the existing repos
     if default:
         _unset_default()
@@ -47,8 +47,13 @@ def register_repository(name, host, default=False):
     elif len(Repository.objects.all()) == 0:
         default = True
 
-    # Create new repository
-    Repository.objects.create(name=name, host=host, is_default=default)
+    Repository.objects.create(
+        name=name,
+        host=host,
+        store_collection=collection,
+        api_version=api_version,
+        is_default=default
+    )
 
 
 def _get_repository(repository):
@@ -96,6 +101,8 @@ def get_repositories():
             'name': rep.name,
             'host': rep.host,
             'is_default': rep.is_default
+            'store_collection': rep.store_collection,
+            'api_version': rep.api_version
         })
 
     return response

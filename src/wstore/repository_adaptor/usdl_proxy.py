@@ -22,7 +22,7 @@ from django.http import HttpResponse
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.http import build_response
-from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
+from wstore.repository_adaptor.repositoryAdaptor import unreg_repository_adaptor_factory
 from wstore.models import Offering, Organization
 
 
@@ -38,7 +38,7 @@ class USDLCollection(Resource):
 
         # Get usdl from repository
         try:
-            adaptor = RepositoryAdaptor(offering.description_url)
+            adaptor = unreg_repository_adaptor_factory(offering.description_url)
             result = adaptor.download()
         except:
             return build_response(request, 502, 'Bad Gateway')

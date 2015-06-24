@@ -124,7 +124,9 @@ class SearchByResourceEntry(Resource):
         try:
             for off in resource.offerings:
                 offering = Offering.objects.get(pk=off)
-                response.append(get_offering_info(offering, request.user))
+
+                if offering.state == 'published':
+                    response.append(get_offering_info(offering, request.user))
         except Exception as e:
             return build_response(request, 400, unicode(e))
 

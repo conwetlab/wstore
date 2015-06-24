@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -20,33 +20,51 @@
 
 from __future__ import unicode_literals
 
-import urllib2
+import json
+import requests
 import unicodedata
-from urlparse import urljoin
+from urlparse import urljoin, urlsplit
 
-from urllib2 import HTTPError
+from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
 
-from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils import mimeparser
+from wstore.store_commons.errors import RepositoryError
 
 
-class RepositoryError(Exception):
-    _msg = None
+def unreg_repository_adaptor_factory(url):
+    adaptors = {
+        'v1': RepositoryAdaptorV1,
+        'v2': RepositoryAdaptorV2
+    }
 
-    def __init__(self, msg):
-        self._msg = msg
+    split_path = urlsplit(url).path.split('/')
 
-    def __str__(self):
-        return 'Repository error: ' + self._msg
+    if split_path[1] in adaptors:
+        adaptor = adaptors[split_path[1]]
+    elif split_path[2] in adaptors:
+        adaptor = adaptors[split_path[2]]
+    else:
+        raise ObjectDoesNotExist('No RepositoryAdaptor has been found for the given URL')
 
-    def __unicode__(self):
-        return 'Repository error: ' + self._msg
+    return adaptor(url)
 
 
-class RepositoryAdaptor():
+def repository_adaptor_factory(repository):
+
+    adaptors = {
+        1: RepositoryAdaptorV1,
+        2: RepositoryAdaptorV2
+    }
+
+    return adaptors[repository.api_version](repository.host, repository.store_collection)
+
+
+class RepositoryAdaptor(object):
 
     _repository_url = None
     _collection = None
+    _credentials = None
 
     def __init__(self, repository_url, collection=None):
 
@@ -60,7 +78,10 @@ class RepositoryAdaptor():
             if not self._collection.endswith('/'):
                 self._collection += '/'
 
-    def _get_url(self, name):
+    def set_credentials(self, credentials):
+        self._credentials = credentials
+
+    def _build_url(self, name):
         url = self._repository_url
 
         if name is not None:
@@ -70,62 +91,77 @@ class RepositoryAdaptor():
 
         return url
 
-    def upload(self, content_type, data, name=None):
+    def _make_request(self, method, data, name, headers={}):
+        url = self._build_url(name)
 
-        opener = urllib2.build_opener()
-        url = self._get_url(name)
+        if settings.OILAUTH:
+            headers.update({'Authorization': 'Bearer ' + self._credentials})
 
-        # Only ASCII characters are allowed
-        data = unicodedata.normalize('NFKD', data).encode('ascii', 'ignore')
+        response = method(url, headers=headers, data=data)
 
-        headers = {'content-type': content_type + '; charset=utf-8'}
-        request = MethodRequest('PUT', url, data, headers)
+        if response.status_code < 200 or response.status_code >= 300:
+            raise RepositoryError('The repository has failed processing the request')
 
-        try:
-            response = opener.open(request)
-        except HTTPError:
-            raise RepositoryError('The repository has failed while uploading the resource')
-
-        if not (response.code > 199 and response.code < 300):
-            raise RepositoryError('The repository has failed while uploading the resource')
-
-        return url
+        return response
 
     def download(self, name=None):
 
-        opener = urllib2.build_opener()
-        url = self._get_url(name)
-
-        headers = {'Accept': '*'}
-        request = MethodRequest('GET', url, '', headers)
-
-        try:
-            response = opener.open(request)
-        except HTTPError:
-            raise RepositoryError('The repository has failed downloading the resource')
-
-        if not (response.code > 199 and response.code < 300):
-            raise RepositoryError('The repository has failed downloading the resource')
+        response = self._make_request(requests.get, '', name, headers={'Accept': '*'})
 
         allowed_formats = ['text/plain', 'application/rdf+xml', 'text/turtle', 'text/n3']
         resp_content_type = mimeparser.best_match(allowed_formats, response.headers.get('content-type'))
 
         return {
             'content_type': resp_content_type,
-            'data': response.read()
+            'data': response.text
         }
 
     def delete(self, name=None):
+        self._make_request(requests.delete, '', name)
 
-        opener = urllib2.build_opener()
-        url = self._get_url(name)
 
-        request = MethodRequest('DELETE', url)
+class RepositoryAdaptorV1(RepositoryAdaptor):
 
-        try:
-            response = opener.open(request)
-        except HTTPError:
-            raise RepositoryError('The repository has failed deleting the resource')
+    def __init__(self, repository_url, collection=None):
 
-        if not (response.code > 199 and response.code < 300):
-            raise RepositoryError('The repository has failed deleting the resource')
+        if collection is not None:
+            repository_url = urljoin(repository_url, 'v1')
+
+        super(RepositoryAdaptorV1, self).__init__(repository_url, collection=collection)
+
+    def upload(self, content_type, data, name=None):
+
+        # Only ASCII characters are allowed
+        data = unicodedata.normalize('NFKD', data).encode('ascii', 'ignore')
+
+        response = self._make_request(requests.put, data, name, headers={'content-type': content_type + '; charset=utf-8'})
+        return response.url
+
+
+class RepositoryAdaptorV2(RepositoryAdaptor):
+
+    def __init__(self, repository_url, collection=None):
+
+        if collection is not None:
+            repository_url = urljoin(repository_url, 'v2/collec')
+
+        super(RepositoryAdaptorV2, self).__init__(repository_url, collection=collection)
+
+    def upload(self, content_type, data, name=None):
+        # If a name has been provided, the resource is new
+        if name is not None:
+            # Create resource
+            name = name.replace(' ', '-')
+            res_meta = {
+                'type': 'resource',
+                'creator': settings.STORE_NAME,
+                'name': name,
+                'contentUrl': self._build_url(name),
+                'contentFileName': name
+            }
+            self._make_request(requests.post, json.dumps(res_meta), '', headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+
+        # Upload resource content
+        response = self._make_request(requests.put, data, name, headers={'content-type': content_type})
+
+        return response.url

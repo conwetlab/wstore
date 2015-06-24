@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013-2015 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -29,6 +29,7 @@ from wstore.store_commons.errors import ConflictError
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.name import is_valid_id
+from wstore.store_commons.errors import ConflictError
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types,\
     authentication_required
 from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, \
@@ -45,30 +46,48 @@ class RepositoryCollection(Resource):
     def create(self, request):
 
         if not request.user.is_staff:  # Only an admin could register a new repository
-            return build_response(request, 403, 'Forbidden')
+            return build_response(request, 403, 'You are not authorized to register a repository')
 
         # Get request info
-        name = None
-        host = None
         try:
             content = json.loads(request.raw_post_data)
-            name = content['name']
-            host = content['host']
             is_default = content.get('is_default', False)
         except:
             msg = "Request body is not valid JSON data"
             return build_response(request, 400, msg)
 
+        if 'name' not in content:
+            return build_response(request, 400, 'Missing required field: name')
+
+        if 'host' not in content:
+            return build_response(request, 400, 'Missing required field: host')
+
+        if 'api_version' not in content:
+            return build_response(request, 400, 'Missing required field: api_version')
+
+        if 'store_collection' not in content:
+            return build_response(request, 400, 'Missing required field: store_collection')
+
         # Check data formats
-        if not is_valid_id(name):
+        if not is_valid_id(content['name']):
             return build_response(request, 400, 'Invalid name format')
 
-        if not is_valid_url(host):
+        if not is_valid_id(content['store_collection']) or ' ' in content['store_collection']:
+            return build_response(request, 400, 'Invalid store_collection format: Invalid character found')
+
+        if not is_valid_url(content['host']):
             return build_response(request, 400, 'Invalid URL format')
+
+        if not content['api_version'].isdigit():
+            return build_response(request, 400, 'Invalid api_version format: must be an integer')
+
+        api_version = int(content['api_version'])
+        if api_version != 1 and api_version != 2:
+            return build_response(request, 400, 'Invalid api_version: Only versions 1 and 2 are supported')
 
         # Register repository
         try:
-            register_repository(name, host, is_default)
+            register_repository(content['name'], content['host'], content['store_collection'], api_version, is_default)
         except ConflictError as e:
             return build_response(request, 409, unicode(e))
         except Exception as e:

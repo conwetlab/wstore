@@ -67,6 +67,9 @@ class FakeRepositoryAdaptor():
     def delete(self, ser=None):
         pass
 
+    def set_credentials(self, credentials):
+        pass
+
     def download(self, name=None, content_type=None):
         # Read the USDL from the file
         path = os.path.join(settings.BASEDIR, 'wstore/test/')
@@ -454,10 +457,10 @@ class OfferingUpdateTestCase(TestCase):
         super(OfferingUpdateTestCase, cls).tearDownClass()
 
     def setUp(self):
-        offerings_management.RepositoryAdaptor = MagicMock()
-        self._adap_object = MagicMock()
+        offerings_management.unreg_repository_adaptor_factory = MagicMock()
+        self._repo_mock = MagicMock()
+        offerings_management.unreg_repository_adaptor_factory.return_value = self._repo_mock
 
-        offerings_management.RepositoryAdaptor.return_value = self._adap_object
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
@@ -533,6 +536,8 @@ class OfferingUpdateTestCase(TestCase):
             self.se_object.update_index.assert_called_with(offering)
 
             if 'offering_info' in data:
+                offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
+
                 usdl = new_offering.offering_description
                 self.assertEquals(usdl['pricing'], {
                     'price_plans': []
@@ -1052,7 +1057,9 @@ class OfferingDeletionTestCase(TestCase):
         self._adaptor_obj = MagicMock()
         offerings_management.marketadaptor_factory.return_value = self._adaptor_obj
 
-        offerings_management.RepositoryAdaptor = FakeRepositoryAdaptor
+        offerings_management.unreg_repository_adaptor_factory = MagicMock()
+        self._repo_mock = MagicMock()
+        offerings_management.unreg_repository_adaptor_factory.return_value = self._repo_mock
         offerings_management.SearchEngine.return_value = self.se_object
 
         self.tag_mock = MagicMock()
@@ -1138,6 +1145,9 @@ class OfferingDeletionTestCase(TestCase):
             # Assert no included in the context lists
             self.assertFalse(offering.pk in self.context_obj.newest)
             self.assertFalse(offering.pk in self.context_obj.top_rated)
+            offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
+            self._repo_mock.delete.assert_called_once_with()
+
             if deleted:
                 # Check index calls if the offering must have been deleted
                 self.assertEquals(len(Offering.objects.filter(name=offering_name)), 0)

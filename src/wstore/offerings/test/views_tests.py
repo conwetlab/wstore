@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -34,7 +34,7 @@ from wstore.offerings import views
 from wstore.models import Offering, Organization, Context
 from django.contrib.sites.models import Site
 from social_auth.db.django_models import UserSocialAuth
-from wstore.store_commons.errors import ConflictError
+from wstore.store_commons.errors import ConflictError, RepositoryError
 
 
 class OfferingCollectionTestCase(TestCase):
@@ -145,7 +145,7 @@ class OfferingCollectionTestCase(TestCase):
         self.user.userprofile.get_current_roles.return_value = ['customer']
 
     def _bad_gateway(self):
-        views.create_offering.side_effect = HTTPError('', 500, '', None, None)
+        views.create_offering.side_effect = RepositoryError('Bad Gateway')
 
     def _exception(self):
         views.create_offering.side_effect = Exception('Error in creation')
@@ -157,6 +157,7 @@ class OfferingCollectionTestCase(TestCase):
         ('exception', {'code': 400, 'message': 'Error in creation', 'result': 'error'}, True, _exception)
     ])
     def test_create_offering_request(self, name, expected_response, called=True, side_effect=None):
+
         data = {
             'name': 'test_offering',
             'version': 1.0,
@@ -890,7 +891,7 @@ class ResourceEntryTestCase(TestCase):
         self.assertEqual(body_response['message'], msg)
 
         if not error:
-            views.delete_resource.assert_called_once_with(self.resource)
+            views.delete_resource.assert_called_once_with(self.resource, self.user)
             self.assertEqual(body_response['result'], 'correct')
         else:
             self.assertEqual(body_response['result'], 'error')
