@@ -105,9 +105,6 @@ class RepositoryAdaptor(object):
 
         return response
 
-    def upload(self, content_type, data, name=None):
-        pass
-
     def download(self, name=None):
 
         response = self._make_request(requests.get, '', name, headers={'Accept': '*'})
@@ -155,15 +152,15 @@ class RepositoryAdaptorV2(RepositoryAdaptor):
         # If a name has been provided, the resource is new
         if name is not None:
             # Create resource
+            name = name.replace(' ', '-')
             res_meta = {
+                'type': 'resource',
                 'creator': settings.STORE_NAME,
-                'creationDate': '',
-                'modificationDate': '',
                 'name': name,
-                'contentURL': self._build_url(name),
+                'contentUrl': self._build_url(name),
                 'contentFileName': name
             }
-            self._make_request(requests.post, json.dumps(res_meta), name, headers={'content-type': 'application/json'})
+            self._make_request(requests.post, json.dumps(res_meta), '', headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
 
         # Upload resource content
         response = self._make_request(requests.put, data, name, headers={'content-type': content_type})
