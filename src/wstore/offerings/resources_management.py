@@ -31,7 +31,7 @@ from django.template import loader
 from django.template import Context as TmplContext
 
 from wstore.models import Resource, Offering, Repository, Context
-from wstore.repository_adaptor.repositoryAdaptor import RepositoryAdaptor
+from wstore.repository_adaptor.repositoryAdaptor import repository_adaptor_factory, unreg_repository_adaptor_factory
 from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
@@ -92,7 +92,7 @@ def _upload_usdl(resource):
 
     # Upload the rdf of the resource to the repository
     repository = Repository.objects.get(is_default=True)
-    repository_adaptor = RepositoryAdaptor(repository.host, 'storeResourcesCollection')
+    repository_adaptor = repository_adaptor_factory(repository, is_resource=True)
 
     resource_id = resource.pk + '__' + resource.provider.name + '__' + resource.name.replace(' ', '_') + '__' + resource.version
 
@@ -394,7 +394,7 @@ def _remove_resource(resource):
 
     # Remove the usdl descriptions from the repository
     for url in usdl_urls:
-        repository_adaptor = RepositoryAdaptor(url)
+        repository_adaptor = unreg_repository_adaptor_factory(url)
         repository_adaptor.delete()
 
 

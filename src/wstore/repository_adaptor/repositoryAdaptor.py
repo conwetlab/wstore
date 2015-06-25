@@ -50,14 +50,16 @@ def unreg_repository_adaptor_factory(url):
     return adaptor(url)
 
 
-def repository_adaptor_factory(repository):
+def repository_adaptor_factory(repository, is_resource=False):
 
     adaptors = {
         1: RepositoryAdaptorV1,
         2: RepositoryAdaptorV2
     }
 
-    return adaptors[repository.api_version](repository.host, repository.store_collection)
+    collection = repository.resource_collection if is_resource else repository.offering_collection
+
+    return adaptors[repository.api_version](repository.host, collection)
 
 
 class RepositoryAdaptor(object):
