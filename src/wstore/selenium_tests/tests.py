@@ -40,7 +40,7 @@ from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils.testing import save_indexes, restore_indexes, save_tags, restore_tags
 from wstore.search.search_engine import SearchEngine
 from wstore.selenium_tests.testcase import WStoreSeleniumTestCase
-from wstore.offerings.offerings_management import _create_basic_usdl
+#from wstore.offerings.offerings_management import _create_basic_usdl
 from wstore.models import Offering, Purchase
 from wstore.social.tagging.tag_manager import TagManager
 from wstore.selenium_tests.test_server import TestServer
@@ -53,9 +53,9 @@ TESTING_PORT = 8989
 def _fill_offering_description(pk, usdl_info, owner):
     offering = Offering.objects.get(pk=pk)
 
-    usdl = _create_basic_usdl(usdl_info)
+    #usdl = _create_basic_usdl(usdl_info)
     graph = rdflib.Graph()
-    graph.parse(data=usdl, format='application/rdf+xml')
+    #graph.parse(data=usdl, format='application/rdf+xml')
     offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
     offering.owner_organization = User.objects.get(username=owner).userprofile.current_organization
     offering.save()

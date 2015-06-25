@@ -59,8 +59,8 @@ class ResourceRegisteringTestCase(TestCase):
         # Mock repository adaptor
         self.adaptor_obj = MagicMock()
         self.adaptor_obj.upload.return_value('http://testrepo.com/resource1')
-        resources_management.RepositoryAdaptor = MagicMock(name="RepositoryAdaptor")
-        resources_management.RepositoryAdaptor.return_value(self.adaptor_obj)
+        resources_management.repository_adaptor_factory = MagicMock()
+        resources_management.repository_adaptor_factory.return_value = self.adaptor_obj
 
         # Mock context
         context_obj = MagicMock()
@@ -438,8 +438,9 @@ class ResourceDeletionTestCase(TestCase):
         resources_management.Offering = MagicMock(name="Offering")
         resources_management.RepositoryAdaptor = MagicMock(name="RepositoryAdaptor")
 
-        self.adaptor_mock = MagicMock()
-        resources_management.RepositoryAdaptor.return_value = self.adaptor_mock
+        self._adaptor_mock = MagicMock()
+        resources_management.unreg_repository_adaptor_factory = MagicMock()
+
         self.user = MagicMock()
         resources_management.Offering = MagicMock()
         resources_management.delete_offering = MagicMock()
@@ -502,8 +503,6 @@ class ResourceDeletionTestCase(TestCase):
     def _check_deleted(self):
         os.remove.assert_called_once_with(os.path.join(settings.BASEDIR, 'media/resources/test_resource'))
         self.resource.delete.assert_called_once_with()
-        resources_management.RepositoryAdaptor.assert_called_once_with(self.resource.resource_usdl)
-        self.adaptor_mock.delete.assert_called_once_with()
 
     def _check_events(self):
         self.plugin_mock.on_pre_delete.assert_called_once_with(self.resource)
@@ -531,9 +530,8 @@ class ResourceDeletionTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
         reload(resources_management)
-        resources_management.RepositoryAdaptor = MagicMock(name="RepositoryAdaptor")
-        self.adaptor_mock = MagicMock()
-        resources_management.RepositoryAdaptor.return_value = self.adaptor_mock
+        self._adaptor_mock = MagicMock()
+        resources_management.unreg_repository_adaptor_factory = MagicMock()
 
     @parameterized.expand([
         (_res_in_use, _check_in_use),

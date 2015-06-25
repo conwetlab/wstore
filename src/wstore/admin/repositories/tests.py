@@ -35,7 +35,6 @@ from wstore.admin.repositories import views
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
     decorator_mock_callable, HTTPResponseMock
 from wstore.store_commons.utils import http
-from wstore.store_commons.errors import ConflictError
 
 
 __test__ = False
@@ -50,36 +49,41 @@ class RegisteringRepositoriesTestCase(TestCase):
         ('basic', {
             'name': 'test_repository',
             'host': 'http://testrepository.com/',
-            'collection': 'storeOfferingCollection',
-            'api_version': 1
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'resourceCollection',
+            'api_version': 1,
             'default': False
         }),
         ('basic_2', {
             'name': 'test_repository',
             'host': 'http://testrepository.com',
-            'collection': 'storeOfferingCollection',
-            'api_version': 1
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'resourceCollection',
+            'api_version': 1,
             'default': False
         }),
         ('existing_name', {
             'name': 'test_repository1',
             'host': 'http://testrepository.com/',
-            'collection': 'storeOfferingCollection',
-            'api_version': 2
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'resourceCollection',
+            'api_version': 2,
             'default': False
-        }, ConflictError, 'The repository already exists'),
+        }, ConflictError, 'The given repository is already registered'),
         ('existing_host', {
             'name': 'test_repository',
             'host': 'http://testrepository1.com/',
-            'collection': 'storeOfferingCollection',
-            'api_version': 2
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'resourceCollection',
+            'api_version': 2,
             'default': False
-        }, ConflictError, 'The repository already exists'),
+        }, ConflictError, 'The given repository is already registered'),
         ('new_default', {
             'name': 'test_repository',
             'host': 'http://testrepository.com/',
-            'collection': 'storeOfferingCollection',
-            'api_version': 2
+            'resource_collection': 'resourceCollection',
+            'offering_collection': 'storeOfferingCollection',
+            'api_version': 2,
             'default': True
         }),
     ])
@@ -87,21 +91,30 @@ class RegisteringRepositoriesTestCase(TestCase):
 
         error = None
         try:
-            register_repository(data['name'], data['host'], data['collection'], data['api_version'], default=data['default'])
+            register_repository(
+                data['name'],
+                data['host'],
+                data['offering_collection'],
+                data['resource_collection'],
+                data['api_version'],
+                default=data['default']
+            )
         except Exception as e:
             error = e
 
         if err_type is None:
             self.assertEquals(error, None)
-            rep = Repository.objects.get(name=data['name'], host=data['host'])
 
             if not data['host'].endswith('/'):
                 data['host'] += '/'
 
+            rep = Repository.objects.get(name=data['name'], host=data['host'])
+
             self.assertEqual(data['name'], rep.name)
             self.assertEqual(data['host'], rep.host)
             self.assertEquals(data['default'], rep.is_default)
-            self.assertEquals(data['collection'], rep.store_collection)
+            self.assertEquals(data['offering_collection'], rep.offering_collection)
+            self.assertEquals(data['resource_collection'], rep.resource_collection)
             self.assertEqual(data['api_version'], rep.api_version)
 
             # Check that the default repository has been to to false
@@ -242,72 +255,94 @@ class RepositoryViewTestCase(TestCase):
         views.register_repository.side_effect = ConflictError('Conflict')
 
     @parameterized.expand([
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com',
-        'store_collection': 'storeOfferingCollection',
-        'api_version': '1'
-    }, (201, 'Created', 'correct'), False),
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com'
-    }, (403, 'You are not authorized to register a repository', 'error'), True, _forbidden),
-    ({
-        'host': 'http://testrepo.com',
-        'store_collection': 'storeOfferingCollection',
-        'api_version': '1'
-    }, (400, 'Missing required field: name', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'store_collection': 'storeOfferingCollection',
-        'api_version': '1'
-    }, (400, 'Missing required field: host', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com',
-        'api_version': '1'
-    }, (400, 'Missing required field: store_collection', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com',
-        'store_collection': 'storeOfferingCollection',
-    }, (400, 'Missing required field: api_version', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com',
-        'store_collection': 'storeOfferingCollection',
-        'api_version': '1'
-    }, (500, 'Bad request', 'error'), True, _bad_request),
-    ({
-        'name': 'test_repo$',
-        'host': 'http://testrepo.com',
-        'store_collection': 'storeOfferingCollection',
-        'api_version': '1'
-    }, (400, 'Invalid name format', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'host': 'invalid_url',
-        'store_collection': 'storeOfferingCollection',
-        'api_version': '1'
-    }, (400, 'Invalid URL format', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com',
-        'store_collection': 'storeOfferingCollection',
-        'api_version': '1as'
-    }, (400, 'Invalid api_version format: must be an integer', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com',
-        'store_collection': 'storeOfferingCollection',
-        'api_version': '3'
-    }, (400, 'Invalid api_version: Only versions 1 and 2 are supported', 'error'), True),
-    ({
-        'name': 'test_repo',
-        'host': 'http://testrepo.com',
-        'store_collection': 'storeOffering Collection',
-        'api_version': '1'
-    }, (400, 'Invalid store_collection format: Invalid character found', 'error'), True)
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'storeOfferingCollection',
+            'api_version': '1',
+        }, (201, 'Created', 'correct'), False),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+        }, (403, 'You are not authorized to register a repository', 'error'), True, _forbidden),
+        ({
+            'host': 'http://testrepo.com',
+            'store_collection': 'storeOfferingCollection',
+            'api_version': '1',
+        }, (400, 'Missing required field: name', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'store_collection': 'storeOfferingCollection',
+            'api_version': '1',
+        }, (400, 'Missing required field: host', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+            'resource_collection': 'storeOfferingCollection',
+            'api_version': '1',
+        }, (400, 'Missing required field: offering_collection', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+            'offering_collection': 'storeOfferingCollection',
+            'api_version': '1',
+        }, (400, 'Missing required field: resource_collection', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'storeOfferingCollection',
+        }, (400, 'Missing required field: api_version', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'storeOfferingCollection',
+            'api_version': '1',
+        }, (500, 'Bad request', 'error'), True, _bad_request),
+        ({
+            'name': 'test_repo$',
+            'host': 'http://testrepo.com',
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'storeOfferingCollection',
+            'api_version': '1',
+        }, (400, 'Invalid name format', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'invalid_url',
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'storeOfferingCollection',
+            'api_version': '1',
+        }, (400, 'Invalid URL format', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'storeOfferingCollection',
+            'api_version': '1as',
+        }, (400, 'Invalid api_version format: must be an integer', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'storeOfferingCollection',
+            'api_version': '3',
+        }, (400, 'Invalid api_version: Only versions 1 and 2 are supported', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+            'offering_collection': 'storeOffering Collection',
+            'resource_collection': 'storeOfferingCollection',
+            'api_version': '1',
+        }, (400, 'Invalid offering_collection format: Invalid character found', 'error'), True),
+        ({
+            'name': 'test_repo',
+            'host': 'http://testrepo.com',
+            'offering_collection': 'storeOfferingCollection',
+            'resource_collection': 'storeOffering Collection',
+            'api_version': '1',
+        }, (400, 'Invalid resource_collection format: Invalid character found', 'error'), True)
     ])
     def test_repository_api_create(self, data, exp_resp, error, side_effect=None):
         # Create request data
@@ -329,7 +364,14 @@ class RepositoryViewTestCase(TestCase):
 
         # Check calls
         if not error:
-            views.register_repository.assert_called_with(data['name'], data['host'], data['store_collection'], int(data['api_version']), False)
+            views.register_repository.assert_called_with(
+                data['name'],
+                data['host'],
+                data['offering_collection'],
+                data['resource_collection'],
+                int(data['api_version']),
+                False
+            )
 
     @parameterized.expand([
         (False,),

@@ -536,7 +536,6 @@ class OfferingUpdateTestCase(TestCase):
             self.se_object.update_index.assert_called_with(offering)
 
             if 'offering_info' in data:
-                offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
 
                 usdl = new_offering.offering_description
                 self.assertEquals(usdl['pricing'], {
@@ -573,8 +572,8 @@ class OfferingUpdateTestCase(TestCase):
 
             if offering.open and offering.state == 'published':
                 # Check repository_call
-                self._gen_mock.generate_offering_usdl.assert_called_once_with(offering)
-                self._adap_object.upload.assert_called_once_with('application/rdf+xml', 'USDL offering')
+                offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
+                self._repo_mock.upload.assert_called_once_with('application/rdf+xml', 'USDL offering')
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
@@ -835,15 +834,19 @@ class OfferingPublicationTestCase(TestCase):
         super(OfferingPublicationTestCase, cls).setUpClass()
 
     def setUp(self):
+        self._adaptor_obj = None
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
 
         offerings_management.marketadaptor_factory = MagicMock()
-        self._adaptor_obj = MagicMock()
-        self._adaptor_obj.add_service.return_value = "published_offering"
-        offerings_management.marketadaptor_factory.return_value = self._adaptor_obj
+        self._market_obj = MagicMock()
+        self._market_obj.add_service.return_value = "published_offering"
+        offerings_management.marketadaptor_factory.return_value = self._market_obj
         self._user = MagicMock()
+
+    def tearDown(self):
+        reload(offerings_management)
 
     def _published(self, offering):
         offering.state = 'published'
@@ -854,19 +857,36 @@ class OfferingPublicationTestCase(TestCase):
         offering.resources = []
         offering.save()
 
+    def _add_repo(self, offering):
+        offerings_management.Repository = MagicMock()
+        self._mock_repo = MagicMock()
+        offerings_management.Repository.objects.all.return_value = [self._mock_repo]
+        offerings_management.Repository.objects.get.return_value = self._mock_repo
+
+        # Mock reporsitory adaptor and USDLGenerator
+        self._adaptor_obj = MagicMock()
+        self._adaptor_obj.upload.return_value = 'http://repository.org/v1/collection/test_offering1'
+        offerings_management.repository_adaptor_factory = MagicMock()
+        offerings_management.repository_adaptor_factory.return_value = self._adaptor_obj
+
+        self._generator_obj = MagicMock()
+        self._generator_obj.generate_offering_usdl.return_value = 'usdl document'
+        offerings_management.USDLGenerator = MagicMock()
+        offerings_management.USDLGenerator.return_value = self._generator_obj
+
     @parameterized.expand([
         ('basic', {
             'marketplaces': []
         }),
         ('marketplace', {
             'marketplaces': ['test_market']
-        }),
+        }, _add_repo),
         ('multiple_market', {
             'marketplaces': ['test_market', 'test_market2']
-        }),
+        }, _add_repo),
         ('not_existing', {
             'marketplaces': ['test_marketplace']
-        }, None, ValueError, 'Publication error: The marketplace test_marketplace does not exist'),
+        }, _add_repo, ValueError, 'Publication error: The marketplace test_marketplace does not exist'),
         ('invalid', {
             'marketpla': ['test_market']
         }, None, ValueError, 'Publication error: missing required field, marketplaces'),
@@ -906,7 +926,6 @@ class OfferingPublicationTestCase(TestCase):
 
             # Check marketplace calls
             if len(data['marketplaces']):
-
                 for m in data['marketplaces']:
                     market = Marketplace.objects.get(name=m)
                     offerings_management.marketadaptor_factory.assert_any_call(market, self._user)
@@ -914,10 +933,20 @@ class OfferingPublicationTestCase(TestCase):
                         'name': offering.owner_organization.name + ' ' + offering.name + ' ' + offering.version,
                         'url': offering.description_url
                     }
-                    self._adaptor_obj.add_service.assert_any_call(info)
+                    self._market_obj.add_service.assert_any_call(info)
 
                 self.assertEquals(offerings_management.marketadaptor_factory.call_count, len(data['marketplaces']))
-                self.assertEquals(self._adaptor_obj.add_service.call_count, len(data['marketplaces']))
+                self.assertEquals(self._market_obj.add_service.call_count, len(data['marketplaces']))
+
+            if isinstance(self._adaptor_obj, MagicMock):
+                # Check reopsitory calls
+                offerings_management.USDLGenerator.assert_called_once_with()
+                self._generator_obj.generate_offering_usdl.assert_called_once_with(offering)
+
+                offerings_management.repository_adaptor_factory.assert_called_once_with(self._mock_repo)
+                offering_id = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
+                self._adaptor_obj.upload.assert_called_once_with('application/rdf+xml', 'usdl document', name=offering_id)
+
         else:
             self.assertTrue(isinstance(error_found, err_type))
             self.assertEquals(unicode(error_found), err_msg)
@@ -1145,8 +1174,10 @@ class OfferingDeletionTestCase(TestCase):
             # Assert no included in the context lists
             self.assertFalse(offering.pk in self.context_obj.newest)
             self.assertFalse(offering.pk in self.context_obj.top_rated)
-            offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
-            self._repo_mock.delete.assert_called_once_with()
+
+            if offering.state == 'published':
+                offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
+                self._repo_mock.delete.assert_called_once_with()
 
             if deleted:
                 # Check index calls if the offering must have been deleted
