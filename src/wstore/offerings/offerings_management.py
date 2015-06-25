@@ -769,7 +769,7 @@ def bind_resources(offering, data, provider):
     # Update USDL document if needed
     if offering.open and offering.state == 'published' and len(offering.description_url):
         usdl_generator = USDLGenerator()
-        repository_adaptor = RepositoryAdaptor(offering.description_url)
+        repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
         repository_adaptor.upload(
             'application/rdf+xml',
             usdl_generator.generate_offering_usdl(offering)
