@@ -26,7 +26,8 @@ class Repository(models.Model):
     host = models.CharField(max_length=100)
     is_default = models.BooleanField(default=False)
     api_version = models.IntegerField(default=1)
-    store_collection = models.CharField(max_length=100)
+    offering_collection = models.CharField(max_length=100)
+    resource_collection = models.CharField(max_length=100)
 
     class Meta:
         app_label = 'wstore'

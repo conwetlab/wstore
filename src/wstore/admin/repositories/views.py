@@ -29,7 +29,6 @@ from wstore.store_commons.errors import ConflictError
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.name import is_valid_id
-from wstore.store_commons.errors import ConflictError
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types,\
     authentication_required
 from wstore.admin.repositories.repositories_management import register_repository, unregister_repository, \
@@ -65,15 +64,21 @@ class RepositoryCollection(Resource):
         if 'api_version' not in content:
             return build_response(request, 400, 'Missing required field: api_version')
 
-        if 'store_collection' not in content:
-            return build_response(request, 400, 'Missing required field: store_collection')
+        if 'offering_collection' not in content:
+            return build_response(request, 400, 'Missing required field: offering_collection')
+
+        if 'resource_collection' not in content:
+            return build_response(request, 400, 'Missing required field: resource_collection')
 
         # Check data formats
         if not is_valid_id(content['name']):
             return build_response(request, 400, 'Invalid name format')
 
-        if not is_valid_id(content['store_collection']) or ' ' in content['store_collection']:
-            return build_response(request, 400, 'Invalid store_collection format: Invalid character found')
+        if not is_valid_id(content['offering_collection']) or ' ' in content['offering_collection']:
+            return build_response(request, 400, 'Invalid offering_collection format: Invalid character found')
+
+        if not is_valid_id(content['resource_collection']) or ' ' in content['resource_collection']:
+            return build_response(request, 400, 'Invalid resource_collection format: Invalid character found')
 
         if not is_valid_url(content['host']):
             return build_response(request, 400, 'Invalid URL format')
@@ -87,7 +92,14 @@ class RepositoryCollection(Resource):
 
         # Register repository
         try:
-            register_repository(content['name'], content['host'], content['store_collection'], api_version, is_default)
+            register_repository(
+                content['name'],
+                content['host'],
+                content['offering_collection'],
+                content['resource_collection'],
+                api_version,
+                is_default
+            )
         except ConflictError as e:
             return build_response(request, 409, unicode(e))
         except Exception as e:

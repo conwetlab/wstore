@@ -26,7 +26,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from wstore.store_commons.errors import ConflictError
 from wstore.models import Repository
 
-def register_repository(name, host, collection, api_version, default=False):
+
+def register_repository(name, host, offering_collection, resource_collection, api_version, default=False):
     """
     Register a new repository in WStore, these repositories will be used for the storage
     of the USDL descriptions of offerings and resources
@@ -38,7 +39,7 @@ def register_repository(name, host, collection, api_version, default=False):
     # Check if the repository name is in use
     if len(Repository.objects.filter(name=name) | Repository.objects.filter(host=host)) > 0:
         raise ConflictError('The given repository is already registered')
-    
+
     # If the repository will be the default one modify the existing repos
     if default:
         _unset_default()
@@ -50,7 +51,8 @@ def register_repository(name, host, collection, api_version, default=False):
     Repository.objects.create(
         name=name,
         host=host,
-        store_collection=collection,
+        offering_collection=offering_collection,
+        resource_collection=resource_collection,
         api_version=api_version,
         is_default=default
     )
@@ -100,8 +102,9 @@ def get_repositories():
         response.append({
             'name': rep.name,
             'host': rep.host,
-            'is_default': rep.is_default
-            'store_collection': rep.store_collection,
+            'is_default': rep.is_default,
+            'offering_collection': rep.offering_collection,
+            'resource_collection': rep.resource_collection,
             'api_version': rep.api_version
         })
 

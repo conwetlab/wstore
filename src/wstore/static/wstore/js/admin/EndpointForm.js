@@ -131,28 +131,44 @@
             validation.data.is_default = $('#is-default').prop('checked');
         }
 
-        var storeCollection = $.trim($('#store-collection').val());
+        var offeringCollection = $.trim($('#offering-collection').val());
+        var resourceCollection = $.trim($('#resource-collection').val());
         var reg = new RegExp(/^[\w-]+$/);
         var msg = validation.msg == undefined ? '' : validation.msg;
         var errFields = validation.errFields == undefined ? [] : validation.errFields;
         
-        if (!storeCollection.length) {
+        if (!offeringCollection.length) {
             validation.valid = false;
-            msg += 'Missing required field Store Collection <br/>';
-            errFields.push($('#store-collection').parent().parent());
+            msg += 'Missing required field Offering Collection <br/>';
+            errFields.push($('#offering-collection').parent().parent());
         }
 
-        if (validation.valid && !reg.test(storeCollection)) {
+        if (validation.valid && !reg.test(offeringCollection)) {
             // Check collection format
             validation.valid = false;
             msg += 'Invalid collection format <br/>';
-            errFields.push($('#store-collection').parent().parent())
+            errFields.push($('#offering-collection').parent().parent())
+
+        }
+
+        if (!resourceCollection.length) {
+            validation.valid = false;
+            msg += 'Missing required field Resource Collection <br/>';
+            errFields.push($('#resource-collection').parent().parent());
+        }
+
+        if (validation.valid && !reg.test(resourceCollection)) {
+            // Check collection format
+            validation.valid = false;
+            msg += 'Invalid collection format <br/>';
+            errFields.push($('#resource-collection').parent().parent())
 
         }
 
         // Include api_version in the request
         if (validation.valid) {
-            validation.data.store_collection = storeCollection;
+            validation.data.offering_collection = offeringCollection;
+            validation.data.resource_collection = resourceCollection;
             validation.data.api_version = $('#api-version').val();
         } else {
             validation.msg = msg;
