@@ -108,7 +108,7 @@ class RepositoryAdaptor(object):
 
     def download(self, name=None):
 
-        response = self._make_request(requests.get, '', name, headers={'Accept': '*'})
+        response = self._make_request(requests.get, '', name, headers={'Accept': '*/*'})
 
         allowed_formats = ['text/plain', 'application/rdf+xml', 'text/turtle', 'text/n3']
         resp_content_type = mimeparser.best_match(allowed_formats, response.headers.get('content-type'))
@@ -136,7 +136,7 @@ class RepositoryAdaptorV1(RepositoryAdaptor):
         # Only ASCII characters are allowed
         data = unicodedata.normalize('NFKD', data).encode('ascii', 'ignore')
 
-        response = self._make_request(requests.put, data, name, headers={'content-type': content_type + '; charset=utf-8'})
+        response = self._make_request(requests.put, data, name, headers={'Content-Type': content_type + '; charset=utf-8'})
         return response.url
 
 
@@ -164,6 +164,6 @@ class RepositoryAdaptorV2(RepositoryAdaptor):
             self._make_request(requests.post, json.dumps(res_meta), '', headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
 
         # Upload resource content
-        response = self._make_request(requests.put, data, name, headers={'content-type': content_type})
+        response = self._make_request(requests.put, data, name, headers={'Content-Type': content_type})
 
         return response.url

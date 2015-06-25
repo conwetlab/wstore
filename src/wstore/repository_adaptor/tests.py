@@ -20,46 +20,90 @@
 
 from __future__ import unicode_literals
 
-from urllib2 import HTTPError
 from mock import MagicMock
 from nose_parameterized import parameterized
 
 from django.test import TestCase
 
 from wstore.repository_adaptor import repositoryAdaptor
+from wstore.store_commons.errors import RepositoryError
+
+
+def _build_mock_request(method):
+    status_values = {
+        'get': 200,
+        'put': 200,
+        'post': 201,
+        'delete': 204
+    }
+
+    # Build response
+    response = MagicMock()
+    response.status_code = status_values[method]
+
+    if method == 'get':
+        response.headers = {
+            'content-type': 'application/rdf+xml'
+        }
+        response.text = 'value returned'
+
+    def _mock_request(url, headers={}, data=''):
+        # Check headers
+        if 'Authorization' not in headers:
+            response.status_code = 401
+
+        if method == 'get' and 'Accept' not in headers:
+            response.status_code = 406
+
+        if (method == 'put' or method == 'post') and 'Content-Type' not in headers:
+            response.status_code = 415
+
+        response.url = url
+        return response
+
+    return _mock_request
 
 
 class RepositoryAdaptorTestCase(TestCase):
 
     tags = ('repository-adaptor', )
 
+    _repository_v1 = MagicMock()
+    _repository_v2 = MagicMock()
+
     def setUp(self):
         # Create mocks
-        repositoryAdaptor.urllib2 = MagicMock(name="urllib2")
-        self.opener_mock = MagicMock()
+        repositoryAdaptor.requests = MagicMock(name="requests")
 
-        self.response = MagicMock()
-        self.response.code = 200
-        self.response.headers = {
-            'content-type': 'application/rdf+xml'
-        }
-        self.response.read.return_value = 'value returned'
+        repositoryAdaptor.requests.get = _build_mock_request('get')
+        repositoryAdaptor.requests.put = _build_mock_request('put')
+        repositoryAdaptor.requests.post = _build_mock_request('post')
+        repositoryAdaptor.requests.delete = _build_mock_request('delete')
 
-        self.opener_mock.open.return_value = self.response
-        repositoryAdaptor.urllib2.build_opener.return_value = self.opener_mock
+        # Mpck repository objects
+        self._repository_v1.name = 'TestRepository1'
+        self._repository_v1.host = 'http://testrepo1.com/'
+        self._repository_v1.api_version = 1
+        self._repository_v1.offering_collection = 'testOfferingCollectionv1'
+        self._repository_v1.resource_collection = 'testResourceCollectionv1'
 
-        repositoryAdaptor.MethodRequest = MagicMock(name="MethodRequest")
-        self.request = MagicMock()
-        repositoryAdaptor.MethodRequest.return_value = self.request
+        self._repository_v2.name = 'TestRepository2'
+        self._repository_v2.host = 'http://testrepo2.com/'
+        self._repository_v2.api_version = 2
+        self._repository_v2.offering_collection = 'testOfferingCollectionv2'
+        self._repository_v2.resource_collection = 'testResourceCollectionv2'
 
     def tearDown(self):
         reload(repositoryAdaptor)
 
-    def _http_error(self):
-        self.opener_mock.open.side_effect = HTTPError('http://repository.com', 500, 'Internal error', None, None)
-
     def _error_code(self):
-        self.response.code = 404
+        response = MagicMock()
+        response.status_code = 500
+        repositoryAdaptor.requests = MagicMock()
+        repositoryAdaptor.requests.get.return_value = response
+        repositoryAdaptor.requests.put.return_value = response
+        repositoryAdaptor.requests.post.return_value = response
+        repositoryAdaptor.requests.delete.return_value = response
 
     def _execute_test(self, method, args, checker, expected_data, side_effect=None, err_msg=None):
 
@@ -77,29 +121,27 @@ class RepositoryAdaptorTestCase(TestCase):
             # Call specific checker
             checker(response, *expected_data)
         else:
-            self.assertTrue(isinstance(error, repositoryAdaptor.RepositoryError))
+            self.assertTrue(isinstance(error, RepositoryError))
             self.assertEquals(unicode(e), err_msg)
 
     def _check_upload_response(self, rep_url, expected_url, content_type, data):
         # Check returned url
         self.assertEquals(rep_url, expected_url)
 
-        # Check calls
-        headers = {'content-type': content_type + '; charset=utf-8'}
-        repositoryAdaptor.MethodRequest.assert_called_once_with('PUT', expected_url, data, headers)
-        self.opener_mock.open.assert_called_once_with(self.request)
-
     @parameterized.expand([
-        ('basic', 'application/rdf+xml', 'content',
-            'http://repository.com/', 'http://repository.com/collection/resource', 'collection/', 'resource'),
-        ('absolute_url', 'text/turtle', 'turtle content',
-            'http://repository.com/resource', 'http://repository.com/resource'),
-        ('http_error', 'application/rdf+xml', 'content', None, None, None, None, _http_error, 'Repository error: The repository has failed while uploading the resource'),
-        ('error_code', 'application/rdf+xml', 'content', None, None, None, None, _error_code, 'Repository error: The repository has failed while uploading the resource')
+        ('basic_v1', 'application/rdf+xml', 'content', _repository_v1,
+            'http://testrepo1.com/v1/testOfferingCollectionv1/resource', 'resource'),
+        ('basic_v2', 'application/rdf+xml', 'content', _repository_v2,
+            'http://testrepo2.com/v2/collec/testOfferingCollectionv2/resource', 'resource'),
+        ('resource', 'application/rdf+xml', 'content', _repository_v2,
+            'http://testrepo2.com/v2/collec/testResourceCollectionv2/resource', 'resource', True),
+        ('error_v1', 'application/rdf+xml', 'content', _repository_v1, None, None, False, _error_code, 'The repository has failed processing the request'),
+        ('error_v2', 'application/rdf+xml', 'content', _repository_v2, None, None, False, _error_code, 'The repository has failed processing the request')
     ])
-    def test_upload(self, name, content_type, data, url, expected_url, collection=None, res_name=None, side_effect=None, err_msg=None):
+    def test_upload(self, name, content_type, data, repository, expected_url, res_name=None, is_resource=False, side_effect=None, err_msg=None):
         # Build repository adaptor object
-        repository_adaptor = repositoryAdaptor.RepositoryAdaptor(url, collection)
+        repository_adaptor = repositoryAdaptor.repository_adaptor_factory(repository, is_resource=is_resource)
+        repository_adaptor.set_credentials('11111')
 
         # Execute test
         self._execute_test(
@@ -117,48 +159,44 @@ class RepositoryAdaptorTestCase(TestCase):
             'data': 'value returned'
         })
 
-        headers = {'Accept': '*'}
-        repositoryAdaptor.MethodRequest.assert_called_once_with('GET', complete_url, '', headers)
-        self.opener_mock.open.assert_called_once_with(self.request)
-
     @parameterized.expand([
-        ('basic', 'http://repository.com', 'http://repository.com/collection/resource', 'collection', 'resource'),
-        ('absolute_url', 'http://repository.com/collection/resource', 'http://repository.com/collection/resource'),
-        ('http_error', 'http://repository.com/collection/resource', None, None, None, _http_error, 'Repository error: The repository has failed downloading the resource'),
-        ('error_code', 'http://repository.com/collection/resource', None, None, None, _error_code, 'Repository error: The repository has failed downloading the resource')
+        ('basic_v1', 'http://repository.com/v1/collection/resource'),
+        ('basic_v2', 'http://repository.com/v2/collec/collection/resource'),
+        ('error_code_v1', 'http://repository.com/v1/collection/resource', _error_code, 'The repository has failed processing the request'),
+        ('error_code_v2', 'http://repository.com/v2/collec/collection/resource', _error_code, 'The repository has failed processing the request')
     ])
-    def test_download(self, name, url, complete_url, collection=None, res_name=None, side_effect=None, err_msg=None):
+    def test_download(self, name, url, side_effect=None, err_msg=None):
         # Build repository adaptor object
-        repository_adaptor = repositoryAdaptor.RepositoryAdaptor(url, collection)
+        repository_adaptor = repositoryAdaptor.unreg_repository_adaptor_factory(url)
+        repository_adaptor.set_credentials('11111')
 
         self._execute_test(
             repository_adaptor.download,
-            (res_name, ),
+            (None,),
             self._check_download_response,
-            (complete_url, ),
+            (url, ),
             side_effect,
             err_msg
         )
 
     def _check_delete_response(self, data, complete_url):
-        repositoryAdaptor.MethodRequest.assert_called_once_with('DELETE', complete_url)
-        self.opener_mock.open.assert_called_once_with(self.request)
+        pass
 
     @parameterized.expand([
-        ('basic', 'http://repository.com', 'http://repository.com/collection/resource', 'collection', 'resource'),
-        ('absolute_url', 'http://repository.com/collection/resource', 'http://repository.com/collection/resource'),
-        ('http_error', 'http://repository.com/collection/resource', None, None, None, _http_error, 'Repository error: The repository has failed deleting the resource'),
-        ('error_code', 'http://repository.com/collection/resource', None, None, None, _error_code, 'Repository error: The repository has failed deleting the resource')
+        ('basic_v1', 'http://repository.com/v1/collection/resource'),
+        ('basic_v2', 'http://repository.com/v2/collec/collection/resource'),
+        ('error_code_v1', 'http://repository.com/v1/collection/resource', _error_code, 'The repository has failed processing the request'),
+        ('error_code_v2', 'http://repository.com/v2/collec/collection/resource', _error_code, 'The repository has failed processing the request')
     ])
-    def test_delete(self, name, url, complete_url, collection=None, res_name=None, side_effect=None, err_msg=None):
-
-        repository_adaptor = repositoryAdaptor.RepositoryAdaptor(url, collection)
+    def test_delete(self, name, url, side_effect=None, err_msg=None):
+        repository_adaptor = repositoryAdaptor.unreg_repository_adaptor_factory(url)
+        repository_adaptor.set_credentials('11111')
 
         self._execute_test(
             repository_adaptor.delete,
-            (res_name, ),
+            (None, ),
             self._check_delete_response,
-            (complete_url, ),
+            (url, ),
             side_effect,
             err_msg
         )
