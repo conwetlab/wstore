@@ -377,25 +377,27 @@ def get_provider_resources(provider, filter_=None, pagination=None):
     return response
 
 
-def _remove_resource(resource):
-    # Delete files if needed
-    if resource.resource_path:
-        path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
-        os.remove(path)
-
+def _remove_usdls(resource):
     usdl_urls = [resource.resource_usdl]
 
     for old in resource.old_versions:
         # Save usdl urls of old versions
         usdl_urls.append(old.resource_usdl)
 
-    # Remove the resource
-    resource.delete()
-
     # Remove the usdl descriptions from the repository
     for url in usdl_urls:
         repository_adaptor = unreg_repository_adaptor_factory(url)
         repository_adaptor.delete()
+
+
+def _remove_resource(resource):
+    # Delete files if needed
+    if resource.resource_path:
+        path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
+        os.remove(path)
+
+    # Remove the resource
+    resource.delete()
 
 
 @delete_resource_events
@@ -431,6 +433,8 @@ def _delete_resource(resource, user):
                 offering = Offering.objects.get(pk=of)
                 if offering.state == 'published':
                     delete_offering(user, offering)
+
+    _remove_usdls(resource)
 
 
 def delete_resource(resource, user):
