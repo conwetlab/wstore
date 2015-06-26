@@ -69,7 +69,7 @@ def _save_resource_file(provider, name, version, file_):
     return settings.MEDIA_URL + 'resources/' + file_name
 
 
-def _upload_usdl(resource):
+def _build_usdl(resource):
     # Create rdf template for the resource
     site_context = Context.objects.all()[0]
     base_uri = site_context.site.domain
@@ -88,7 +88,12 @@ def _upload_usdl(resource):
 
     usdl_template = loader.get_template('usdl/resource_usdl_template.rdf')
     # Render the template
-    usdl = usdl_template.render(TmplContext(context))
+    return usdl_template.render(TmplContext(context)), resource_uri
+
+
+def _upload_usdl(resource, user):
+
+    usdl, resource_uri = _build_usdl(resource)
 
     # Upload the rdf of the resource to the repository
     repository = Repository.objects.get(is_default=True)
@@ -96,6 +101,8 @@ def _upload_usdl(resource):
 
     resource_id = resource.pk + '__' + resource.provider.name + '__' + resource.name.replace(' ', '_') + '__' + resource.version
 
+    repository_adaptor.set_uri(resource_uri)
+    repository_adaptor.set_credentials(user.userprofile.access_token)
     usdl_url = repository_adaptor.upload('application/rdf+xml', usdl, resource_id)
 
     resource.resource_usdl = usdl_url
@@ -103,8 +110,15 @@ def _upload_usdl(resource):
     resource.save()
 
 
+def _update_usdl(resource, user):
+    usdl, resource_uri = _build_usdl(resource)
+    repository_adaptor = unreg_repository_adaptor_factory(resource.resource_usdl)
+    repository_adaptor.set_credentials(user.userprofile.access_token)
+    repository_adaptor.upload('application/rdf+xml', usdl)
+
+
 @register_resource_events
-def _create_resource_model(provider, resource_data):
+def _create_resource_model(provider, user, resource_data):
     # Create the resource
     resource = Resource.objects.create(
         name=resource_data['name'],
@@ -119,7 +133,7 @@ def _create_resource_model(provider, resource_data):
         resource_type=resource_data['resource_type'],
         meta_info=resource_data['meta']
     )
-    _upload_usdl(resource)
+    _upload_usdl(resource, user)
 
 
 @register_resource_validation_events
@@ -194,7 +208,7 @@ def register_resource(provider, data, file_=None):
     resource_data['meta'] = data.get('meta', {})
 
     # Create the resource entry in the database
-    _create_resource_model(current_organization, resource_data)
+    _create_resource_model(current_organization, provider, resource_data)
 
 
 def _get_decorated_save(action):
@@ -203,11 +217,16 @@ def _get_decorated_save(action):
         'update': update_resource_events
     }
 
+    uploaders = {
+        'upgrade': _upload_usdl,
+        'update': _update_usdl
+    }
+
     decorator = save_decorators[action]
 
     @decorator
-    def save_resource(resource):
-        _upload_usdl(resource)
+    def save_resource(resource, user):
+        uploaders[action](resource, user)
         resource.save()
 
     return save_resource
@@ -233,7 +252,7 @@ def _validate_upgrade_resource_info(resource, data, file_=None):
     return data
 
 
-def upgrade_resource(resource, data, file_=None):
+def upgrade_resource(resource, user, data, file_=None):
     """
     Upgrades an existing resource to a new version
     """
@@ -273,10 +292,10 @@ def upgrade_resource(resource, data, file_=None):
 
     # Save the resource
     decorated_save = _get_decorated_save('upgrade')
-    decorated_save(resource)
+    decorated_save(resource, user)
 
 
-def update_resource(resource, data):
+def update_resource(resource, user, data):
 
     # Check that the resource can be updated
     if resource.state == 'deleted':
@@ -326,7 +345,7 @@ def update_resource(resource, data):
         resource.description = data['description']
 
     decorated_save = _get_decorated_save('update')
-    decorated_save(resource)
+    decorated_save(resource, user)
 
 
 def get_resource_info(resource):
@@ -377,7 +396,7 @@ def get_provider_resources(provider, filter_=None, pagination=None):
     return response
 
 
-def _remove_usdls(resource):
+def _remove_usdls(resource, user):
     usdl_urls = [resource.resource_usdl]
 
     for old in resource.old_versions:
@@ -387,6 +406,7 @@ def _remove_usdls(resource):
     # Remove the usdl descriptions from the repository
     for url in usdl_urls:
         repository_adaptor = unreg_repository_adaptor_factory(url)
+        repository_adaptor.set_credentials(user.userprofile.access_token)
         repository_adaptor.delete()
 
 
@@ -404,6 +424,8 @@ def _remove_resource(resource):
 def _delete_resource(resource, user):
 
     # If the resource is not included in any offering delete it
+    _remove_usdls(resource, user)
+
     if not len(resource.offerings):
         _remove_resource(resource)
     else:
@@ -433,8 +455,6 @@ def _delete_resource(resource, user):
                 offering = Offering.objects.get(pk=of)
                 if offering.state == 'published':
                     delete_offering(user, offering)
-
-    _remove_usdls(resource)
 
 
 def delete_resource(resource, user):

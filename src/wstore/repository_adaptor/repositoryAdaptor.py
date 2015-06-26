@@ -67,6 +67,7 @@ class RepositoryAdaptor(object):
     _repository_url = None
     _collection = None
     _credentials = None
+    _asset_uri = None
 
     def __init__(self, repository_url, collection=None):
 
@@ -82,6 +83,9 @@ class RepositoryAdaptor(object):
 
     def set_credentials(self, credentials):
         self._credentials = credentials
+
+    def set_uri(self, uri):
+        self._asset_uri = uri
 
     def _build_url(self, name):
         url = self._repository_url
@@ -154,11 +158,16 @@ class RepositoryAdaptorV2(RepositoryAdaptor):
         if name is not None:
             # Create resource
             name = name.replace(' ', '-')
+
+            content_url = self._asset_uri
+            if self._asset_uri is None:
+                content_url = self._build_url(name)
+
             res_meta = {
                 'type': 'resource',
                 'creator': settings.STORE_NAME,
                 'name': name,
-                'contentUrl': self._build_url(name),
+                'contentUrl': content_url,
                 'contentFileName': name
             }
             self._make_request(requests.post, json.dumps(res_meta), '', headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
