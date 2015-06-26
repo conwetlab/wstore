@@ -525,7 +525,7 @@ def update_offering(offering, data):
             repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
             repository_adaptor.upload(
                 'application/rdf+xml',
-                usdl_generator.generate_offering_usdl(offering)
+                usdl_generator.generate_offering_usdl(offering)[0]
             )
 
     offering.save()
@@ -565,11 +565,12 @@ def publish_offering(user, offering, data):
 
         # Generate the USDL of the offering
         generator = USDLGenerator()
-        usdl = generator.generate_offering_usdl(offering)
+        usdl, offering_uri = generator.generate_offering_usdl(offering)
 
         repository_adaptor = repository_adaptor_factory(repository)
         offering_id = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
 
+        repository_adaptor.set_uri(offering_uri)
         offering.description_url = repository_adaptor.upload('application/rdf+xml', usdl, name=offering_id)
 
     # Publish the offering in the selected marketplaces
@@ -772,5 +773,5 @@ def bind_resources(offering, data, provider):
         repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
         repository_adaptor.upload(
             'application/rdf+xml',
-            usdl_generator.generate_offering_usdl(offering)
+            usdl_generator.generate_offering_usdl(offering)[0]
         )

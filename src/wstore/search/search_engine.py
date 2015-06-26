@@ -48,7 +48,7 @@ class SearchEngine():
 
         generator = USDLGenerator()
         graph.parse(
-            data=generator.generate_offering_usdl(offering),
+            data=generator.generate_offering_usdl(offering)[0],
             format='application/rdf+xml'
         )
 

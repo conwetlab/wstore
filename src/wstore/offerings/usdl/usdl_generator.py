@@ -489,4 +489,4 @@ class USDLGenerator():
             usdl = graph.serialize(format=format_, auto_compact=True)
 
         # Return the USDL document
-        return usdl
+        return usdl, offering_uri
