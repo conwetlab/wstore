@@ -27,6 +27,8 @@
         this.offeringInfo = {};
         this.logoFailure = false;
         this.screenFailure = false;
+        this.apps = {};
+        this.resources = [];
     }
 
     CreateOfferingForm.prototype = new ModalForm('Create new offering', '#create_off_form_template');
@@ -167,120 +169,79 @@
         });
     };
 
-    /**
-     * Displays the form for creating a simple USDL document
-     */
-    CreateOfferingForm.prototype.displayCreateUSDLForm = function displayCreateUSDLForm(repositories) {
-        var i, repLength = repositories.length;
-        var helpMsg = "Create a basic USDL for your offering. This method only supports free or single payment as price models";
+    CreateOfferingForm.prototype.displayPricingEditor = function displayPricingEditor() {
+        var footBtn, backBtn;
 
-        $('#upload-help').attr('data-content', helpMsg);
-        $('#usdl-container').empty();
-        $.template('usdlFormTemplate', $('#create_usdl_form_template'));
-        $.tmpl('usdlFormTemplate', {}).appendTo('#usdl-container');
+        // var pricingEditor = new PricingEditor($('.modal-body'));
 
-        for(i=0; i<repLength; i+=1) {
-            $.template('radioTemplate', $('#radio_template'));
-            $.tmpl('radioTemplate', {
-                'name': 'rep-radio',
-                'id': 'rep-radio' + i,
-                'value': repositories[i].name,
-                'text': repositories[i].name}).appendTo('#repositories');
-        }
-        // Set listeners
-        if (this.offeringInfo.open) {
-            $('#pricing-select').prop('disabled', true);
-        } else {
-            $('#pricing-select').change(function() {
-                if ($(this).val() == 'free') {
-                    $('#price-input').prop('disabled', true);
-                } else {
-                    $('#price-input').prop('disabled', false);
-                }
-            });
-        }
+        $('.modal-footer').empty();
+        backBtn = $('<input class="btn btn-basic" type="button" value="Back"></input>').appendTo('.modal-footer');
+        backBtn.click(function(evnt) {
+            this.showUSDLForm();
+        }.bind(this));
+
+        footBtn = $('<input class="btn btn-basic" type="button" value="Next"></input>').appendTo('.modal-footer');
+        footBtn.click(function(){
+            this.offeringInfo.offering_info.pricing = {
+                'price_plans': []
+            }
+            this.getApplications();
+        }.bind(this));
     };
 
     /**
      * Displays the form for providing the USDL info
      */
-    CreateOfferingForm.prototype.showUSDLForm = function showUSDLForm(repositories) {
+    CreateOfferingForm.prototype.showUSDLForm = function showUSDLForm() {
         var footBtn, backBtn;
-        $('.modal-body').empty();
 
         // Create the form
-        $.template('usdlTemplate', $('#select_usdl_form_template'));
-        $.tmpl('usdlTemplate').appendTo('.modal-body');
-
-        // If the offering is an open offering show an informative message
-        if (this.offeringInfo.open) {
-            var msg = 'You are creating an open offering, so you cannot specify a pricing model';
-            MessageManager.showAlertInfo('Note', msg, $('#error-message'));
-            $('#error-message').removeClass('span8');
+        if (!$('#offering-creation-usdl').length) {
+            $.template('usdlTemplate', $('#select_usdl_form_template'));
+            $.tmpl('usdlTemplate').appendTo('.modal-body');
+        } else {
+            $('#offering-creation-usdl').removeClass('hide');
         }
-        // The create USDL form is displayed by default
-        this.displayCreateUSDLForm(repositories);
         
         // Listener for application selection
         $('.modal-footer').empty();
 
+        backBtn = $('<input class="btn btn-basic" type="button" value="Back"></input>').appendTo('.modal-footer');
+        backBtn.click(function(evnt) {
+            $('#offering-creation-usdl').addClass('hide');
+            $('#offering-creation-main').children().off();
+            this.includeContents();
+            $('#offering-creation-main').removeClass('hide');
+        }.bind(this));
+
         // Set next action
-        footBtn = $('<input></input>').addClass('btn btn-classic').attr('type', 'button').val('Next').appendTo('.modal-footer');
+        footBtn = $('<input></input>').addClass('btn btn-basic').attr('type', 'button').val('Next').appendTo('.modal-footer');
         footBtn.click(function(event) {
             var msg = [];
             var errElems = [];
             var error = false;
-            var description;
-            var pricing = {
-                'price_plans': []
-            };
-            var plan = {};
+            var description, abstract;
             var legal = {};
-            var rep = $('#repositories').val();
-            var model;
 
             event.preventDefault();
             event.stopPropagation();
 
             // Check provided info
             description = $.trim($('#description').val());
+            abstract = $.trim($('#abstract').val());
 
             if (description == '') {
                 error = true;
                 msg.push('The description is required');
                 errElems.push($('#description'));
             }
-            model = $('#pricing-select').val();
 
-            // If a payment model is selected the price is required
-            if (model == 'single_payment') {
-                var component = {}
-                var price = $.trim($('#price-input').val());
-                if (price == '') {
-                    error = true;
-                    msg.push('The price is required for a single payment model');
-                    errElems.push($('#price-input'));
-                } else if (!$.isNumeric(price)){
-                    error = true;
-                    msg.push('The price must be a number');
-                    errElems.push($('#price-input'));
-                } else {
-                    plan.title = 'Single payment price plan'
-                    plan.description = 'This price plan defines a single payment for the current offering';
-                    component.title = 'Single payment';
-                    component.description = '';
-                    component.value = price;
-                    component.unit = 'single payment';
-                    plan.currency = 'EUR';
-                    plan.price_components = [component];
-                    pricing.price_plans.push(plan);
-                } 
-            } else if (model == 'free' && !this.offeringInfo.open){
-                plan.title = 'Free use price plan';
-                plan.description = 'The current offering can be acquired for free';
-                pricing.price_plans.push(plan);
+            if (abstract == '') {
+                error = true;
+                msg.push('The abstract is required');
+                errElems.push($('#abstract'));
             }
-            
+
             legal.title = $.trim($('#legal-title').val());
             legal.text = $.trim($('#legal-text').val());
 
@@ -297,21 +258,20 @@
             // Include the info
             this.offeringInfo.offering_info = {
                 'description': description,
-                'abstract': description,
-                'pricing': pricing
+                'abstract': abstract,
             }
-            this.offeringInfo.repository = rep;
+
             // Include the legal info if conpleted
             if (legal.title && legal.text) {
                 this.offeringInfo.offering_info.legal = legal
             }
 
-
             // If the USDL is loaded go to the final step, application selection
             if (!error) {
-                this.getApplications();
+                $('#offering-creation-usdl').addClass('hide');
+                this.displayPricingEditor();
             } else {
-                fillErrorMessage(msg, errElems);
+                fillErrorMessage(msg, errElems, $('#error-message-usdl'));
             }
         }.bind(this));
     };
@@ -320,43 +280,53 @@
      * Obtains the idm applications of an user
      */
     CreateOfferingForm.prototype.getApplications = function getApplications () {
-        $.ajax({
-            type: "GET",
-            url: EndpointManager.getEndpoint('APPLICATION_COLLECTION'),
-            dataType: 'json',
-            contentType: 'application/json',
-            success: function (response) {
-                this.showApplicationsForm(response);
-            }.bind(this),
-            error: function (xhr) {
-                var resp = xhr.responseText;
-                var msg = JSON.parse(resp).message;
-                MessageManager.showAlertError('Error', msg, $('#error-message'));
-            }
-        })
+        if (!$('#offering-creation-apps').length) {
+            $.ajax({
+                type: "GET",
+                url: EndpointManager.getEndpoint('APPLICATION_COLLECTION'),
+                dataType: 'json',
+                contentType: 'application/json',
+                success: function (response) {
+                    this.showApplicationsForm(response);
+                }.bind(this),
+                error: function (xhr) {
+                    var resp = xhr.responseText;
+                    var msg = JSON.parse(resp).message;
+                    MessageManager.showAlertError('Error', msg, $('#error-message'));
+                }
+            });
+        } else {
+            this.showApplicationsForm([]);
+        }
     };
 
     /**
      * Display the form for the selection of idM applications
      */
     CreateOfferingForm.prototype.showApplicationsForm = function showApplicationsForm(applications) {
-        var userForm, footBtn, apps = {};
-        $('.modal-body').empty();
+        var userForm, footBtn, backBtn;
+        var created = false;
 
         // Create the form
-        $.template('offDescTemplate', $('#select_application_form_template'));
-        $.tmpl('offDescTemplate').appendTo('.modal-body');
+        if (!$('#offering-creation-apps').length) {
+            $.template('offDescTemplate', $('#select_application_form_template'));
+            $.tmpl('offDescTemplate').appendTo('.modal-body');
+            created = true;
+        } else {
+            $('#offering-creation-apps').children().off();
+            $('#offering-creation-apps').removeClass('hide');
+        }
 
         $('#app-help').popover({'trigger': 'manual'});
         $('#app-help').click(helpHandler);
         // Include applications
-        if (applications.length > 0) {
+        if (applications.length > 0 && created) {
             $.template('appCheckTemplate', $('#application_select_template'));
             // Fill applications structure
             for (var i = 0; i < applications.length; i++) {
                 var url = applications[i].url;
                 var dispUrl = applications[i].url;
-                apps[applications[i]['id']] = applications[i];
+                this.apps[applications[i]['id']] = applications[i];
 
                 // Check URL size
                 if (applications[i].url.length > 50) {
@@ -370,14 +340,22 @@
                     'id': applications[i].id
                 }).appendTo('#applications');
             }
-        } else {
+        } else if (created) {
             var msg = "You don't have any application available for access control. Go to the next window to bind some downloadable resources";
             MessageManager.showAlertInfo('No Applications', msg, $('#applications'));
         }
 
         // Set button listener
         $('.modal-footer').empty();
-        footBtn = $('<input></input>').addClass('btn btn-classic').attr('type', 'button').val('Next').appendTo('.modal-footer');
+        backBtn = $('<input class="btn btn-basic" type="button" value="Back"></input>').appendTo('.modal-footer');
+        backBtn.click(function(evnt) {
+            $('#offering-creation-apps').addClass('hide');
+            //$('#offering-creation-main').children().off();
+            this.displayPricingEditor();
+            //$('#offering-creation-main').removeClass('hide');
+        }.bind(this));
+
+        footBtn = $('<input></input>').addClass('btn btn-basic').attr('type', 'button').val('Next').appendTo('.modal-footer');
         footBtn.click(function(evnt) {
             var appsSelected = [];
             evnt.preventDefault();
@@ -390,23 +368,31 @@
                 $(document).unbind('click');
             }
 
-            // Check tha selected applications
-            $('input[type="checkbox"]').each(function() {
-                if ($(this).prop('checked')) {
-                    var app = apps[$(this).attr('id')];
-                    appsSelected.push({
-                        'name': app.name,
-                        'url': app.url,
-                        'id': app.id,
-                        'description': app.description
-                    });
+            // Check the selected applications
+            $('input[type="checkbox"]').each(function(self) {
+                return function() {
+                    if ($(this).prop('checked') && self.apps.hasOwnProperty($(this).attr('id'))) {
+                        var app = self.apps[$(this).attr('id')];
+                        appsSelected.push({
+                            'name': app.name,
+                            'url': app.url,
+                            'id': app.id,
+                            'description': app.description
+                        });
+                    }
                 }
-            });
+            }(this));
 
             // Make the request
             this.offeringInfo.applications = appsSelected;
-            userForm = new BindResourcesForm({});
-            userForm.getUserResources(this.showResourcesForm.bind(this), this.offeringInfo.open, true);
+
+            $('#offering-creation-apps').addClass('hide');
+            if (!$('#offering-creation-resources').length) {
+                userForm = new BindResourcesForm({});
+                userForm.getUserResources(this.showResourcesForm.bind(this), this.offeringInfo.open, true);
+            } else {
+                this.showResourcesForm([]);
+            }
         }.bind(this));
     };
 
@@ -414,15 +400,23 @@
      * Displays the form for the selection of resources
      */
     CreateOfferingForm.prototype.showResourcesForm = function showResourcesForm(resources) {
-        $('.modal-body').empty();
+        var backBtn, created = false;
+
         $('.modal-footer').empty()
 
-        $.template('selectResourcesTemplate', $('#resources_form_template'));
-        $.tmpl('selectResourcesTemplate').appendTo('.modal-body');
+        if (!$('#offering-creation-resources').length) {
+            $.template('selectResourcesTemplate', $('#resources_form_template'));
+            $.tmpl('selectResourcesTemplate').appendTo('.modal-body');
+            created = true;
+        } else {
+            $('#offering-creation-resources').children().off();
+            $('#offering-creation-resources').removeClass('hide');
+        }
 
         $('#resources-help').popover({'trigger': 'manual'});
         $('#resources-help').click(helpHandler);
-        if (resources.length > 0) {
+
+        if (resources.length > 0 && created) {
          // Apend the provider resources
             for (var i = 0; i < resources.length; i++) {
                 var res = resources[i];
@@ -451,13 +445,20 @@
                     templ.find('.label').remove();
                 }
             }
-        } else {
+            this.resources = resources
+        } else if (created){
             var msg = "You don't have any resource registered. Press accept to create the offering without resources (You can bind resources later, before publishing the offering).";
             MessageManager.showAlertInfo('No Resources', msg, $('#sel-resources'));
         }
 
+        backBtn = $('<input class="btn btn-basic" type="button" value="Back"></input>').appendTo('.modal-footer');
+        backBtn.click(function(evnt) {
+            $('#offering-creation-resources').addClass('hide');
+            this.showApplicationsForm([]);
+        }.bind(this));
+
         // Append the Accept button
-        $('<input></input>').attr('type', 'button').addClass('btn btn-clasic').attr('value', 'Accept').click(function() {
+        $('<input></input>').attr('type', 'button').addClass('btn btn-blue').attr('value', 'Accept').click(function() {
             var resSelected = [];
 
             if ($('#resources-help').prop('displayed')) {
@@ -470,8 +471,8 @@
             for (var i = 0; i < resources.length; i++) {
                 if ($('#check-' + i).prop("checked")) {
                     resSelected.push({
-                        'name': resources[i].name,
-                        'version': resources[i].version
+                        'name': this.resources[i].name,
+                        'version': this.resources[i].version
                     })
                 }
             }
@@ -481,17 +482,17 @@
         }.bind(this)).appendTo('.modal-footer');
     };
 
-    CreateOfferingForm.prototype.includeContents = function includeContents() {
-        var repositoryClient = new ServerClient('', 'REPOSITORY_COLLECTION');
-        // Get repositories
-        repositoryClient.get(this.fillMainInfo.bind(this), {});
-    }
+    var fillErrorMessage = function fillErrorMessage(msg, errElems, errContainer) {
+        var errorContainer = $('#error-message');
 
-    var fillErrorMessage = function fillErrorMessage(msg, errElems) {
+        if (errContainer) {
+            errorContainer = errContainer;
+        }
+
         for (var i = 0; i < errElems.length; i++) {
             errElems[i].parent().parent().addClass('error');
         }
-        MessageManager.showAlertError('Error', '', $('#error-message'));
+        MessageManager.showAlertError('Error', '', errorContainer);
         // Build message content
         $('.alert-error').append(msg[0]);
         for (var i = 1; i < msg.length; i++) {
@@ -527,19 +528,9 @@
         }, 300);
         $('[name="app-version"]').off();
     }
-    /**
-     * Displays the form for providing the basic info of the offering
-     */
-    CreateOfferingForm.prototype.fillMainInfo = function fillMainInfo(repositories) {
-        var i, repLength = repositories.length;
 
-        if (repLength == 0) {
-            var msg = "There isn't any repository registered where saving offering descriptions. A repository is needed for the creation of offerings";
-            $('.modal-header h2').text('Error');
-            $('.modal-body').empty();
-            $('.modal-body').append('<p>' + msg + '</p>');
-            return
-        }
+    CreateOfferingForm.prototype.includeContents = function includeContents() {
+        var i;
 
         // Create the listeners
         $('#img-logo').change(function(event) {
@@ -578,7 +569,9 @@
 
         $('[name="app-version"]').on('change paste keyup', versionCheckHandler);
 
-        $('.modal-footer > .btn').text('Next');
+        $('.modal-footer').empty();
+        $('<input type="button" class="btn btn-basic" value="Next"></input>').appendTo('.modal-footer');
+
         $('.modal-footer > .btn').click(function(event) {
             var name, version, errElems = [];
             var msg = [];
@@ -695,12 +688,12 @@
             if (!error) {
                 this.offeringInfo.name = name;
                 this.offeringInfo.version = version;
-                this.showUSDLForm(repositories);
+                $('#offering-creation-main').addClass('hide');
+                this.showUSDLForm();
             } else {
                 fillErrorMessage(msg, errElems)
             }
         }.bind(this));
-    };
-
+    }
 })();
 
