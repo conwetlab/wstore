@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 -2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -147,12 +147,12 @@ class Command(BaseCommand):
                 print "Include KeyRock API version [1/2]: "
                 api_version = read_from_cmd()
                 if api_version.isdigit() and (int(api_version) == 1 or int(api_version) == 2):
-                    settings['api_version'] = int(api_version)
+                    settings['idm_api_version'] = int(api_version)
                     correct = True
                 else:
                     print "Please include 1 or 2"
 
-            if settings['api_version'] == 2:
+            if settings['idm_api_version'] == 2:
                 print "Include KeyStone endpoint: "
                 settings['keystone_endpoint'] = read_from_cmd()
 
@@ -174,6 +174,8 @@ class Command(BaseCommand):
             else:
                 print """OAuth2 credentials are required for authentication using an Identity Manager, 
                 please include this credentials in the file settings.py as soon as you have them"""
+        else:
+            settings['idm_api_version'] = 2
 
         # Render templates
 
