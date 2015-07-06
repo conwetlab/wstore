@@ -135,7 +135,9 @@ def get_api_user(request):
 
     # Get access_token from the request
     try:
-        token = request.META['HTTP_AUTHORIZATION'].split(' ', 1)[1]
+        auth_info = request.META['HTTP_AUTHORIZATION'].split(' ', 1)
+        auth_type = auth_info[0]
+        token = auth_info[1]
     except:
         return AnonymousUser()
 
@@ -239,7 +241,15 @@ def get_api_user(request):
             user = AnonymousUser()
     else:
         try:
-            user = Token.objects.get(token=token).user
+            if auth_type.lower() == 'basic':
+                # Get user creadentials from the token
+                import base64
+                usr, passwd = base64.b64decode(token).split(':')
+
+                user = User.objects.get(username=usr)
+                user = user if user.check_password(passwd) else AnonymousUser()
+            else:
+                user = Token.objects.get(token=token).user
         except:
             user = AnonymousUser()
 
