@@ -96,10 +96,10 @@ enabled=1" > /etc/yum.repos.d/mongodb.repo
 
     # Get wkhtmltopdf package download version 0.12.1
     if [[ $ARCH == "x86_64" ]]; then
-        wget http://downloads.sourceforge.net/project/wkhtmltopdf/0.12.1/wkhtmltox-0.12.1_linux-centos6-amd64.rpm
+        wget http://download.gna.org/wkhtmltopdf/0.12/0.12.1/wkhtmltox-0.12.1_linux-centos6-amd64.rpm
         rpm -ivh wkhtmltox-0.12.1_linux-centos6-amd64.rpm
     else
-        wget http://downloads.sourceforge.net/project/wkhtmltopdf/0.12.1/wkhtmltox-0.12.1_linux-centos6-i386.rpm
+        wget http://download.gna.org/wkhtmltopdf/0.12/0.12.1/wkhtmltox-0.12.1_linux-centos6-i386.rpm
         rpm -ivh wkhtmltox-0.12.1_linux-centos6-i386.rpm
     fi
 

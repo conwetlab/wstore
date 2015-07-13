@@ -121,7 +121,7 @@ MongoDB is included in the official MongoDB downloads repositories. Once the rel
 To install wkhtmltopdf get the related rpm for your system from http://wkhtmltopdf.org/downloads.html and install the package. For example, version 0.12.1 for a 64 bits architecture: 
 
 <pre>
-# wget http://downloads.sourceforge.net/project/wkhtmltopdf/0.12.1/wkhtmltox-0.12.1_linux-centos6-amd64.rpm
+# wget http://download.gna.org/wkhtmltopdf/0.12/0.12.1/wkhtmltox-0.12.1_linux-centos6-amd64.rpm
 # rpm -ivh wkhtmltox-0.12.1_linux-centos6-amd64.rpm
 </pre>
 
