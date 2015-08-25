@@ -116,7 +116,6 @@ class FakeOfferingRollback():
         self._func(provider, profile, json_data)
 
 
-
 ##############################################################################
 ############################# Test Cases #####################################
 ##############################################################################
@@ -466,7 +465,7 @@ class OfferingUpdateTestCase(TestCase):
         offerings_management.SearchEngine.return_value = self.se_object
         offerings_management.USDLGenerator = MagicMock()
         self._gen_mock = MagicMock()
-        self._gen_mock.generate_offering_usdl.return_value = 'USDL offering'
+        self._gen_mock.generate_offering_usdl.return_value = ('USDL offering', 'http://usdluri.com/')
         offerings_management.USDLGenerator.return_value = self._gen_mock
 
     def tearDown(self):
@@ -547,10 +546,6 @@ class OfferingUpdateTestCase(TestCase):
                 })
                 self.assertEquals(usdl['description'], 'Test offering')
                 self.assertEquals(usdl['abstract'], 'A test offering')
-                self.assertEquals(usdl['name'], 'test_offering2')
-                self.assertEquals(usdl['base_id'], '61000aba8e15ac2115f022f9')
-                self.assertEquals(usdl['organization'], 'test_organization')
-                self.assertEquals(usdl['image_url'], '/wstore/test/test_organization__test_offering2__1.0/image.png')
 
             if 'image' in data:
                 # Check deletion of old image
@@ -870,7 +865,7 @@ class OfferingPublicationTestCase(TestCase):
         offerings_management.repository_adaptor_factory.return_value = self._adaptor_obj
 
         self._generator_obj = MagicMock()
-        self._generator_obj.generate_offering_usdl.return_value = 'usdl document'
+        self._generator_obj.generate_offering_usdl.return_value = ('usdl document', 'http://usdluri.com/')
         offerings_management.USDLGenerator = MagicMock()
         offerings_management.USDLGenerator.return_value = self._generator_obj
 
@@ -1005,16 +1000,14 @@ class OfferingBindingTestCase(TestCase):
         ([{
             'name': 'test_resource1',
             'version': '1.0'
-        },
-        {
+        }, {
             'name': 'test_resource3',
             'version': '1.0'
         }], 'test_offering2'),
         ([{
             'name': 'test_resource1',
             'version': '1.0'
-        },
-        {
+        }, {
             'name': 'test_resource3',
             'version': '1.0'
         }], 'test_offering2', _resource_included),

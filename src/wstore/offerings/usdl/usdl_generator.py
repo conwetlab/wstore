@@ -441,6 +441,14 @@ class USDLGenerator():
             raise ValueError('The specified format (' + format_ + ') is not a valid format')
 
         offering_info = offering.offering_description
+        offering_info['image_url'] = offering.image_url
+        offering_info['name'] = offering.name
+        offering_info['version'] = offering.version
+        offering_info['organization'] = offering.owner_organization.name
+        offering_info['base_id'] = offering.pk
+
+        offering_info['created'] = unicode(offering.creation_date)
+
         self.validate_info(offering_info, offering.owner_organization, offering.open)
 
         # Get the template

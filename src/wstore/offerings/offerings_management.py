@@ -415,7 +415,7 @@ def create_offering(provider, data):
     data['organization'] = organization
 
     # Create offering USDL
-    offering_info = data['offering_info']
+    offering_info = deepcopy(data['offering_info'])
     offering_info['image_url'] = data['image_url']
     offering_info['name'] = data['name']
     offering_info['version'] = data['version']
@@ -425,6 +425,8 @@ def create_offering(provider, data):
     created = datetime.now()
     offering_info['created'] = unicode(created)
     offering_info['modified'] = unicode(created)
+
+    data['offering_info']['modified'] = created
 
     usdl_generator = USDLGenerator()
     usdl_generator.validate_info(offering_info, organization, open_=is_open)
@@ -506,7 +508,7 @@ def update_offering(offering, data):
 
     if 'offering_info' in data:
         # Create offering USDL
-        offering_info = data['offering_info']
+        offering_info = deepcopy(data['offering_info'])
         offering_info['image_url'] = offering.image_url
         offering_info['name'] = offering.name
         offering_info['version'] = offering.version
@@ -514,11 +516,14 @@ def update_offering(offering, data):
         offering_info['base_id'] = offering.pk
 
         offering_info['created'] = unicode(offering.creation_date)
-        offering_info['modified'] = unicode(datetime.now())
+
+        mod = unicode(datetime.now())
+        offering_info['modified'] = mod
 
         usdl_generator = USDLGenerator()
         usdl_generator.validate_info(offering_info, offering.owner_organization, open_=offering.open)
 
+        data['offering_info']['modified'] = mod
         offering.offering_description = data['offering_info']
 
         if offering.open and offering.state == 'published' and len(offering.description_url):
@@ -765,6 +770,7 @@ def bind_resources(offering, data, provider):
         resource.save()
         offering.resources.remove(del_res)
 
+    offering.offering_description['modified'] = unicode(datetime.now())
     offering.save()
 
     # Update USDL document if needed
