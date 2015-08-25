@@ -135,7 +135,7 @@ def _mock_generator(self):
     search_engine.USDLGenerator = MagicMock()
     self._gen_inst = MagicMock()
     f = open(os.path.join(settings.BASEDIR, 'wstore/test/test_usdl.rdf'), 'rb')
-    self._gen_inst.generate_offering_usdl.return_value = f.read()
+    self._gen_inst.generate_offering_usdl.return_value = (f.read(), 'http://usdluri.com/')
     search_engine.USDLGenerator.return_value = self._gen_inst
 
 
@@ -153,12 +153,7 @@ class IndexCreationTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         path = settings.BASEDIR + '/wstore/test/test_index'
-        files = os.listdir(path)
-        for f in files:
-            file_path = os.path.join(path, f)
-            os.remove(file_path)
-
-        os.rmdir(path)
+        rmtree(path)
 
     def test_basic_index_creaton(self):
 
