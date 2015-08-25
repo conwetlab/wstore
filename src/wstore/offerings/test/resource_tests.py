@@ -64,7 +64,7 @@ class ResourceRegisteringTestCase(TestCase):
 
         # Mock context
         context_obj = MagicMock()
-        context_obj.site.host = 'http://localhost'
+        context_obj.site.domain = 'http://localhost'
         resources_management.Context = MagicMock(name="Context")
         resources_management.Context.objects.all.return_value = [context_obj]
 
@@ -569,9 +569,26 @@ class ResourceUpdateTestCase(TestCase):
         self.resource.offerings = []
         self.resource.resource_path = ''
         self.resource.resource_type = 'API'
+        self.resource.resource_usdl = 'http://repository.com/resource'
         resources_management.Resource = MagicMock()
         resources_management.Resource.objects.filter.return_value = []
-        resources_management._upload_usdl = MagicMock(name="_upload_usdl")
+
+        # Mock user
+        self.user = MagicMock()
+        self.user.userprofile.access_token = "access_token"
+        self._mock_resource_libs()
+
+    def _mock_resource_libs(self):
+        # Mock context
+        context_obj = MagicMock()
+        context_obj.site.domain = 'http://localhost'
+        resources_management.Context = MagicMock(name="Context")
+        resources_management.Context.objects.all.return_value = [context_obj]
+
+        # Mock RepositoryAdaptor
+        self._rep_obj = MagicMock()
+        resources_management.unreg_repository_adaptor_factory = MagicMock()
+        resources_management.unreg_repository_adaptor_factory.return_value = self._rep_obj
 
     @classmethod
     def tearDownClass(cls):
@@ -593,7 +610,7 @@ class ResourceUpdateTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
         reload(resources_management)
-        resources_management._upload_usdl = MagicMock(name="_upload_usdl")
+        self._mock_resource_libs()
 
     def _invalid_media(self):
         self.resource.resource_type = 'test_plugin'
@@ -605,6 +622,7 @@ class ResourceUpdateTestCase(TestCase):
 
         wstore.offerings.resource_plugins.decorators._get_plugin_model.return_value = mock_model
         reload(resources_management)
+        self._mock_resource_libs()
 
     def _check_in_use(self):
         self.assertEquals(self.resource.description, 'Test resource 4')
@@ -654,16 +672,16 @@ class ResourceUpdateTestCase(TestCase):
 
         error = None
         try:
-            resources_management.update_resource(self.resource, data)
+            resources_management.update_resource(self.resource, self.user, data)
         except Exception as e:
             error = e
 
         if not err_type:
             self.assertEquals(error, None)
             check(self)
+            resources_management.unreg_repository_adaptor_factory.assert_called_once_with('http://repository.com/resource')
+            self._rep_obj.set_credentials.assert_called_once_with('access_token')
             self.resource.save.assert_called_once_with()
-            resources_management._upload_usdl.assert_called_once_with(self.resource)
-
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
@@ -702,6 +720,12 @@ class ResourceUpgradeTestCase(TestCase):
         self.resource.version = '0.1'
         self.resource.old_versions = []
         resources_management._upload_usdl = MagicMock(name="_upload_usdl")
+
+        # Mock context
+        context_obj = MagicMock()
+        context_obj.site.domain = 'http://localhost'
+        resources_management.Context = MagicMock(name="Context")
+        resources_management.Context.objects.all.return_value = [context_obj]
 
     def _deleted_res(self, data):
         self.resource.state = 'deleted'
@@ -759,9 +783,10 @@ class ResourceUpgradeTestCase(TestCase):
         elif 'content' in data:
             data['content']['data'] = self.content
 
+        user = MagicMock()
         error = None
         try:
-            resources_management.upgrade_resource(self.resource, data, res_file)
+            resources_management.upgrade_resource(self.resource, user, data, res_file)
         except Exception as e:
             error = e
 
@@ -792,7 +817,7 @@ class ResourceUpgradeTestCase(TestCase):
                 self.assertEquals(self.resource.download_link, 'http://newlinktoresource.com')
 
             self.resource.save.assert_called_once_with()
-            resources_management._upload_usdl.assert_called_once_with(self.resource)
+            resources_management._upload_usdl.assert_called_once_with(self.resource, user)
 
             # Check old versions
             self.assertEquals(len(self.resource.old_versions), 1)

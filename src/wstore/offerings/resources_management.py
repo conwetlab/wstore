@@ -70,6 +70,7 @@ def _save_resource_file(provider, name, version, file_):
 
 
 def _build_usdl(resource):
+
     # Create rdf template for the resource
     site_context = Context.objects.all()[0]
     base_uri = site_context.site.domain
