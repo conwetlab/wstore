@@ -132,7 +132,7 @@ def _create_resource_model(provider, user, resource_data):
         state='created',
         open=resource_data['open'],
         resource_type=resource_data['resource_type'],
-        meta_info=resource_data['meta']
+        meta_info=resource_data['metadata']
     )
     _upload_usdl(resource, user)
 
@@ -206,7 +206,7 @@ def register_resource(provider, data, file_=None):
         resource_data['content_path'] = _save_resource_file(current_organization.name, resource_data['name'], resource_data['version'], file_)
         resource_data['link'] = ''
 
-    resource_data['meta'] = data.get('meta', {})
+    resource_data['metadata'] = data.get('metadata', {})
 
     # Create the resource entry in the database
     _create_resource_model(current_organization, provider, resource_data)
@@ -363,7 +363,7 @@ def get_resource_info(resource):
         'open': resource.open,
         'link': resource.get_url(),
         'resource_type': resource.resource_type,
-        'meta': resource.meta_info
+        'metadata': resource.meta_info
     }
 
 

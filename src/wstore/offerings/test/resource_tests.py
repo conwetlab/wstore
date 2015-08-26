@@ -275,7 +275,7 @@ class ResourceRegisteringTestCase(TestCase):
             # Check event calls
             expected_data = {
                 'name': 'Download',
-                'meta': {},
+                'metadata': {},
                 'content_path': '/media/resources/test_user__Download__1.0__test_usdl.rdf',
                 'version': '1.0',
                 'link': '',
