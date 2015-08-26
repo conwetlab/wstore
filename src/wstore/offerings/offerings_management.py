@@ -101,6 +101,7 @@ def get_offering_info(offering, user):
             'description': resource.description,
             'content_type': resource.content_type,
             'open': resource.open,
+            'resource_type': resource.resource_type,
             'metadata': resource.meta_info
         }
 
