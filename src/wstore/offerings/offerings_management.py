@@ -331,7 +331,7 @@ def create_offering(provider, data):
     profile = provider.userprofile
 
     # Validate basic fields
-    if 'name' not in data or 'version' not in data or 'offering_info' not in data \
+    if 'name' not in data or 'version' not in data or 'offering_description' not in data \
             or 'image' not in data:
 
         missing_fields = ''
@@ -342,8 +342,8 @@ def create_offering(provider, data):
         if 'version' not in data:
             missing_fields += ' version'
 
-        if 'offering_info' not in data:
-            missing_fields += ' offering_info'
+        if 'offering_description' not in data:
+            missing_fields += ' offering_description'
 
         if 'image' not in data:
             missing_fields += ' image'
@@ -416,7 +416,7 @@ def create_offering(provider, data):
     data['organization'] = organization
 
     # Create offering USDL
-    offering_info = deepcopy(data['offering_info'])
+    offering_info = deepcopy(data['offering_description'])
     offering_info['image_url'] = data['image_url']
     offering_info['name'] = data['name']
     offering_info['version'] = data['version']
@@ -427,7 +427,7 @@ def create_offering(provider, data):
     offering_info['created'] = unicode(created)
     offering_info['modified'] = unicode(created)
 
-    data['offering_info']['modified'] = created
+    data['offering_description']['modified'] = created
 
     usdl_generator = USDLGenerator()
     usdl_generator.validate_info(offering_info, organization, open_=is_open)
@@ -447,7 +447,7 @@ def create_offering(provider, data):
         notification_url=notification_url,
         creation_date=created,
         open=is_open,
-        offering_description=data['offering_info']
+        offering_description=data['offering_description']
     )
 
     if settings.OILAUTH and 'applications' in data:
@@ -507,9 +507,9 @@ def update_offering(offering, data):
             _save_encoded_image(path, img['name'], img['data'])
             offering.related_images.append(settings.MEDIA_URL + dir_name + '/' + img['name'])
 
-    if 'offering_info' in data:
+    if 'offering_description' in data:
         # Create offering USDL
-        offering_info = deepcopy(data['offering_info'])
+        offering_info = deepcopy(data['offering_description'])
         offering_info['image_url'] = offering.image_url
         offering_info['name'] = offering.name
         offering_info['version'] = offering.version
@@ -524,8 +524,8 @@ def update_offering(offering, data):
         usdl_generator = USDLGenerator()
         usdl_generator.validate_info(offering_info, offering.owner_organization, open_=offering.open)
 
-        data['offering_info']['modified'] = mod
-        offering.offering_description = data['offering_info']
+        data['offering_description']['modified'] = mod
+        offering.offering_description = data['offering_description']
 
         if offering.open and offering.state == 'published' and len(offering.description_url):
             repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)

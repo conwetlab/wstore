@@ -29,7 +29,7 @@ BASIC_OFFERING = {
         'data': '',
     },
     'related_images': [],
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -51,7 +51,7 @@ OFFERING_BIGGER_VERSION = {
         'name': 'test_image.png',
         'data': '',
     },
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -80,7 +80,7 @@ OFFERING_WITH_IMAGES = {
         'name': 'test_screen2.png',
         'data': ''
     }],
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -112,7 +112,7 @@ OFFERING_APPLICATIONS_RESOURCES = {
         'data': '',
     },
     'related_images': [],
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -140,7 +140,7 @@ OFFERING_APPLICATIONS_INVALID = {
         'data': '',
     },
     'related_images': [],
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -163,7 +163,7 @@ OFFERING_NOTIFY_URL = {
         'data': '',
     },
     'notification_url': 'http://notification_url.com',
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -181,7 +181,7 @@ OFFERING_NOTIFY_DEFAULT = {
         'data': '',
     },
     'notification_url': 'default',
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -205,7 +205,7 @@ OFFERING_INVALID_VERSION = {
         'data': '',
     },
     'related_images': [],
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -223,7 +223,7 @@ OFFERING_INVALID_NAME = {
         'data': '',
     },
     'related_images': [],
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -241,7 +241,7 @@ OFFERING_INVALID_JSON = {
         'data': '',
     },
     'related_images': [],
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -259,7 +259,7 @@ OFFERING_NOTIFY_URL_INVALID = {
         'data': '',
     },
     'notification_url': 'invalid url',
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -277,7 +277,7 @@ OFFERING_EXISTING = {
         'data': '',
     },
     'related_images': [],
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -300,7 +300,7 @@ OFFERING_NO_IMAGE = {
     'name': 'test_offering',
     'version': '1.0',
     'repository': 'test_repository',
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -317,7 +317,7 @@ OFFERING_NO_VERSION = {
         'data': '',
     },
     'related_images': [],
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -331,7 +331,7 @@ OFFERING_IMAGE_INVALID = {
     'version': '1.0',
     'repository': 'test_repository',
     'image': '',
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {
@@ -346,7 +346,7 @@ OFFERING_IMAGE_MISSING = {
     'repository': 'test_repository',
     'image': {
     },
-    'offering_info': {
+    'offering_description': {
         'description': 'a basic offering',
         'abstract': 'a basic ',
         'pricing': {

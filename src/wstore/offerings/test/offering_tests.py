@@ -275,7 +275,7 @@ class OfferingCreationTestCase(TestCase):
         (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering test_offering_fail version 1.0 already exists'),
         (OFFERING_NOTIFY_DEFAULT, None, _fill_basic_images, ValueError, 'There is not a default notification URL defined for the organization test_organization. To configure a default notification URL provide it in the settings menu'),
         (OFFERING_NOTIFY_URL_INVALID, None, _fill_basic_images, ValueError, "Invalid notification URL format: It doesn't seem to be an URL"),
-        (OFFERING_NO_USDL, None, _fill_image, Exception, 'Missing required fields: offering_info'),
+        (OFFERING_NO_USDL, None, _fill_image, Exception, 'Missing required fields: offering_description'),
         (OFFERING_NO_IMAGE, None, None, ValueError, 'Missing required fields: image'),
         (OFFERING_NO_VERSION, None, None, ValueError, 'Missing required fields: version'),
         (OFFERING_IMAGE_MISSING, None, None, ValueError, 'Missing required field in image'),
@@ -410,7 +410,7 @@ class RemoveMock():
 
 
 BASIC_USDL_INFO = {
-    'offering_info': {
+    'offering_description': {
         'description': 'Test offering',
         'abstract': 'A test offering',
         'pricing': {
@@ -534,7 +534,7 @@ class OfferingUpdateTestCase(TestCase):
             new_offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
             self.se_object.update_index.assert_called_with(offering)
 
-            if 'offering_info' in data:
+            if 'offering_description' in data:
 
                 usdl = new_offering.offering_description
                 self.assertEquals(usdl['pricing'], {
