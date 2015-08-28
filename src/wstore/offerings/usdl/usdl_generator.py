@@ -419,6 +419,9 @@ class USDLGenerator():
             # Include description
             graph.add((plan_node, DCTERMS.description, Literal(plan['description'])))
 
+            if 'label' in plan:
+                graph.add((plan_node, RDFS.label, Literal(plan['label'])))
+
             # Include price components if existing
             if 'price_components' in plan:
                 for component in plan['price_components']:
