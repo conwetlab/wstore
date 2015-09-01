@@ -427,7 +427,7 @@ def create_offering(provider, data):
     offering_info['created'] = unicode(created)
     offering_info['modified'] = unicode(created)
 
-    data['offering_description']['modified'] = created
+    data['offering_description']['modified'] = unicode(created)
 
     usdl_generator = USDLGenerator()
     usdl_generator.validate_info(offering_info, organization, open_=is_open)
