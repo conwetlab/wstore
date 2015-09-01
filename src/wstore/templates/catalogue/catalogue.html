@@ -40,6 +40,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/OrganizationProfile.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/PricingEditor.js"></script>
 
         {% if oil %}
             <script type="text/javascript" src="{{ STATIC_URL }}oil/js/CreateOfferingForm.js"></script>
@@ -94,6 +95,9 @@
         {% endif %}
 
         <script type="text/x-jquery-tmpl" id="select_usdl_form_template">{% include "catalogue/select_usdl_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="pricing_form_template">{% include "catalogue/pricing_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="price_plan_form_template">{% include "catalogue/price_plan_form_template.html" %}</script>
+        <script type="text/x-jquery-tmpl" id="control_slider_template">{% include "catalogue/control_slider_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="provider_request_template">{% include "catalogue/provider_request_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="register_res_form_template">{% include "catalogue/register_res_form_template.html" %}</script>
         <script type="text/x-jquery-tmpl" id="provide_res_template">{% include "catalogue/provide_res_template.html" %}</script>

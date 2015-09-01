@@ -29,6 +29,8 @@
         this.screenFailure = false;
         this.apps = {};
         this.resources = [];
+        this.currencies = [];
+        this.units = {};
     }
 
     CreateOfferingForm.prototype = new ModalForm('Create new offering', '#create_off_form_template');
@@ -169,22 +171,67 @@
         });
     };
 
-    CreateOfferingForm.prototype.displayPricingEditor = function displayPricingEditor() {
+    var setVisited = function setVisited(elem, callback) {
+        if (!elem.hasClass('.visited')) {
+            elem.addClass('visited');
+            elem.click(function() {
+                // Hide forms
+                $('#offering-creation-pricing').addClass('hide');
+                $('#offering-creation-usdl').addClass('hide');
+                $('#offering-creation-apps').addClass('hide');
+                $('#offering-creation-resources').addClass('hide');
+                $('#offering-creation-main').addClass('hide');
+                callback();
+            })
+        }
+    };
+
+    CreateOfferingForm.prototype.getPricingUnits = function getPricingUnits(currencies) {
+        if (!$('#offering-creation-pricing').length) {
+            this.currencies = currencies;
+            var client = new ServerClient('', 'UNIT_COLLECTION');
+            client.get(this.displayPricingEditor.bind(this));
+        } else {
+            this.displayPricingEditor();
+        }
+    };
+
+    CreateOfferingForm.prototype.getAllowedCurrencies = function getAllowedCurrencies() {
+        if (!$('#offering-creation-pricing').length) {
+            var client = new ServerClient('', 'CURRENCY_COLLECTION');
+            client.get(this.getPricingUnits.bind(this));
+        } else {
+            this.getPricingUnits([]);
+        }
+    };
+
+    CreateOfferingForm.prototype.displayPricingEditor = function displayPricingEditor(units) {
         var footBtn, backBtn;
 
-        // var pricingEditor = new PricingEditor($('.modal-body'));
+        // Set navigation button
+        $('.off-nav.selected').removeClass('selected');
+        $('#off-nav-3').addClass('selected');
+        setVisited($('#off-nav-3'), this.displayPricingEditor.bind(this));
+
+        if (!$('#offering-creation-pricing').length) {
+            this.units = units;
+            this.pricingEditor = new PricingEditor($('.modal-body'), this.units, this.currencies);
+            this.pricingEditor.createListeners();
+        } else {
+            $('#offering-creation-pricing').removeClass('hide');
+        }
 
         $('.modal-footer').empty();
         backBtn = $('<input class="btn btn-basic" type="button" value="Back"></input>').appendTo('.modal-footer');
         backBtn.click(function(evnt) {
+            $('#offering-creation-pricing').addClass('hide');
             this.showUSDLForm();
         }.bind(this));
 
         footBtn = $('<input class="btn btn-basic" type="button" value="Next"></input>').appendTo('.modal-footer');
         footBtn.click(function(){
-            this.offeringInfo.offering_info.pricing = {
-                'price_plans': []
-            }
+            this.offeringInfo.offering_description.pricing = this.pricingEditor.getPricing();
+            $('#offering-creation-pricing').addClass('hide');
             this.getApplications();
         }.bind(this));
     };
@@ -194,6 +241,11 @@
      */
     CreateOfferingForm.prototype.showUSDLForm = function showUSDLForm() {
         var footBtn, backBtn;
+
+        // Set navigation button
+        $('.off-nav.selected').removeClass('selected');
+        $('#off-nav-2').addClass('selected');
+        setVisited($('#off-nav-2'), this.showUSDLForm.bind(this));
 
         // Create the form
         if (!$('#offering-creation-usdl').length) {
@@ -209,9 +261,7 @@
         backBtn = $('<input class="btn btn-basic" type="button" value="Back"></input>').appendTo('.modal-footer');
         backBtn.click(function(evnt) {
             $('#offering-creation-usdl').addClass('hide');
-            $('#offering-creation-main').children().off();
             this.includeContents();
-            $('#offering-creation-main').removeClass('hide');
         }.bind(this));
 
         // Set next action
@@ -256,20 +306,20 @@
                 errElems.push($('#legal-title'));
             }
             // Include the info
-            this.offeringInfo.offering_info = {
+            this.offeringInfo.offering_description = {
                 'description': description,
                 'abstract': abstract,
             }
 
             // Include the legal info if conpleted
             if (legal.title && legal.text) {
-                this.offeringInfo.offering_info.legal = legal
+                this.offeringInfo.offering_description.legal = legal
             }
 
             // If the USDL is loaded go to the final step, application selection
             if (!error) {
                 $('#offering-creation-usdl').addClass('hide');
-                this.displayPricingEditor();
+                this.getAllowedCurrencies();
             } else {
                 fillErrorMessage(msg, errElems, $('#error-message-usdl'));
             }
@@ -306,6 +356,11 @@
     CreateOfferingForm.prototype.showApplicationsForm = function showApplicationsForm(applications) {
         var userForm, footBtn, backBtn;
         var created = false;
+
+        // Set navigation button
+        $('.off-nav.selected').removeClass('selected');
+        $('#off-nav-4').addClass('selected');
+        setVisited($('#off-nav-4'), this.showApplicationsForm.bind(this));
 
         // Create the form
         if (!$('#offering-creation-apps').length) {
@@ -402,6 +457,12 @@
     CreateOfferingForm.prototype.showResourcesForm = function showResourcesForm(resources) {
         var backBtn, created = false;
 
+        // Set navigation button
+        $('.off-nav.selected').removeClass('selected');
+        $('#off-nav-5').addClass('selected');
+        setVisited($('#off-nav-5'), this.showResourcesForm.bind(this));
+
+        $()
         $('.modal-footer').empty()
 
         if (!$('#offering-creation-resources').length) {
@@ -531,6 +592,13 @@
 
     CreateOfferingForm.prototype.includeContents = function includeContents() {
         var i;
+
+        $('#offering-creation-main').children().off();
+        $('#offering-creation-main').removeClass('hide');
+
+        $('.off-nav.selected').removeClass('selected');
+        $('#off-nav-1').addClass('selected');
+        setVisited($('#off-nav-1'), this.includeContents.bind(this));
 
         // Create the listeners
         $('#img-logo').change(function(event) {

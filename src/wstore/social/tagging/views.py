@@ -66,7 +66,6 @@ class TagCollection(Resource):
             response = {
                 'tags': offering.tags
             }
-        
         # Build response
         return HttpResponse(json.dumps(response), status=200, mimetype='application/json')
 
