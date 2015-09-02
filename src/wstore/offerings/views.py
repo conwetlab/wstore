@@ -170,13 +170,14 @@ class OfferingEntry(Resource):
         try:
             # Check if the user is the owner of the offering or if is a manager of the
             # owner organization
-            if user.userprofile.current_organization != org\
-            or (not offering.is_owner(user) and not user.pk in org.managers):
+            if user.userprofile.current_organization != org \
+                    or (not offering.is_owner(user) and user.pk not in org.managers):
+
                 return build_response(request, 403, 'You are not allowed to edit the current offering')
 
             data = json.loads(request.raw_post_data)
 
-            update_offering(offering, data)
+            update_offering(user, offering, data)
         except Exception, e:
             return build_response(request, 400, e.message)
 

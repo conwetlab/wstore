@@ -368,13 +368,11 @@ class OfferingEntryTestCase(TestCase):
             notification_url='',
             creation_date='2013-06-03 10:00:00'
         )
-        #views.Offering.is_owner = MagicMock(name='is_owner')
-        #views.Offering.is_owner.return_value = True
 
         response = offering_entry.update(request, 'test_user', 'test_offering', '1.0')
 
         # Check correct call
-        views.update_offering.assert_called_once_with(offering, data)
+        views.update_offering.assert_called_once_with(self.user, offering, data)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
@@ -520,7 +518,7 @@ class OfferingEntryTestCase(TestCase):
         response = offering_entry.update(request, 'test_user', 'test_offering', '1.0')
 
         # Check correct call
-        views.update_offering.assert_called_once_with(offering, data)
+        views.update_offering.assert_called_once_with(self.user, offering, data)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')

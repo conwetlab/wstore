@@ -470,7 +470,7 @@ def create_offering(provider, data):
     search_engine.create_index(offering)
 
 
-def update_offering(offering, data):
+def update_offering(user, offering, data):
 
     # Check if the offering has been published,
     # if published the offering cannot be updated
@@ -529,6 +529,10 @@ def update_offering(offering, data):
 
         if offering.open and offering.state == 'published' and len(offering.description_url):
             repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
+
+            if settings.OILAUTH:
+                repository_adaptor.set_credentials(user.userprofile.access_token)
+
             repository_adaptor.upload(
                 'application/rdf+xml',
                 usdl_generator.generate_offering_usdl(offering)[0]
@@ -577,6 +581,10 @@ def publish_offering(user, offering, data):
         offering_id = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
 
         repository_adaptor.set_uri(offering_uri)
+
+        if settings.OILAUTH:
+            repository_adaptor.set_credentials(user.userprofile.access_token)
+
         offering.description_url = repository_adaptor.upload('application/rdf+xml', usdl, name=offering_id)
 
     # Publish the offering in the selected marketplaces
@@ -658,7 +666,10 @@ def delete_offering(user, offering):
 
     if offering.state == 'published':
         repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
-        repository_adaptor.set_credentials(user.userprofile.access_token)
+
+        if settings.OILAUTH:
+            repository_adaptor.set_credentials(user.userprofile.access_token)
+
         repository_adaptor.delete()
 
     index_path = os.path.join(settings.BASEDIR, 'wstore')
@@ -778,6 +789,10 @@ def bind_resources(offering, data, provider):
     if offering.open and offering.state == 'published' and len(offering.description_url):
         usdl_generator = USDLGenerator()
         repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
+
+        if settings.OILAUTH:
+            repository_adaptor.set_credentials(provider.userprofile.access_token)
+
         repository_adaptor.upload(
             'application/rdf+xml',
             usdl_generator.generate_offering_usdl(offering)[0]

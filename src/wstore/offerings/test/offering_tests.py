@@ -468,6 +468,9 @@ class OfferingUpdateTestCase(TestCase):
         self._gen_mock.generate_offering_usdl.return_value = ('USDL offering', 'http://usdluri.com/')
         offerings_management.USDLGenerator.return_value = self._gen_mock
 
+        self._user = MagicMock()
+        self._user.userprofile.access_token = "access_token"
+
     def tearDown(self):
         try:
             for file_ in os.listdir(self.test_dir):
@@ -524,7 +527,7 @@ class OfferingUpdateTestCase(TestCase):
 
         error = None
         try:
-            offerings_management.update_offering(offering, data)
+            offerings_management.update_offering(self._user, offering, data)
         except Exception as e:
             error = e
 
@@ -568,6 +571,7 @@ class OfferingUpdateTestCase(TestCase):
             if offering.open and offering.state == 'published':
                 # Check repository_call
                 offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
+                self._repo_mock.set_credentials.assert_called_once_with(self._user.userprofile.access_token)
                 self._repo_mock.upload.assert_called_once_with('application/rdf+xml', 'USDL offering')
         else:
             self.assertTrue(isinstance(error, err_type))
@@ -815,6 +819,7 @@ class PurchasedOfferingPaginationTestCase(TestCase):
         self.assertEqual(offerings[1]['name'], 'test_offering5')
 
 
+@override_settings(OILAUTH=True)
 class OfferingPublicationTestCase(TestCase):
 
     tags = ('fiware-ut-4',)
@@ -838,7 +843,9 @@ class OfferingPublicationTestCase(TestCase):
         self._market_obj = MagicMock()
         self._market_obj.add_service.return_value = "published_offering"
         offerings_management.marketadaptor_factory.return_value = self._market_obj
+
         self._user = MagicMock()
+        self._user.userprofile.access_token = "access_token"
 
     def tearDown(self):
         reload(offerings_management)
@@ -940,6 +947,8 @@ class OfferingPublicationTestCase(TestCase):
 
                 offerings_management.repository_adaptor_factory.assert_called_once_with(self._mock_repo)
                 offering_id = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
+
+                self._adaptor_obj.set_credentials.assert_called_once_with(self._user.userprofile.access_token)
                 self._adaptor_obj.upload.assert_called_once_with('application/rdf+xml', 'usdl document', name=offering_id)
 
         else:
@@ -947,20 +956,14 @@ class OfferingPublicationTestCase(TestCase):
             self.assertEquals(unicode(error_found), err_msg)
 
 
+@override_settings(OILAUTH=True)
 class OfferingBindingTestCase(TestCase):
 
     tags = ('binding',)
     fixtures = ['bind.json']
 
-    @classmethod
-    def setUpClass(cls):
-        cls._auth = settings.OILAUTH
-        settings.OILAUTH = False
-
-    @classmethod
-    def tearDownClass(cls):
-        settings.OILAUTH = cls._auth
-        super(OfferingBindingTestCase, cls).tearDownClass()
+    def setUp(self):
+        pass
 
     def _fill_resources_org(self, data, org):
         try:
@@ -1060,11 +1063,16 @@ class OfferingBindingTestCase(TestCase):
                         found = True
                         break
                 self.assertTrue(found)
+
+            # Check repository calls
+            if offering.open:
+                pass
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
 
 
+@override_settings(OILAUTH=True)
 class OfferingDeletionTestCase(TestCase):
 
     tags = ('fiware-ut-5',)
@@ -1095,6 +1103,8 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.Context.objects.all.return_value = [self.context_obj]
 
         self._user = MagicMock()
+        self._user.userprofile.access_token = "access_token"
+
         market = Marketplace.objects.get(pk="61000aba8e05ac2115f022ff")
         off = Offering.objects.get(name="test_offering3")
         off.marketplaces = [MarketOffering(
@@ -1170,6 +1180,8 @@ class OfferingDeletionTestCase(TestCase):
 
             if offering.state == 'published':
                 offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
+
+                self._repo_mock.set_credentials.assert_called_once_with(self._user.userprofile.access_token)
                 self._repo_mock.delete.assert_called_once_with()
 
             if deleted:
