@@ -107,7 +107,7 @@ def _upload_usdl(resource, user):
     usdl_url = repository_adaptor.upload('application/rdf+xml', usdl, resource_id)
 
     resource.resource_usdl = usdl_url
-    resource.resource_uri = resource_id
+    resource.resource_uri = resource_uri
     resource.save()
 
 

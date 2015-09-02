@@ -58,7 +58,7 @@ class ResourceRegisteringTestCase(TestCase):
     def setUp(self):
         # Mock repository adaptor
         self.adaptor_obj = MagicMock()
-        self.adaptor_obj.upload.return_value('http://testrepo.com/resource1')
+        self.adaptor_obj.upload.return_value = 'http://testrepo.com/resource1'
         resources_management.repository_adaptor_factory = MagicMock()
         resources_management.repository_adaptor_factory.return_value = self.adaptor_obj
 
@@ -194,6 +194,8 @@ class ResourceRegisteringTestCase(TestCase):
             res = Resource.objects.get(name=data['name'], version=data['version'])
             self.assertEquals(res.version, data['version'])
             self.assertEquals(res.content_type, data['content_type'])
+            self.assertEquals(res.resource_uri, "http://localhost/api/offering/resources/test_user/" + data['name'] + "/" + data["version"])
+            self.assertEquals(res.resource_usdl, "http://testrepo.com/resource1")
 
             if 'content' in data or is_file:
                 if is_file:
