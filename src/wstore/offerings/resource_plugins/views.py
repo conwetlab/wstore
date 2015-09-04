@@ -39,6 +39,7 @@ class PluginCollection(Resource):
         # Load basic types
         result = [{
             'name': 'Downloadable',
+            'plugin_id': 'downloadable',
             'author': 'Wstore',
             'version': '1',
             'media_types': [],
@@ -46,6 +47,7 @@ class PluginCollection(Resource):
             'overrides': []
         }, {
             'name': 'API',
+            'plugin_id': 'api',
             'author': 'Wstore',
             'version': '1',
             'media_types': [],
@@ -59,6 +61,7 @@ class PluginCollection(Resource):
         for plugin in plugins:
             plugin_info = {
                 'name': plugin.name,
+                'plugin_id': plugin.plugin_id,
                 'author': plugin.author,
                 'version': plugin.version,
                 'media_types': plugin.media_types,

@@ -23,7 +23,6 @@ from __future__ import unicode_literals
 import pymongo
 import os
 import base64
-import json
 import rdflib
 from mock import MagicMock
 from nose_parameterized import parameterized
@@ -37,7 +36,6 @@ from django.core.exceptions import PermissionDenied
 from django.test.utils import override_settings
 
 from wstore.offerings import offerings_management
-from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.models import UserProfile
 from wstore.models import Offering
 from wstore.models import Marketplace, MarketOffering
@@ -56,11 +54,11 @@ class FakeRepositoryAdaptor():
 
     def __init__(self, url, collection=None):
         self._url = url
-        if collection != None:
+        if collection is not None:
             self._collection = collection
 
     def upload(self, cont, data, name=None):
-        if name != None:
+        if name is not None:
             url = self._url + self._collection + '/' + name
         else:
             url = self._url
@@ -92,7 +90,7 @@ class FakeUsdlParser():
         return {
             'pricing': {
                 'price_plans': [{
-                    'price_components':[]
+                    'price_components': []
                 }]
             }
         }
@@ -118,7 +116,6 @@ class FakeOfferingRollback():
         self._func(provider, profile, json_data)
 
 
-
 ##############################################################################
 ############################# Test Cases #####################################
 ##############################################################################
@@ -139,9 +136,6 @@ class OfferingCreationTestCase(TestCase):
         cls._auth = settings.OILAUTH
 
         settings.OILAUTH = False
-        # Capture repository calls
-        offerings_management.repository_adaptor_factory = MagicMock()
-        offerings_management.repository_adaptor_factory.return_value = FakeRepositoryAdaptor('http://testrepository/', 'storeOfferingCollection')
         offerings_management.SearchEngine = FakeSearchEngine
         offerings_management.OfferingRollback = FakeOfferingRollback
         # loads test image
@@ -209,14 +203,8 @@ class OfferingCreationTestCase(TestCase):
         offering_data['image']['data'] = self._image
         return offering_data
 
-    def _fill_image_err(self, offering_data):
-        offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = 'invalid usdl'
-        return offering_data
-
     def _fill_basic_images(self, offering_data):
         offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = self._usdl
         return offering_data
 
     def _fill_screenshots(self, offering_data):
@@ -241,13 +229,11 @@ class OfferingCreationTestCase(TestCase):
             screen_shots.append(scr)
 
         offering_data['related_images'] = screen_shots
-        offering_data['offering_description']['data'] = self._usdl
 
         return offering_data
 
     def _fill_previous_version(self, offering_data):
         offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = self._usdl
 
         self._create_offering({
             'name': offering_data['name'],
@@ -259,13 +245,11 @@ class OfferingCreationTestCase(TestCase):
     def _fill_applications(self, offering_data):
         settings.OILAUTH = True
         offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = self._usdl
         offerings_management.bind_resources = MagicMock()
         return offering_data
 
     def _fill_notification_url(self, offering_data):
         offering_data['image']['data'] = self._image
-        offering_data['offering_description']['data'] = self._usdl
         org = Organization.objects.get(name='test_organization')
         org.notification_url = 'http://notification_url.com'
         org.save()
@@ -277,47 +261,26 @@ class OfferingCreationTestCase(TestCase):
         graph.parse(data=self._usdl, format='application/rdf+xml')
         return graph.serialize(format=type_, auto_compact=True)
 
-    def _fill_turtle(self, offering_data):
-        offering_data['image']['data'] = self._image
-        offering_data['offering_description']['content_type']= 'text/turtle'
-        offering_data['offering_description']['data'] = self._serialize('n3')
-        return offering_data
-
-    def _fill_json(self, offering_data):
-        offering_data['image']['data'] = self._image
-        offering_data['offering_description']['content_type']= 'application/json'
-        offering_data['offering_description']['data'] = self._serialize('json-ld')
-        return offering_data
-
     @parameterized.expand([
-        (BASIC_OFFERING, BASIC_EXPECTED, _fill_json),
+        (BASIC_OFFERING, BASIC_EXPECTED, _fill_image),
         (OFFERING_WITH_IMAGES, EXPECTED_WITH_IMAGES, _fill_screenshots),
         (OFFERING_BIGGER_VERSION, EXPECTED_BIGGER_VERSION, _fill_previous_version),
         (OFFERING_APPLICATIONS_RESOURCES, BASIC_EXPECTED, _fill_applications),
-        (OFFERING_NOTIFY_URL, EXPECTED_NOTIFY_URL, _fill_turtle),
+        (OFFERING_NOTIFY_URL, EXPECTED_NOTIFY_URL, _fill_image),
         (OFFERING_NOTIFY_DEFAULT, EXPECTED_NOTIFY_URL, _fill_notification_url),
-        (OFFERING_USDL_DATA, BASIC_EXPECTED, _fill_image),
-        (OFFERING_USDL_DATA_COMPLETE, BASIC_EXPECTED, _fill_image),
         (OFFERING_INVALID_NAME, None, None, ValueError, 'Invalid name format'),
         (BASIC_OFFERING, None, _fill_previous_version, ValueError, 'A bigger version of the current offering exists'),
         (OFFERING_INVALID_VERSION, None, None, ValueError, 'Invalid version format'),
-        (OFFERING_INVALID_JSON, None, _fill_basic_images, ValueError, 'Missing required fields'),
-        (BASIC_OFFERING, None, _fill_image_err, Exception, 'Malformed USDL'),
-        (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering already exists'),
+        (OFFERING_INVALID_JSON, None, _fill_basic_images, ValueError, 'Missing required fields: name'),
+        (OFFERING_EXISTING, None, _fill_basic_images, Exception, 'The offering test_offering_fail version 1.0 already exists'),
         (OFFERING_NOTIFY_DEFAULT, None, _fill_basic_images, ValueError, 'There is not a default notification URL defined for the organization test_organization. To configure a default notification URL provide it in the settings menu'),
         (OFFERING_NOTIFY_URL_INVALID, None, _fill_basic_images, ValueError, "Invalid notification URL format: It doesn't seem to be an URL"),
-        (OFFERING_NO_USDL, None, _fill_image, Exception, 'No USDL description provided'),
-        (OFFERING_NO_IMAGE, None, None, ValueError, 'Missing required field: Logo'),
+        (OFFERING_NO_USDL, None, _fill_image, Exception, 'Missing required fields: offering_description'),
+        (OFFERING_NO_IMAGE, None, None, ValueError, 'Missing required fields: image'),
+        (OFFERING_NO_VERSION, None, None, ValueError, 'Missing required fields: version'),
         (OFFERING_IMAGE_MISSING, None, None, ValueError, 'Missing required field in image'),
         (OFFERING_IMAGE_INVALID, None, None, TypeError, 'Invalid image type'),
-        (OFFERING_USDL_DATA_INVALID, None, _fill_image, ValueError, 'Invalid USDL info: Missing a required field'),
-        (OFFERING_USDL_DATA_INVALID_1, None, _fill_image, ValueError, 'Invalid USDL info: Description field cannot be empty'),
-        (OFFERING_USDL_DATA_INVALID_2, None, _fill_image, ValueError, 'Invalid USDL info: Title and text fields are required if providing legal info'),
-        (OFFERING_USDL_DATA_INVALID_3, None, _fill_image, ValueError, 'Invalid USDL info: Title and text fields cannot be empty in legal info'),
-        (OFFERING_USDL_DATA_INVALID_4, None, _fill_image, ValueError, 'Invalid USDL info: The pricing field must define a pricing model'),
-        (OFFERING_USDL_DATA_INVALID_5, None, _fill_image, ValueError, 'Invalid USDL info: Missing price for single payment model'),
-        (OFFERING_USDL_DATA_INVALID_6, None, _fill_image, ValueError, 'Invalid USDL info: Price cannot be empty in single payment models'),
-        (OFFERING_USDL_DATA_INVALID_7, None, _fill_image, ValueError, 'Invalid USDL info: Invalid pricing model'),
+        (OFFERING_APPLICATIONS_INVALID, None, _fill_applications, ValueError, 'Missing a required field in application definition'),
     ])
     def test_offering_creation(self, offering_data, expected_data, data_filler=None, err_type=None, err_msg=None):
 
@@ -352,7 +315,7 @@ class OfferingCreationTestCase(TestCase):
             self.assertEqual(content['version'], offering_data['version'])
             self.assertEqual(content['state'], 'uploaded')
             self.assertEqual(content['image_url'], expected_data['image'])
-            self.assertEqual(content['description_url'], expected_data['description_url'])
+            self.assertEqual(content['description_url'], None)
 
             if 'screenshots' in expected_data:
                 self.assertEquals(content['related_images'], expected_data['screenshots'])
@@ -417,7 +380,6 @@ class OfferingCountTestCase(TestCase):
         if side_effect:
             side_effect(self)
 
-        #import ipdb; ipdb.set_trace()
         error = None
         try:
             return_value = offerings_management.count_offerings(self.user, filter_, states)
@@ -445,6 +407,21 @@ class RemoveMock():
 
     def assertCall(self, path):
         assert path in self.calls
+
+
+BASIC_USDL_INFO = {
+    'offering_description': {
+        'description': 'Test offering',
+        'abstract': 'A test offering',
+        'pricing': {
+            'price_plans': []
+        },
+        'legal': {
+            'title': 'legal title',
+            'text': 'legal text'
+        }
+    }
+}
 
 
 @override_settings(OILAUTH=True)
@@ -486,6 +463,13 @@ class OfferingUpdateTestCase(TestCase):
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
+        offerings_management.USDLGenerator = MagicMock()
+        self._gen_mock = MagicMock()
+        self._gen_mock.generate_offering_usdl.return_value = ('USDL offering', 'http://usdluri.com/')
+        offerings_management.USDLGenerator.return_value = self._gen_mock
+
+        self._user = MagicMock()
+        self._user.userprofile.access_token = "access_token"
 
     def tearDown(self):
         try:
@@ -496,15 +480,6 @@ class OfferingUpdateTestCase(TestCase):
             pass
         reload(offerings_management)
         settings.MEDIA_ROOT = os.path.join(settings.BASEDIR, 'media')
-
-    def _serialize(self, type_):
-        graph = rdflib.Graph()
-        graph.parse(data=self._usdl, format='application/rdf+xml')
-        return graph.serialize(format=type_, auto_compact=True)
-
-    def _fit_usdl(self, data):
-        data['offering_description']['data'] = self._usdl
-        return data
 
     def _publish_offering(self, data):
         offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
@@ -519,38 +494,14 @@ class OfferingUpdateTestCase(TestCase):
         settings.MEDIA_ROOT = os.path.join(settings.BASEDIR, 'wstore/test/')
         return data
 
-    def _invalid_usdl(self, data):
-        offerings_management.validate_usdl = MagicMock()
-        offerings_management.validate_usdl.return_value = (False, 'Invalid USDL')
-        return data
-
-    def _fit_usdl_n3(self, data):
-        data['offering_description']['data'] = self._serialize('n3')
-        return data
-
-    def _fit_usdl_json(self, data):
-        data['offering_description']['data'] = self._serialize('json-ld')
+    def _open_published(self, data):
+        self._publish_offering(data)
+        offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
+        offering.open = True
+        offering.save()
         return data
 
     @parameterized.expand([
-        ({
-            'offering_description': {
-                'content_type': 'application/rdf+xml',
-                'data': ''
-            }
-        }, _fit_usdl),
-        ({
-            'offering_description': {
-                'content_type': 'text/turtle',
-                'data': ''
-            }
-        }, _fit_usdl_n3),
-        ({
-            'offering_description': {
-                'content_type': 'application/json',
-                'data': ''
-            }
-        }, _fit_usdl_json),
         ({
             'image': {
                 'name': 'test_logo.png',
@@ -561,28 +512,9 @@ class OfferingUpdateTestCase(TestCase):
                 'data': 'encoded_data'
             }]
         }, _mock_images),
-        ({
-            'offering_info': {
-                'description': 'Test offering',
-                'pricing': {
-                    'price_model': 'single_payment',
-                    'price': 5
-                },
-                'legal': {
-                    'title': 'legal title',
-                    'text': 'legal text'
-                }
-            }
-        },),
-        ({}, _publish_offering, PermissionDenied, 'The offering cannot be edited'),
-        ({
-            'offering_info': {
-                'pricing': {
-                    'price_model': 'single_payment',
-                    'price': 5
-                }
-            }
-        }, None, ValueError, 'Invalid USDL info')
+        (BASIC_USDL_INFO, ),
+        (BASIC_USDL_INFO, _open_published),
+        ({}, _publish_offering, PermissionDenied, 'The offering cannot be edited')
     ])
     def test_offering_update(self, initial_data, data_filler=None, err_type=None, err_msg=None):
 
@@ -595,7 +527,7 @@ class OfferingUpdateTestCase(TestCase):
 
         error = None
         try:
-            offerings_management.update_offering(offering, data)
+            offerings_management.update_offering(self._user, offering, data)
         except Exception as e:
             error = e
 
@@ -605,36 +537,18 @@ class OfferingUpdateTestCase(TestCase):
             new_offering = Offering.objects.get(pk="61000aba8e15ac2115f022f9")
             self.se_object.update_index.assert_called_with(offering)
 
-            if 'offering_description' in data or 'description_url' in data or 'offering_info' in data:
-                offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
+            if 'offering_description' in data:
 
                 usdl = new_offering.offering_description
-
-                parser = USDLParser(json.dumps(usdl), 'application/json')
-
-                usdl_content = parser.parse()
-                self.assertEqual(len(usdl_content['services_included']), 1)
-                service = usdl_content['services_included'][0]
-
-                if 'offering_description' in data or 'description_url' in data:
-                    self.assertEqual(service['name'], 'Map viewer')
-                    self.assertEqual(service['vendor'], 'CoNWeT')
-
-                    self.assertEqual(usdl_content['pricing']['title'], 'Map viewer free use')
-                    self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
-
-                    plan = usdl_content['pricing']['price_plans'][0]
-                    self.assertEqual(plan['title'], 'Free use')
-
-                else:
-                    self.assertEqual(service['name'], 'test_offering2')
-
-                    self.assertEqual(usdl_content['pricing']['title'], 'test_offering2')
-                    self.assertEqual(usdl_content['pricing']['description'], 'Test offering')
-                    self.assertEqual(len(usdl_content['pricing']['price_plans']), 1)
-
-                    plan = usdl_content['pricing']['price_plans'][0]
-                    self.assertEqual(plan['description'], 'This price plan defines a single payment')
+                self.assertEquals(usdl['pricing'], {
+                    'price_plans': []
+                })
+                self.assertEquals(usdl['legal'], {
+                    'title': 'legal title',
+                    'text': 'legal text'
+                })
+                self.assertEquals(usdl['description'], 'Test offering')
+                self.assertEquals(usdl['abstract'], 'A test offering')
 
             if 'image' in data:
                 # Check deletion of old image
@@ -653,6 +567,12 @@ class OfferingUpdateTestCase(TestCase):
                     f = open(os.path.join(self.test_dir, img['name']), "rb")
                     content = f.read()
                     self.assertEquals(content, 'decoded data')
+
+            if offering.open and offering.state == 'published':
+                # Check repository_call
+                offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
+                self._repo_mock.set_credentials.assert_called_once_with(self._user.userprofile.access_token)
+                self._repo_mock.upload.assert_called_once_with('application/rdf+xml', 'USDL offering')
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
@@ -749,12 +669,6 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
     tags = ('fiware-ut-2',)
     fixtures = ['get_purch.json']
 
-    @classmethod
-    def setUpClass(cls):
-        # Create database connection and load initial data
-        offerings_management.USDLParser = FakeUsdlParser
-        super(PurchasedOfferingRetrievingTestCase, cls).setUpClass()
-
     @parameterized.expand([
         ('customer_purchased', 'purchased', [],
          [('11000aba8e05ac2115f022f9', 'purchased'), ('21000aba8e05ac2115f022ff', 'purchased')]),
@@ -800,6 +714,7 @@ class PurchasedOfferingRetrievingTestCase(TestCase):
                     validated = validated + 1
 
         self.assertEquals(validated, len(expected_offerings))
+
 
 class OfferingPaginationTestCase(TestCase):
 
@@ -904,6 +819,7 @@ class PurchasedOfferingPaginationTestCase(TestCase):
         self.assertEqual(offerings[1]['name'], 'test_offering5')
 
 
+@override_settings(OILAUTH=True)
 class OfferingPublicationTestCase(TestCase):
 
     tags = ('fiware-ut-4',)
@@ -918,15 +834,21 @@ class OfferingPublicationTestCase(TestCase):
         super(OfferingPublicationTestCase, cls).setUpClass()
 
     def setUp(self):
+        self._adaptor_obj = None
         offerings_management.SearchEngine = MagicMock()
         self.se_object = MagicMock()
         offerings_management.SearchEngine.return_value = self.se_object
 
         offerings_management.marketadaptor_factory = MagicMock()
-        self._adaptor_obj = MagicMock()
-        self._adaptor_obj.add_service.return_value = "published_offering"
-        offerings_management.marketadaptor_factory.return_value = self._adaptor_obj
+        self._market_obj = MagicMock()
+        self._market_obj.add_service.return_value = "published_offering"
+        offerings_management.marketadaptor_factory.return_value = self._market_obj
+
         self._user = MagicMock()
+        self._user.userprofile.access_token = "access_token"
+
+    def tearDown(self):
+        reload(offerings_management)
 
     def _published(self, offering):
         offering.state = 'published'
@@ -937,19 +859,36 @@ class OfferingPublicationTestCase(TestCase):
         offering.resources = []
         offering.save()
 
+    def _add_repo(self, offering):
+        offerings_management.Repository = MagicMock()
+        self._mock_repo = MagicMock()
+        offerings_management.Repository.objects.all.return_value = [self._mock_repo]
+        offerings_management.Repository.objects.get.return_value = self._mock_repo
+
+        # Mock reporsitory adaptor and USDLGenerator
+        self._adaptor_obj = MagicMock()
+        self._adaptor_obj.upload.return_value = 'http://repository.org/v1/collection/test_offering1'
+        offerings_management.repository_adaptor_factory = MagicMock()
+        offerings_management.repository_adaptor_factory.return_value = self._adaptor_obj
+
+        self._generator_obj = MagicMock()
+        self._generator_obj.generate_offering_usdl.return_value = ('usdl document', 'http://usdluri.com/')
+        offerings_management.USDLGenerator = MagicMock()
+        offerings_management.USDLGenerator.return_value = self._generator_obj
+
     @parameterized.expand([
         ('basic', {
             'marketplaces': []
         }),
         ('marketplace', {
             'marketplaces': ['test_market']
-        }),
+        }, _add_repo),
         ('multiple_market', {
             'marketplaces': ['test_market', 'test_market2']
-        }),
+        }, _add_repo),
         ('not_existing', {
             'marketplaces': ['test_marketplace']
-        }, None, ValueError, 'Publication error: The marketplace test_marketplace does not exist'),
+        }, _add_repo, ValueError, 'Publication error: The marketplace test_marketplace does not exist'),
         ('invalid', {
             'marketpla': ['test_market']
         }, None, ValueError, 'Publication error: missing required field, marketplaces'),
@@ -989,7 +928,6 @@ class OfferingPublicationTestCase(TestCase):
 
             # Check marketplace calls
             if len(data['marketplaces']):
-
                 for m in data['marketplaces']:
                     market = Marketplace.objects.get(name=m)
                     offerings_management.marketadaptor_factory.assert_any_call(market, self._user)
@@ -997,29 +935,35 @@ class OfferingPublicationTestCase(TestCase):
                         'name': offering.owner_organization.name + ' ' + offering.name + ' ' + offering.version,
                         'url': offering.description_url
                     }
-                    self._adaptor_obj.add_service.assert_any_call(info)
+                    self._market_obj.add_service.assert_any_call(info)
 
                 self.assertEquals(offerings_management.marketadaptor_factory.call_count, len(data['marketplaces']))
-                self.assertEquals(self._adaptor_obj.add_service.call_count, len(data['marketplaces']))
+                self.assertEquals(self._market_obj.add_service.call_count, len(data['marketplaces']))
+
+            if isinstance(self._adaptor_obj, MagicMock):
+                # Check reopsitory calls
+                offerings_management.USDLGenerator.assert_called_once_with()
+                self._generator_obj.generate_offering_usdl.assert_called_once_with(offering)
+
+                offerings_management.repository_adaptor_factory.assert_called_once_with(self._mock_repo)
+                offering_id = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
+
+                self._adaptor_obj.set_credentials.assert_called_once_with(self._user.userprofile.access_token)
+                self._adaptor_obj.upload.assert_called_once_with('application/rdf+xml', 'usdl document', name=offering_id)
+
         else:
             self.assertTrue(isinstance(error_found, err_type))
             self.assertEquals(unicode(error_found), err_msg)
 
 
+@override_settings(OILAUTH=True)
 class OfferingBindingTestCase(TestCase):
 
     tags = ('binding',)
     fixtures = ['bind.json']
 
-    @classmethod
-    def setUpClass(cls):
-        cls._auth = settings.OILAUTH
-        settings.OILAUTH = False
-
-    @classmethod
-    def tearDownClass(cls):
-        settings.OILAUTH = cls._auth
-        super(OfferingBindingTestCase, cls).tearDownClass()
+    def setUp(self):
+        pass
 
     def _fill_resources_org(self, data, org):
         try:
@@ -1059,16 +1003,14 @@ class OfferingBindingTestCase(TestCase):
         ([{
             'name': 'test_resource1',
             'version': '1.0'
-        },
-        {
+        }, {
             'name': 'test_resource3',
             'version': '1.0'
         }], 'test_offering2'),
         ([{
             'name': 'test_resource1',
             'version': '1.0'
-        },
-        {
+        }, {
             'name': 'test_resource3',
             'version': '1.0'
         }], 'test_offering2', _resource_included),
@@ -1121,11 +1063,16 @@ class OfferingBindingTestCase(TestCase):
                         found = True
                         break
                 self.assertTrue(found)
+
+            # Check repository calls
+            if offering.open:
+                pass
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
 
 
+@override_settings(OILAUTH=True)
 class OfferingDeletionTestCase(TestCase):
 
     tags = ('fiware-ut-5',)
@@ -1156,6 +1103,8 @@ class OfferingDeletionTestCase(TestCase):
         offerings_management.Context.objects.all.return_value = [self.context_obj]
 
         self._user = MagicMock()
+        self._user.userprofile.access_token = "access_token"
+
         market = Marketplace.objects.get(pk="61000aba8e05ac2115f022ff")
         off = Offering.objects.get(name="test_offering3")
         off.marketplaces = [MarketOffering(
@@ -1228,8 +1177,12 @@ class OfferingDeletionTestCase(TestCase):
             # Assert no included in the context lists
             self.assertFalse(offering.pk in self.context_obj.newest)
             self.assertFalse(offering.pk in self.context_obj.top_rated)
-            offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
-            self._repo_mock.delete.assert_called_once_with()
+
+            if offering.state == 'published':
+                offerings_management.unreg_repository_adaptor_factory.assert_called_once_with(offering.description_url)
+
+                self._repo_mock.set_credentials.assert_called_once_with(self._user.userprofile.access_token)
+                self._repo_mock.delete.assert_called_once_with()
 
             if deleted:
                 # Check index calls if the offering must have been deleted

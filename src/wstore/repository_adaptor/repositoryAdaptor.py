@@ -50,14 +50,16 @@ def unreg_repository_adaptor_factory(url):
     return adaptor(url)
 
 
-def repository_adaptor_factory(repository):
+def repository_adaptor_factory(repository, is_resource=False):
 
     adaptors = {
         1: RepositoryAdaptorV1,
         2: RepositoryAdaptorV2
     }
 
-    return adaptors[repository.api_version](repository.host, repository.store_collection)
+    collection = repository.resource_collection if is_resource else repository.offering_collection
+
+    return adaptors[repository.api_version](repository.host, collection)
 
 
 class RepositoryAdaptor(object):
@@ -65,6 +67,7 @@ class RepositoryAdaptor(object):
     _repository_url = None
     _collection = None
     _credentials = None
+    _asset_uri = None
 
     def __init__(self, repository_url, collection=None):
 
@@ -81,18 +84,20 @@ class RepositoryAdaptor(object):
     def set_credentials(self, credentials):
         self._credentials = credentials
 
+    def set_uri(self, uri):
+        self._asset_uri = uri
+
     def _build_url(self, name):
         url = self._repository_url
 
         if name is not None:
             name = name.replace(' ', '')
-            url = urljoin(self._repository_url, self._collection)
+            url = urljoin(url, self._collection)
             url = urljoin(url, name)
 
         return url
 
     def _make_request(self, method, data, name, headers={}):
-
         url = self._build_url(name)
 
         if settings.OILAUTH:
@@ -107,7 +112,7 @@ class RepositoryAdaptor(object):
 
     def download(self, name=None):
 
-        response = self._make_request(requests.get, '', name, headers={'Accept': '*'})
+        response = self._make_request(requests.get, '', name, headers={'Accept': '*/*'})
 
         allowed_formats = ['text/plain', 'application/rdf+xml', 'text/turtle', 'text/n3']
         resp_content_type = mimeparser.best_match(allowed_formats, response.headers.get('content-type'))
@@ -135,7 +140,7 @@ class RepositoryAdaptorV1(RepositoryAdaptor):
         # Only ASCII characters are allowed
         data = unicodedata.normalize('NFKD', data).encode('ascii', 'ignore')
 
-        response = self._make_request(requests.put, data, name, headers={'content-type': content_type + '; charset=utf-8'})
+        response = self._make_request(requests.put, data, name, headers={'Content-Type': content_type + '; charset=utf-8'})
         return response.url
 
 
@@ -153,16 +158,21 @@ class RepositoryAdaptorV2(RepositoryAdaptor):
         if name is not None:
             # Create resource
             name = name.replace(' ', '-')
+
+            content_url = self._asset_uri
+            if self._asset_uri is None:
+                content_url = self._build_url(name)
+
             res_meta = {
                 'type': 'resource',
                 'creator': settings.STORE_NAME,
                 'name': name,
-                'contentUrl': self._build_url(name),
+                'contentUrl': content_url,
                 'contentFileName': name
             }
             self._make_request(requests.post, json.dumps(res_meta), '', headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
 
         # Upload resource content
-        response = self._make_request(requests.put, data, name, headers={'content-type': content_type})
+        response = self._make_request(requests.put, data, name, headers={'Content-Type': content_type})
 
         return response.url

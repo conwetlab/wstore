@@ -21,7 +21,6 @@
 from __future__ import unicode_literals
 
 import os
-import json
 import rdflib
 from decimal import Decimal
 from whoosh.fields import Schema, TEXT, NUMERIC, DATETIME, KEYWORD
@@ -30,6 +29,7 @@ from whoosh.qparser import QueryParser
 from whoosh import query
 
 from wstore.models import Offering, Purchase
+from wstore.offerings.usdl.usdl_generator import USDLGenerator
 
 
 class SearchEngine():
@@ -44,11 +44,13 @@ class SearchEngine():
         Create a single string for creating the index by extracting text fields
         from the USDL document of the offering
         """
-
-        usdl_document = offering.offering_description
         graph = rdflib.ConjunctiveGraph()
 
-        graph.parse(data=json.dumps(usdl_document), format='json-ld')
+        generator = USDLGenerator()
+        graph.parse(
+            data=generator.generate_offering_usdl(offering)[0],
+            format='application/rdf+xml'
+        )
 
         text = offering.name
 
@@ -101,7 +103,6 @@ class SearchEngine():
         # Aggregate all the information included in the USDL document in
         # a single string in order to add a new document to the index
         text = self._aggregate_text(offering)
-
         purchasers_text = self._aggregate_purchasers(offering)
 
         # Add the new document

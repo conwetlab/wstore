@@ -101,7 +101,7 @@
         "fields": {
             "pricing_model": {
                 "pay_per_use": [{
-                    "title": "pay per use",
+                    "label": "pay per use",
                     "text_function": "number of calls plus 2 minus number of minutes",
                     "price_function": {
                         "variables": {
@@ -195,7 +195,7 @@
         "fields": {
             "pricing_model": {
                 "pay_per_use": [{
-                    "title": "pay per use",
+                    "label": "pay per use",
                     "text_function": "number of calls plus 2 minus number of minutes",
                     "price_function": {
                         "variables": {
@@ -225,7 +225,7 @@
                     }
                 }],
                 "subscription": [{
-                    "title": "price component 1",
+                    "label": "price component 1",
                     "unit": "per month",
                     "currency": "EUR",
                     "value": "5",
@@ -296,7 +296,7 @@
         "fields": {
             "pricing_model": {
                 "pay_per_use": [{
-                    "title": "pay per use",
+                    "label": "pay per use",
                     "text_function": "number of calls plus 2 minus number of minutes",
                     "price_function": {
                         "variables": {
@@ -326,14 +326,14 @@
                     }
                 }],
                 "subscription": [{
-                    "title": "price component 1",
+                    "label": "price component 1",
                     "unit": "per month",
                     "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
                 }],
                 "deductions": [{
-                    "title": "function deduction",
+                    "label": "function deduction",
                     "text_function": "0.1 plus number of minutes",
                     "price_function": {
                         "variables": {
@@ -354,7 +354,7 @@
                         }
                     }
                 },{
-                    "title": "deduction 2",
+                    "label": "deduction 2",
                     "unit": "call",
                     "currency": "EUR",
                     "value": "0.2"

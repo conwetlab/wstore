@@ -211,13 +211,13 @@
             legal.text = $.trim($('#legal-text').val());
 
             // Include the info
-            request.offering_info = {
+            request.offering_description = {
                 'description': description,
                 'pricing': pricing
             }
             // Include the legal info if completed
             if (legal.title && legal.text) {
-                request.offering_info.legal = legal
+                request.offering_description.legal = legal
             }
             provided = true
 

@@ -23,11 +23,15 @@ from __future__ import unicode_literals
 import base64
 import os
 from bson import ObjectId
+from urlparse import urljoin
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.template import loader
+from django.template import Context as TmplContext
 
-from wstore.models import Resource, Offering
+from wstore.models import Resource, Offering, Repository, Context
+from wstore.repository_adaptor.repositoryAdaptor import repository_adaptor_factory, unreg_repository_adaptor_factory
 from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
 from wstore.store_commons.utils.url import is_valid_url
@@ -65,9 +69,59 @@ def _save_resource_file(provider, name, version, file_):
     return settings.MEDIA_URL + 'resources/' + file_name
 
 
+def _build_usdl(resource):
+
+    # Create rdf template for the resource
+    site_context = Context.objects.all()[0]
+    base_uri = site_context.site.domain
+    resource_uri = urljoin(base_uri, 'api/offering/resources/' + resource.provider.name + '/' + resource.name + '/' + resource.version)
+
+    context = {
+        'resource_uri': resource_uri,
+        'base_id': resource.pk,
+        'name': resource.name,
+        'description': resource.description,
+        'resource_type': resource.resource_type,
+        'media_type': resource.content_type,
+        'provider': resource.provider.name,
+        'version': resource.version
+    }
+
+    usdl_template = loader.get_template('usdl/resource_usdl_template.rdf')
+    # Render the template
+    return usdl_template.render(TmplContext(context)), resource_uri
+
+
+def _upload_usdl(resource, user):
+
+    usdl, resource_uri = _build_usdl(resource)
+
+    # Upload the rdf of the resource to the repository
+    repository = Repository.objects.get(is_default=True)
+    repository_adaptor = repository_adaptor_factory(repository, is_resource=True)
+
+    resource_id = resource.pk + '__' + resource.provider.name + '__' + resource.name.replace(' ', '_') + '__' + resource.version
+
+    repository_adaptor.set_uri(resource_uri)
+    repository_adaptor.set_credentials(user.userprofile.access_token)
+    usdl_url = repository_adaptor.upload('application/rdf+xml', usdl, resource_id)
+
+    resource.resource_usdl = usdl_url
+    resource.resource_uri = resource_uri
+    resource.save()
+
+
+def _update_usdl(resource, user):
+    usdl, resource_uri = _build_usdl(resource)
+    repository_adaptor = unreg_repository_adaptor_factory(resource.resource_usdl)
+    repository_adaptor.set_credentials(user.userprofile.access_token)
+    repository_adaptor.upload('application/rdf+xml', usdl)
+
+
 @register_resource_events
-def _create_resource_model(provider, resource_data):
-    Resource.objects.create(
+def _create_resource_model(provider, user, resource_data):
+    # Create the resource
+    resource = Resource.objects.create(
         name=resource_data['name'],
         provider=provider,
         version=resource_data['version'],
@@ -78,8 +132,9 @@ def _create_resource_model(provider, resource_data):
         state='created',
         open=resource_data['open'],
         resource_type=resource_data['resource_type'],
-        meta_info=resource_data['meta']
+        meta_info=resource_data['metadata']
     )
+    _upload_usdl(resource, user)
 
 
 @register_resource_validation_events
@@ -98,8 +153,8 @@ def _validate_resource_info(provider, data, file_=None):
 
     # Check contents
     if 'name' not in data or 'version' not in data or\
-    'description' not in data or 'content_type' not in data or\
-    'resource_type' not in data:
+            'description' not in data or 'content_type' not in data or\
+            'resource_type' not in data:
         raise ValueError('Invalid request: Missing required field')
 
     # Create version object to validate resource version format
@@ -151,10 +206,10 @@ def register_resource(provider, data, file_=None):
         resource_data['content_path'] = _save_resource_file(current_organization.name, resource_data['name'], resource_data['version'], file_)
         resource_data['link'] = ''
 
-    resource_data['meta'] = data.get('meta', {})
+    resource_data['metadata'] = data.get('metadata', {})
 
     # Create the resource entry in the database
-    _create_resource_model(current_organization, resource_data)
+    _create_resource_model(current_organization, provider, resource_data)
 
 
 def _get_decorated_save(action):
@@ -163,10 +218,16 @@ def _get_decorated_save(action):
         'update': update_resource_events
     }
 
+    uploaders = {
+        'upgrade': _upload_usdl,
+        'update': _update_usdl
+    }
+
     decorator = save_decorators[action]
 
     @decorator
-    def save_resource(resource):
+    def save_resource(resource, user):
+        uploaders[action](resource, user)
         resource.save()
 
     return save_resource
@@ -192,7 +253,7 @@ def _validate_upgrade_resource_info(resource, data, file_=None):
     return data
 
 
-def upgrade_resource(resource, data, file_=None):
+def upgrade_resource(resource, user, data, file_=None):
     """
     Upgrades an existing resource to a new version
     """
@@ -203,7 +264,9 @@ def upgrade_resource(resource, data, file_=None):
     resource.old_versions.append(ResourceVersion(
         version=resource.version,
         resource_path=resource.resource_path,
-        download_link=resource.download_link
+        download_link=resource.download_link,
+        resource_usdl=resource.resource_usdl,
+        resource_uri=resource.resource_uri
     ))
 
     # Update new version number
@@ -230,10 +293,10 @@ def upgrade_resource(resource, data, file_=None):
 
     # Save the resource
     decorated_save = _get_decorated_save('upgrade')
-    decorated_save(resource)
+    decorated_save(resource, user)
 
 
-def update_resource(resource, data):
+def update_resource(resource, user, data):
 
     # Check that the resource can be updated
     if resource.state == 'deleted':
@@ -283,7 +346,25 @@ def update_resource(resource, data):
         resource.description = data['description']
 
     decorated_save = _get_decorated_save('update')
-    decorated_save(resource)
+    decorated_save(resource, user)
+
+
+def get_resource_info(resource):
+    state = resource.state
+    if state != 'deleted' and len(resource.offerings):
+        state = 'used'
+
+    return {
+        'name': resource.name,
+        'version': resource.version,
+        'description': resource.description,
+        'content_type': resource.content_type,
+        'state': state,
+        'open': resource.open,
+        'link': resource.get_url(),
+        'resource_type': resource.resource_type,
+        'metadata': resource.meta_info
+    }
 
 
 def get_provider_resources(provider, filter_=None, pagination=None):
@@ -311,23 +392,23 @@ def get_provider_resources(provider, filter_=None, pagination=None):
             resources = Resource.objects.filter(provider=provider.userprofile.current_organization)
 
     for res in resources:
-        state = res.state
-        if state != 'deleted' and len(res.offerings):
-            state = 'used'
+        response.append(get_resource_info(res))
 
-        resource_info = {
-            'name': res.name,
-            'version': res.version,
-            'description': res.description,
-            'content_type': res.content_type,
-            'state': state,
-            'open': res.open,
-            'link': res.get_url(),
-            'resource_type': res.resource_type,
-            'metadata': res.meta_info
-        }
-        response.append(resource_info)
     return response
+
+
+def _remove_usdls(resource, user):
+    usdl_urls = [resource.resource_usdl]
+
+    for old in resource.old_versions:
+        # Save usdl urls of old versions
+        usdl_urls.append(old.resource_usdl)
+
+    # Remove the usdl descriptions from the repository
+    for url in usdl_urls:
+        repository_adaptor = unreg_repository_adaptor_factory(url)
+        repository_adaptor.set_credentials(user.userprofile.access_token)
+        repository_adaptor.delete()
 
 
 def _remove_resource(resource):
@@ -336,6 +417,7 @@ def _remove_resource(resource):
         path = os.path.join(settings.BASEDIR, resource.resource_path[1:])
         os.remove(path)
 
+    # Remove the resource
     resource.delete()
 
 
@@ -343,6 +425,8 @@ def _remove_resource(resource):
 def _delete_resource(resource, user):
 
     # If the resource is not included in any offering delete it
+    _remove_usdls(resource, user)
+
     if not len(resource.offerings):
         _remove_resource(resource)
     else:

@@ -43,7 +43,7 @@
         });
     };
 
-    MessageManager.showAlertError = function showAlertError(title, msg, messageCont) {
+    var showAlert = function(title, msg, template, messageCont) {
         var container = $('#message-container');
 
         if (messageCont) {
@@ -51,48 +51,24 @@
         }
 
         container.empty();
-        $.template('alertError', $('#alert_error_template'));
-        $.tmpl('alertError', {'title': title, 'message': msg}).appendTo(container);
+        $.template('alert', template);
+        $.tmpl('alert', {'title': title, 'message': msg}).appendTo(container);
 
         $('#message').bind('closed', function() {
             $(container).empty();
         });
+    };
+
+    MessageManager.showAlertError = function showAlertError(title, msg, messageCont) {
+        showAlert(title, msg, $('#alert_error_template'), messageCont);
     };
 
     MessageManager.showAlertInfo = function showAlertInfo(title, msg, messageCont) {
-        var container = $('#message-container');
-        var template;
-
-        if (messageCont) {
-            container = messageCont;
-        }
-
-        container.empty();
-        $.template('alertInfo', $('#alert_info_template'));
-        template = $.tmpl('alertInfo', {'title': title, 'message': msg})
-        container.append(template);
-
-        $('#message').bind('closed', function() {
-            $(container).empty();
-        });
+        showAlert(title, msg, $('#alert_info_template'), messageCont);
     };
 
     MessageManager.showAlertWarning = function showAlertWarning(title, msg, messageCont) {
-        var container = $('#message-container');
-        var template;
-
-        if (messageCont) {
-            container = messageCont;
-        }
-
-        container.empty();
-        $.template('alertWarning', $('#alert_warning_template'));
-        template = $.tmpl('alertWarning', {'title': title, 'message': msg})
-        container.append(template);
-
-        $('#message').bind('closed', function() {
-            $(container).empty();
-        });
+        showAlert(title, msg, $('#alert_warning_template'), messageCont);
     };
 
     MessageManager.showYesNoWindow = function showYesNoWindow (msg, handler, tit, msgContainer, cancelHandler) {

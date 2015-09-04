@@ -28,7 +28,23 @@
         "model": "wstore.Repository",
         "fields": {
             "name": "test_repository1",
-            "host": "http://testrepository.com/"
+            "host": "http://testrepository1.com/",
+            "offering_collection": "storeOfferingCollection",
+            "resource_collection": "resourceCollection",
+            "api_version": 1,
+            "is_default": false
+        }
+    },
+    {
+        "pk": "61001bba8e05ac2115f11111",
+        "model": "wstore.Repository",
+        "fields": {
+            "name": "test_repository2",
+            "host": "http://testrepository2.com/",
+            "offering_collection": "storeOfferingCollection",
+            "resource_collection": "resourceCollection",
+            "api_version": 1,
+            "is_default": true
         }
     }
 ]

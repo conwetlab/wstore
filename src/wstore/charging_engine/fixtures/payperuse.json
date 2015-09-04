@@ -102,7 +102,22 @@
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "publication_date": "2013-02-05 17:06:46",
+            "offering_description": {
+                "pricing": {
+                    "price_plans": [{
+                        "currency": "EUR",
+                        "title": "Example price plan",
+                        "description": "Price plan description",
+                        "price_components": [{
+                            "label": "Pay per use",
+                            "unit": "invocation",
+                            "value": "5.0",
+                            "description": "price component use description"
+                        }]
+                    }]
+                }
+            }
         }
     },
     {
@@ -293,10 +308,9 @@
         "fields": {
             "pricing_model": {
                 "pay_per_use": [{
-                    "title": "pay per use",
+                    "label": "pay per use",
                     "value": "1",
-                    "unit": "invocation",
-                    "currency": "EUR"
+                    "unit": "invocation"
                 }],
                 "general_currency": "EUR"
             },

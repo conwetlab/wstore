@@ -41,7 +41,12 @@
             "resources": [],
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
-            "creation_date": "2013-02-05 17:06:46"
+            "creation_date": "2013-02-05 17:06:46",
+            "offering_description": {
+                "pricing": {
+                    "price_plans": []
+                }
+            }
         }
     },
     {
@@ -62,7 +67,12 @@
             "resources": [],
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
-            "creation_date": "2013-02-05 17:06:46"
+            "creation_date": "2013-02-05 17:06:46",
+            "offering_description": {
+                "pricing": {
+                    "price_plans": []
+                }
+            }
         }
     },
     {
@@ -87,7 +97,12 @@
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "publication_date": "2013-02-05 17:06:46",
+            "offering_description": {
+                "pricing": {
+                    "price_plans": []
+                }
+            }
         }
     },
     {
@@ -112,7 +127,12 @@
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "publication_date": "2013-02-05 17:06:46",
+            "offering_description": {
+                "pricing": {
+                    "price_plans": []
+                }
+            }
         }
     },
     {
@@ -137,7 +157,21 @@
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "publication_date": "2013-02-05 17:06:46",
+            "offering_description": {
+                "name": "test_offering5",
+                "description": "Place things on map! Explore the world, trace routes... Don't carry a paper map again",
+                "abstract": "Place things on map! Explore the world, trace routes... Don't carry a paper map again",
+                "base_id": "51100aba8e05ac2115f022f0",
+                "image_url": "/media/test_organization__test_offering3__1.0/image.png",
+                "organization": "test_organization",
+                "version": "1.0",
+                "created": "",
+                "modified": "",
+                "pricing": {
+                    "price_plans": []
+                }
+            }
         }
     },
     {

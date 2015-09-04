@@ -104,12 +104,13 @@ class PurchasesCreationTestCase(TestCase):
         purchases_management.SearchEngine.return_value = se_obj
         usdl_info = {
             'name': 'test_offering',
-            'base_uri': 'http://localhost',
+            'base_id': 'pk',
             'image_url': '/media/test_image.png',
             'pricing': {
-                'price_model': 'free'
+                'price_plans': []
             },
-            'description': 'test offering'
+            'description': 'test offering',
+            'abstract': 'test offering'
         }
         self._load_usdl(usdl_info)
 
@@ -131,23 +132,20 @@ class PurchasesCreationTestCase(TestCase):
 
     def _load_usdl(self, usdl_info):
         # Load offering description to test offering
-        from wstore.offerings.offerings_management import _create_basic_usdl
         offering = Offering.objects.get(name='test_offering')
-        usdl = _create_basic_usdl(usdl_info)
-        graph = rdflib.Graph()
-        graph.parse(data=usdl, format='application/rdf+xml')
-        offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
+        offering.offering_description = usdl_info
         offering.save()
 
     def _set_legal(self):
         usdl_info = {
             'name': 'test_offering',
-            'base_uri': 'http://localhost',
+            'base_id': 'pk',
             'image_url': '/media/test_image.png',
             'pricing': {
-                'price_model': 'free'
+                'price_plans': []
             },
             'description': 'test offering',
+            'abstract': 'test offering',
             'legal': {
                 'title': 'terms and conditions',
                 'text': 'this are the applied terms and conditions'
@@ -208,7 +206,7 @@ class PurchasesCreationTestCase(TestCase):
             }
         }, ValueError, 'The customer does not have a tax address'),
         ('invalid_tax_address', None, False, {
-           'payment_method': 'credit_card',
+            'payment_method': 'credit_card',
             'credit_card': {
                 'number': '1234123412341234',
                 'type': 'Visa',
@@ -476,7 +474,7 @@ class PurchasesCreationTestCase(TestCase):
         self.assertEqual(len(user_profile.offerings_purchased), 1)
         self.assertEqual(user_profile.offerings_purchased[0], offering.pk)
 
-    test_purchase_creation_paypal.tags = ('fiware-ut-17',)
+    test_purchase_creation_paypal.tags = ('fiware-ut-17', 'fiware-ut-16')
 
     def test_purchase_creation_organization_payment(self):
         user = User.objects.get(username='test_user')
@@ -857,7 +855,7 @@ class UpdatingPurchasesTestCase(TestCase):
             content_type='application/json; charset=utf-8'
         )
         request.user = self._user
-        
+
         # Test purchase view
         views.create_purchase = MagicMock(name='create_purchase')
         offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")
@@ -907,14 +905,12 @@ class UpdatingPurchasesTestCase(TestCase):
         }
         views.create_purchase.assert_called_once_with(self._user, offering, org_owned=False, payment_info=payment_info)
 
-        # Test Contract creation
-        # Load usdl info
-        f = open('wstore/test/test_usdl1.ttl', 'rb')
-        g = rdflib.Graph()
-        g.parse(data=f.read(), format='n3')
-        f.close()
+        offering.offering_description = {
+            'pricing': {
+                'price_plans': []
+            }
+        }
 
-        offering.offering_description = json.loads(g.serialize(format='json-ld', auto_compact=True))
         offering.save()
 
         from wstore.charging_engine.charging_engine import ChargingEngine
@@ -925,11 +921,9 @@ class UpdatingPurchasesTestCase(TestCase):
         purchase = Purchase.objects.get(pk=purchase.pk)
         contract = purchase.contract
 
-        # Check contract pricing model
         self.assertFalse('single_payment' in contract.pricing_model)
         self.assertFalse('subscription' in contract.pricing_model)
         self.assertFalse('pay_per_use' in contract.pricing_model)
-        
 
     def test_purchase_offering_update_payment(self):
 
@@ -966,7 +960,7 @@ class UpdatingPurchasesTestCase(TestCase):
             content_type='application/json; charset=utf-8'
         )
         request.user = self._user
-        
+
         # Test purchase view
         views.create_purchase = MagicMock(name='create_purchase')
         offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")
@@ -1017,13 +1011,19 @@ class UpdatingPurchasesTestCase(TestCase):
         views.create_purchase.assert_called_once_with(self._user, offering, org_owned=True, payment_info=payment_info)
 
         # Test Contract creation
-        # Load usdl info
-        f = open('wstore/test/test_usdl2.ttl', 'rb')
-        g = rdflib.Graph()
-        g.parse(data=f.read(), format='n3')
-        f.close()
-
-        offering.offering_description = json.loads(g.serialize(format='json-ld', auto_compact=True))
+        offering.offering_description = {
+            'pricing': {
+                'price_plans': [{
+                    'title': 'Price plan',
+                    'currency': 'EUR',
+                    'price_components': [{
+                        'label': 'Price component update',
+                        'unit': 'single payment',
+                        'value': '1.0'
+                    }]
+                }]
+            }
+        }
         offering.save()
 
         from wstore.charging_engine.charging_engine import ChargingEngine
@@ -1038,7 +1038,7 @@ class UpdatingPurchasesTestCase(TestCase):
         self.assertTrue('single_payment' in contract.pricing_model)
         self.assertEquals(len(contract.pricing_model['single_payment']), 1)
         payment = contract.pricing_model['single_payment'][0]
-        self.assertEquals(payment['title'], 'Price component update')
+        self.assertEquals(payment['label'], 'Price component update')
         self.assertEquals(payment['value'], '1.0')
 
         self.assertFalse('subscription' in contract.pricing_model)
@@ -1084,14 +1084,22 @@ class UpdatingPurchasesTestCase(TestCase):
         self.assertEquals(response.status_code, 403)
 
         # Test Create contract exceptions
-        # Load usdl info
-        f = open('wstore/test/test_usdl2.ttl', 'rb')
-        g = rdflib.Graph()
-        g.parse(data=f.read(), format='n3')
-        f.close()
 
         offering = Offering.objects.get(pk="71000aba8e05ac2115f022ff")
-        offering.offering_description = json.loads(g.serialize(format='json-ld', auto_compact=True))
+        offering.offering_description = {
+            'pricing': {
+                'price_plans': [{
+                    'title': 'Plan 1',
+                    'label': 'update',
+                    'price_components': []
+                }, {
+                    'title': 'Plan 1',
+                    'label': 'regular',
+                    'price_components': []
+                }]
+            }
+        }
+
         offering.save()
 
         from datetime import datetime

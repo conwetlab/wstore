@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -20,8 +20,6 @@
 
 from __future__ import unicode_literals
 
-import json
-import rdflib
 import re
 import base64
 import os
@@ -30,25 +28,23 @@ from bson.objectid import ObjectId
 from copy import deepcopy
 
 from django.conf import settings
-from django.template import loader
-from django.template import Context as TmplContext
 from django.core.exceptions import PermissionDenied
 
 from wstore.repository_adaptor.repositoryAdaptor import repository_adaptor_factory, unreg_repository_adaptor_factory
 from wstore.market_adaptor.marketadaptor import marketadaptor_factory
 from wstore.search.search_engine import SearchEngine
 from wstore.offerings.offering_rollback import OfferingRollback
-from wstore.models import Offering, Repository, Resource
+from wstore.models import Offering, Resource, Repository
 from wstore.models import Marketplace, MarketOffering
 from wstore.models import Purchase
 from wstore.models import UserProfile, Context
-from wstore.store_commons.utils.usdlParser import USDLParser, validate_usdl
 from wstore.store_commons.utils.version import is_lower_version
 from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.social.tagging.tag_manager import TagManager
 from wstore.store_commons.errors import ConflictError
 from wstore.store_commons.database import get_database_connection
+from wstore.offerings.usdl.usdl_generator import USDLGenerator
 
 
 def get_offering_info(offering, user):
@@ -92,6 +88,7 @@ def get_offering_info(offering, user):
         'creation_date': str(offering.creation_date),
         'publication_date': str(offering.publication_date),
         'open': offering.open,
+        'offering_description': offering.offering_description,
         'resources': []
     }
 
@@ -104,6 +101,7 @@ def get_offering_info(offering, user):
             'description': resource.description,
             'content_type': resource.content_type,
             'open': resource.open,
+            'resource_type': resource.resource_type,
             'metadata': resource.meta_info
         }
 
@@ -115,13 +113,9 @@ def get_offering_info(offering, user):
 
         result['resources'].append(res_info)
 
+    # Load applications
     if settings.OILAUTH:
         result['applications'] = offering.applications
-
-    # Load applications
-    # Load offering description
-    parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
-    result['offering_description'] = parser.parse()
 
     if not offering.open and (state == 'purchased' or state == 'rated'):
         result['bill'] = purchase.bill
@@ -171,7 +165,6 @@ def _get_purchased_offerings(user, db, pagination=None, sort=None):
 
     if not user.userprofile.is_user_org():
         user_purchased = organization['offerings_purchased']
-
     else:
         # If the current organization is the user organization, load
         # all user offerings
@@ -180,11 +173,10 @@ def _get_purchased_offerings(user, db, pagination=None, sort=None):
 
         # Append user offerings from organization offerings
         for offer in organization['offerings_purchased']:
-            if not offer in user_purchased:
+            if offer not in user_purchased:
                 user_purchased.append(offer)
 
     # Check sorting
-
     if sort == 'creation_date':
         user_purchased = sorted(user_purchased, key=lambda off: Offering.objects.get(pk=off).creation_date, reverse=True)
     elif sort == 'publication_date':
@@ -218,12 +210,12 @@ def get_offerings(user, filter_='published', state=None, pagination=None, sort=N
     # Validate states
     if state:
         for st in state:
-            if not st in allowed_states:
+            if st not in allowed_states:
                 raise ValueError('Invalid state: ' + st)
 
     # Set sorting values
     order = -1
-    if sort == None or sort == 'date':
+    if sort is None or sort == 'date':
         if filter_ == 'published' or filter_ == 'purchased':
             sorting = 'publication_date'
         else:
@@ -244,7 +236,7 @@ def get_offerings(user, filter_='published', state=None, pagination=None, sort=N
         current_organization = user.userprofile.current_organization
         query = {
             'owner_organization_id': ObjectId(current_organization.id),
-            'state': { '$in': state }
+            'state': {'$in': state}
         }
 
         prov_offerings = offerings.find(query).sort(sorting, order)
@@ -256,7 +248,7 @@ def get_offerings(user, filter_='published', state=None, pagination=None, sort=N
         else:
             prov_offerings = _get_purchased_offerings(user, db, sort=sorting)
 
-    elif  filter_ == 'published':
+    elif filter_ == 'published':
             prov_offerings = offerings.find({'state': 'published'}).sort(sorting, order)
     else:
         raise ValueError('Invalid filter: ' + filter_)
@@ -287,7 +279,7 @@ def count_offerings(user, filter_='published', state=None):
             raise ValueError('Invalid filter: states are not allowed for filter ' + filter_)
 
         for st in state:
-            if not st in ['uploaded', 'published', 'deleted']:
+            if st not in ['uploaded', 'published', 'deleted']:
                 raise ValueError('Invalid state: ' + st)
 
     if filter_ == 'provided':
@@ -303,7 +295,7 @@ def count_offerings(user, filter_='published', state=None):
         if user.userprofile.is_user_org():
             count += len(user.userprofile.offerings_purchased)
 
-    elif  filter_ == 'published':
+    elif filter_ == 'published':
         count = Offering.objects.filter(state='published').count()
     else:
         raise ValueError('Invalid filter: ' + filter_)
@@ -311,96 +303,52 @@ def count_offerings(user, filter_='published', state=None):
     return {'number': count}
 
 
-def _create_basic_usdl(usdl_info):
-
-    # Get the template
-    usdl_template = loader.get_template('usdl/usdl_template.rdf')
-    # Create the context
-
-    if usdl_info['base_uri'].endswith('/'):
-        usdl_info['base_uri'] = usdl_info['base_uri'] + 'storeOfferingCollection/'
-    else:
-        usdl_info['base_uri'] = usdl_info['base_uri'] + '/storeOfferingCollection/'
-
-    site = Context.objects.all()[0].site.domain
-
-    if site.endswith('/'):
-        site = site[:-1]
-
-    image_url = site + usdl_info['image_url']
-
-    free = False
-    if usdl_info['pricing']['price_model'] == 'free':
-        free = True
-
-    context = {
-        'base_uri': usdl_info['base_uri'],
-        'name': usdl_info['name'],
-        'fixed_name': usdl_info['name'].replace(' ', ''),
-        'image_url': image_url,
-        'description': usdl_info['description'],
-        'created': str(datetime.now()),
-        'free': free
-    }
-
-    if not free:
-        context['price'] = usdl_info['pricing']['price']
-
-    if 'legal' in usdl_info:
-        context['legal'] = True
-        context['legal_title'] = usdl_info['legal']['title']
-        context['legal_text'] = usdl_info['legal']['text']
-
-    # Render the template
-    usdl = usdl_template.render(TmplContext(context))
-    # Return the USDL document
-    return usdl
+def _save_encoded_image(path, name, data):
+    """
+    Saves into the filesystem a base64 encoded image
+    """
+    f = open(os.path.join(path, name), "wb")
+    dec = base64.b64decode(data)
+    f.write(dec)
+    f.close()
 
 
-def _validate_offering_info(offering_info):
-    # Validate USDL mandatory fields
-    if not 'description' in offering_info or not 'pricing' in offering_info:
-        raise ValueError('Invalid USDL info: Missing a required field')
+def _create_image(dir_name, path, image):
+    if 'name' not in image or 'data' not in image:
+        raise ValueError('Missing required field in image')
 
-    # Validate that description field is not empty
-    if not offering_info['description']:
-        raise ValueError('Invalid USDL info: Description field cannot be empty')
-
-    # Validate legal fields
-    if 'legal' in offering_info:
-        if not 'title' in offering_info['legal'] or not 'text' in offering_info['legal']:
-            raise ValueError('Invalid USDL info: Title and text fields are required if providing legal info')
-
-        if not offering_info['legal']['title'] or not offering_info['legal']['text']:
-            raise ValueError('Invalid USDL info: Title and text fields cannot be empty in legal info')
-
-    # Validate pricing fields
-    if not 'price_model' in offering_info['pricing']:
-        raise ValueError('Invalid USDL info: The pricing field must define a pricing model')
-
-    if offering_info['pricing']['price_model'] != 'free' and offering_info['pricing']['price_model'] != 'single_payment':
-        raise ValueError('Invalid USDL info: Invalid pricing model')
-
-    if offering_info['pricing']['price_model'] == 'single_payment':
-        if not 'price' in offering_info['pricing']:
-            raise ValueError('Invalid USDL info: Missing price for single payment model')
-
-        if not offering_info['pricing']['price']:
-            raise ValueError('Invalid USDL info: Price cannot be empty in single payment models')
+    # Save the application image or logo
+    _save_encoded_image(path, image['name'], image['data'])
+    return settings.MEDIA_URL + dir_name + '/' + image['name']
 
 
-# Creates a new offering including the media files and
-# the repository uploads
 @OfferingRollback
-def create_offering(provider, json_data):
-
+def create_offering(provider, data):
+    """
+    Creates a new offering including the media files and
+    the repository uploads
+    """
     profile = provider.userprofile
-    data = {}
-    if not 'name' in json_data or not 'version' in json_data:
-        raise ValueError('Missing required fields')
 
-    data['name'] = json_data['name']
-    data['version'] = json_data['version']
+    # Validate basic fields
+    if 'name' not in data or 'version' not in data or 'offering_description' not in data \
+            or 'image' not in data:
+
+        missing_fields = ''
+
+        if 'name' not in data:
+            missing_fields += ' name'
+
+        if 'version' not in data:
+            missing_fields += ' version'
+
+        if 'offering_description' not in data:
+            missing_fields += ' offering_description'
+
+        if 'image' not in data:
+            missing_fields += ' image'
+
+        raise ValueError('Missing required fields:' + missing_fields)
 
     if not re.match(re.compile(r'^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)$'), data['version']):
         raise ValueError('Invalid version format')
@@ -412,15 +360,8 @@ def create_offering(provider, json_data):
     organization = profile.current_organization
 
     # Check if the offering already exists
-    existing = True
-
-    try:
-        Offering.objects.get(name=data['name'], owner_organization=organization, version=data['version'])
-    except:
-        existing = False
-
-    if existing:
-        raise ConflictError('The offering already exists')
+    if len(Offering.objects.filter(name=data['name'], owner_organization=organization, version=data['version'])) > 0:
+        raise ConflictError('The offering ' + data['name'] + ' version ' + data['version'] + ' already exists')
 
     # Check if the version of the offering is lower than an existing one
     offerings = Offering.objects.filter(owner_organization=organization, name=data['name'])
@@ -428,176 +369,97 @@ def create_offering(provider, json_data):
         if is_lower_version(data['version'], off.version):
             raise ValueError('A bigger version of the current offering exists')
 
-    is_open = json_data.get('open', False)
+    is_open = data.get('open', False)
 
     # If using the idm, get the applications from the request
-    if settings.OILAUTH:
-
+    if settings.OILAUTH and 'applications' in data:
         # Validate application structure
-        data['applications'] = []
-
-        for app in json_data['applications']:
-            data['applications'].append({
-                'name': app['name'],
-                'url': app['url'],
-                'id': app['id'],
-                'description': app['description']
-            })
-
-    data['related_images'] = []
+        for app in data['applications']:
+            if 'name' not in app or 'url' not in app or 'id' not in app or 'description' not in app:
+                raise ValueError('Missing a required field in application definition')
 
     # Check the URL to notify the provider
     notification_url = ''
-
-    if 'notification_url' in json_data:
-        if json_data['notification_url'] == 'default':
+    if 'notification_url' in data:
+        if data['notification_url'] == 'default':
             notification_url = organization.notification_url
             if not notification_url:
                 raise ValueError('There is not a default notification URL defined for the organization ' + organization.name + '. To configure a default notification URL provide it in the settings menu')
         else:
             # Check the notification URL
-            if not is_valid_url(json_data['notification_url']):
+            if not is_valid_url(data['notification_url']):
                 raise ValueError("Invalid notification URL format: It doesn't seem to be an URL")
 
-            notification_url = json_data['notification_url']
+            notification_url = data['notification_url']
 
     # Create the directory for app media
     dir_name = organization.name + '__' + data['name'] + '__' + data['version']
     path = os.path.join(settings.MEDIA_ROOT, dir_name)
     os.makedirs(path)
 
-    if not 'image' in json_data:
-        raise ValueError('Missing required field: Logo')
-
-    if not isinstance(json_data['image'], dict):
+    # Validate image format
+    if not isinstance(data['image'], dict):
         raise TypeError('Invalid image type')
 
-    image = json_data['image']
+    data['image_url'] = _create_image(dir_name, path, data['image'])
 
-    if not 'name' in image or not 'data' in image:
-        raise ValueError('Missing required field in image')
-
-    # Save the application image or logo
-    f = open(os.path.join(path, image['name']), "wb")
-    dec = base64.b64decode(image['data'])
-    f.write(dec)
-    f.close()
-
-    data['image_url'] = settings.MEDIA_URL + dir_name + '/' + image['name']
     # Save screen shots
-    if 'related_images' in json_data:
-        for image in json_data['related_images']:
-
-            # images must be encoded in base64 format
-            f = open(os.path.join(path, image['name']), "wb")
-            dec = base64.b64decode(image['data'])
-            f.write(dec)
-            f.close()
-
-            data['related_images'].append(settings.MEDIA_URL + dir_name + '/' + image['name'])
-
-    # Save USDL document
-    # If the USDL itself is provided
-
-    if 'offering_description' in json_data:
-        usdl_info = json_data['offering_description']
-
-        repository = Repository.objects.get(name=json_data['repository'])
-        repository_adaptor = repository_adaptor_factory(repository)
-        offering_id = organization.name + '__' + data['name'] + '__' + data['version']
-
-        usdl = usdl_info['data']
-        repository_adaptor.set_credentials(profile.access_token)
-        data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl_info['data'], name=offering_id)
-
-    # If the USDL is going to be created
-    elif 'offering_info' in json_data:
-
-        _validate_offering_info(json_data['offering_info'])
-
-        offering_info = json_data['offering_info']
-        offering_info['image_url'] = data['image_url']
-        offering_info['name'] = data['name']
-
-        repository = Repository.objects.get(name=json_data['repository'])
-
-        offering_info['base_uri'] = repository.host
-
-        usdl = _create_basic_usdl(offering_info)
-        usdl_info = {
-            'content_type': 'application/rdf+xml'
-        }
-
-        repository_adaptor = repository_adaptor_factory(repository)
-        offering_id = organization.name + '__' + data['name'] + '__' + data['version']
-        repository_adaptor.set_credentials(profile.access_token)
-        data['description_url'] = repository_adaptor.upload(usdl_info['content_type'], usdl, name=offering_id)
+    screenshots = []
+    if 'related_images' in data:
+        for image in data['related_images']:
+            screenshots.append(_create_image(dir_name, path, image))
     else:
-        raise Exception('No USDL description provided')
+        data['related_images'] = []
 
     # Validate the USDL
     data['open'] = is_open
     data['organization'] = organization
-    valid = validate_usdl(usdl, usdl_info['content_type'], data)
 
-    if not valid[0]:
-        raise Exception(valid[1])
+    # Create offering USDL
+    offering_info = deepcopy(data['offering_description'])
+    offering_info['image_url'] = data['image_url']
+    offering_info['name'] = data['name']
+    offering_info['version'] = data['version']
+    offering_info['organization'] = organization.name
+    offering_info['base_id'] = 'pk'
 
-    # Check new currencies used
-    if len(valid) > 2:
-        new_curr = valid[2]
+    created = datetime.now()
+    offering_info['created'] = unicode(created)
+    offering_info['modified'] = unicode(created)
 
-        # Set the currency as used
-        cont = Context.objects.all()[0]
-        currency = None
-        # Search the currency
-        for c in cont.allowed_currencies['allowed']:
-            if c['currency'].lower() == new_curr.lower():
-                currency = c
-                break
+    data['offering_description']['modified'] = unicode(created)
 
-        cont.allowed_currencies['allowed'].remove(currency)
-        currency['in_use'] = True
-        cont.allowed_currencies['allowed'].append(currency)
-        cont.save()
-
-    # Serialize and store USDL info in json-ld format
-    graph = rdflib.Graph()
-    rdf_format = usdl_info['content_type']
-
-    if rdf_format == 'text/turtle' or rdf_format == 'text/plain':
-            rdf_format = 'n3'
-    elif rdf_format == 'application/json':
-            rdf_format = 'json-ld'
-
-    graph.parse(data=usdl, format=rdf_format)
-    data['offering_description'] = graph.serialize(format='json-ld', auto_compact=True)
+    usdl_generator = USDLGenerator()
+    usdl_generator.validate_info(offering_info, organization, open_=is_open)
 
     # Create the offering
-    offering = Offering.objects.create(
+    offering = Offering(
         name=data['name'],
         owner_organization=organization,
         owner_admin_user=provider,
         version=data['version'],
         state='uploaded',
-        description_url=data['description_url'],
         resources=[],
         comments=[],
         tags=[],
         image_url=data['image_url'],
-        related_images=data['related_images'],
-        offering_description=json.loads(data['offering_description']),
+        related_images=screenshots,
         notification_url=notification_url,
-        creation_date=datetime.now(),
-        open=is_open
+        creation_date=created,
+        open=is_open,
+        offering_description=data['offering_description']
     )
 
-    if settings.OILAUTH:
+    if settings.OILAUTH and 'applications' in data:
         offering.applications = data['applications']
-        offering.save()
 
-    if 'resources' in json_data and len(json_data['resources']) > 0:
-        bind_resources(offering, json_data['resources'], profile.user)
+    offering.save()
+
+    offering.offering_description['base_id'] = offering.pk
+    offering.save()
+
+    if 'resources' in data and len(data['resources']) > 0:
+        bind_resources(offering, data['resources'], profile.user)
 
     # Load offering document to the search index
     index_path = os.path.join(settings.BASEDIR, 'wstore')
@@ -608,7 +470,7 @@ def create_offering(provider, json_data):
     search_engine.create_index(offering)
 
 
-def update_offering(offering, data):
+def update_offering(user, offering, data):
 
     # Check if the offering has been published,
     # if published the offering cannot be updated
@@ -627,10 +489,7 @@ def update_offering(offering, data):
         os.remove(logo_path)
 
         # Save the new logo
-        f = open(os.path.join(path, data['image']['name']), "wb")
-        dec = base64.b64decode(data['image']['data'])
-        f.write(dec)
-        f.close()
+        _save_encoded_image(path, data['image']['name'], data['image']['data'])
         offering.image_url = settings.MEDIA_URL + dir_name + '/' + data['image']['name']
 
     # Update the related images
@@ -645,88 +504,39 @@ def update_offering(offering, data):
 
         # Create new images
         for img in data['related_images']:
-            f = open(os.path.join(path, img['name']), "wb")
-            dec = base64.b64decode(img['data'])
-            f.write(dec)
-            f.close()
+            _save_encoded_image(path, img['name'], img['data'])
             offering.related_images.append(settings.MEDIA_URL + dir_name + '/' + img['name'])
 
-    new_usdl = False
-    # Update the USDL description
     if 'offering_description' in data:
-        usdl_info = data['offering_description']
-
-        repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
-
-        usdl = usdl_info['data']
-        repository_adaptor.set_credentials(offering.owner_admin_user.userprofile.access_token)
-        repository_adaptor.upload(usdl_info['content_type'], usdl)
-        new_usdl = True
-
-    elif 'offering_info' in data:
-        usdl_info = {
-            'content_type': 'application/rdf+xml'
-        }
-        # Validate USDL info
-        if not 'description' in data['offering_info'] or not 'pricing' in data['offering_info']:
-            raise ValueError('Invalid USDL info')
-
-        offering_info = data['offering_info']
+        # Create offering USDL
+        offering_info = deepcopy(data['offering_description'])
         offering_info['image_url'] = offering.image_url
-
         offering_info['name'] = offering.name
+        offering_info['version'] = offering.version
+        offering_info['organization'] = offering.owner_organization.name
+        offering_info['base_id'] = offering.pk
 
-        splited_desc_url = offering.description_url.split('/')
+        offering_info['created'] = unicode(offering.creation_date)
 
-        base_uri = splited_desc_url[0] + '//'
-        splited_desc_url.remove(splited_desc_url[0])
-        splited_desc_url.remove(splited_desc_url[0])
-        splited_desc_url.remove(splited_desc_url[-1])
-        splited_desc_url.remove(splited_desc_url[-1])
+        mod = unicode(datetime.now())
+        offering_info['modified'] = mod
 
-        for p in splited_desc_url:
-            base_uri += (p + '/')
+        usdl_generator = USDLGenerator()
+        usdl_generator.validate_info(offering_info, offering.owner_organization, open_=offering.open)
 
-        offering_info['base_uri'] = base_uri
+        data['offering_description']['modified'] = mod
+        offering.offering_description = data['offering_description']
 
-        usdl = _create_basic_usdl(offering_info)
-        usdl_info = {
-            'content_type': 'application/rdf+xml'
-        }
+        if offering.open and offering.state == 'published' and len(offering.description_url):
+            repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
 
-        repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
-        repository_adaptor.set_credentials(offering.owner_admin_user.userprofile.access_token)
-        repository_adaptor.upload(usdl_info['content_type'], usdl)
-        new_usdl = True
+            if settings.OILAUTH:
+                repository_adaptor.set_credentials(user.userprofile.access_token)
 
-    # If the USDL has changed store the new description
-    # in the offering model
-    if new_usdl:
-        # Validate the USDL
-        valid = validate_usdl(usdl, usdl_info['content_type'], {
-            'name': offering.name,
-            'organization': offering.owner_organization
-        })
-
-        if not valid[0]:
-            raise ValueError(valid[1])
-
-        # Serialize and store USDL info in json-ld format
-        graph = rdflib.Graph()
-
-        rdf_format = usdl_info['content_type']
-
-        if usdl_info['content_type'] == 'text/turtle' or usdl_info['content_type'] == 'text/plain':
-            rdf_format = 'n3'
-        elif usdl_info['content_type'] == 'application/json':
-            rdf_format = 'json-ld'
-
-        off_description = usdl
-        if rdf_format != 'json-ld':
-            graph.parse(data=usdl, format=rdf_format)
-            off_description = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(off_description)
+            repository_adaptor.upload(
+                'application/rdf+xml',
+                usdl_generator.generate_offering_usdl(offering)[0]
+            )
 
     offering.save()
 
@@ -754,6 +564,28 @@ def publish_offering(user, offering, data):
     # digital assets (applications or resources)
     if offering.open and not len(offering.resources) and not len(offering.applications):
         raise PermissionDenied('Publication error: Open offerings cannot be published if they do not contain at least a digital asset (resource or application)')
+
+    # Check if it possible to publish the offering in a Marketplace
+    if not len(Repository.objects.all()) > 0 and len(data['marketplaces']) > 0:
+        raise PermissionDenied('Publication error: It is not possible to publish an offering in a Markteplace if no Repositories has been registered')
+
+    # Upload the USDL description of the offering to the repository
+    if len(Repository.objects.all()) > 0:
+        repository = Repository.objects.get(is_default=True)
+
+        # Generate the USDL of the offering
+        generator = USDLGenerator()
+        usdl, offering_uri = generator.generate_offering_usdl(offering)
+
+        repository_adaptor = repository_adaptor_factory(repository)
+        offering_id = offering.owner_organization.name + '__' + offering.name + '__' + offering.version
+
+        repository_adaptor.set_uri(offering_uri)
+
+        if settings.OILAUTH:
+            repository_adaptor.set_credentials(user.userprofile.access_token)
+
+        offering.description_url = repository_adaptor.upload('application/rdf+xml', usdl, name=offering_id)
 
     # Publish the offering in the selected marketplaces
     for market in data['marketplaces']:
@@ -801,7 +633,7 @@ def _remove_offering(offering, se):
             os.remove(file_path)
 
         os.rmdir(path)
-    except OSError as e:
+    except OSError:
         # An OS error means that offering files
         # does not exist so continue with the deletion
         pass
@@ -832,9 +664,13 @@ def delete_offering(user, offering):
     if offering.state == 'deleted':
         raise PermissionDenied('The offering is already deleted')
 
-    repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
-    repository_adaptor.set_credentials(user.userprofile.access_token)
-    repository_adaptor.delete()
+    if offering.state == 'published':
+        repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
+
+        if settings.OILAUTH:
+            repository_adaptor.set_credentials(user.userprofile.access_token)
+
+        repository_adaptor.delete()
 
     index_path = os.path.join(settings.BASEDIR, 'wstore')
     index_path = os.path.join(index_path, 'search')
@@ -904,7 +740,7 @@ def delete_offering(user, offering):
 def bind_resources(offering, data, provider):
 
     # Check that the offering supports binding
-    if offering.state != 'uploaded' and not offering.open:
+    if offering.state != 'uploaded' and not (offering.open and offering.state == 'published'):
         raise PermissionDenied('This offering cannot be modified')
 
     added_resources = []
@@ -946,4 +782,18 @@ def bind_resources(offering, data, provider):
         resource.save()
         offering.resources.remove(del_res)
 
+    offering.offering_description['modified'] = unicode(datetime.now())
     offering.save()
+
+    # Update USDL document if needed
+    if offering.open and offering.state == 'published' and len(offering.description_url):
+        usdl_generator = USDLGenerator()
+        repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
+
+        if settings.OILAUTH:
+            repository_adaptor.set_credentials(provider.userprofile.access_token)
+
+        repository_adaptor.upload(
+            'application/rdf+xml',
+            usdl_generator.generate_offering_usdl(offering)[0]
+        )

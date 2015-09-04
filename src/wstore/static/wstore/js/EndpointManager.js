@@ -33,7 +33,7 @@
         'OFFERING_COLLECTION': '/api/offering/offerings',
         'APPLICATION_COLLECTION': '/api/offering/applications',
         'PURCHASE_COLLECTION': '/api/contracting',
-        'NEWEST_COLLECTION': '/api/offering/offerings/newest',
+        'NEWEST_COLLECTION': '/api/offering/offerings/latest',
         'TOPRATED_COLLECTION': '/api/offering/offerings/toprated',
         'UNIT_COLLECTION': '/api/administration/units',
         'CURRENCY_COLLECTION': '/api/administration/currency',
@@ -46,6 +46,7 @@
     var contextEndpoints = {
         'MARKET_ENTRY': '/api/administration/marketplaces/${name}',
         'REPOSITORY_ENTRY': '/api/administration/repositories/${name}',
+        'REPOSITORY_DEFAULT_ENTRY': '/api/administration/repositories/${name}/default',
         'RSS_ENTRY': '/api/administration/rss/${name}',
         'USERPROFILE_ENTRY': '/api/administration/profiles/${username}',
         'ORGANIZATION_ENTRY': '/api/administration/organizations/${org}',

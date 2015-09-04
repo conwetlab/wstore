@@ -58,7 +58,22 @@
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "publication_date": "2013-02-05 17:06:46",
+            "offering_description": {
+                "pricing": {
+                    "price_plans": [{
+                        "currency": "EUR",
+                        "title": "Example price plan",
+                        "description": "Price plan description",
+                        "price_components": [{
+                            "label": "Price component 1",
+                            "unit": "single payment",
+                            "value": "5",
+                            "description": "price component 1 description"
+                        }]
+                    }]
+                }
+            }
         }
     },
     {

@@ -26,6 +26,7 @@ import rdflib
 from datetime import datetime
 from bson import ObjectId
 from mock import MagicMock
+from nose_parameterized import parameterized
 
 from django.test import TestCase
 from django.conf import settings
@@ -41,6 +42,7 @@ from wstore.store_commons.database import get_database_connection
 
 
 __test__ = False
+
 
 def fake_renovation_date(unit):
 
@@ -111,6 +113,50 @@ class FakeSubprocess():
     def call(self, prams):
         pass
 
+BASIC_PRCING = {
+    "pricing": {
+        "price_plans": [{
+            "currency": "EUR",
+            "title": "Example price plan",
+            "description": "Price plan description",
+            "price_components": [{
+                "label": "Price component 1",
+                "unit": "single payment",
+                "value": "5",
+                "description": "price component 1 description"
+            }]
+        }]
+    }
+}
+
+
+MULTIPLE_PRCING = {
+    "pricing": {
+        "price_plans": [{
+            "currency": "EUR",
+            "title": "Example price plan",
+            "description": "Price plan description",
+            "price_components": [{
+                "label": "Price component 1",
+                "unit": "single payment",
+                "value": "5",
+                "description": "price component 1 description"
+            }, {
+                "label": "Price component 2",
+                "unit": "single payment",
+                "value": "5",
+                "description": "price component 2 description"
+            }, {
+                "label": "Price component 3",
+                "unit": "single payment",
+                "value": "7",
+                "description": "price component 3 description"
+            }]
+        }]
+    }
+}
+
+
 class SinglePaymentChargingTestCase(TestCase):
 
     tags = ('fiware-ut-12',)
@@ -132,18 +178,11 @@ class SinglePaymentChargingTestCase(TestCase):
         settings.OILAUTH = cls._auth
         super(SinglePaymentChargingTestCase, cls).tearDownClass()
 
-    def test_basic_charging_single_payment(self):
-
-        # Load model
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_price.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
+    @parameterized.expand([
+        ('basic',  BASIC_PRCING, 5),
+        ('multiple', MULTIPLE_PRCING, 17)
+    ])
+    def test_charging_single_payment(self, name, pricing_model, value):
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
         profile = UserProfile.objects.get(user=user)
 
@@ -160,12 +199,8 @@ class SinglePaymentChargingTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
-
-        offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(json_model)
-        offering.save()
+        purchase.offering.offering_description = pricing_model
+        purchase.offering.save()
 
         credit_card = {
             'type': 'Visa',
@@ -192,7 +227,7 @@ class SinglePaymentChargingTestCase(TestCase):
         charges = contract.charges
 
         self.assertEqual(len(charges), 1)
-        self.assertEqual(charges[0]['cost'], 5)
+        self.assertEqual(charges[0]['cost'], value)
         self.assertEqual(charges[0]['currency'], 'EUR')
         self.assertEqual(charges[0]['concept'], 'initial charge')
 
@@ -202,94 +237,17 @@ class SinglePaymentChargingTestCase(TestCase):
         self.assertFalse('subscription' in price_model)
         self.assertFalse('pay_per_use' in price_model)
 
-        self.assertEqual(len(price_model['single_payment']), 1)
-        self.assertEqual(price_model['single_payment'][0]['title'], 'Price component 1')
-        self.assertEqual(price_model['single_payment'][0]['value'], '5.0')
-
-    def test_charging_single_payment_parts(self):
-
-        # Load model
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'complex_sin_price.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
-        user = User.objects.get(pk='51070aba8e05cc2115f022f9')
-        profile = UserProfile.objects.get(user=user)
-
-        tax_address = {
-            "street": "test street",
-            "postal": "20000",
-            "city": "test city",
-            "country": "test country"
-        }
-
-        profile.tax_address = tax_address
-        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
-        profile.organization = org
-        profile.save()
-
-        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
-
-        offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(json_model)
-        offering.save()
-
-        credit_card = {
-            'type': 'Visa',
-            'number': '1234123412341234',
-            'expire_year': '2018',
-            'expire_month': '2',
-            'cvv2': '111',
-        }
-
-        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
-        charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
-
-        charging._generate_cdr = fake_cdr_generation
-        charging._check_expenditure_limits = MagicMock()
-        charging._update_actor_balance = MagicMock()
-        charging.resolve_charging(new_purchase=True)
-
-        purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
-        bills = purchase.bill
-        self.assertEqual(len(bills), 1)
-
-        contract = purchase.contract
-        charges = contract.charges
-
-        self.assertEqual(len(charges), 1)
-        self.assertEqual(charges[0]['cost'], 17)
-        self.assertEqual(charges[0]['currency'], 'EUR')
-        self.assertEqual(charges[0]['concept'], 'initial charge')
-
-        price_model = contract.pricing_model
-
-        self.assertTrue('single_payment' in price_model)
-        self.assertFalse('subscription' in price_model)
-        self.assertFalse('pay_per_use' in price_model)
-
-        self.assertEqual(len(price_model['single_payment']), 3)
+        self.assertEqual(len(price_model['single_payment']), len(pricing_model['pricing']['price_plans'][0]['price_components']))
 
         for pay in price_model['single_payment']:
+            if pay['label'] == 'Price component 1':
+                self.assertEqual(pay['value'], '5')
 
-            if pay['title'] == 'Price component 1':
-                self.assertEqual(pay['title'], 'Price component 1')
-                self.assertEqual(pay['value'], '5.0')
+            elif pay['label'] == 'Price component 2':
+                self.assertEqual(pay['value'], '5')
 
-            elif pay['title'] == 'Price component 2':
-                self.assertEqual(pay['title'], 'Price component 2')
-                self.assertEqual(pay['value'], '5.0')
-
-            elif pay['title'] == 'Price component 3':
-                self.assertEqual(pay['title'], 'Price component 3')
-                self.assertEqual(pay['value'], '7.0')
+            elif pay['label'] == 'Price component 3':
+                self.assertEqual(pay['value'], '7')
 
 
 class SubscriptionChargingTestCase(TestCase):
@@ -307,16 +265,6 @@ class SubscriptionChargingTestCase(TestCase):
 
     def test_basic_subscription_charging(self):
 
-        # Load model
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_subs.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
         profile = UserProfile.objects.get(user=user)
 
@@ -332,13 +280,6 @@ class SubscriptionChargingTestCase(TestCase):
         profile.organization = org
         profile.save()
 
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(json_model)
-        offering.save()
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
 
         credit_card = {
@@ -371,12 +312,12 @@ class SubscriptionChargingTestCase(TestCase):
         self.assertFalse('pay_per_use' in pricing_model)
 
         for sub in pricing_model['subscription']:
-            if sub['title'] == 'Price component 1':
+            if sub['label'] == 'Price component 1':
                 self.assertEqual(sub['value'], '5.0')
                 self.assertEqual(sub['unit'], 'per month')
                 self.assertEqual(str(sub['renovation_date']), '2013-04-01 00:00:00')
             else:
-                self.assertEqual(sub['title'], 'Price component 2')
+                self.assertEqual(sub['label'], 'Price component 2')
                 self.assertEqual(sub['value'], '5.0')
                 self.assertEqual(sub['unit'], 'per week')
                 self.assertEqual(str(sub['renovation_date']), '2013-03-20 00:00:00')
@@ -445,12 +386,12 @@ class SubscriptionChargingTestCase(TestCase):
         self.assertFalse('pay_per_use' in pricing_model)
 
         for sub in pricing_model['subscription']:
-            if sub['title'] == 'price component 1':
+            if sub['label'] == 'price component 1':
                 self.assertEqual(sub['value'], '5')
                 self.assertEqual(sub['unit'], 'per month')
                 self.assertEqual(str(sub['renovation_date']), '2013-04-01 00:00:00')
             else:
-                self.assertEqual(sub['title'], 'price component 2')
+                self.assertEqual(sub['label'], 'price component 2')
                 self.assertEqual(sub['value'], '5')
                 self.assertEqual(sub['unit'], 'per week')
                 self.assertEqual(str(sub['renovation_date']), '2013-03-20 00:00:00')
@@ -519,7 +460,7 @@ class SubscriptionChargingTestCase(TestCase):
         self.assertFalse('pay_per_use' in pricing_model)
 
         for s in pricing_model['subscription']:
-            if s['title'] == 'price component 1':
+            if s['label'] == 'price component 1':
                 self.assertEqual(s['value'], '5')
                 self.assertEqual(s['unit'], 'per month')
                 self.assertEqual(str(s['renovation_date']), '2013-04-01 00:00:00')
@@ -660,7 +601,7 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertEqual(loaded_sdr['unit'], 'invocation')
 
     test_sdr_feeding_some_applied.tags = ('fiware-ut-14',)
-    
+
     def test_sdr_feeding_some_pending(self):
 
         sdr = {
@@ -918,16 +859,6 @@ class PayPerUseChargingTestCase(TestCase):
 
     def test_new_purchase_use(self):
 
-        # Load model
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_use.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
         profile = UserProfile.objects.get(user=user)
 
@@ -944,12 +875,6 @@ class PayPerUseChargingTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
-
-        offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(json_model)
-        offering.save()
 
         charging = charging_engine.ChargingEngine(purchase)
 
@@ -974,10 +899,10 @@ class PayPerUseChargingTestCase(TestCase):
         self.assertTrue('pay_per_use' in price_model)
 
         self.assertEqual(len(price_model['pay_per_use']), 1)
-        self.assertEqual(price_model['pay_per_use'][0]['title'], 'Pay per use')
+        self.assertEqual(price_model['pay_per_use'][0]['label'], 'Pay per use')
         self.assertEqual(price_model['pay_per_use'][0]['value'], '5.0')
         self.assertEqual(price_model['pay_per_use'][0]['unit'], 'invocation')
-        self.assertEqual(price_model['pay_per_use'][0]['currency'], 'EUR')
+        self.assertEqual(price_model['general_currency'], 'EUR')
 
     test_new_purchase_use.tags = ('fiware-ut-16',)
 
@@ -1067,16 +992,6 @@ class AsynchronousPaymentTestCase(TestCase):
 
     def test_basic_asynchronous_payment(self):
 
-        # Load model
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_price.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
         profile = UserProfile.objects.get(user=user)
 
@@ -1093,12 +1008,6 @@ class AsynchronousPaymentTestCase(TestCase):
         profile.save()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        offering = purchase.offering
-        json_model = graph.serialize(format='json-ld', auto_compact=True)
-
-        offering.offering_description = json.loads(json_model)
-        offering.save()
 
         # First step
         charging = charging_engine.ChargingEngine(purchase, payment_method='paypal')
@@ -1117,8 +1026,8 @@ class AsynchronousPaymentTestCase(TestCase):
 
         model = contract.pending_payment['related_model']
         self.assertEqual(len(model['single_payment']), 1)
-        self.assertEqual(model['single_payment'][0]['title'], 'Price component 1')
-        self.assertEqual(model['single_payment'][0]['value'], '5.0')
+        self.assertEqual(model['single_payment'][0]['label'], 'Price component 1')
+        self.assertEqual(model['single_payment'][0]['value'], '5')
 
         # Second step
         charging = charging_engine.ChargingEngine(purchase)
@@ -1436,6 +1345,7 @@ class AdaptorWrapperThread():
     def start(self):
         self._context._cdrs = self._cdr
 
+
 @override_settings(STORE_NAME='wstore')
 class CDRGeranationTestCase(TestCase):
 
@@ -1486,7 +1396,7 @@ class CDRGeranationTestCase(TestCase):
 
         cdr = self._cdrs[0]
         self.assertEqual(cdr['provider'], 'wstore')
-        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Single payment event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
@@ -1536,7 +1446,7 @@ class CDRGeranationTestCase(TestCase):
 
         cdr = self._cdrs[0]
         self.assertEqual(cdr['provider'], 'wstore')
-        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Single payment event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
@@ -1550,7 +1460,7 @@ class CDRGeranationTestCase(TestCase):
 
         cdr = self._cdrs[1]
         self.assertEqual(cdr['provider'], 'wstore')
-        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Subscription event')
         self.assertEqual(cdr['correlation'], '1')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
@@ -1604,33 +1514,33 @@ class CDRGeranationTestCase(TestCase):
         applied_parts = {
             'charges': [{
                 'accounting': [{
-                'offering': {
-                    'name': 'test_offering',
-                    'organization': 'test_organization',
-                    'version': '1.0'
+                    'offering': {
+                        'name': 'test_offering',
+                        'organization': 'test_organization',
+                        'version': '1.0'
+                    },
+                    'customer': 'test_user',
+                    'value': '15',
+                    'unit': 'invocation'
+                }, {
+                    'offering': {
+                        'name': 'test_offering',
+                        'organization': 'test_organization',
+                        'version': '1.0'
+                    },
+                    'customer': 'test_user',
+                    'value': '10',
+                    'unit': 'invocation'
+                }],
+                'model': {
+                    'title': 'example part',
+                    'unit': 'invocation',
+                    'currency': 'EUR',
+                    'value': '1'
                 },
-                'customer': 'test_user',
-                'value': '15',
-                'unit': 'invocation'
-            },
-            {
-                'offering': {
-                    'name': 'test_offering',
-                    'organization': 'test_organization',
-                    'version': '1.0'
-                },
-                'customer': 'test_user',
-                'value': '10',
-                'unit': 'invocation'
-            }],
-            'model': {
-                'title': 'example part',
-                'unit': 'invocation',
-                'currency': 'EUR',
-                'value': '1'
-            },
-            'price': 25.0
-        }]}
+                'price': 25.0
+            }]
+        }
 
         # Load usdl
         model = os.path.join(settings.BASEDIR, 'wstore')
@@ -1653,7 +1563,7 @@ class CDRGeranationTestCase(TestCase):
 
         cdr = self._cdrs[0]
         self.assertEqual(cdr['provider'], 'wstore')
-        self.assertEqual(cdr['service'], 'example service')
+        self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Pay per use event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
@@ -1683,6 +1593,7 @@ class PriceFunctionPaymentTestCase(TestCase):
     def tearDownClass(cls):
         settings.OILAUTH = cls._auth
         super(PriceFunctionPaymentTestCase, cls).tearDownClass()
+
     def test_basic_price_function_payment(self):
 
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')

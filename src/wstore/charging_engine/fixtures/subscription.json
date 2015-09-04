@@ -58,7 +58,24 @@
             "owner_organization": "91000aba8e06ac2115f022f0",
             "offering_description": {},
             "creation_date": "2013-02-05 17:06:46",
-            "publication_date": "2013-02-05 17:06:46"
+            "publication_date": "2013-02-05 17:06:46",
+            "offering_description": {
+                "pricing": {
+                    "price_plans": [{
+                        "title": "Suscription plan",
+                        "currency": "EUR",
+                        "price_components": [{
+                            "label": "Price component 1",
+                            "unit": "per month",
+                            "value": "5.0"
+                        }, {
+                            "label": "Price component 2",
+                            "unit": "per week",
+                            "value": "5.0"
+                        }]
+                    }]
+                }
+            }
         }
     },
     {
@@ -161,16 +178,14 @@
         "fields": {
             "pricing_model": {
                 "subscription": [{
-                    "title": "price component 1",
+                    "label": "price component 1",
                     "unit": "per month",
-                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
                 },
                 {
-                    "title": "price component 2",
+                    "label": "price component 2",
                     "unit": "per week",
-                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
                 }],
@@ -191,16 +206,14 @@
         "fields": {
             "pricing_model": {
                 "subscription": [{
-                    "title": "price component 1",
+                    "label": "price component 1",
                     "unit": "per month",
-                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "1990-02-05 17:06:46"
                 },
                 {
-                    "title": "price component 2",
+                    "label": "price component 2",
                     "unit": "per week",
-                    "currency": "EUR",
                     "value": "5",
                     "renovation_date": "2020-04-01 00:00:00"
                 }],
@@ -221,9 +234,8 @@
         "fields": {
             "pricing_model": {
                 "single_payment": [{
-                    "title": "price component 1",
+                    "label": "price component 1",
                     "unit": "single_payment",
-                    "currency": "EUR",
                     "value": "5"
                 }],
                 "general_currency": "EUR"

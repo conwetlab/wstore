@@ -5,6 +5,7 @@
         "fields": {
             "name": "test_repository",
             "host": "http://localhost:8989",
+            "is_default": true
             "store_collection": "storeOfferingCollection",
             "api_version": 1
         }

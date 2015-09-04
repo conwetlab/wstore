@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013-2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -35,69 +35,10 @@ from wstore.offerings import resources_management
 from wstore.models import Resource
 from django.core.exceptions import PermissionDenied
 from wstore.store_commons.errors import ConflictError
+from wstore.offerings.test.resource_test_data import *
 
 
 __test__ = False
-
-
-RESOURCE_DATA1 = {
-    'name': 'Resource1',
-    'version': '1.0',
-    'description': 'Test resource 1',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': False,
-    'link': 'http://localhost/media/resources/resource1',
-    'resource_type': 'API',
-    'metadata': {}
-}
-
-RESOURCE_DATA2 = {
-    'name': 'Resource2',
-    'version': '2.0',
-    'description': 'Test resource 2',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': False,
-    'link': 'http://localhost/media/resources/resource2',
-    'resource_type': 'API',
-    'metadata': {}
-}
-
-RESOURCE_DATA3 = {
-    'name': 'Resource3',
-    'version': '2.0',
-    'description': 'Test resource 3',
-    'content_type': 'text/plain',
-    'state': 'created',
-    'open': True,
-    'link': 'http://localhost/media/resources/resource3',
-    'resource_type': 'API',
-    'metadata': {}
-}
-
-RESOURCE_DATA4 = {
-    'name': 'Resource4',
-    'version': '1.0',
-    'description': 'Test resource 4',
-    'content_type': 'text/plain',
-    'state': 'used',
-    'open': True,
-    'link': 'http://localhost/media/resources/resource4',
-    'resource_type': 'API',
-    'metadata': {}
-}
-
-RESOURCE_IN_USE_DATA = {
-    'description': 'Test resource 4',
-}
-
-RESOURCE_CONTENT = {
-    'content': {
-        'name': 'test_usdl.rdf',
-        'data': ''
-    },
-}
 
 
 class FakePlugin():
@@ -113,6 +54,19 @@ class ResourceRegisteringTestCase(TestCase):
     def tearDownClass(cls):
         reload(wstore.offerings.resource_plugins.decorators)
         reload(resources_management)
+
+    def setUp(self):
+        # Mock repository adaptor
+        self.adaptor_obj = MagicMock()
+        self.adaptor_obj.upload.return_value = 'http://testrepo.com/resource1'
+        resources_management.repository_adaptor_factory = MagicMock()
+        resources_management.repository_adaptor_factory.return_value = self.adaptor_obj
+
+        # Mock context
+        context_obj = MagicMock()
+        context_obj.site.domain = 'http://localhost'
+        resources_management.Context = MagicMock(name="Context")
+        resources_management.Context.objects.all.return_value = [context_obj]
 
     def _basic_encoder(self, data):
         f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
@@ -240,6 +194,8 @@ class ResourceRegisteringTestCase(TestCase):
             res = Resource.objects.get(name=data['name'], version=data['version'])
             self.assertEquals(res.version, data['version'])
             self.assertEquals(res.content_type, data['content_type'])
+            self.assertEquals(res.resource_uri, "http://localhost/api/offering/resources/test_user/" + data['name'] + "/" + data["version"])
+            self.assertEquals(res.resource_usdl, "http://testrepo.com/resource1")
 
             if 'content' in data or is_file:
                 if is_file:
@@ -252,6 +208,7 @@ class ResourceRegisteringTestCase(TestCase):
                 os.remove(res_path)
             elif 'link' in data:
                 self.assertEquals(res.download_link, data['link'])
+
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
@@ -302,6 +259,8 @@ class ResourceRegisteringTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = plugin_mock
         reload(resources_management)
 
+        self.setUp()
+
         if encoder is not None:
             encoder(self, data)
 
@@ -318,7 +277,7 @@ class ResourceRegisteringTestCase(TestCase):
             # Check event calls
             expected_data = {
                 'name': 'Download',
-                'meta': {},
+                'metadata': {},
                 'content_path': '/media/resources/test_user__Download__1.0__test_usdl.rdf',
                 'version': '1.0',
                 'link': '',
@@ -477,6 +436,13 @@ class ResourceDeletionTestCase(TestCase):
         self.resource = MagicMock()
         self.resource.pk = '4444'
         self.resource.resource_type = 'API'
+        self.resource.resource_usdl = 'http://repository.com/resource'
+        resources_management.Offering = MagicMock(name="Offering")
+        resources_management.RepositoryAdaptor = MagicMock(name="RepositoryAdaptor")
+
+        self._adaptor_mock = MagicMock()
+        resources_management.unreg_repository_adaptor_factory = MagicMock()
+
         self.user = MagicMock()
         resources_management.Offering = MagicMock()
         resources_management.delete_offering = MagicMock()
@@ -566,6 +532,8 @@ class ResourceDeletionTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
         reload(resources_management)
+        self._adaptor_mock = MagicMock()
+        resources_management.unreg_repository_adaptor_factory = MagicMock()
 
     @parameterized.expand([
         (_res_in_use, _check_in_use),
@@ -594,18 +562,6 @@ class ResourceDeletionTestCase(TestCase):
             self.assertEquals(unicode(e), err_msg)
 
 
-UPDATE_DATA1 = {
-    'description': 'Test resource 1',
-    'content_type': 'text/plain',
-    'open': False
-}
-
-UPDATE_DATA2 = {
-    'content_type': 'text/plain',
-    'open': False
-}
-
-
 class ResourceUpdateTestCase(TestCase):
 
     tags = ('fiware-ut-3', )
@@ -615,8 +571,26 @@ class ResourceUpdateTestCase(TestCase):
         self.resource.offerings = []
         self.resource.resource_path = ''
         self.resource.resource_type = 'API'
+        self.resource.resource_usdl = 'http://repository.com/resource'
         resources_management.Resource = MagicMock()
         resources_management.Resource.objects.filter.return_value = []
+
+        # Mock user
+        self.user = MagicMock()
+        self.user.userprofile.access_token = "access_token"
+        self._mock_resource_libs()
+
+    def _mock_resource_libs(self):
+        # Mock context
+        context_obj = MagicMock()
+        context_obj.site.domain = 'http://localhost'
+        resources_management.Context = MagicMock(name="Context")
+        resources_management.Context.objects.all.return_value = [context_obj]
+
+        # Mock RepositoryAdaptor
+        self._rep_obj = MagicMock()
+        resources_management.unreg_repository_adaptor_factory = MagicMock()
+        resources_management.unreg_repository_adaptor_factory.return_value = self._rep_obj
 
     @classmethod
     def tearDownClass(cls):
@@ -638,6 +612,7 @@ class ResourceUpdateTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module = MagicMock(name="load_plugin_module")
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
         reload(resources_management)
+        self._mock_resource_libs()
 
     def _invalid_media(self):
         self.resource.resource_type = 'test_plugin'
@@ -649,6 +624,7 @@ class ResourceUpdateTestCase(TestCase):
 
         wstore.offerings.resource_plugins.decorators._get_plugin_model.return_value = mock_model
         reload(resources_management)
+        self._mock_resource_libs()
 
     def _check_in_use(self):
         self.assertEquals(self.resource.description, 'Test resource 4')
@@ -674,7 +650,6 @@ class ResourceUpdateTestCase(TestCase):
         self.plugin_mock.on_post_update.assert_called_once_with(self.resource)
         wstore.offerings.resource_plugins.decorators._get_plugin_model.assert_called_once_with('test_plugin')
 
-
     @parameterized.expand([
         (RESOURCE_IN_USE_DATA, _check_in_use, _res_in_use),
         (UPDATE_DATA1, _check_complete),
@@ -699,37 +674,20 @@ class ResourceUpdateTestCase(TestCase):
 
         error = None
         try:
-            resources_management.update_resource(self.resource, data)
+            resources_management.update_resource(self.resource, self.user, data)
         except Exception as e:
             error = e
 
         if not err_type:
             self.assertEquals(error, None)
             check(self)
+            resources_management.unreg_repository_adaptor_factory.assert_called_once_with('http://repository.com/resource')
+            self._rep_obj.set_credentials.assert_called_once_with('access_token')
             self.resource.save.assert_called_once_with()
-
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
 
-
-UPGRADE_CONTENT = {
-    'version': '1.0',
-    'content': {
-        'name': 'test_usdl.rdf',
-        'data': ''
-    },
-}
-
-UPGRADE_LINK = {
-    'version': '1.0',
-    'link': 'http://newlinktoresource.com'
-}
-
-UPGRADE_INV_LINK = {
-    'version': '1.0',
-    'link': 'invalid link'
-}
 
 class ResourceUpgradeTestCase(TestCase):
 
@@ -763,6 +721,13 @@ class ResourceUpgradeTestCase(TestCase):
         self.resource.resource_type = 'Downloadable'
         self.resource.version = '0.1'
         self.resource.old_versions = []
+        resources_management._upload_usdl = MagicMock(name="_upload_usdl")
+
+        # Mock context
+        context_obj = MagicMock()
+        context_obj.site.domain = 'http://localhost'
+        resources_management.Context = MagicMock(name="Context")
+        resources_management.Context.objects.all.return_value = [context_obj]
 
     def _deleted_res(self, data):
         self.resource.state = 'deleted'
@@ -783,6 +748,7 @@ class ResourceUpgradeTestCase(TestCase):
         wstore.offerings.resource_plugins.decorators.load_plugin_module.return_value = self.plugin_mock
 
         reload(resources_management)
+        resources_management._upload_usdl = MagicMock(name="_upload_usdl")
         self._mock_save_file(data)
 
     def _mock_res_api(self, data):
@@ -819,9 +785,10 @@ class ResourceUpgradeTestCase(TestCase):
         elif 'content' in data:
             data['content']['data'] = self.content
 
+        user = MagicMock()
         error = None
         try:
-            resources_management.upgrade_resource(self.resource, data, res_file)
+            resources_management.upgrade_resource(self.resource, user, data, res_file)
         except Exception as e:
             error = e
 
@@ -852,6 +819,7 @@ class ResourceUpgradeTestCase(TestCase):
                 self.assertEquals(self.resource.download_link, 'http://newlinktoresource.com')
 
             self.resource.save.assert_called_once_with()
+            resources_management._upload_usdl.assert_called_once_with(self.resource, user)
 
             # Check old versions
             self.assertEquals(len(self.resource.old_versions), 1)

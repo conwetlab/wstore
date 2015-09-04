@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/" 
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"  
+    xmlns:dcterms="http://purl.org/dc/terms/" 
+    xmlns:usdl="http://www.linked-usdl.org/ns/usdl-core#" 
+    xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+    xmlns:gr="http://purl.org/goodrelations/v1#"
+    xmlns:pav="http://purl.org/pav/"
+    xmlns:price="http://www.linked-usdl.org/ns/usdl-pricing#">
+
+    <usdl:ServiceOffering xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="{{ offering_uri }}">
+        <dcterms:title>{{ name }}</dcterms:title>
+        <dcterms:description>{{ description }}</dcterms:description>
+        <dcterms:abstract>{{ abstract }}</dcterms:abstract>
+        <pav:version>{{ version }}</pav:version>
+        <foaf:depiction rdf:resource="{{ image_url }}"/>
+        <dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">{{ created }}</dcterms:created>
+        <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">{{ modified }}</dcterms:modified>
+
+        {% if legal %}
+        <gr:hasBusinessFunction xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ID{{ base_id }}01" />
+        {% endif %}
+
+        {% for res in resources %}
+        <usdl:includes rdf:resource="{{ res }}"/>
+        {% endfor %}
+    </usdl:ServiceOffering>
+
+    {% if legal %}
+    <gr:License xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ID{{ base_id }}01">
+        <rdfs:label>{{ license_label }}</rdfs:label>
+        <dcterms:description>{{ license_description }}</dcterms:description>
+    </gr:License>
+    {% endif %}
+</rdf:RDF>

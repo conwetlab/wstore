@@ -71,7 +71,7 @@ def register_resource_validation_events(func):
 def register_resource_events(func):
 
     @wraps(func)
-    def wrapper(provider, data):
+    def wrapper(provider, user, data):
         # Get plugin models
         if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
 
@@ -98,7 +98,7 @@ def register_resource_events(func):
             raise ValueError('Invalid plugin format: File not allowed for the resource type')
 
         # Call method
-        func(provider, data)
+        func(provider, user, data)
 
         # Call on post create event handler
         if data['resource_type'] != 'Downloadable' and data['resource_type'] != 'API':
@@ -132,7 +132,7 @@ def upgrade_resource_validation_events(func):
 def upgrade_resource_events(func):
 
     @wraps(func)
-    def wrapper(resource):
+    def wrapper(resource, user):
 
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
             plugin_model = _get_plugin_model(resource.resource_type)
@@ -154,7 +154,7 @@ def upgrade_resource_events(func):
             raise ValueError('Invalid plugin format: File not allowed for the resource type')
 
         # Call method
-        func(resource)
+        func(resource, user)
 
         # Call on post upgrade event handler
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
@@ -166,7 +166,7 @@ def upgrade_resource_events(func):
 def update_resource_events(func):
 
     @wraps(func)
-    def wrapper(resource):
+    def wrapper(resource, user):
 
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':
             plugin_model = _get_plugin_model(resource.resource_type)
@@ -182,7 +182,7 @@ def update_resource_events(func):
             plugin_module.on_pre_update(resource)
 
         # Call method
-        func(resource)
+        func(resource, user)
 
         # Call on post update event handler
         if resource.resource_type != 'Downloadable' and resource.resource_type != 'API':

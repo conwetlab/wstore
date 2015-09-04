@@ -44,7 +44,6 @@ from wstore.models import RSS
 from wstore.charging_engine.models import Contract
 from wstore.charging_engine.models import Unit
 from wstore.charging_engine.price_resolver import PriceResolver
-from wstore.store_commons.utils.usdlParser import USDLParser
 from wstore.contracting.purchase_rollback import rollback
 from wstore.rss_adaptor.rss_adaptor import RSSAdaptorThread
 from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
@@ -62,13 +61,13 @@ class ChargingEngine:
 
     def __init__(self, purchase, payment_method=None, credit_card=None, plan=None):
         self._purchase = purchase
-        if payment_method != None:
+        if payment_method is not None:
 
             if payment_method != 'paypal':
                 if payment_method != 'credit_card':
                     raise Exception('Invalid payment method')
                 else:
-                    if credit_card == None:
+                    if credit_card is None:
                         raise Exception('No credit card provided')
                     self._credit_card_info = credit_card
 
@@ -92,7 +91,7 @@ class ChargingEngine:
 
         # If _lock not exists or is set to false means that this function has
         # acquired the resource
-        if not '_lock' in pre_value or not pre_value['_lock']:
+        if '_lock' not in pre_value or not pre_value['_lock']:
 
             # Only rollback if the state is pending
             if pre_value['state'] == 'pending':
@@ -164,12 +163,12 @@ class ChargingEngine:
             raise Exception('Invalid payment method')
 
     def _generate_cdr_part(self, part, model, cdr_info):
-        # Take and increment the correlation number using
-        # the mongoDB atomic access in order to avoid race
-        # problems
         # Create connection for raw database access
         db = get_database_connection()
 
+        # Take and increment the correlation number using
+        # the mongoDB atomic access in order to avoid race
+        # problems
         corr_number = db.wstore_rss.find_and_modify(
             query={'_id': ObjectId(cdr_info['rss'].pk)},
             update={'$inc': {'correlation_number': 1}}
@@ -208,26 +207,6 @@ class ChargingEngine:
         if len(rss_collection) > 0:
             rss = RSS.objects.all()[0]
 
-            # Get the service name using direct access to the stored
-            # JSON USDL description
-
-            offering_description = self._purchase.offering.offering_description
-
-            # Get the used tag for RDF properties
-            service_tag = ''
-            dc_tag = ''
-            for k, v in offering_description['@context'].iteritems():
-                if v == 'http://www.linked-usdl.org/ns/usdl-core#':
-                    service_tag = k
-                if v == 'http://purl.org/dc/terms/':
-                    dc_tag = k
-
-            # Get the service name
-            service_name = ''
-            for node in offering_description['@graph']:
-                if node['@type'] == service_tag + ':Service':
-                    service_name = node[dc_tag + ':title']['@value']
-
             # Get the provider (Organization)
             provider = settings.STORE_NAME.lower()
 
@@ -247,7 +226,7 @@ class ChargingEngine:
             cdr_info = {
                 'rss': rss,
                 'provider': provider,
-                'service_name': service_name,
+                'service_name': offering,
                 'offering': offering,
                 'country_code': country_code,
                 'time_stamp': time_stamp,
@@ -322,11 +301,11 @@ class ChargingEngine:
             }
             if 'single_payment' in applied_parts:
                 for part in applied_parts['single_payment']:
-                    parts['single_parts'].append((part['title'], part['value'], part['currency']))
+                    parts['single_parts'].append((part['label'], part['value'], currency))
 
             if 'subscription' in applied_parts:
                 for part in applied_parts['subscription']:
-                    parts['subs_parts'].append((part['title'], part['value'], part['currency'], part['unit'], str(part['renovation_date'])))
+                    parts['subs_parts'].append((part['label'], part['value'], currency, part['unit'], str(part['renovation_date'])))
 
             # Get the bill template
             bill_template = loader.get_template('contracting/bill_template_initial.html')
@@ -338,7 +317,7 @@ class ChargingEngine:
             }
             # If renovation, It contains subscriptions
             for part in applied_parts['subscription']:
-                parts['subs_parts'].append((part['title'], part['value'], part['currency'], part['unit'], str(part['renovation_date'])))
+                parts['subs_parts'].append((part['label'], part['value'], currency, part['unit'], str(part['renovation_date'])))
                 parts['subs_subtotal'] += float(part['value'])
 
             # Check use based charges
@@ -362,7 +341,7 @@ class ChargingEngine:
                         for sdr in part['accounting']:
                             use += int(sdr['value'])
 
-                    parts['use_parts'].append((model['title'], unit, value_unit, use, part['price']))
+                    parts['use_parts'].append((model['label'], unit, value_unit, use, part['price']))
                     parts['use_subtotal'] += part['price']
 
             # Check deductions
@@ -386,8 +365,8 @@ class ChargingEngine:
                         for sdr in part['accounting']:
                             use += int(sdr['value'])
 
-                    parts['deduct_parts'].append((model['title'], unit, value_unit, use, part['price']))
-                    parts['deduct_subtotal'] += part['price'] 
+                    parts['deduct_parts'].append((model['label'], unit, value_unit, use, part['price']))
+                    parts['deduct_subtotal'] += part['price']
 
             # Get the bill template
             bill_template = loader.get_template('contracting/bill_template_renovation.html')
@@ -395,7 +374,7 @@ class ChargingEngine:
         elif type_ == 'use':
             # If use, can only contain pay per use parts or deductions
             parts = {
-                'use_parts' : [],
+                'use_parts': [],
                 'use_subtotal': 0
             }
             for part in applied_parts['charges']:
@@ -413,7 +392,7 @@ class ChargingEngine:
                     for sdr in part['accounting']:
                         use += int(sdr['value'])
 
-                parts['use_parts'].append((model['title'], unit, value_unit, use, part['price']))
+                parts['use_parts'].append((model['label'], unit, value_unit, use, part['price']))
                 parts['use_subtotal'] += part['price']
 
             # Check deductions
@@ -437,7 +416,7 @@ class ChargingEngine:
                         for sdr in part['accounting']:
                             use += int(sdr['value'])
 
-                    parts['deduct_parts'].append((model['title'], unit, value_unit, use, part['price']))
+                    parts['deduct_parts'].append((model['label'], unit, value_unit, use, part['price']))
                     parts['deduct_subtotal'] += part['price']
 
             # Get the bill template
@@ -458,7 +437,7 @@ class ChargingEngine:
 
         last_charge = self._purchase.contract.last_charge
 
-        if last_charge == None:
+        if last_charge is None:
             # If last charge is None means that it is the invoice generation
             # associated with a free offering
             date = str(datetime.now()).split(' ')[0]
@@ -569,8 +548,7 @@ class ChargingEngine:
     def _create_purchase_contract(self):
         # Generate the pricing model structure
         offering = self._purchase.offering
-        parser = USDLParser(json.dumps(offering.offering_description), 'application/json')
-        parsed_usdl = parser.parse()
+        parsed_usdl = offering.offering_description
 
         usdl_pricing = {}
         price_model = {}
@@ -596,7 +574,10 @@ class ChargingEngine:
                 if not found:
                     raise Exception('The specified plan does not exist')
 
-        currency_loaded = False
+        # Save the general currency of the offering
+        if 'price_components' in usdl_pricing or 'deductions' in usdl_pricing:
+            price_model['general_currency'] = usdl_pricing['currency']
+
         if 'price_components' in usdl_pricing:
 
             for comp in usdl_pricing['price_components']:
@@ -604,7 +585,7 @@ class ChargingEngine:
                 # Check if the price component defines a price function
                 if 'price_function' in comp:
                     # Price functions always define pay-per-use models
-                    if not 'pay_per_use' in price_model:
+                    if 'pay_per_use' not in price_model:
                         price_model['pay_per_use'] = []
 
                     price_model['pay_per_use'].append(comp)
@@ -618,53 +599,44 @@ class ChargingEngine:
 
                 # The price component defines a single payment
                 if unit.defined_model == 'single payment':
-                    if not 'single_payment' in price_model:
+                    if 'single_payment' not in price_model:
                         price_model['single_payment'] = []
 
                     price_model['single_payment'].append(comp)
 
                 # The price component defines a subscription
                 elif unit.defined_model == 'subscription':
-                    if not 'subscription' in price_model:
+                    if 'subscription' not in price_model:
                         price_model['subscription'] = []
 
                     price_model['subscription'].append(comp)
 
                 # The price component defines a pay per use
                 elif unit.defined_model == 'pay per use':
-                    if not 'pay_per_use' in price_model:
+                    if 'pay_per_use' not in price_model:
                         price_model['pay_per_use'] = []
 
                     price_model['pay_per_use'].append(comp)
-
-                # Save the general currency of the offering
-                if not currency_loaded:
-                    price_model['general_currency'] = comp['currency']
-                    currency_loaded = True
 
         if 'deductions' in usdl_pricing:
 
             for deduct in usdl_pricing['deductions']:
 
-                if not 'deductions' in price_model:
+                if 'deductions' not in price_model:
                     price_model['deductions'] = []
 
-                if not 'price_function' in deduct:
+                if 'price_function' not in deduct:
                     unit = Unit.objects.get(name=deduct['unit'])
 
                     # Deductions only can define use based discounts
                     if unit.defined_model != 'pay per use':
                         raise Exception('Invalid deduction')
 
-                    if not currency_loaded:
-                        price_model['general_currency'] = deduct['currency']
-                        currency_loaded = True
-
                 price_model['deductions'].append(deduct)
 
         # If not price components or all price components define a
         # function without currency, load default currency
-        if not 'general_currency' in price_model:
+        if 'general_currency' not in price_model:
             cnt = WStore_context.objects.all()[0]
             price_model['general_currency'] = cnt.allowed_currencies['default']
 
@@ -676,7 +648,7 @@ class ChargingEngine:
             revenue_class = 'subscription'
         elif 'single_payment' in price_model:
             revenue_class = 'single-payment'
-    
+
         # Create the contract entry
         Contract.objects.create(
             pricing_model=price_model,
@@ -731,7 +703,7 @@ class ChargingEngine:
         # Extract the pricing model from the purchase
         self._price_model = self._purchase.contract.pricing_model
 
-        if not 'pay_per_use' in self._price_model:
+        if 'pay_per_use' not in self._price_model:
             raise Exception('No pay per use parts in the pricing model of the offering')
 
         # Check the correlation number and timestamp
@@ -763,11 +735,11 @@ class ChargingEngine:
         if last_time > time_stamp_sec:
             raise Exception('Invalid time stamp')
 
-        # Check unit or component_label depending if the model defines components or 
+        # Check unit or component_label depending if the model defines components or
         # price functions
         found_model = False
         for comp in self._price_model['pay_per_use']:
-            if not 'price_function' in comp:
+            if 'price_function' not in comp:
                 if sdr['unit'] == comp['unit']:
                     found_model = True
                     break
@@ -781,7 +753,7 @@ class ChargingEngine:
         found_deduction = False
         if 'deductions' in self._price_model:
             for comp in self._price_model['deductions']:
-                if not 'price_function' in comp:
+                if 'price_function' not in comp:
                     if sdr['unit'] == comp['unit']:
                         found_deduction = True
                         break
@@ -840,7 +812,7 @@ class ChargingEngine:
                 exp_manager.set_credentials(rss.access_token)
                 try:
                     exp_manager.check_balance(charge, actor)
-                # The user may be unauthorized, an error occurs, or the 
+                # The user may be unauthorized, an error occurs, or the
                 # actor balance is not enough
                 except:
                     request_failure = e
@@ -912,7 +884,7 @@ class ChargingEngine:
             })
 
         contract.pending_payment = {}
-        if self._price_model == None:
+        if self._price_model is None:
             self._price_model = contract.pricing_model
 
         contract.last_charge = time_stamp
@@ -1031,7 +1003,7 @@ class ChargingEngine:
             # If not SDR received means that the call is a renovation
             if not sdr:
                 # Determine the price parts to renovate
-                if not 'subscription' in self._price_model:
+                if 'subscription' not in self._price_model:
                     raise Exception('No subscriptions to renovate')
 
                 related_model = {
@@ -1093,7 +1065,7 @@ class ChargingEngine:
                     if accounting_info:
                         pending_payment['accounting'] = applied_accounting
 
-                    self._purchase.contract.pending_payment    
+                    self._purchase.contract.pending_payment
                     self._purchase.contract.save()
                     return redirect_url
 

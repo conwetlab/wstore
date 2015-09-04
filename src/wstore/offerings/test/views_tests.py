@@ -33,7 +33,6 @@ from django.contrib.auth.models import User
 from wstore.offerings import views
 from wstore.models import Offering, Organization, Context
 from django.contrib.sites.models import Site
-from social_auth.db.django_models import UserSocialAuth
 from wstore.store_commons.errors import ConflictError, RepositoryError
 
 
@@ -369,13 +368,11 @@ class OfferingEntryTestCase(TestCase):
             notification_url='',
             creation_date='2013-06-03 10:00:00'
         )
-        #views.Offering.is_owner = MagicMock(name='is_owner')
-        #views.Offering.is_owner.return_value = True
 
         response = offering_entry.update(request, 'test_user', 'test_offering', '1.0')
 
         # Check correct call
-        views.update_offering.assert_called_once_with(offering, data)
+        views.update_offering.assert_called_once_with(self.user, offering, data)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
@@ -521,7 +518,7 @@ class OfferingEntryTestCase(TestCase):
         response = offering_entry.update(request, 'test_user', 'test_offering', '1.0')
 
         # Check correct call
-        views.update_offering.assert_called_once_with(offering, data)
+        views.update_offering.assert_called_once_with(self.user, offering, data)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get('Content-type'), 'application/json; charset=utf-8')
@@ -773,7 +770,7 @@ class ResourceEntryTestCase(TestCase):
         (RESOURCE_DATA, 403, 'Forbidden', _no_provider, 'error'),
         (RESOURCE_DATA, 400, 'Exception in call', _exception_update, 'error')
     ])
-    def test_resouorce_update_api(self, data, code, msg, side_effect=None, status='correct'):
+    def test_resource_update_api(self, data, code, msg, side_effect=None, status='correct'):
         views.update_resource = MagicMock(name='update_resource')
 
         if side_effect:
@@ -800,7 +797,7 @@ class ResourceEntryTestCase(TestCase):
 
         # Check call to update method if needed
         if status != 'error':
-            views.update_resource.assert_called_once_with(self.resource, data)
+            views.update_resource.assert_called_once_with(self.resource, self.user, data)
 
     @parameterized.expand([
         (RESOURCE_DATA, 200, 'OK'),
@@ -852,10 +849,10 @@ class ResourceEntryTestCase(TestCase):
 
         if not error:
             if not file_:
-                views.upgrade_resource.assert_called_once_with(self.resource, data)
+                views.upgrade_resource.assert_called_once_with(self.resource, self.user, data)
             else:
                 expected_file = request.FILES['file']  # The type change when loaded
-                views.upgrade_resource.assert_called_once_with(self.resource, data, expected_file)
+                views.upgrade_resource.assert_called_once_with(self.resource, self.user, data, expected_file)
             self.assertEqual(body_response['result'], 'correct')
         else:
             self.assertEqual(body_response['result'], 'error')

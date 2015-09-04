@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2015 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013-2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -42,7 +42,7 @@ class Offering(models.Model):
     # support_admin_user
     version = models.CharField(max_length=20)
     state = models.CharField(max_length=50)
-    description_url = models.CharField(max_length=200)
+    description_url = models.CharField(max_length=200, null=True, blank=True)
     marketplaces = ListField(EmbeddedModelField(MarketOffering))
     resources = ListField()
     rating = models.FloatField(default=0)
@@ -82,6 +82,8 @@ class ResourceVersion(models.Model):
     version = models.CharField(max_length=20)
     resource_path = models.CharField(max_length=100)
     download_link = models.CharField(max_length=200)
+    resource_usdl = models.URLField()
+    resource_uri = models.URLField()
 
 
 # The resources are the frontend components of an application
@@ -101,6 +103,8 @@ class Resource(models.Model):
     open = models.BooleanField(default=False)
     old_versions = ListField(EmbeddedModelField(ResourceVersion))
     resource_type = models.CharField(max_length=100)
+    resource_usdl = models.URLField()
+    resource_uri = models.URLField()
     meta_info = DictField()
 
     def get_url(self):

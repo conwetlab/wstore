@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -29,12 +29,13 @@ from whoosh.index import create_in, open_dir
 from whoosh.qparser import QueryParser
 from nose_parameterized import parameterized
 from whoosh import query
+from shutil import rmtree
 
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from wstore.search.search_engine import SearchEngine
+from wstore.search import search_engine
 from wstore.models import Offering
 from wstore.contracting.models import Purchase
 
@@ -71,39 +72,6 @@ QUERY_DEL = (query.Term('id', '61000aba8e05ac2115144444') & query.Term('state', 
 QUERY_RATED = (query.Term('id', '61000aba8e05ac2115122222') & query.Term('popularity', Decimal(3)))
 QUERY_CONTENT = (query.Term('id', '61000aba8e05ac2115166666') & query.Term('content', 'updated'))
 QUERY_PURCH = (query.Term('id', '61000aba8e05ac2115122222'))
-
-
-class IndexCreationTestCase(TestCase):
-
-    tags = ('fiware-ut-6',)
-    fixtures = ['create_index.json']
-
-    @classmethod
-    def tearDownClass(cls):
-        path = settings.BASEDIR + '/wstore/test/test_index'
-        files = os.listdir(path)
-        for f in files:
-            file_path = os.path.join(path, f)
-            os.remove(file_path)
-
-        os.rmdir(path)
-
-    def test_basic_index_creaton(self):
-
-        offering = Offering.objects.get(name='test_offering')
-        se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
-        se.create_index(offering)
-
-        # Get the index reader
-        index = open_dir(settings.BASEDIR + '/wstore/test/test_index')
-
-        with index.searcher() as searcher:
-            query = QueryParser('content', index.schema).parse(unicode('widget'))
-            total_hits = searcher.search(query)
-
-            self.assertEqual(len(total_hits), 1)
-            doc = total_hits[0]
-            self.assertEqual(offering.pk, doc['id'])
 
 
 def _create_index(user):
@@ -157,14 +125,52 @@ def _create_index(user):
 
     index_writer.commit()
 
+
 def _remove_index(ins, off=None, sa=None):
     path = settings.BASEDIR + '/wstore/test/test_index'
-    files = os.listdir(path)
-    for f in files:
-        file_path = os.path.join(path, f)
-        os.remove(file_path)
+    rmtree(path)
 
-    os.rmdir(path)
+
+def _mock_generator(self):
+    search_engine.USDLGenerator = MagicMock()
+    self._gen_inst = MagicMock()
+    f = open(os.path.join(settings.BASEDIR, 'wstore/test/test_usdl.rdf'), 'rb')
+    self._gen_inst.generate_offering_usdl.return_value = (f.read(), 'http://usdluri.com/')
+    search_engine.USDLGenerator.return_value = self._gen_inst
+
+
+class IndexCreationTestCase(TestCase):
+
+    tags = ('fiware-ut-6',)
+    fixtures = ['create_index.json']
+
+    def setUp(self):
+        _mock_generator(self)
+
+    def tearDown(self):
+        reload(search_engine)
+
+    @classmethod
+    def tearDownClass(cls):
+        path = settings.BASEDIR + '/wstore/test/test_index'
+        rmtree(path)
+
+    def test_basic_index_creaton(self):
+
+        offering = Offering.objects.get(name='test_offering')
+        se = search_engine.SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
+        se.create_index(offering)
+
+        # Get the index reader
+        index = open_dir(settings.BASEDIR + '/wstore/test/test_index')
+
+        with index.searcher() as searcher:
+            query = QueryParser('content', index.schema).parse(unicode('widget'))
+            total_hits = searcher.search(query)
+
+            self.assertEqual(len(total_hits), 1)
+            doc = total_hits[0]
+            self.assertEqual(offering.pk, doc['id'])
 
 
 class FullTextSearchTestCase(TestCase):
@@ -207,7 +213,7 @@ class FullTextSearchTestCase(TestCase):
         ({}, _remove_index, None, False, None, None, Exception, 'The index does not exist'),
         ({}, None, 'invalid', False, None, None, ValueError, 'Invalid state'),
         ({}, None, None, False, None, 'invalid', ValueError, 'Undefined sorting'),
-        ({}, None, None, False, (2,4), None, TypeError, 'Invalid pagination type'),
+        ({}, None, None, False, (2, 4), None, TypeError, 'Invalid pagination type'),
         ({}, None, None, False, {'start': 1}, None, ValueError, 'Missing required field in pagination'),
         ({}, None, None, False, {'start': 'a1', 'limit': 2}, None, TypeError, 'Invalid pagination params type'),
         ({}, None, None, False, {'start': 0, 'limit': 2}, None, ValueError, 'Start param must be higher than 0'),
@@ -228,7 +234,7 @@ class FullTextSearchTestCase(TestCase):
             side_effect(self)
 
         # Create the search engine
-        se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
+        se = search_engine.SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
 
         # Call full text search
         error = None
@@ -267,7 +273,7 @@ class UpdateIndexTestCase(TestCase):
     def setUpClass(cls):
         from wstore.offerings import offerings_management
         offerings_management.USDLParser = FakeUSDLParser
-        cls.date=datetime.now()
+        cls.date = datetime.now()
 
         super(UpdateIndexTestCase, cls).setUpClass()
 
@@ -276,9 +282,11 @@ class UpdateIndexTestCase(TestCase):
             _remove_index(self)
         except:
             pass
+        reload(search_engine)
 
     def setUp(self):
         # Fill user info
+        _mock_generator(self)
         user = User.objects.get(username='test_user')
         for p in Purchase.objects.all():
             user.userprofile.offerings_purchased.append(p.offering.pk)
@@ -322,7 +330,7 @@ class UpdateIndexTestCase(TestCase):
             organization_owned=False,
             state='pending',
             tax_address={},
-            owner_organization = user.userprofile.current_organization
+            owner_organization=user.userprofile.current_organization
         )
 
     @parameterized.expand([
@@ -341,7 +349,7 @@ class UpdateIndexTestCase(TestCase):
             off = Offering.objects.get(pk=offering)
 
         # Create the search engine
-        se = SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
+        se = search_engine.SearchEngine(settings.BASEDIR + '/wstore/test/test_index')
 
         # Call the update method
         update_method(self, off, sa=se)

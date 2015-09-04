@@ -35,7 +35,7 @@
             nameReg = new RegExp(/^[\w\s-]+$/);
             if (!nameReg.test(name)) {
                 validation.valid = false;
-                msg += 'Invalid name format <br/>';
+                msg += 'Invalid name format';
                 errFields.push($('#elem-name').parent().parent())
             }
                 
@@ -43,7 +43,7 @@
             var urlReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
             if (!urlReg.test(host)) {
                 validation.valid = false;
-                msg += 'Invalid URL format <br/>';
+                msg += 'Invalid URL format';
                 errFields.push($('#elem-host').parent().parent());
             }
 
@@ -59,7 +59,7 @@
             }
         } else {
             validation.valid = false;
-            validation.msg = "Name and Host are required </br>";
+            validation.msg = "Both fields are required";
             validation.errFields = []
 
             // Include fields with errors
@@ -95,10 +95,29 @@
     RepositoryForm.prototype = new AdminForm('REPOSITORY_ENTRY', 'REPOSITORY_COLLECTION', $('#repository_form_template'), {'title': 'Repository'});
     RepositoryForm.prototype.constructor = RepositoryForm;
 
-    RepositoryForm.prototype.fillListInfo = function fillListInfo(elements) {
-        // Paint elements
+    var setDefaultRepoHandler = function setDefaultRepoHandler (repository) {
+        var setDefClient = new ServerClient('REPOSITORY_DEFAULT_ENTRY', "");
+
+        // Make request to the server
+        setDefClient.create({}, this.elementInfoRequest.bind(this), {'name': repository}, this.elementInfoRequest.bind(this));
+    };
+
+    RepositoryForm.prototype.fillListInfo = function fillListInfo (elements) {
         $.template('elemTemplate', $('#element_template'));
-        $.tmpl('elemTemplate', elements).appendTo('#table-list');
+
+        for (var i = 0; i < elements.length; i++) {
+            var temp = $.tmpl('elemTemplate', elements[i]);
+            temp.find('#elem-info').after('<td id="default-elem"></td>');
+
+            // Include the default value if needed
+            if (elements[i].is_default) {
+                temp.find('#default-elem').text('default');
+            } else {
+                var editButton = $('<i class="icon-edit"></i>').click(setDefaultRepoHandler.bind(this, elements[i].name));
+                temp.find('#default-elem').append(editButton);
+            }
+            temp.appendTo('#table-list');
+        }
 
         // Set delete listener
         $('.delete').click(deleteElementHandler.bind(this));
@@ -106,35 +125,60 @@
 
     RepositoryForm.prototype.validateFields = function validateFields() {
         var validation = basicValidation();
-        var storeCollection = $.trim($('#store-collection').val());
+
+        // Include is_default flag if needed
+        if (validation.valid) {
+            validation.data.is_default = $('#is-default').prop('checked');
+        }
+
+        var offeringCollection = $.trim($('#offering-collection').val());
+        var resourceCollection = $.trim($('#resource-collection').val());
         var reg = new RegExp(/^[\w-]+$/);
         var msg = validation.msg == undefined ? '' : validation.msg;
         var errFields = validation.errFields == undefined ? [] : validation.errFields;
         
-        if (!storeCollection.length) {
+        if (!offeringCollection.length) {
             validation.valid = false;
-            msg += 'Missing required field Store Collection <br/>';
-            errFields.push($('#store-collection').parent().parent());
+            msg += 'Missing required field Offering Collection <br/>';
+            errFields.push($('#offering-collection').parent().parent());
         }
 
-        if (validation.valid && !reg.test(storeCollection)) {
+        if (validation.valid && !reg.test(offeringCollection)) {
             // Check collection format
             validation.valid = false;
             msg += 'Invalid collection format <br/>';
-            errFields.push($('#store-collection').parent().parent())
+            errFields.push($('#offering-collection').parent().parent())
+
+        }
+
+        if (!resourceCollection.length) {
+            validation.valid = false;
+            msg += 'Missing required field Resource Collection <br/>';
+            errFields.push($('#resource-collection').parent().parent());
+        }
+
+        if (validation.valid && !reg.test(resourceCollection)) {
+            // Check collection format
+            validation.valid = false;
+            msg += 'Invalid collection format <br/>';
+            errFields.push($('#resource-collection').parent().parent())
 
         }
 
         // Include api_version in the request
         if (validation.valid) {
-            validation.data.store_collection = storeCollection;
+            validation.data.offering_collection = offeringCollection;
+            validation.data.resource_collection = resourceCollection;
             validation.data.api_version = $('#api-version').val();
         } else {
             validation.msg = msg;
             validation.errFields = errFields;
         }
-
         return validation;
+    };
+
+    RepositoryForm.prototype.setFormListeners = function setFormListeners() {
+        $('#is-default-group').removeClass('hide');
     }
 
 

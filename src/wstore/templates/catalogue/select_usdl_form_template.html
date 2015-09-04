@@ -1,15 +1,36 @@
-<form class="form form-vertical">
-	<div id="error-message"></div>
-    <div class="space clear"></div>
-    <label>Select how to provide offering Info</label>
-    <select id="usdl-sel">
-        <option value="0">Create Basic USDL</option>
-        <option value="1">Upload USDL</option>
-    </select>
-    <i class="icon-question-sign" id="upload-help" rel="popover" data-content="" data-original-title="Help"></i>
-    <div class="clear space" />
-	<div class="clear line" />
-	<div class="clear space" />
-	<div id="usdl-container">
-	</div>
-</form>
+<div id="offering-creation-usdl">
+    <form class="form form-vertical">
+	    <div id="error-message-usdl"></div>
+        <div class="space clear"></div>
+	    <div id="usdl-container">
+            <section class="span6">
+                <div class="control-group">
+                    <label>Abstract*</label>
+                    <div class="controls">
+                        <textarea id="abstract"></textarea>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Description*</label>
+                    <div class="controls">
+                        <textarea id="description"></textarea>
+                    </div>
+                </div>
+            </section>
+            <section class="span6">
+                <label>Legal Conditions</label>
+                <div class="control-group">
+                    <div class="controls">
+                        <input id="legal-title" type="text" placeholder="Title"></input>
+                    </div>
+                </div>
+                <div class="clear space" />
+                <div class="control-group">
+                    <div class="controls">
+                        <textarea id="legal-text" placeholder="Text"></textarea>
+                    </div>
+                </div>
+            </section>
+	    </div>
+    </form>
+</div>
