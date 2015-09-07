@@ -1,0 +1,2480 @@
+FORMAT: 1A
+HOST: https://store.lab.fiware.org/
+TITLE: FIWARE Store Open API Specification
+DATE: 30 September 2015
+VERSION: v4.3.3
+PREVIOUS_VERSION: v4.1.0
+APIARY_PROJECT: fiwarestore
+
+# FIWARE Store
+
+WStore is the reference implementation of the FIWARE Store Generic Enabler. 
+The Store GE provides functionality for the monetization of different kind of
+digital assets, including the management of assets and offerings as well as support for acquisitions, 
+charging, billing, and accounting of pay-per-use services.
+
+This document describes the Store REST API including: Administration APIs, Resource API, Offering API, and Search API.
+
+## Editors
+
+* Francisco de la Vega, Universidad Politénica de Madrid
+
+## Status
+
+This is a work in progress and is changing on a daily basis. You can check the latest
+available version on: https://github.com/conwetlab/wstore/tree/develop. 
+Please send your comments to wstore@conwet.com.
+
+This specification is licensed under the [FIWARE Open Specification License](https://forge.fiware.org/plugins/mediawiki/wiki/fiware/index.php/FI-WARE_Open_Specification_Legal_Notice_%28implicit_patents_license%29)
+
+## Acknowledgements
+
+The editors would like to express their gratitude to the following people who actively contributed to this specification:
+Aitor Magán and Álvaro Arranz García 
+
+## Copyright
+
+* Copyright © 2015 by Universidad Politénica de Madrid
+
+## Specification
+
+### Authentication
+
+Each HTTP request against the Store API requires the inclusion of specific authentication credentials. The specific implementation of this API may support multiple authentication schemes (OAuth, Basic Auth, Token) and will be determined by the specific provider that implements the GE. Please contact the provider to determine the best way to authenticate against this API. Remember that some authentication schemes may require that the API operates using SSL over HTTP (HTTPS).
+
+WStore provides support for Cookie, OAuth2, and Basic authentication being OAuth2 the default in FIWARE Lab.
+
+### Synchronous Faults
+
+Error responses will be encoded using the most appropriated <code>content-type</code> in base to the <code>Accept</code> header of the request.
+
+JSON Example
+
+
+    {
+        "message": "No JSON object could be decoded",
+        "result": "error"
+    }
+
+
+XML Example
+
+
+    <?xml version="1.0" encoding="utf-8"?>
+    <error>No JSON object could be decoded</error>
+
+
+### Used HTTP Codes
+
+
+| HTTP Code | Type | Description |
+|-----------|------|------------ |
+| 200 | OK | Your request has been completed properly |
+| 201 | Created | Your resource has been created.|
+| 204 | No content | Your request has been processed, but a response is not available. Generally used when deleting entities|
+| 400 | Bad Request | The content of your request is not correct (e.g. There is a missing field) |
+| 409 | Conflict | The resource you are tring to create already exists |
+| 404 | Not Found | The resource you are looking for does not exists |
+| 403 | Forbidden | You have no rights to perform the request |
+| 401 | Unauthorized | You are not logged in or the Authorization token you are providing is not valid |
+| 500 | Internal server error | There was an internal error in the system so your request cannot be completed |
+
+
+# Group Managing Marketplaces
+
+API for the management of instances of the Marketplace Generic Enabler. It allows to retrieve, register and unregister Marketplace instances.
+
+This API uses the following fields:
+
+*  **name** - The name given to the Marketplace instance in the Store
+*  **host** - URL where the Marketplace instance is running
+*  **api_version** - Version of the API of the Maketplace (note that v1 is now deprecated)
+*  **credentials** - Username and password used to access the Marketplace in case it implements API V1 or V2 with local authentication (Note that the version 2 of the Marketplace is integrated with the IdM)
+
+## Marketplace Collection [/api/administration/marketplaces]
+
+### List All Marketplaces [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "FIWARE Lab Market",
+                "host": "https://marketplace.lab.fiware.org/",
+                "api_version": 2
+            }
+        ]
+
+### Register a Marketplace [POST]
+
++ Request Register a Marketplace v2 (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "name": "FIWARE Lab Market",
+                "host": "https://marketplace.lab.fiware.org/",
+                "api_version": 2
+            }
+
++ Response 201
+
++ Request Register a Marketplace v1 - This Marketplace version is deprecated - (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "name": "FIWARE Lab Market",
+                "host": "https://marketplace.lab.fiware.org/",
+                "api_version": 1,
+                "credentials": {
+                    "username": "marketuser",
+                    "passwd": "marketpasswd"
+                }
+            }
+
++ Response 201
+
+## Marketplace Entry [/api/administration/marketplaces/{market}]
+
+### Unregister a Marketplace [DELETE]
+
++ Parameters
+
+    + market: FIWARELab - Name of the Marketplace
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 204
+
+# Group Managing Repositories
+
+API for the management of instances of the Repository Generic Enabler. It allows to retrieve, register and unregister Repository instances.
+
+This API uses the following fields:
+
+*  **name** - The name given to the Repository instance in the Store
+*  **host** - URL where the Repository instance is running
+*  **is_default** - Specifies whether the Repository instance is the default one in the Store
+*  **offering_collection** - Collection name used in the Repository instance for storing offering descriptions
+*  **resource_collection** - Collection name used in the Repository instance for storing resource descriptions
+*  **api_version** - Version of the API of the Repository (note that v1 is now deprecated)
+
+## Repository Collection [/api/administration/repositories]
+
+### List All Repositories [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "FIWARE Lab Repository",
+                "host": "https://repository.lab.fiware.org/",
+                "is_default": true,
+                "offering_collection": "storeOfferingCollection",
+                "resource_collection": "storeResourceCollection",
+                "api_version": 2
+            }
+        ]
+
+### Register a Repository [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            [
+                {
+                    "name": "FIWARE Lab Repository",
+                    "host": "https://repository.lab.fiware.org/",
+                    "is_default": true,
+                    "offering_collection": "storeOfferingCollection",
+                    "resource_collection": "storeResourceCollection",
+                    "api_version": 2
+                }
+            ]
+
++ Response 201
+
+## Repository Entry [/api/administration/repositories/{repository}]
+
+### Unregister a Repository [DELETE]
+
++ Parameters
+
+    + repository: FIWARELab - Name of the repository
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 204
+
+# Group Managing RSSs
+
+API for the management of instances of the Revenue Settlement and Sharing System Generic Enabler. It allows to retrieve, register and unregister RSS instances.
+
+This API uses the following fields:
+
+*  **name** - The name given to the RSS instance in the Store
+*  **host** - The URL where the RSS instance in running
+*  **limits** - The default expenditure limits for the customers of the Store. This field contains the following values:
+
+    *  **currency** - The currency in what the limits are specified
+    *  **perTransaction** - Maximum allowed amount in a single transaction
+    *  **weekly** - Maximum allowed amount expended weekly
+    *  **daily** - Maximum allowed amount expended daily
+    *  **monthly** - Maximum allowed amount expended monthly
+
+*  **models** - The percentage the owner of the Store expects to retrieve of the revenues generated in the Store. This field is a list containing elements with the following fields 
+
+    *  **revenue_class** - The type of pricing model used to determine the percentage applied (single-payment, subscription, use)
+    *  **percentage** - Concrete percentage expected by the Store owner
+
+*  **is_default** - Specifies whether the RSS instance is the default one in the Store
+*  **api_version** - Version of the API of the RSS instance (note that v1 is now deprecated)
+
+## RSS Collection [/api/administration/rss]
+
+### List All RSSs [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "FIWARE Lab RSS",
+                "host": "https://rss.lab.fiware.org/",
+                "is_default": true,
+                "api_version": 2,
+                "limits": {
+                    "currency": "EUR",
+                    "perTransaction": 10000,
+                    "weekly": 100000,
+                    "daily": 10000,
+                    "monthly": 100000
+                },
+                "models": [
+                    {
+                        "reveune_class": "single-payment",
+                        "percentage": 10
+                    },
+                    {
+                        "reveune_class": "subscription",
+                        "percentage": 15
+                    },
+                    {
+                        "reveune_class": "use",
+                        "percentage": 30
+                    }
+                ]
+            }
+        ]
+
+### Register a RSS [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            [
+                {
+                    "name": "FIWARE Lab RSS",
+                    "host": "https://rss.lab.fiware.org/",
+                    "is_default": true,
+                    "api_version": 2,
+                    "limits": {
+                        "currency": "EUR",
+                        "perTransaction": 10000,
+                        "weekly": 100000,
+                        "daily": 10000,
+                        "monthly": 100000
+                    },
+                    "models": [
+                        {
+                            "reveune_class": "single-payment",
+                            "percentage": 10
+                        },
+                        {
+                            "reveune_class": "subscription",
+                            "percentage": 15
+                        },
+                        {
+                            "reveune_class": "use",
+                            "percentage": 30
+                        }
+                    ]
+                }
+            ]
+
++ Response 201
+
+## RSS Entry [/api/administration/rss/{rss}]
+
+### List a RSS [GET]
+
++ Parameters
+
+    + rss: FIWARELab - Name of the rss
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        {
+            "name": "FIWARE Lab RSS",
+            "host": "https://rss.lab.fiware.org/",
+            "is_default": true,
+            "api_version": 2,
+            "limits": {
+                "currency": "EUR",
+                "perTransaction": 10000,
+                "weekly": 100000,
+                "daily": 10000,
+                "monthly": 100000
+            },
+            "models": [
+                {
+                    "reveune_class": "single-payment",
+                    "percentage": 10
+                },
+                {
+                    "reveune_class": "subscription",
+                    "percentage": 15
+                },
+                {
+                    "reveune_class": "use",
+                    "percentage": 30
+                }
+            ]
+        }
+
+### Update a RSS [PUT]
+
++ Parameters
+
+    + rss: FIWARELab - Name of the RSS
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            [
+                {
+                    "name": "FIWARE Lab RSS",
+                    "host": "https://rss.lab.fiware.org/",
+                    "is_default": true,
+                    "api_version": 2,
+                    "limits": {
+                        "currency": "EUR",
+                        "perTransaction": 10000,
+                        "weekly": 100000,
+                        "daily": 10000,
+                        "monthly": 100000
+                    },
+                    "models": [
+                        {
+                            "revenue_class": "single-payment",
+                            "percentage": 10
+                        },
+                        {
+                            "revenue_class": "subscription",
+                            "percentage": 15
+                        },
+                        {
+                            "revenue_class": "use",
+                            "percentage": 30
+                        }
+                    ]
+                }
+            ]
+
++ Response 200
+
+### Unregister a RSS [DELETE]
+
++ Parameters
+
+    + rss: FIWARELab - Name of the RSS
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 204
+
+# Group Managing Units
+
+API for the management of pricing units. It allows to list and create units.
+
+This API uses the following fields:
+
+*  **name** - Name given to the unit
+*  **defined_model** - Pricing model that is defined by the unit (single payment, subscription, or pay per use)
+*  **renovation_period** - This field is only used for subscriptions and specifies the duration in days
+
+## Units Collection [/api/administration/units]
+
+### List all Units [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "second",
+                "defined_model": "pay per use"
+            },
+            {
+                "name": "per month",
+                "defined_model": "subscription",
+                "renovation_period": 30
+            }
+        ]
+
+### Create new Unit [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "name": "second",
+                "defined_model": "pay per use"
+            }
+
++ Response 201
+
+# Group Managing Currencies
+
+API for the management of Currencies. This API allows to register, retrieve, and delete currencies.
+
+This API uses the following fields:
+*  **currency** - String representing the Currency
+*  **default** - Whether the currency is the default one or not
+
+## Currencies Collection [/api/administration/currency]
+
+### List all Currencies [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "currency": "EUR",
+                "default": true
+            }
+        ]
+
+### Register new Currency [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "currency": "EUR",
+                "default": true
+            }
+
++ Response 201
+
+## Currency Entry [/api/administration/currency/{currency}]
+
+### Delete Currency [DELETE]
+
++ Parameters
+
+    + currency: EUR - Currency to be deleted
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 204
+
+### Set Currency as Default [PUT]
+
++ Parameters
+
+    + currency: EUR - Currency to be set as default
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200
+
+# Group Managing Users
+
+## Users Collection [/api/administration/profiles]
+
+This API is used for the management of Users. This API allows to list, create, and update users. Note that some of the actions available in this API are limited when using an external identity manager.
+
+This API manages the following fields:
+
+*  **username** - Id given to the user
+*  **password** - Password used by the user to access the Store when not using an external IdM
+*  **complete_name** - Display name of the user
+*  **first_name** - Name of the user
+*  **last_name** - Surname of the user
+*  **current_organization** - Current organization the user is on behalf
+*  **notification_url** - Default notification URL of the user
+*  **organizations** - List of organization the user belongs to. For each organization is included the name and the list of roles of the user
+*  **limits** - Expenditure limits defined by the user
+*  **tax_address** - Default tax address ofthe user
+*  **roles** - List of roles of the user
+*  **payment_info** - Credit card of the user. Note that the support for credit cards is deprecated and should not be used
+
+
+### List All Users [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "username": "fdelavega",
+                "complete_name": "Francisco de la Vega",
+                "current_organization": "CoNWeT",
+                "notification_url": "http://conwet.fi.upm.es/",
+                "organizations": [
+                    {
+                        "name": "CoNWeT",
+                        "roles": ["manager", "provider", "customer"]
+                    }
+                ],
+                "limits": {
+                    "currency": "EUR",
+                    "perTransaction": 10000,
+                    "weekly": 100000,
+                    "daily": 10000,
+                    "monthly": 100000
+                },
+                "tax_address": {
+                    "street": "Campus Montegancedo S/N",
+                    "postal": "28050",
+                    "city": "Madrid",
+                    "country": "Spain"
+                },
+                "roles": ["provider", "customer", "admin"],
+                "payment_info": {}
+            }
+        ]
+
+### Create a New User [POST]
+
+- **Note:** This action is not available when using an external IdM for authentication, since users are created in this external system
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "username": "fdelavega",
+                "first_name": "Francisco",
+                "last_name": "de la Vega",
+                "password": "123456",
+                "notification_url": "http://conwet.fi.upm.es/",
+                "tax_address": {
+                    "street": "Campus Montegancedo S/N",
+                    "postal": "28050",
+                    "city": "Madrid",
+                    "country": "Spain"
+                },
+                "roles": ["provider", "customer", "admin"],
+                "payment_info": {}
+            }
+
++ Response 201
+
+## User Entry [/api/administration/profiles/{username}]
+
+### Get User Info [GET]
+
++ Parameters
+
+    + username: fdelavega - Id of the user, username field
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        {
+            "complete_name": "Francisco de la Vega",
+            "current_organization": "CoNWeT",
+            "notification_url": "http://conwet.fi.upm.es/",
+            "organizations": [
+                {
+                    "name": "CoNWeT",
+                    "roles": ["manager", "provider", "customer"]
+                }
+            ],
+            "limits": {
+                "currency": "EUR",
+                "perTransaction": 10000,
+                "weekly": 100000,
+                "daily": 10000,
+                "monthly": 100000
+            },
+            "tax_address": {
+                "street": "Campus Montegancedo S/N",
+                "postal": "28050",
+                "city": "Madrid",
+                "country": "Spain"
+            },
+            "roles": ["provider", "customer", "admin"],
+            "payment_info": {}
+        }
+
+### Update user [PUT]
+
+- **Note:** If an external IdM is being used, "first_name", "last_name", "password", and "roles" fields are ignored, since this information is managed by the IdM 
+
++ Parameters
+
+    + username: fdelavega - Id of the user, username field
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "first_name": "Francisco",
+                "last_name": "de la Vega",
+                "password": "123456",
+                "notification_url": "http://conwet.fi.upm.es/",
+                "tax_address": {
+                    "street": "Campus Montegancedo S/N",
+                    "postal": "28050",
+                    "city": "Madrid",
+                    "country": "Spain"
+                },
+                "limits": {
+                    "currency": "EUR",
+                    "perTransaction": 10000,
+                    "weekly": 100000,
+                    "daily": 10000,
+                    "monthly": 100000
+                },
+                "roles": ["provider", "customer", "admin"],
+                "payment_info": {}
+            }
+
++ Response 200
+
+
+# Group Managing Organizations
+
+This API is used for the management of organizations. This API allows to list, create, and update organizations. Additionally, it allows to change current user organization, list organization users and include new users in organizations. Note that if an external identity manager is used some of this actions may be limited.
+
+This API manages the following fields:
+*  **name** - Name of the organization
+*  **is_manager** - Whether the user making the request is manager of the organization
+*  **notification_url** - Default notification URL of the organization
+*  **limits** - Expenditure limits specified for the organization
+*  **tax_address** - Default tax address of the organization
+*  **payment_info** - Credit card info. Note that credit card payments are deprecated so they should not be used
+
+Additionally, for the management of organization users it uses the following fields:
+
+*  **members** - list of members of the given organization
+*  **username** - Username of the member
+*  **roles** - List of roles of the member within the organization
+
+
+## Organizations Collection [/api/administration/organizations{?username}]
+
+### List all Organizations [GET]
+
++ Parameters
+
+    + username: fdelavega (optional) - Optional parameter used to filter the organizations by manager user
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "CoNWeT",
+                "is_manager": true,
+                "notification_url": "http://conwet.fi.upm.es/",
+                "limits": {
+                    "currency": "EUR",
+                    "perTransaction": 10000,
+                    "weekly": 100000,
+                    "daily": 10000,
+                    "monthly": 100000
+                },
+                "tax_address": {
+                    "street": "Campus Montegancedo S/N",
+                    "postal": "28050",
+                    "city": "Madrid",
+                    "country": "Spain"
+                },
+                "payment_info": {}
+            }
+        ]
+
+### Create New Organization [POST]
+
+- **Note:** This action is not available when using an external IdM, since organizations are created in this system
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "name": "CoNWeT",
+                "notification_url": "http://conwet.fi.upm.es/",
+                "tax_address": {
+                    "street": "Campus Montegancedo S/N",
+                    "postal": "28050",
+                    "city": "Madrid",
+                    "country": "Spain"
+                },
+                "payment_info": {}
+            }
+
++ Response 201 
+
+## Organization Entry [/api/administration/organizations/{organization}]
+
+### Get Organization Info [GET]
+
++ Parameters
+
+    + organization: CoNWeT - Name of the organization
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        {
+            "name": "CoNWeT",
+            "is_manager": true,
+            "notification_url": "http://conwet.fi.upm.es/",
+            "limits": {
+                "currency": "EUR",
+                "perTransaction": 10000,
+                "weekly": 100000,
+                "daily": 10000,
+                "monthly": 100000
+            },
+            "tax_address": {
+                "street": "Campus Montegancedo S/N",
+                "postal": "28050",
+                "city": "Madrid",
+                "country": "Spain"
+            },
+            "payment_info": {}
+        }
+
+
+### Update Organization [PUT]
+
++ Parameters
+
+    + organization: CoNWeT - Name of the organization
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "notification_url": "http://conwet.fi.upm.es/",
+                "tax_address": {
+                    "street": "Campus Montegancedo S/N",
+                    "postal": "28050",
+                    "city": "Madrid",
+                    "country": "Spain"
+                },
+                "limits": {
+                    "currency": "EUR",
+                    "perTransaction": 10000,
+                    "weekly": 100000,
+                    "daily": 10000,
+                    "monthly": 100000
+                },
+                "payment_info": {}
+            }
+
++ Response 200 
+
+## Current Organization Change Entry [/api/administration/organizations/change]
+
+### Change Current Organization [PUT]
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "organization": "CoNWeT"
+            }
+
++ Response 200 
+
+## Organization Users Collection [/api/administration/organizations/{organization}/users]
+
+### Get Organization Users [GET]
+
++ Parameters
+
+    + organization: CoNWeT - Name of the organization
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        {
+            "members": [
+                {
+                    "username": "fdelavega",
+                    "roles": ["manager", "provider", "customer"]
+                }
+            ]
+        }
+
+### Add a User an Organization [POST]
+
+- **Note:** This action is not availabe when using an external IdM, since organizations are managed on it
+
++ Parameters
+
+    + organization: CoNWeT - Name of the organization
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "username": "fdelavega",
+                "roles": ["manager", "provider", "customer"]
+            }
+
++ Response 200 
+
+
+# Group Managing Resources
+
+API for the management of Resources. It allows to retrieve, create, update, upgrade and delete resources.
+
+This API uses the following fields for managing resources:
+
+*  **name** - Name of the resource
+*  **version** - Current version of the resource 
+*  **description** - Description of the resource
+*  **content_type** - Media type of the provided resource
+*  **state** - Current state of the resource (created, used, deleted)
+*  **open** - Whether the resource needs authentication to be accessed
+*  **link** - URL pointing to the resource, both when the resource is an API or when the resource can be downloaded from a server
+*  **resource_type** - Type of the resource. The valid types can be different depending on what plugins definig resource types are installed.
+*  **meta** - Meta information of the resource. This field can contain any valid JSON
+*  **content** - Base 64 encoded resource file. This field is only used when the resource is provided by encoding it in base 64
+    *  **name** - Name of the file
+    *  **data** - Base 64 encoded file
+
+Additionally, this API also allows to retrieve a list of the existing resource plugins. A resource plugin defines a type of resource supported by the Store and specifies a couple of constrains.
+This API uses the following fields for managing resource plugins:
+
+*  **name** - Name of the resource type that is defined by the plugin
+*  **plugin_id** - Id of the plugin used for management
+*  **author** - Creator of the plugin
+*  **version** - Current version of the plugin
+*  **media_types** - Supported media types of the resources whose type is the defined by the plugin
+*  **formats** - Supported formats of the resources whose type is the defined by the plugin (URL, FILE)
+*  **overrides** - Fields that will be overriden by the code of the plugin when a resource of the defined type is created (NAME, VERSION, OPEN)
+
+## Resources Collection [/api/offering/resources{?open}{?start}{?limit}]
+
+### List all Resources [GET]
+
++ Parameters
+
+    + open: true (optional) - Optional parameter can be used to filter the resources and retrieve only those that are open or not open depending on the provided value (true or false).
+    + start: 1 (optional) - Optional parameter used for pagination. This parameter specifies the first element to be retrieved. Note that if start parameter is included limit parameter is also needed.
+    + limit: 5 (optional) - Optional parameter used for pagination. This parameter specifies the number of elements to be retrieved. Note that if limit parameter is used start parameter is also required.
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "Map Viewer Widget",
+                "version": "1.0.1",
+                "description": "A WireCloud Widget contaning a map",
+                "content_type": "application/x-widget+mashable-application-component",
+                "state": "used",
+                "open": true,
+                "link": "https://store.lab.fiware.org/media/resources/CoNWeT__MapViewer__1.0.1",
+                "resource_type": "WireCloud Component",
+                "meta": {}
+            }
+        ]
+
+### Create a Resource [POST]
+
++ Request - Create a resource providing a URL (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "name": "Orion Context Broker",
+                "version": "1.0",
+                "description": "A private instance of the Orion Context Broker",
+                "content_type": "application/json",
+                "open": false,
+                "link": "https://orion.lab.fiware.org/",
+                "resource_type": "API",
+                "meta": {}
+            }
+
++ Response 201
+
++ Request - Create a resource providing the Resource as file (multipart/form-data)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "name": "Map Viewer Widget",
+                "version": "1.0.1",
+                "description": "A WireCloud Widget contaning a map",
+                "content_type": "application/x-widget+mashable-application-component",
+                "open": true,
+                "resource_type": "WireCloud Component",
+                "meta": {}
+            }
+
+            +
+
+            FILE
+
++ Response 201
+
++ Request - Create a resource providing the Resource encoded in base 64 (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "name": "Map Viewer Widget",
+                "version": "1.0.1",
+                "description": "A WireCloud Widget contaning a map",
+                "content_type": "application/x-widget+mashable-application-component",
+                "open": true,
+                "resource_type": "WireCloud Component",
+                "meta": {},
+                "content": {
+                    "name": "mapViewer.wgt",
+                    "data": "ENCODED_FILE_DATA"
+                }
+            }
+
++ Response 201
+
+## Resource Entry [/api/offering/resources/{provider}/{name}/{version}]
+
+### Update Resource info [PUT]
+
++ Parameters
+
+    + provider: CoNWeT - Name of the organization that owns the resource
+    + name: MapViewer - Name of the resource
+    + version: 1.0 - Version of the resource
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "description": "A WireCloud Widget contaning a map",
+                "content_type": "application/x-widget+mashable-application-component",
+                "open": true,
+            }
+
++ Response 200
+
+### Upgrade a Resource [POST]
+
++ Parameters
+
+    + provider: CoNWeT - Name of the organization that owns the resource
+    + name: MapViewer - Name of the resource
+    + version: 1.0 - Version of the resource
+
++ Request - Upgrade a resource providing a URL (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "version": "2.0",
+                "link": "https://orion.lab.fiware.org/v2"
+            }
+
++ Response 200
+
++ Request - Upgrade a resource providing a file (multipart/form-data)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "version": "2.0",
+            }
+
+            +
+
+            FILE
+
++ Response 200
+
++ Request - Upgrade a resource providing a base 64 encoded file (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "version": "2.0",
+                "content" {
+                    "name": "MapViewerv2.wgt",
+                    "data": "ENCODED_DATA"
+                }
+            }
+
++ Response 200
+
+### Delete a Resource [DELETE]
+
++ Parameters
+
+    + provider: CoNWeT - Name of the organization that owns the resource
+    + name: MapViewer - Name of the resource
+    + version: 1.0 - Version of the resource
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 204
+
+## Resource Plugins Collection [/api/offering/resources/plugin]
+
+### List All Resource Plugins [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "Wirecloud Component",
+                "plugin_id": "wirecloud-component",
+                "author": "fdelavega",
+                "version": "1.0",
+                "media_types": [
+                    "application/x-widget+mashable-application-component",
+                    "application/x-mashup+mashable-application-component",
+                    "application/x-operator+mashable-application-component"
+                ],
+                "formats": ["FILE"],
+                "overrides": ["VERSION", "OPEN"]
+            }
+        ]
+        
+        
+# Group Managing Offerings
+
+API for the management of offerings. It allows to list, create, update and delete offerings. Additionally, this API allows to publish offerings, bind resources and manage reviews of offerings.
+
+This API uses the following fields for the management of offerings:
+
+*  **name** - Name given to the offering
+*  **owner_organization** - Organization that owns the offering
+*  **owner_admin_user_id** -  ID of the user that created the offering
+*  **version** - Current version of the offering
+*  **state** - Current state of the offering (uploaded, published, deleted, acquired, rated). It is important to remark that the returned state of the offering depends on the user that makes the request.
+*  **description_url** - URL pointing to the USDL description of the offering stored in a Repository
+*  **rating** - Medium rate of the offering
+*  **comments** - IDs of the different reviews of the offering made by the customers
+*  **tags** - List of tags of the offering
+*  **image_url** - Relative URL of the logo of the offering 
+*  **related_images** - List of relative URLs of a couple of screenshots of the offering
+*  **creation_date** - Date when the offering was created
+*  **publication_date** - Date when the offering was published
+*  **open** - Whether the offering is open or not (an offering is open if its resources can be accessed by any user without the need of acquiring the offering)
+*  **resources** - List of the resources offered in the offering
+*  **applications** - List of IdM applications offered in the offering
+*  **notification_url** - URL where the Store notifies that the offering has been acquired. if this field contains the value "default", the Store uses the default URL configured for the user or organization 
+
+*  **offering_description** - Business level aspects of the offering. It includes the following fields:
+    *  **abstract** - Short description of the offering
+    *  **description** - A detailed description of the offering
+    *  **modified** - Date of the last modification of the offering
+    *  **legal** - Terms  and conditions of the offering. It includes two fields: title and text describing the terms and conditions. Note that customers acquiring the offering will be forced to accept this terms and conditions when acquiring the offering.
+    *  **pricing**, price_plans - List of pricing models that apply to the given offering. To have a detailed explaination on how to build different pricing models have a look at the programmer guide.
+
+Additionally, this API uses the following fields for the management of offering reviews:
+
+* **id** - Id of the review
+* **user** - User that creates the review
+* **organization** - Organization the user is on behalf when creating the review
+* **timestamp** - Date and time when the review is created (or last modified)
+* **title** - Title given to the review
+* **comment** - Text of the review
+* **rating** - Rating between 0 and 5 given to the offering in the review
+* **response** - Reply to the review created by the owners of the offering
+    * **user** - User that creates the reply
+    * **organization** - Organization the user is on behalf when creating the reply
+    * **timestamp** - Date and time when the reply is created (or last modified)
+    * **title** - Title of the response
+    * **response** - Text of the response
+
+
+## Offerings Collection [/api/offering/offerings{?filter}{?action}{?sort}{?state}{?start}{?limit}]
+
+### List all Offerings [GET]
+
++ Parameters
+
+    + filter: published (optional) - Optional parameter used for filtering the retrieved offerings. The allowed values are: published (all published offerings, default), purchased (all offerings acquired by the user or organization making the request), and provided (all the offering provided by the user or organization making the request) 
+    + action: count (optional) - Optional parameter used to change the default behaviour of the API and perform an action such as counting the number of offerings instead of returning them
+    + sort: date (optional) - Optional parameter that specifies the sorting of the returned offerings. The allowed values are date, name, and popularity
+    + state: deleted (optional) - Optional parameter that specifies the state of the returned offerings. The allowed values are uploaded, published and deleted
+    + start: 1 (optional) - Optional parameter used for pagination. This parameter specifies the first element to be retrieved. Note that if start parameter is included limit parameter is also needed.
+    + limit: 5 (optional) - Optional parameter used for pagination. This parameter specifies the number of elements to be retrieved. Note that if limit parameter is used start parameter is also required.
+    
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "OrionStarterKit",
+                "owner_organization": "CoNWeT",
+                "owner_admin_user_id": "fdelavega",
+                "version": "1.0",
+                "state": "published",
+                "description_url": "https://repository.lab.fiware.org/collec/storeOfferingCollection/OrionStarterKit",
+                "rating": "5.0",
+                "comments": [],
+                "tags": ["starterKit", "wirecloud", "widget", "service"],
+                "image_url": "/media/CoNWeT__OrionStarterKit__1.0/logo.png",
+                "related_images": [
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen1.png",
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen2.png"
+                ],
+                "creation_date": "2015-05-19 04:51:25.569879",
+                "publication_date": "2015-05-30 18:30:10.0",
+                "open": false,
+                "resources": [
+                    {
+                        "name": "MapViewer",
+                        "version": "1.0.1",
+                        "description": "A WireCloud Widget contaning a map",
+                        "content_type": "application/x-widget+mashable-application-component",
+                        "open": true,
+                        "resource_type": "WireCloud Component",
+                        "metadata': {}
+                    }
+                ],
+                "applications": [],
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker"
+                    "modified": "2015-05-30 18:30:10.0",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                        ]
+                    }
+                }
+            }
+        ]
+
+### Create an Offerintg [POST]
+
++ Request - Create an offering with a pricing model based on a single payment (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+
+            {
+                "name": "OrionStarterKit",
+                "version": "1.0",
+                "image": {
+                    "name": "logo.png",
+                    "data": "BASE64_ENCODED_IMAGE"
+                },
+                "notification_url": "https://providerserver.com/action/notify",
+                "related_images": [],
+                "open": false,
+                "resources": [
+                    {
+                        "name": "MapViewer",
+                        "version": "1.0.1",
+                    }
+                ],
+                "applications": [],
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                            {
+                                "title": "Single payment plan",
+                                "description": "This plan defines a single payment of 1 EUR for acquiring OrionStarterKit",
+                                "currency": "EUR",
+                                "price_components": [
+                                    {
+                                        "label": "single-payment",
+                                        "description": "Single payment of 1 EUR",
+                                        "value": 1,
+                                        "unit": "single payment"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+
+
++ Response 201
+
++ Request - Create an offering with multiple price plans: subscription and pay-per-use with usage discount (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "name": "OrionStarterKit",
+                "version": "1.0",
+                "image": {
+                    "name": "logo.png",
+                    "data": "BASE64_ENCODED_IMAGE"
+                },
+                "notification_url": "default",
+                "related_images": [
+                    {
+                        "name": "screen1.png",
+                        "data": "BASE64_ENCODED_IMAGE"
+                    }
+                ],
+                "open": false,
+                "resources": [
+                    {
+                        "name": "MapViewer",
+                        "version": "1.0.1",
+                    }
+                ],
+                "applications": [],
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                            {
+                                "title": "Monthly subscription plan with initial fee",
+                                "description": "This plan defines a monthly subscription of 30 euro cents with a initial fee of 1 euro for acquiring OrionStarterKit",
+                                "currency": "EUR",
+                                "label": "subscription",
+                                "price_components": [
+                                    {
+                                        "label": "initial-fee",
+                                        "description": "Single payment of 1 EUR",
+                                        "value": 1,
+                                        "unit": "single payment"
+                                    },
+                                    {
+                                        "label": "subscription",
+                                        "description": "Monthly subscription of 0.30 EUR",
+                                        "value": 0.30,
+                                        "unit": "per month"
+                                    }
+                                ]
+                            },
+                            {
+                                "title": "Pay-per-use plan with usage discount",
+                                "description": "This plan defines a payment based on calls with a discount depending of the megabytes downloaded",
+                                "currency": "EUR",
+                                "label": "usage",
+                                "price_components": [
+                                    {
+                                        "label": "usage",
+                                        "description": "0.01 EUR per call",
+                                        "value": 0.01,
+                                        "unit": "call"
+                                    }
+                                ],
+                                "deductions": [
+                                    {
+                                        "label": "discount",
+                                        "description": "Discount of 0.02 EUR per megabyte",
+                                        "value": 0.02,
+                                        "unit": "megabyte"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+
++ Response 201
+
++ Request - Create an offering with a pay-per-use price function (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "name": "OrionStarterKit",
+                "version": "1.0",
+                "image": {
+                    "name": "logo.png",
+                    "data": "BASE64_ENCODED_IMAGE"
+                },
+                "related_images": [],
+                "open": false,
+                "resources": [
+                    {
+                        "name": "MapViewer",
+                        "version": "1.0.1",
+                    }
+                ],
+                "applications": [
+                    {
+                        "name": "Private Orion",
+                        "url": "http://privateorion.lab.fiware.org/",
+                        "id": 1,
+                        "description": "A private Orion Cotext Broker instance"
+                    }
+                ],
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                            {
+                                "title": "Pay-per-use plan based on calls and megabytes",
+                                "description": "This plan defines a payment based on a function that depends on calls and megabytes",
+                                "currency": "EUR",
+                                "price_components": [
+                                    {
+                                        "label": "function-comp",
+                                        "description": "Price function based on 2 variables",
+                                        "text_function": "0.6*calls + 0.4*megabytes",
+                                        "price_function": {
+                                            "label": "",
+                                            "variables": {
+                                                "const1": {
+                                                    "label": "calls-constant",
+                                                    "type": "constant",
+                                                    "value": 0.6
+                                                },
+                                                "const2": {
+                                                    "label": "megabytes-constant",
+                                                    "type": "constant",
+                                                    "value": 0.4
+                                                },
+                                                "calls": {
+                                                    "label": "calls",
+                                                    "type": "usage"
+                                                },
+                                                "mega": {
+                                                    "label": "megabytes",
+                                                    "type": "usage"
+                                                }
+                                            },
+                                            "function": {
+                                                "operation": "+",
+                                                "arg1": {
+                                                    "operation": "*",
+                                                    "arg1": "cons1",
+                                                    "arg2": "calls"
+                                                },
+                                                "arg2": {
+                                                    "operation": "*",
+                                                    "arg1": "cons2",
+                                                    "arg2": "mega"
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+
++ Response 201
+
+## Latest Offerings Collection [/api/offering/offerings/latest]
+
+### List Latest Offerings [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "OrionStarterKit",
+                "owner_organization": "CoNWeT",
+                "owner_admin_user_id": "fdelavega",
+                "version": "1.0",
+                "state": "published",
+                "description_url": "https://repository.lab.fiware.org/collec/storeOfferingCollection/OrionStarterKit",
+                "rating": "5.0",
+                "comments": [],
+                "tags": ["starterKit", "wirecloud", "widget", "service"],
+                "image_url": "/media/CoNWeT__OrionStarterKit__1.0/logo.png",
+                "related_images": [
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen1.png",
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen2.png"
+                ],
+                "creation_date": "2015-05-19 04:51:25.569879",
+                "publication_date": "2015-05-30 18:30:10.0",
+                "open": false,
+                "resources": [
+                    {
+                        "name": "MapViewer",
+                        "version": "1.0.1",
+                        "description": "A WireCloud Widget contaning a map",
+                        "content_type": "application/x-widget+mashable-application-component",
+                        "open": true,
+                        "resource_type": "WireCloud Component",
+                        "metadata': {}
+                    }
+                ],
+                "applications": [],
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker"
+                    "modified": "2015-05-30 18:30:10.0",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                        ]
+                    }
+                }
+            }
+        ]
+
+## Top Rated Offerings Collection [/api/offering/offerings/toprated]
+
+### List Top Rated Offerings [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "OrionStarterKit",
+                "owner_organization": "CoNWeT",
+                "owner_admin_user_id": "fdelavega",
+                "version": "1.0",
+                "state": "published",
+                "description_url": "https://repository.lab.fiware.org/collec/storeOfferingCollection/OrionStarterKit",
+                "rating": "5.0",
+                "comments": [],
+                "tags": ["starterKit", "wirecloud", "widget", "service"],
+                "image_url": "/media/CoNWeT__OrionStarterKit__1.0/logo.png",
+                "related_images": [
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen1.png",
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen2.png"
+                ],
+                "creation_date": "2015-05-19 04:51:25.569879",
+                "publication_date": "2015-05-30 18:30:10.0",
+                "open": false,
+                "resources": [
+                    {
+                        "name": "MapViewer",
+                        "version": "1.0.1",
+                        "description": "A WireCloud Widget contaning a map",
+                        "content_type": "application/x-widget+mashable-application-component",
+                        "open": true,
+                        "resource_type": "WireCloud Component",
+                        "metadata': {}
+                    }
+                ],
+                "applications": [],
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker"
+                    "modified": "2015-05-30 18:30:10.0",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                        ]
+                    }
+                }
+            }
+        ]
+
+## Offering Entry [/api/offering/offerings/{organization}/{name}/{version}]
+
+### Get an Offering [GET]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        {
+            "name": "OrionStarterKit",
+            "owner_organization": "CoNWeT",
+            "owner_admin_user_id": "fdelavega",
+            "version": "1.0",
+            "state": "published",
+            "description_url": "https://repository.lab.fiware.org/collec/storeOfferingCollection/OrionStarterKit",
+            "rating": "5.0",
+            "comments": [],
+            "tags": ["starterKit", "wirecloud", "widget", "service"],
+            "image_url": "/media/CoNWeT__OrionStarterKit__1.0/logo.png",
+            "related_images": [
+                "/media/CoNWeT__OrionStarterKit__1.0/screen1.png",
+                "/media/CoNWeT__OrionStarterKit__1.0/screen2.png"
+            ],
+            "creation_date": "2015-05-19 04:51:25.569879",
+            "publication_date": "2015-05-30 18:30:10.0",
+            "open": false,
+            "resources": [
+                {
+                    "name": "MapViewer",
+                    "version": "1.0.1",
+                    "description": "A WireCloud Widget contaning a map",
+                    "content_type": "application/x-widget+mashable-application-component",
+                    "open": true,
+                    "resource_type": "WireCloud Component",
+                    "metadata': {}
+                }
+            ],
+            "applications": [],
+            "offering_description": {
+                "abstract" : "Basic set of WireCloud widgets for using orion",
+                "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker"
+                "modified": "2015-05-30 18:30:10.0",
+                "legal" : {
+                    "title" : "License",
+                    "text" : "This offer is offered under a GPL License"
+                },
+                "pricing" : {
+                    "price_plans" : [
+                    ]
+                }
+            }
+        }
+
+
+### Update an Offering [PUT]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "image": {
+                    "name": "logo.png",
+                    "data": "BASE64_ENCODED_IMAGE"
+                },
+                "notification_url": "https://providerserver.com/action/notify",
+                "related_images": [],
+                "open": false,
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                            {
+                                "title": "Single payment plan",
+                                "description": "This plan defines a single payment of 1 EUR for acquiring OrionStarterKit",
+                                "currency": "EUR",
+                                "price_components": [
+                                    {
+                                        "label": "single-payment",
+                                        "description": "Single payment of 1 EUR",
+                                        "value": 1,
+                                        "unit": "single payment"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+
++ Response 200
+
+### Delete an Offering [DELETE]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 204
+
+## Publish Offering Entry [/api/offering/offerings/{organization}/{name}/{version}/publish]
+
+### Publish an Offering [POST]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "marketplaces": ["FIWARELab"]
+            }
+
++ Response 200
+
+## Bind Resources Entry [/api/offering/offerings/{organization}/{name}/{version}/bind]
+
+### Bind Resources [POST]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            [
+                {
+                    "name": "MapViewer",
+                    "version": "1.0.1",
+                }
+            ]
+
++ Response 200
+
+## Reviews Collection [/api/offering/offerings/{organization}/{name}/{version}/review]
+
+### List all Reviews [GET]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "id": "555b079d8e05ac213ff15827",
+                "user": "aarranz",
+                "organization": "aarranz",
+                "timestamp": "2015-05-30 18:30:10.0",
+                "title": "Good Offering",
+                "comment": "This is a very good offering for those people insterested in using Orion from WireCloud, but not shure how to install it",
+                "rating": "4.0",
+                "response": {
+                    "user": "fdelavega",
+                    "organization": "CoNWeT",
+                    "timestamp": "2015-06-01 18:30:10.0",
+                    "title": "Installing",
+                    "response": "You can install them by going to Wirecloud and clicking the install button"
+                }
+            }
+        ]
+
+### Create a new Review [POST]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "title": "Good Offering",
+                "comment": "This is a very good offering for those people insterested in using Orion from WireCloud, but not shure how to install it",
+                "rating": "4.0"
+            }
+
++ Response 201
+
+## Review Entry [/api/offering/offerings/{organization}/{name}/{version}/review/{id}]
+
+### Update a Review [PUT]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "title": "Good Offering",
+                "comment": "This is a very good offering for those people insterested in using Orion from WireCloud, but not shure how to install it",
+                "rating": "4.0"
+            }
+
++ Response 200
+
+### Delete a Review [DELETE]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 204
+
+## Review Reply Entry [/api/offering/offerings/{organization}/{name}/{version}/review/{id}/reply]
+
+### Update/Create a Reply [PUT]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+    + id: 555b079d8e05ac213ff15827 - Id of the review that is being replied
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "title": "Installing",
+                "comment": "You can install them by going to Wirecloud and clicking the install button"
+            }
+
++ Response 200
+
+### Delete a Reply [DELETE]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+    + id: 555b079d8e05ac213ff15827 - Id of the review that is being deleted
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 204
+
+## Tags Collection [/api/offering/offerings/{organization}/{name}/{version}/tags{?action}]
+
+### List Offering Tags [GET]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+    + action: recommend (optional) - Optional parameter used to retrieve recommended tags instead of the existing ones
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        {
+            "tags": ["orion", "widget", "context broker"]
+        }
+
+### Update Offering Tags [PUT]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+               "tags": ["orion", "widget", "context broker"]
+            }
+
++ Response 200
+
+## Offering USDL entry [/api/offering/offerings/{organization}/{name}/{version}/usdl]
+
+### Get Offering USDL document [GET]
+
++ Parameters
+
+    + organization: CoNWeT - Organization that owns the offering
+    + name: OrionStarterKit - Name of the offering
+    + version: 1.0 - Version of the Offering
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/rdf+xml)
+
+        <?xml version="1.0"?>
+        <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+            xmlns:foaf="http://xmlns.com/foaf/0.1/" 
+            xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"  
+            xmlns:dcterms="http://purl.org/dc/terms/" 
+            xmlns:usdl="http://www.linked-usdl.org/ns/usdl-core#" 
+            xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+            xmlns:gr="http://purl.org/goodrelations/v1#"
+            xmlns:pav="http://purl.org/pav/"
+            xmlns:price="http://www.linked-usdl.org/ns/usdl-pricing#">
+        
+            <usdl:ServiceOffering xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="https://store.lab.fiware.org/offering/offerings/CoNWeT/OrionStarterKit/1.0">
+                <dcterms:title>OrionStarterKit</dcterms:title>
+                <dcterms:description>This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker</dcterms:description>
+                <dcterms:abstract>Basic set of WireCloud widgets for using orion</dcterms:abstract>
+                <pav:version>1.0</pav:version>
+                <foaf:depiction rdf:resource="https://store.lab.fiware.org/media/CoNWeT__OrionStarterKit__1.0/logo.png"/>
+                <dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2015-05-19 04:51:25.569879</dcterms:created>
+                <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2015-05-30 18:30:10.0</dcterms:modified>
+                <gr:hasBusinessFunction xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="IDabcd01" />
+
+                <usdl:includes rdf:resource="https://store.lab.fiware.org/offering/resources/CoNWeT/MapViewer/1.0"/>
+            </usdl:ServiceOffering>
+        
+            <gr:License xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="IDabcd01">
+                <rdfs:label>License</rdfs:label>
+                <dcterms:description>This offer is offered under a GPL License</dcterms:description>
+            </gr:License>
+        </rdf:RDF>
+
+# Group Managing Contracts
+
+This API is in charge of the management of contracting and billing. It allows to acquire offerings, renovate subscriptions, and provide accounting information for pay-per-use offerings.
+
+This API manages the following fields:
+
+*  **accepted** - Specifies whether the terms and conditions has been accepted
+*  **plan** - Price plan selected by the customer
+*  **tax_address** - Tax Address of the customer
+*  **payment_method** - Payment method selected by the customer. Note that the Store has support for Credit card payment; however, this method is deprecated for security constraints and it is preferred to delegate the payment to external systems (i.e PayPal)
+
+Additionally, this API manages the following fields for accounting:
+
+*  **offering** - Identifies the offering that have been acquired
+*  **customer** - User or organization that is making use of the offering
+*  **time_stamp** - Timestamp of the usage
+*  **correlation_number** - Correlation number of the accounting information
+*  **record_type** - Type of usage made (event, time, quantity)
+*  **unit** - Unit that is being monitored
+*  **value** - Actual usage made of the offering
+*  **component_label** - Label of the price component or variable that is used to calculate the amount to be paid
+
+## Contracts Collection [/api/contracting]
+
+### Acquire Offering [POST]
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "accepted": true,
+                "plan": "subscription",
+                "tax_address": {
+                    "street": "Campus Montegancedo S/N",
+                    "postal": "28050",
+                    "city": "Madrid",
+                    "country": "Spain"
+                },
+                "payment_method": "paypal"
+            }
+
++ Response 201
+
+## Contract Entry [/api/contracting/{reference}]
+
+### Renovate Subscription [PUT]
+
++ Parameters
+
+    + reference: 555b079d8e05ac213ff15827 - Purchase reference
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "payment_method": "paypal"
+            }
+
++ Response 201
+
+## Accounting Entry [/api/contracting/{reference}/accounting{?from}{?to}{?label}]
+
+### Get Accounting Info [GET]
+
++ Parameters
+
+    + reference: 555b079d8e05ac213ff15827 - Purchase reference
+    + from (optional, date, `2015-05-30 18:30:00.0`) ... Optional parameter specifying the starting datetime of the accounting information. Note that is "to" parameter is not provided all the accounting information since this datetime is returned
+    + to (optional, date, `2015-06-10 18:30:00.0`) ... Optional parameter specifying the ending datetime of the accounting information. Note that is "from" parameter is not provided all the accounting information until this datetime is returned
+    + label: usage (optional) - Optional parameter used to filter by "component_label"
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "offering": {
+                    "organzation": "CoNWeT",
+                    "name": "OrionStarterKit",
+                    "version": "1.0"
+                },
+                "customer": "aarranz",
+                "time_stamp": "2015-05-30 18:30:10.0",
+                "correlation_number": 13,
+                "record_type": "event",
+                "unit": "call",
+                "value": 190,
+                "component_label": "usage"
+            }
+        ]
+
+### Provide Accounting Info [POST]
+
++ Parameters
+
+    + reference: 555b079d8e05ac213ff15827 - Purchase reference
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
+    + Body
+
+            {
+                "offering": {
+                    "organzation": "CoNWeT",
+                    "name": "OrionStarterKit",
+                    "version": "1.0"
+                },
+                "customer": "aarranz",
+                "time_stamp": "2015-05-30 18:30:10.0",
+                "correlation_number": 13,
+                "record_type": "event",
+                "unit": "call",
+                "value": 190,
+                "component_label": "usage"
+            }
+
++ Response 200
+
+# Group Managing Searches
+
+This API allows to search for offerings using different mechanisms. Concretely, it allows to search offerings by keyword, by tag and by resource.
+This API returns lists of offerings, so it manages the same fields as the Offering API.
+
+## Search by Keyword [/api/search/keyword/{keyword}{?filter}{?action}{?sort}{?state}{?start}{?limit}]
+
+### Search by Keyword [GET]
+
++ Parameters
+
+    + keyword: free - Keyword used for searching
+    + filter: published (optional) - Optional parameter used for filtering the retrieved offerings. The allowed values are: published (all published offerings, default), purchased (all offerings acquired by the user or organization making the request), and provided (all the offering provided by the user or organization making the request) 
+    + action: count (optional) - Optional parameter used to change the default behaviour of the API and perform an action such as counting the number of offerings instead of returning them
+    + sort: date (optional) - Optional parameter that specifies the sorting of the returned offerings. The allowed values are date, name, and popularity
+    + state: deleted (optional) - Optional parameter that specifies the state of the returned offerings. The allowed values are uploaded, published and deleted
+    + start: 1 (optional) - Optional parameter used for pagination. This parameter specifies the first element to be retrieved. Note that if start parameter is included limit parameter is also needed.
+    + limit: 5 (optional) - Optional parameter used for pagination. This parameter specifies the number of elements to be retrieved. Note that if limit parameter is used start parameter is also required.
+    
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "OrionStarterKit",
+                "owner_organization": "CoNWeT",
+                "owner_admin_user_id": "fdelavega",
+                "version": "1.0",
+                "state": "published",
+                "description_url": "https://repository.lab.fiware.org/collec/storeOfferingCollection/OrionStarterKit",
+                "rating": "5.0",
+                "comments": [],
+                "tags": ["starterKit", "wirecloud", "widget", "service"],
+                "image_url": "/media/CoNWeT__OrionStarterKit__1.0/logo.png",
+                "related_images": [
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen1.png",
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen2.png"
+                ],
+                "creation_date": "2015-05-19 04:51:25.569879",
+                "publication_date": "2015-05-30 18:30:10.0",
+                "open": false,
+                "resources": [
+                    {
+                        "name": "MapViewer",
+                        "version": "1.0.1",
+                        "description": "A WireCloud Widget contaning a map",
+                        "content_type": "application/x-widget+mashable-application-component",
+                        "open": true,
+                        "resource_type": "WireCloud Component",
+                        "metadata': {}
+                    }
+                ],
+                "applications": [],
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker"
+                    "modified": "2015-05-30 18:30:10.0",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                        ]
+                    }
+                }
+            }
+        ]
+
+## Search by Tag [/api/search/keyword/{tag}{?filter}{?action}{?sort}{?start}{?limit}]
+
+### Search by Tag [GET]
+
++ Parameters
+
+    + tag: widget - Tag used for searching
+    + filter: published (optional) - Optional parameter used for filtering the retrieved offerings. The allowed values are: published (all published offerings, default), purchased (all offerings acquired by the user or organization making the request), and provided (all the offering provided by the user or organization making the request) 
+    + action: count (optional) - Optional parameter used to change the default behaviour of the API and perform an action such as counting the number of offerings instead of returning them
+    + sort: date (optional) - Optional parameter that specifies the sorting of the returned offerings. The allowed values are date, name, and popularity
+    + start: 1 (optional) - Optional parameter used for pagination. This parameter specifies the first element to be retrieved. Note that if start parameter is included limit parameter is also needed.
+    + limit: 5 (optional) - Optional parameter used for pagination. This parameter specifies the number of elements to be retrieved. Note that if limit parameter is used start parameter is also required.
+    
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "OrionStarterKit",
+                "owner_organization": "CoNWeT",
+                "owner_admin_user_id": "fdelavega",
+                "version": "1.0",
+                "state": "published",
+                "description_url": "https://repository.lab.fiware.org/collec/storeOfferingCollection/OrionStarterKit",
+                "rating": "5.0",
+                "comments": [],
+                "tags": ["starterKit", "wirecloud", "widget", "service"],
+                "image_url": "/media/CoNWeT__OrionStarterKit__1.0/logo.png",
+                "related_images": [
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen1.png",
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen2.png"
+                ],
+                "creation_date": "2015-05-19 04:51:25.569879",
+                "publication_date": "2015-05-30 18:30:10.0",
+                "open": false,
+                "resources": [
+                    {
+                        "name": "MapViewer",
+                        "version": "1.0.1",
+                        "description": "A WireCloud Widget contaning a map",
+                        "content_type": "application/x-widget+mashable-application-component",
+                        "open": true,
+                        "resource_type": "WireCloud Component",
+                        "metadata': {}
+                    }
+                ],
+                "applications": [],
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker"
+                    "modified": "2015-05-30 18:30:10.0",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                        ]
+                    }
+                }
+            }
+        ]
+
+## Search by Resource [/api/search/resource/{provider}/{name}/{version}]
+
+### Search by Resource [GET]
+
++ Parameters
+
+    + provider: CoNWeT - Name of the organization that owns the resource
+    + name: MapViewer - Name of the resource
+    + version: 1.0 - Version of the resource
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer YOUR_OAUTH2_TOKEN
+
++ Response 200 (application/json)
+
+        [
+            {
+                "name": "OrionStarterKit",
+                "owner_organization": "CoNWeT",
+                "owner_admin_user_id": "fdelavega",
+                "version": "1.0",
+                "state": "published",
+                "description_url": "https://repository.lab.fiware.org/collec/storeOfferingCollection/OrionStarterKit",
+                "rating": "5.0",
+                "comments": [],
+                "tags": ["starterKit", "wirecloud", "widget", "service"],
+                "image_url": "/media/CoNWeT__OrionStarterKit__1.0/logo.png",
+                "related_images": [
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen1.png",
+                    "/media/CoNWeT__OrionStarterKit__1.0/screen2.png"
+                ],
+                "creation_date": "2015-05-19 04:51:25.569879",
+                "publication_date": "2015-05-30 18:30:10.0",
+                "open": false,
+                "resources": [
+                    {
+                        "name": "MapViewer",
+                        "version": "1.0.1",
+                        "description": "A WireCloud Widget contaning a map",
+                        "content_type": "application/x-widget+mashable-application-component",
+                        "open": true,
+                        "resource_type": "WireCloud Component",
+                        "metadata': {}
+                    }
+                ],
+                "applications": [],
+                "offering_description": {
+                    "abstract" : "Basic set of WireCloud widgets for using orion",
+                    "description" : "This offering contains a set of widgets that can be used as the starting point for the development of a WireCloud Mashup that requires the usage of Orion Context Broker"
+                    "modified": "2015-05-30 18:30:10.0",
+                    "legal" : {
+                        "title" : "License",
+                        "text" : "This offer is offered under a GPL License"
+                    },
+                    "pricing" : {
+                        "price_plans" : [
+                        ]
+                    }
+                }
+            }
+        ]
