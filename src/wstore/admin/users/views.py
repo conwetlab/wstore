@@ -61,6 +61,7 @@ class UserProfileCollection(Resource):
                 user_org = Organization.objects.get(name=user.username)
             else:
                 user_org = Organization.objects.get(actor_id=profile.actor_id)
+                user_profile['limits'] = user_org.expenditure_limits
 
             user_profile['current_organization'] = profile.current_organization.name
 
