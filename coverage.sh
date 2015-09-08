@@ -1,8 +1,8 @@
 #!/bin/bash
-pip install coverage
-pip install mock
-pip install nose-parameterized
-pip install selenium
+pip install coverage=="4.0b2"
+pip install "mock==1.0.1"
+pip install "nose-parameterized==0.5.0"
+pip install "selenium==2.47.1"
 
 cd $WORKSPACE/src
 
