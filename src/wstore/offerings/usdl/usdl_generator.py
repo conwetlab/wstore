@@ -21,6 +21,7 @@
 from __future__ import unicode_literals
 
 import rdflib
+import urllib2
 from rdflib import Namespace, BNode, Literal
 from rdflib.namespace import RDF, DCTERMS, RDFS
 from urlparse import urljoin
@@ -459,7 +460,8 @@ class USDLGenerator():
 
         site = Context.objects.all()[0].site.domain
 
-        offering_uri = urljoin(site, 'api/offering/offerings/' + offering_info['organization'] + '/' + offering_info['name'] + '/' + offering_info['version'])
+        offering_id = urllib2.quote(offering_info['organization'] + '/' + offering_info['name'] + '/' + offering_info['version'])
+        offering_uri = urljoin(site, 'api/offering/offerings/' + offering_id)
         image_url = urljoin(site, offering_info['image_url'])
 
         # Include resources

@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 
 import base64
 import os
+import urllib2
 from bson import ObjectId
 from urlparse import urljoin
 
@@ -74,7 +75,8 @@ def _build_usdl(resource):
     # Create rdf template for the resource
     site_context = Context.objects.all()[0]
     base_uri = site_context.site.domain
-    resource_uri = urljoin(base_uri, 'api/offering/resources/' + resource.provider.name + '/' + resource.name + '/' + resource.version)
+    resource_id = urllib2.quote(resource.provider.name + '/' + resource.name + '/' + resource.version)
+    resource_uri = urljoin(base_uri, 'api/offering/resources/' + resource_id)
 
     context = {
         'resource_uri': resource_uri,
