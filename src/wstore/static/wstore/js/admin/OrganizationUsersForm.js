@@ -41,7 +41,7 @@
             var csrfToken = $.cookie('csrftoken');
             var request = {}
 
-            request.user = user;
+            request.username = user;
             request.roles = roles;
             $('#loading').removeClass('hide');    // Loading view when waiting for requests
             $('#loading').css('height', $(window).height() + 'px');

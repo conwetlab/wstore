@@ -395,14 +395,14 @@ class OrganizationUserCollection(Resource):
         try:
             data = json.loads(request.raw_post_data)
 
-            if not 'user' in data or not 'roles' in data:
+            if not 'username' in data or not 'roles' in data:
                 raise Exception('')
         except:
             return build_response(request, 400, 'Invalid JSON content')
 
         # Get the user
         try:
-            user = User.objects.get(username=data['user'])
+            user = User.objects.get(username=data['username'])
         except:
             return build_response(request, 404, 'The user is not registered for WStore.')
 
