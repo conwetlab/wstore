@@ -120,14 +120,17 @@ class FakeOrganization():
             self.org_object_private_1 = MagicMock()
             self.org_object_private_1.name = 'user1'
             self.org_object_private_1.notification_url = 'http://examplenot1.com'
+            self.org_object_private_1.expenditure_limits = {}
 
             self.org_object_private_2 = MagicMock()
             self.org_object_private_2.name = 'user2'
             self.org_object_private_2.notification_url = 'http://examplenot4.com'
+            self.org_object_private_2.expenditure_limits = {}
 
             self.org_object_private_3 = MagicMock()
             self.org_object_private_3.name = 'user3'
             self.org_object_private_3.notification_url = 'http://examplenot5.com'
+            self.org_object_private_3.expenditure_limits = {}
 
             self.org_object_1 = MagicMock()
             self.org_object_1.name = 'test_org1'
@@ -257,7 +260,7 @@ class UserCollectionTestCase(TestCase):
         }],
        'notification_url': 'http://examplenot4.com',
        'tax_address': {},
-       'roles':['customer'],
+       'roles': ['customer'],
        'payment_info': {}
     }], 200, False),
     (['user2'], False, [{
@@ -271,11 +274,13 @@ class UserCollectionTestCase(TestCase):
        'notification_url': 'http://examplenot4.com',
        'tax_address': {},
        'roles':['customer'],
-       'payment_info': {}
+       'payment_info': {},
+       'limits': {}
     }], 200, True),
     (['user1'], True, ('error', 'Forbidden'), 403, False)
     ])
     def test_user_retrieving(self, users, error, expected_response, code, ext_auth):
+
         # Mock User all method
         views.User = MagicMock()
         views.User.objects.all = MagicMock()
