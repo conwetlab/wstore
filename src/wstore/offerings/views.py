@@ -110,7 +110,7 @@ class OfferingCollection(Resource):
                     state = state.split(',')
 
             # Check sorting values
-            if sort != None:
+            if sort is not None:
                 if sort != 'date' and sort != 'popularity' and sort != 'name':
                     return build_response(request, 400, 'Invalid query string: Invalid sorting')
 

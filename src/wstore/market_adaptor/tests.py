@@ -25,6 +25,7 @@ import json
 import urlparse
 from urllib2 import HTTPError
 from mock import MagicMock
+from nose_parameterized import parameterized
 
 from django.test import TestCase
 
@@ -136,6 +137,13 @@ class MarketAdaptorTestCase(TestCase):
         marketadaptor.Marketplace = MagicMock()
         marketadaptor.Marketplace.objects.get.return_value = self.marketplace
 
+        self.offering = MagicMock(name="Offering")
+        self.offering.name = "test_service"
+        self.offering.owner_organization.name = "test_org"
+        self.offering.version = "1.0"
+        self.offering.description_url = "http://test_service_uri.com"
+        self.offering.get_uri.return_value = "http://offering_usdl_uri.org/"
+
     def tearDown(self):
         reload(marketadaptor)
 
@@ -217,16 +225,11 @@ class MarketAdaptorTestCase(TestCase):
         self.assertEqual(msg, 'Error delete store')
 
     def test_add_service_v1(self):
-        expected_body = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="test_service" ><url>http://test_service_uri.com</url></resource>'
-
-        service_info = {
-            'name': 'test_service',
-            'url': 'http://test_service_uri.com'
-        }
+        expected_body = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="test_org test_service 1.0" ><url>http://test_service_uri.com</url></resource>'
 
         market_adaptor = self._get_marketadaptor('http://add_service_marketplace/')
 
-        market_adaptor.add_service(service_info)
+        market_adaptor.add_service(self.offering)
 
         opener = self.fake_urllib._opener
         self.assertEqual(opener._url, 'http://add_service_marketplace/v1/offering/store/test_store/offering')
@@ -237,17 +240,13 @@ class MarketAdaptorTestCase(TestCase):
     test_add_service_v1.tags = ('fiware-ut-4',)
 
     def test_add_service_error_v1(self):
-        service_info = {
-            'name': 'test_service',
-            'url': 'http://test_service_uri.com'
-        }
 
         market_adaptor = self._get_marketadaptor('http://add_service_error/')
 
         error = False
         msg = None
         try:
-            market_adaptor.add_service(service_info)
+            market_adaptor.add_service(self.offering)
         except HTTPError, e:
             error = True
             msg = str(e.reason)
@@ -324,24 +323,38 @@ class MarketAdaptorTestCase(TestCase):
             'http://delete_store_marketplace_v2/api/v2/store/test_store'
         )
 
-    def test_add_service_v2(self):
+    def _set_v2_repo_url(self):
+        self.offering.description_url = "http://test_service_uri.com/v2/collec/collection/test_service"
+
+    def _set_v2_repo_url_app(self):
+        self.offering.description_url = "http://test_service_uri.com/repo/v2/collec/collection/test_service"
+
+    @parameterized.expand([
+        ("repo_v1", {
+            "displayName": "test_org test_service 1.0",
+            "url": "http://test_service_uri.com",
+        }),
+        ("repo_v2_no_webapp", {
+            "displayName": "test_org test_service 1.0",
+            "url": "http://test_service_uri.com/v2/services/query?query=CONSTRUCT { ?a ?b ?c . ?d ?e ?f . } WHERE { GRAPH <http://offering_usdl_uri.org/> { ?a ?b ?c } . { ?m <http://www.linked-usdl.org/ns/usdl-core#includes> ?n } . GRAPH ?n { ?d ?e ?f } . }",
+        }, _set_v2_repo_url),
+        ("repo_v2", {
+            "displayName": "test_org test_service 1.0",
+            "url": "http://test_service_uri.com/repo/v2/services/query?query=CONSTRUCT { ?a ?b ?c . ?d ?e ?f . } WHERE { GRAPH <http://offering_usdl_uri.org/> { ?a ?b ?c } . { ?m <http://www.linked-usdl.org/ns/usdl-core#includes> ?n } . GRAPH ?n { ?d ?e ?f } . }",
+        }, _set_v2_repo_url_app)
+    ])
+    def test_add_service_v2(self, name, expected_body, side_effect=None):
+
         self.marketplace.api_version = 2
         market_adaptor = self._get_marketadaptor('http://add_service_marketplace/')
         market_adaptor._user = None
         market_adaptor._current_user = MagicMock()
         market_adaptor._current_user.userprofile.access_token = 'access_token'
 
-        expected_body = {
-            "displayName": "test_service",
-            "url": "http://test_service_uri.com",
-        }
+        if side_effect is not None:
+            side_effect(self)
 
-        service_info = {
-            'name': 'test_service',
-            'url': 'http://test_service_uri.com'
-        }
-
-        store_id = market_adaptor.add_service(service_info)
+        store_id = market_adaptor.add_service(self.offering)
 
         self.assertEquals(store_id, 'wstore')
 

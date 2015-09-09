@@ -23,7 +23,7 @@ from __future__ import unicode_literals
 import json
 import urllib2
 from urllib2 import HTTPError
-from urlparse import urljoin
+from urlparse import urljoin, urlparse
 from base64 import b64encode
 
 from wstore.store_commons.utils.method_request import MethodRequest
@@ -91,7 +91,7 @@ class MarketAdaptor():
     def delete_store(self):
         pass
 
-    def add_service(self, service_info):
+    def add_service(self, offering):
         pass
 
     def delete_service(self, service):
@@ -121,17 +121,19 @@ class MarketAdaptorV1(MarketAdaptor):
         url = url_fix(url)
         self._make_request('DELETE', url, '', {}, 200)
 
-    def add_service(self, service_info):
+    def add_service(self, offering):
         store = self._get_store_name()
 
-        params = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="' + service_info['name'] + '" ><url>' + service_info['url'] + '</url></resource>'
+        offering_id = offering.owner_organization.name + ' ' + offering.name + ' ' + offering.version
+
+        params = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><resource name="' + offering_id + '" ><url>' + offering.description_url + '</url></resource>'
         headers = {'content-type': 'application/xml'}
         url = urljoin(self._marketplace_uri, "v1/offering/store/" + store + "/offering")
 
         url = url_fix(url)
         self._make_request('PUT', url, params, headers, 201)
 
-        return service_info['name']
+        return offering_id
 
     def delete_service(self, service):
         store = self._get_store_name()
@@ -185,14 +187,36 @@ class MarketAdaptorV2(MarketAdaptor):
         url = url_fix(url)
         self._make_request('DELETE', url, '', {}, 204)
 
-    def add_service(self, service_info):
+    def add_service(self, offering):
 
         store = self._get_store_name()
         url = urljoin(self._marketplace_uri, "api/v2/store/" + store + "/description")
+
+        # Build Repository URL in order to load resource USDL descriptions
+        parsed_url = urlparse(offering.description_url)
+        splitted_path = parsed_url.path.split('/')
+
+        # Check repository version
+        if 'v2' in splitted_path:
+            service_url = parsed_url.scheme + '://' + parsed_url.netloc
+
+            # Check if the webapp name of the repository is included in the path
+            if splitted_path.index('v2') > 1:
+                service_url += '/' + splitted_path[1]
+
+            query = "CONSTRUCT { ?a ?b ?c . ?d ?e ?f . } WHERE { GRAPH <%s> { ?a ?b ?c } . { ?m <http://www.linked-usdl.org/ns/usdl-core#includes> ?n } . GRAPH ?n { ?d ?e ?f } . }"
+            service_url += '/v2/services/query?query=' + (query % (offering.get_uri()))
+
+        else:
+            service_url = offering.description_url
+
+        offering_id = offering.owner_organization.name + ' ' + offering.name + ' ' + offering.version
+
         params = {
-            "displayName": service_info['name'],
-            "url": service_info['url']
+            "displayName": offering_id,
+            "url": service_url
         }
+
         headers = {
             'Content-type': 'application/json'
         }
