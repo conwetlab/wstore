@@ -21,10 +21,8 @@
 from __future__ import unicode_literals
 
 import rdflib
-import urllib2
 from rdflib import Namespace, BNode, Literal
 from rdflib.namespace import RDF, DCTERMS, RDFS
-from urlparse import urljoin
 
 from django.template import loader
 from django.template import Context as TmplContext
@@ -476,7 +474,8 @@ class USDLGenerator():
             'created': offering_info['created'],
             'modified': offering_info['modified'],
             'base_id': offering_info['base_id'],
-            'resources': resources
+            'resources': resources,
+            'acquire_url': offering.get_acquire_url()
         }
 
         if 'legal' in offering_info:

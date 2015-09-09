@@ -17,6 +17,7 @@
         <foaf:depiction rdf:resource="{{ image_url }}"/>
         <dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">{{ created }}</dcterms:created>
         <dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">{{ modified }}</dcterms:modified>
+        <gr:availableDeliveryMethods rdf:resource="{{ acquire_url }}" />
 
         {% if legal %}
         <gr:hasBusinessFunction xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:nodeID="ID{{ base_id }}01" />

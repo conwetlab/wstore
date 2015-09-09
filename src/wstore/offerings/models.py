@@ -68,11 +68,14 @@ class Offering(models.Model):
 
         return owns
 
+    def _get_site(self):
+        return Context.objects.all()[0].site.domain
+
     def get_uri(self):
         """
         Return the URI of the Offering to be used in USDL documents
         """
-        site = Context.objects.all()[0].site.domain
+        site = self._get_site()
 
         offering_id = urllib2.quote(self.owner_organization.name + '/' + self.name + '/' + self.version)
         return urljoin(site, 'api/offering/offerings/' + offering_id)
@@ -81,9 +84,15 @@ class Offering(models.Model):
         """
         Returns the complete URL of the offering image
         """
-        site = Context.objects.all()[0].site.domain
+        site = self._get_site()
 
         return urljoin(site, self.image_url)
+
+    def get_acquire_url(self):
+        site = self._get_site()
+
+        offering_id = urllib2.quote(self.owner_organization.name + '/' + self.name + '/' + self.version)
+        return urljoin(site, 'offering/' + offering_id)
 
     def __unicode__(self):
         return self.name
