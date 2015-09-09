@@ -659,7 +659,7 @@ def delete_offering(user, offering):
     if offering.state == 'deleted':
         raise PermissionDenied('The offering is already deleted')
 
-    if offering.state == 'published':
+    if offering.state == 'published' and len(offering.description_url):
         repository_adaptor = unreg_repository_adaptor_factory(offering.description_url)
 
         if settings.OILAUTH:
