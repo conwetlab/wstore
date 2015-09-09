@@ -194,7 +194,7 @@ class ResourceRegisteringTestCase(TestCase):
             res = Resource.objects.get(name=data['name'], version=data['version'])
             self.assertEquals(res.version, data['version'])
             self.assertEquals(res.content_type, data['content_type'])
-            self.assertEquals(res.resource_uri, "http://localhost/api/offering/resources/test_user/" + data['name'] + "/" + data["version"])
+            self.assertEquals(res.resource_uri, "http://localhost/api/offering/resources/test_user/" + data['name'].replace(' ', '%20') + "/" + data["version"])
             self.assertEquals(res.resource_usdl, "http://testrepo.com/resource1")
 
             if 'content' in data or is_file:
