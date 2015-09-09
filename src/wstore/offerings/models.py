@@ -18,6 +18,7 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+import urllib2
 from urlparse import urljoin
 from django.contrib.auth.models import User
 from django.db import models
@@ -38,8 +39,6 @@ class Offering(models.Model):
     name = models.CharField(max_length=50)
     owner_organization = models.ForeignKey(Organization)
     owner_admin_user = models.ForeignKey(User)
-    # support_organization
-    # support_admin_user
     version = models.CharField(max_length=20)
     state = models.CharField(max_length=50)
     description_url = models.CharField(max_length=200, null=True, blank=True)
@@ -63,10 +62,28 @@ class Offering(models.Model):
         """
         owns = False
         if user.userprofile.current_organization == self.owner_organization and \
-        (self.owner_admin_user == user or user.pk in user.userprofile.current_organization.managers):
+                (self.owner_admin_user == user or user.pk in user.userprofile.current_organization.managers):
+
             owns = True
 
         return owns
+
+    def get_uri(self):
+        """
+        Return the URI of the Offering to be used in USDL documents
+        """
+        site = Context.objects.all()[0].site.domain
+
+        offering_id = urllib2.quote(self.owner_organization.name + '/' + self.name + '/' + self.version)
+        return urljoin(site, 'api/offering/offerings/' + offering_id)
+
+    def get_image_url(self):
+        """
+        Returns the complete URL of the offering image
+        """
+        site = Context.objects.all()[0].site.domain
+
+        return urljoin(site, self.image_url)
 
     def __unicode__(self):
         return self.name

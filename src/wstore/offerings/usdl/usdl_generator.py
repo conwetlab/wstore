@@ -445,8 +445,8 @@ class USDLGenerator():
             raise ValueError('The specified format (' + format_ + ') is not a valid format')
 
         offering_info = offering.offering_description
-        offering_info['image_url'] = offering.image_url
         offering_info['name'] = offering.name
+        offering_info['image_url'] = offering.get_image_url()
         offering_info['version'] = offering.version
         offering_info['organization'] = offering.owner_organization.name
         offering_info['base_id'] = offering.pk
@@ -458,11 +458,7 @@ class USDLGenerator():
         # Get the template
         usdl_template = loader.get_template('usdl/basic_offering_usdl_template.rdf')
 
-        site = Context.objects.all()[0].site.domain
-
-        offering_id = urllib2.quote(offering_info['organization'] + '/' + offering_info['name'] + '/' + offering_info['version'])
-        offering_uri = urljoin(site, 'api/offering/offerings/' + offering_id)
-        image_url = urljoin(site, offering_info['image_url'])
+        offering_uri = offering.get_uri()
 
         # Include resources
         resources = []
@@ -472,7 +468,7 @@ class USDLGenerator():
 
         context = {
             'offering_uri': offering_uri,
-            'image_url': image_url,
+            'image_url': offering_info['image_url'],
             'name': offering_info['name'],
             'version': offering_info['version'],
             'description': offering_info['description'],
