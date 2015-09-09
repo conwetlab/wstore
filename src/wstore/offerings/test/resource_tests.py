@@ -529,6 +529,24 @@ class ResourceDeletionTestCase(TestCase):
         os.remove.assert_not_called()
         self.resource.delete.assert_called_once_with()
 
+    def _not_uploaded(self):
+        self._res_url()
+        self.resource.resource_usdl = ''
+
+    def _check_usdl_not_deleted(self):
+        self._check_url()
+        resources_management.unreg_repository_adaptor_factory.assert_not_called()
+
+    def _res_old_versions(self):
+        self._res_url()
+        old_version = MagicMock()
+        old_version.resource_usdl = 'http://repository.com/resource/old'
+        self.resource.old_versions = [old_version]
+
+    def _check_old_versions(self):
+        self._check_url()
+        self.assertEquals(resources_management.unreg_repository_adaptor_factory.call_count, 2)
+
     def _deleted_res(self):
         self.resource.state = 'deleted'
 
@@ -546,6 +564,8 @@ class ResourceDeletionTestCase(TestCase):
 
     @parameterized.expand([
         (_res_in_use, _check_in_use),
+        (_not_uploaded, _check_usdl_not_deleted),
+        (_res_old_versions, _check_old_versions),
         (_res_in_use_uploaded, _check_deleted),
         (_res_file, _check_deleted),
         (_res_url, _check_url),
@@ -635,19 +655,30 @@ class ResourceUpdateTestCase(TestCase):
         reload(resources_management)
         self._mock_resource_libs()
 
+    def _no_uploaded(self):
+        self.resource.resource_usdl = ''
+
+    def _check_rep_calls(self):
+        resources_management.unreg_repository_adaptor_factory.assert_called_once_with('http://repository.com/resource')
+        self._rep_obj.set_credentials.assert_called_once_with('access_token')
+
     def _check_in_use(self):
+        self._check_rep_calls()
         self.assertEquals(self.resource.description, 'Test resource 4')
 
     def _check_complete(self):
+        self._check_rep_calls()
         self.assertEquals(self.resource.description, 'Test resource 1')
         self.assertEquals(self.resource.content_type, 'text/plain')
         self.assertEquals(self.resource.open, False)
         self.assertEquals(self.resource.resource_path, '')
 
     def _check_description(self):
+        self._check_rep_calls()
         self.assertEquals(self.resource.description, 'Modified description')
 
     def _check_no_description(self):
+        self._check_rep_calls()
         self.assertEquals(self.resource.content_type, 'text/plain')
         self.assertEquals(self.resource.open, False)
         self.assertEquals(self.resource.resource_path, '')
@@ -659,9 +690,14 @@ class ResourceUpdateTestCase(TestCase):
         self.plugin_mock.on_post_update.assert_called_once_with(self.resource)
         wstore.offerings.resource_plugins.decorators._get_plugin_model.assert_called_once_with('test_plugin')
 
+    def _check_no_uploaded(self):
+        self.assertEquals(self.resource.resource_usdl, "")
+        resources_management.unreg_repository_adaptor_factory.assert_not_called()
+
     @parameterized.expand([
         (RESOURCE_IN_USE_DATA, _check_in_use, _res_in_use),
         (UPDATE_DATA1, _check_complete),
+        (UPDATE_DATA1, _check_no_uploaded, _no_uploaded),
         (UPDATE_DATA2, _check_no_description),
         ({'description': 'Modified description'}, _check_description),
         (UPDATE_DATA1, _check_plugin_type, _res_plugin_type),
@@ -690,8 +726,6 @@ class ResourceUpdateTestCase(TestCase):
         if not err_type:
             self.assertEquals(error, None)
             check(self)
-            resources_management.unreg_repository_adaptor_factory.assert_called_once_with('http://repository.com/resource')
-            self._rep_obj.set_credentials.assert_called_once_with('access_token')
             self.resource.save.assert_called_once_with()
         else:
             self.assertTrue(isinstance(error, err_type))
