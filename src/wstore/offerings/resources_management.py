@@ -22,16 +22,14 @@ from __future__ import unicode_literals
 
 import base64
 import os
-import urllib2
 from bson import ObjectId
-from urlparse import urljoin
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.template import loader
 from django.template import Context as TmplContext
 
-from wstore.models import Resource, Offering, Repository, Context
+from wstore.models import Resource, Offering, Repository
 from wstore.repository_adaptor.repositoryAdaptor import repository_adaptor_factory, unreg_repository_adaptor_factory
 from wstore.offerings.models import ResourceVersion
 from wstore.store_commons.utils.name import is_valid_id, is_valid_file
@@ -73,10 +71,7 @@ def _save_resource_file(provider, name, version, file_):
 def _build_usdl(resource):
 
     # Create rdf template for the resource
-    site_context = Context.objects.all()[0]
-    base_uri = site_context.site.domain
-    resource_id = urllib2.quote(resource.provider.name + '/' + resource.name + '/' + resource.version)
-    resource_uri = urljoin(base_uri, 'api/offering/resources/' + resource_id)
+    resource_uri = resource.get_uri()
 
     context = {
         'resource_uri': resource_uri,
@@ -96,17 +91,21 @@ def _build_usdl(resource):
 
 def _upload_usdl(resource, user):
 
-    usdl, resource_uri = _build_usdl(resource)
+    # Upload the rdf of the resource to the repository if existing
+    usdl_url = ""
+    if len(Repository.objects.all()) > 0:
+        usdl, resource_uri = _build_usdl(resource)
+        repository = Repository.objects.get(is_default=True)
+        repository_adaptor = repository_adaptor_factory(repository, is_resource=True)
 
-    # Upload the rdf of the resource to the repository
-    repository = Repository.objects.get(is_default=True)
-    repository_adaptor = repository_adaptor_factory(repository, is_resource=True)
+        resource_id = resource.pk + '__' + resource.provider.name + '__' + resource.name.replace(' ', '_') + '__' + resource.version
 
-    resource_id = resource.pk + '__' + resource.provider.name + '__' + resource.name.replace(' ', '_') + '__' + resource.version
+        repository_adaptor.set_uri(resource_uri)
+        repository_adaptor.set_credentials(user.userprofile.access_token)
+        usdl_url = repository_adaptor.upload('application/rdf+xml', usdl, resource_id)
 
-    repository_adaptor.set_uri(resource_uri)
-    repository_adaptor.set_credentials(user.userprofile.access_token)
-    usdl_url = repository_adaptor.upload('application/rdf+xml', usdl, resource_id)
+    else:
+        resource_uri = resource.get_uri()
 
     resource.resource_usdl = usdl_url
     resource.resource_uri = resource_uri
@@ -114,10 +113,11 @@ def _upload_usdl(resource, user):
 
 
 def _update_usdl(resource, user):
-    usdl, resource_uri = _build_usdl(resource)
-    repository_adaptor = unreg_repository_adaptor_factory(resource.resource_usdl)
-    repository_adaptor.set_credentials(user.userprofile.access_token)
-    repository_adaptor.upload('application/rdf+xml', usdl)
+    if len(resource.resource_usdl) > 0:
+        usdl, resource_uri = _build_usdl(resource)
+        repository_adaptor = unreg_repository_adaptor_factory(resource.resource_usdl)
+        repository_adaptor.set_credentials(user.userprofile.access_token)
+        repository_adaptor.upload('application/rdf+xml', usdl)
 
 
 @register_resource_events

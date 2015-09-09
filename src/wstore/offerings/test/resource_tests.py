@@ -62,12 +62,6 @@ class ResourceRegisteringTestCase(TestCase):
         resources_management.repository_adaptor_factory = MagicMock()
         resources_management.repository_adaptor_factory.return_value = self.adaptor_obj
 
-        # Mock context
-        context_obj = MagicMock()
-        context_obj.site.domain = 'http://localhost'
-        resources_management.Context = MagicMock(name="Context")
-        resources_management.Context.objects.all.return_value = [context_obj]
-
     def _basic_encoder(self, data):
         f = open(settings.BASEDIR + '/wstore/test/test_usdl.rdf')
         encoded = base64.b64encode(f.read())
@@ -184,6 +178,7 @@ class ResourceRegisteringTestCase(TestCase):
         # Call the method
         error = None
         try:
+            #import ipdb; ipdb.set_trace()
             resources_management.register_resource(provider, data, file_=f1)
         except Exception as e:
             error = e

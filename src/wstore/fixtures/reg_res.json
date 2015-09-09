@@ -15,6 +15,14 @@
             "date_joined": "2011-10-10 11:27:12"
         }
     },
+        {
+        "pk": "515ab0738e05ac20b622888b",
+        "model": "sites.site",
+        "fields": {
+            "domain": "http://localhost",
+            "name": "antares"
+        }
+    },
     {
         "pk": "51000aba8e05ac2115f022ff",
         "model": "wstore.Repository",
