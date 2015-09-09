@@ -408,9 +408,10 @@ def _remove_usdls(resource, user):
 
     # Remove the usdl descriptions from the repository
     for url in usdl_urls:
-        repository_adaptor = unreg_repository_adaptor_factory(url)
-        repository_adaptor.set_credentials(user.userprofile.access_token)
-        repository_adaptor.delete()
+        if len(url) > 0:
+            repository_adaptor = unreg_repository_adaptor_factory(url)
+            repository_adaptor.set_credentials(user.userprofile.access_token)
+            repository_adaptor.delete()
 
 
 def _remove_resource(resource):

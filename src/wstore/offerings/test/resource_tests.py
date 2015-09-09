@@ -178,7 +178,6 @@ class ResourceRegisteringTestCase(TestCase):
         # Call the method
         error = None
         try:
-            #import ipdb; ipdb.set_trace()
             resources_management.register_resource(provider, data, file_=f1)
         except Exception as e:
             error = e
