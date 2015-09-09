@@ -21,6 +21,7 @@
 from __future__ import unicode_literals
 
 import json
+import urllib
 import urllib2
 from urllib2 import HTTPError
 from urlparse import urljoin, urlparse
@@ -204,8 +205,10 @@ class MarketAdaptorV2(MarketAdaptor):
             if splitted_path.index('v2') > 1:
                 service_url += '/' + splitted_path[1]
 
-            query = "CONSTRUCT { ?a ?b ?c . ?d ?e ?f . } WHERE { GRAPH <%s> { ?a ?b ?c } . { ?m <http://www.linked-usdl.org/ns/usdl-core#includes> ?n } . GRAPH ?n { ?d ?e ?f } . }"
-            service_url += '/v2/services/query?query=' + (query % (offering.get_uri()))
+            query = "CONSTRUCT { ?a ?b ?c . ?d ?e ?f . } WHERE { GRAPH <%s> { ?a ?b ?c } . { ?m <http://www.linked-usdl.org/ns/usdl-core#includes> ?n } . GRAPH ?n { ?d ?e ?f } . }" % (offering.get_uri())
+            query = urllib.quote_plus(query)
+
+            service_url += '/v2/services/query?query=' + query
 
         else:
             service_url = offering.description_url
