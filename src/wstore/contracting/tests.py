@@ -21,7 +21,6 @@
 from __future__ import unicode_literals
 
 import json
-import rdflib
 import types
 from mock import MagicMock
 from urllib2 import HTTPError
@@ -773,6 +772,7 @@ class ProviderNotificationTestCase(TestCase):
         }, True)
     ])
     def test_identity_manager_notification_v1(self, name, org_data, refresh=False):
+
         keyrock_backend_v1.urllib2 = FakeUrlib2Notify()
 
         settings.OILAUTH = True
@@ -794,8 +794,6 @@ class ProviderNotificationTestCase(TestCase):
         self.assertEquals(content['applications'][0]['id'], 1)
         self.assertEquals(content['applications'][0]['name'], 'test_app1')
         self.assertEquals(content['customer'], org_data['actor_id'])
-
-    test_identity_manager_notification_v1.tags = ('fiware-ut-23', 'prov-not')
 
 
 class UpdatingPurchasesTestCase(TestCase):
