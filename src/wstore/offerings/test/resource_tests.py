@@ -32,7 +32,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 from wstore.offerings import resources_management
-from wstore.models import Resource
+from wstore.models import Resource, Repository
 from django.core.exceptions import PermissionDenied
 from wstore.store_commons.errors import ConflictError
 from wstore.offerings.test.resource_test_data import *
@@ -75,6 +75,9 @@ class ResourceRegisteringTestCase(TestCase):
             resource.provider = provider.userprofile.current_organization
             resource.save()
 
+    def _no_repo(self, data):
+        Repository.objects.all()[0].delete()
+
     @parameterized.expand([
         ({
             'name': 'Download',
@@ -100,6 +103,14 @@ class ResourceRegisteringTestCase(TestCase):
             'version': '1.0',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
             'resource_type': 'Downloadable',
+            'link': 'https://historymod.com/download',
+            'content_type': 'text/plain'
+        }, _no_repo, False, False),
+        ({
+            'name': 'History Mod',
+            'version': '1.0',
+            'description': 'This service is in charge of maintaining historical info for Smart Cities',
+            'resource_type': 'Downloadable',
             'content_type': 'text/plain'
         }, None, True),
         ({
@@ -108,7 +119,7 @@ class ResourceRegisteringTestCase(TestCase):
             'description': '',
             'resource_type': 'Downloadable',
             'link': 'https://existing.com/download'
-        }, _fill_provider, False, ConflictError, 'The resource Existing already exists. Please upgrade the resource if you want to provide new content'),
+        }, _fill_provider, False, True, ConflictError, 'The resource Existing already exists. Please upgrade the resource if you want to provide new content'),
         ({
             'name': 'Invalid',
             'version': '1.0a',
@@ -116,7 +127,7 @@ class ResourceRegisteringTestCase(TestCase):
             'resource_type': 'Downloadable',
             'content_type': 'text/plain',
             'link': 'https://existing.com/download'
-        }, None, False, ValueError, "Invalid version number '1.0a'"),
+        }, None, False, True, ValueError, "Invalid version number '1.0a'"),
         ({
             'name': 'invalidname$',
             'version': '1.0',
@@ -124,7 +135,7 @@ class ResourceRegisteringTestCase(TestCase):
             'resource_type': 'Downloadable',
             'link': 'https://existing.com/download',
             'content_type': 'text/plain'
-        }, None, False, ValueError, 'Invalid name format'),
+        }, None, False, True, ValueError, 'Invalid name format'),
         ({
             'name': 'InvalidURL',
             'version': '1.0',
@@ -132,7 +143,7 @@ class ResourceRegisteringTestCase(TestCase):
             'resource_type': 'Downloadable',
             'link': 'not an uri',
             'content_type': 'text/plain'
-        }, None, False, ValueError, 'Invalid resource link format'),
+        }, None, False, True, ValueError, 'Invalid resource link format'),
         ({
             'name': 'Download',
             'version': '1.0',
@@ -143,23 +154,23 @@ class ResourceRegisteringTestCase(TestCase):
             },
             'resource_type': 'Downloadable',
             'content_type': 'application/rdf+xml'
-        }, _basic_encoder, False, ValueError, 'Invalid file name format: Unsupported character'),
+        }, _basic_encoder, False, True, ValueError, 'Invalid file name format: Unsupported character'),
         ({
             'version': '1.1',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
             'resource_type': 'Downloadable',
             'link': 'https://historymod.com/download',
             'content_type': 'text/plain'
-        }, None, False, ValueError, 'Invalid request: Missing required field'),
+        }, None, False, True, ValueError, 'Invalid request: Missing required field'),
         ({
             'name': 'Download',
             'version': '1.1',
             'description': 'This service is in charge of maintaining historical info for Smart Cities',
             'resource_type': 'Downloadable',
             'content_type': 'text/plain'
-        }, None, False, ValueError, 'Invalid request: Missing resource content'),
+        }, None, False, True, ValueError, 'Invalid request: Missing resource content'),
     ])
-    def test_resource_registering(self, data, encoder=None, is_file=False, err_type=None, err_msg=None):
+    def test_resource_registering(self, data, encoder=None, is_file=False, uploaded=True, err_type=None, err_msg=None):
 
         # Call the encoder for the data if needed
         if encoder:
@@ -189,7 +200,11 @@ class ResourceRegisteringTestCase(TestCase):
             self.assertEquals(res.version, data['version'])
             self.assertEquals(res.content_type, data['content_type'])
             self.assertEquals(res.resource_uri, "http://localhost/api/offering/resources/test_user/" + data['name'].replace(' ', '%20') + "/" + data["version"])
-            self.assertEquals(res.resource_usdl, "http://testrepo.com/resource1")
+
+            if uploaded:
+                self.assertEquals(res.resource_usdl, "http://testrepo.com/resource1")
+            else:
+                self.assertEquals(res.resource_usdl, "")
 
             if 'content' in data or is_file:
                 if is_file:
