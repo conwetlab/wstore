@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 -2015 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -27,7 +27,10 @@ import django.conf
 from django.core.management.base import CommandError
 from django.core.management.base import BaseCommand
 from django.template import loader, Context
+
+
 from wstore.store_commons.database import get_database_connection
+from wstore.store_commons.utils.url import is_valid_url
 
 
 def exec_external_cmd(cmd):
@@ -40,21 +43,42 @@ def read_from_cmd():
     return stdin.readline()[:-1]
 
 
+def get_yes_no_option(msg):
+    correct = False
+    while not correct:
+        print msg + " [y/n]:"
+        opt = read_from_cmd()
+        if opt != 'y' and opt != 'n':
+            print "Please include 'y' or 'n'"
+            continue
+        correct = True
+
+    return opt
+
+
+def get_url(msg):
+    correct = False
+    while not correct:
+        print msg
+        domain = read_from_cmd()
+
+        if not is_valid_url(domain):
+            print "The domain " + domain + " is not a valid URL"
+        else:
+            correct = True
+
+    return domain
+
+
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
         Starts and configures a new WStore instance
         """
+
         # Check if the user want to create an initial configuration
-        correct = False
-        while not correct:
-            print "Do you want to create an initial configuration? [y/n]:"
-            opt = read_from_cmd()
-            if opt != 'y' and opt != 'n':
-                print "Please include 'y' or 'n'"
-                continue
-            correct = True
+        opt = get_yes_no_option("Do you want to create an initial configuration")
 
         if opt == 'n':
             print "You can configure WStore manually editing settings.py file"
@@ -80,22 +104,14 @@ class Command(BaseCommand):
         # Create the default site
         print "Include a site name: "
         site_name = read_from_cmd()
-        print "Include a site domain: "
-        site_domain = read_from_cmd()
+
+        site_domain = get_url("Include a site domain: ")
 
         # Get WStore name
         print "Include a name for your instance: "
         settings['store_name'] = read_from_cmd()
 
-        correct = False
-        while not correct:
-            # Get optional mail configuration
-            print "Do you want to include email configuration? [y/n]: "
-            option = read_from_cmd()
-            if option != 'y' and option != 'n':
-                print "Please include 'y' or 'n'"
-                continue
-            correct = True
+        option = get_yes_no_option("Do you want to include email configuration?")
 
         if option == 'y':
             print "Include email smtp server endpoint: "
@@ -136,9 +152,14 @@ class Command(BaseCommand):
         syn_command = 'python manage.py syncdb'
         # Get auth info
         if number_opt == 1:
-            print "Include Identity manager endpoint: "
+            print "Include Identity manager endpoint: (default https://account.lab.fiware.org/)"
             settings['oilauth'] = True
+
             settings['idm_endpoint'] = read_from_cmd()
+
+            if not len(settings['idm_endpoint']) or settings['idm_endpoint'].isspace():
+                settings['idm_endpoint'] = "https://account.lab.fiware.org/"
+
             syn_command += ' --noinput'
 
             # Get idm api version
@@ -153,18 +174,12 @@ class Command(BaseCommand):
                     print "Please include 1 or 2"
 
             if settings['idm_api_version'] == 2:
-                print "Include KeyStone endpoint: "
-                settings['keystone_endpoint'] = read_from_cmd()
+                if settings['idm_endpoint'].startswith('https://account.lab.fiware.org'):
+                    settings['keystone_endpoint'] = "http://cloud.lab.fiware.org:4731"
+                else:
+                    settings['keystone_endpoint'] = get_url("Include KeyStone endpoint: ")
 
-            correct = False
-            while not correct:
-                # Get optional mail configuration
-                print "Do you want to include OAuth2 configuration? [y/n]: "
-                option = read_from_cmd()
-                if option != 'y' and option != 'n':
-                    print "Please include 'y' or 'n'"
-                    continue
-                correct = True
+            option = get_yes_no_option("Do you want to include OAuth2 configuration?")
 
             if option == 'y':
                 print "Include Client id: "
