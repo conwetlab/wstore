@@ -24,6 +24,7 @@ from mock import MagicMock
 from nose_parameterized import parameterized
 
 from django.test import TestCase
+from django.test.utils import override_settings
 
 from wstore.repository_adaptor import repositoryAdaptor
 from wstore.store_commons.errors import RepositoryError
@@ -64,6 +65,7 @@ def _build_mock_request(method):
     return _mock_request
 
 
+@override_settings(OILAUTH=True)
 class RepositoryAdaptorTestCase(TestCase):
 
     tags = ('repository-adaptor', )
