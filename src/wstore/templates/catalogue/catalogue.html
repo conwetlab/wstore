@@ -23,7 +23,11 @@
             USDLEDITOR = "{{ usdl_editor }}";
             ORGANIZATION = "{{ organization }}";
             INITIAL_PAGE = "catalogue";
-           // USERROLES = {{ roles }};
+            {% if oil %}
+                IDMAUTH = true;
+            {% else %}
+                IDMAUTH = false;
+            {% endif %}
         </script>
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery-1.8.2.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}jquery/jquery.tmpl.js"></script>
@@ -41,12 +45,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/ModalForm.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/UserConfiguration.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/PricingEditor.js"></script>
-
-        {% if oil %}
-            <script type="text/javascript" src="{{ STATIC_URL }}oil/js/CreateOfferingForm.js"></script>
-        {% else %}
-            <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CreateOfferingForm.js"></script>
-        {% endif %}
+        <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/catalogue/CreateOfferingForm.js"></script>
 
         <script type="text/x-jquery-tmpl" id="footer_template">{% include "footer_template.html" %}</script>
         <script type="text/javascript" src="{{ STATIC_URL }}wstore/js/MenuPainter.js"></script>
