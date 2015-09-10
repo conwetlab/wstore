@@ -149,10 +149,6 @@ class CurrencyCollection(Resource):
     @authentication_required
     def read(self, request):
 
-        # Check if the user is an admin
-        if not request.user.is_staff:
-            return build_response(request, 403, 'Forbidden')
-
         # Get Store context
         context = Context.objects.all()[0]
         # Return currencies
