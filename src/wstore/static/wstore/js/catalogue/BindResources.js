@@ -30,7 +30,11 @@
         this.viewOnly = vOnly;
         this.offeringElem = offeringElement;
         this.caller = callerObj;
-        
+
+        // Create a copy of the resources alreasy bound
+        if (!$.isEmptyObject(this.offeringElem)) {
+            this.pendingResources = this.offeringElem.getResources().slice();
+        }
     };
 
     /**
@@ -71,9 +75,18 @@
                 resSelected.push({
                     'name': this.resources[i].name,
                     'version': this.resources[i].version
-                })
+                });
             }
         }
+
+        // Include pending resources
+        for (var i = 0; i < this.pendingResources.length; i++) {
+            resSelected.push({
+                'name': this.pendingResources[i].name,
+                'version': this.pendingResources[i].version
+            });
+        }
+
         var csrfToken = $.cookie('csrftoken');
         $.ajax({
             headers: {
@@ -132,6 +145,18 @@
         this.pagination.setNextPage(5);
     };
 
+
+    BindResourcesForm.prototype.removePendingResource = function removePendingResource(resource) {
+        var found = false, i = 0;
+
+        while (!found && i < this.pendingResources.length) {
+            if (this.pendingResources[i].name == resource.name) {
+                found = true;
+                this.pendingResources.splice(i, 1);
+            }
+            i++;
+        }
+    };
 
     /**
      * Paints the resources
@@ -206,6 +231,9 @@
                     if (res.name == offeringRes[j].name && res.version == offeringRes[j].version) {
                         found = true;
                         $('#check-' + index).prop('checked', true);
+
+                        // Remove the resource from the pending resources list
+                        this.removePendingResource(res);
                     }
                     j++;
                 }
