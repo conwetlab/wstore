@@ -101,10 +101,10 @@ class PurchaseFormCollection(Resource):
         site = get_current_site(request)
         context = Context.objects.get(site=site)
 
-        if not token in context.user_refs:
+        if token not in context.user_refs:
             return render(request, 'err_msg.html', {
                 'title': 'Token not found',
-                'message': 'The used token for identifying the purchase is not valid or has expired.'
+                'message': 'The token provided for identifying the purchase is not valid or has expired.'
             })
 
         info = context.user_refs[token]
