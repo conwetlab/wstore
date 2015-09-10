@@ -285,6 +285,7 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
 
         self.driver.find_element_by_css_selector('.modal-footer > input[value=Next]').click()  # Next
         self.driver.find_element_by_css_selector('.modal-footer > input[value=Next]').click()  # Next
+        time.sleep(1)
         self.driver.find_element_by_css_selector('.modal-footer > input[value=Accept]').click()  # Next
         time.sleep(1)
         self.driver.find_element_by_css_selector('.modal-footer > .btn').click()  # Accept
