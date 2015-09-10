@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -23,7 +23,6 @@ from __future__ import unicode_literals
 import os
 import json
 import shutil
-import rdflib
 import time
 import urllib2
 
@@ -40,7 +39,6 @@ from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils.testing import save_indexes, restore_indexes, save_tags, restore_tags
 from wstore.search.search_engine import SearchEngine
 from wstore.selenium_tests.testcase import WStoreSeleniumTestCase
-#from wstore.offerings.offerings_management import _create_basic_usdl
 from wstore.models import Offering, Purchase
 from wstore.social.tagging.tag_manager import TagManager
 from wstore.selenium_tests.test_server import TestServer
@@ -50,13 +48,8 @@ import unittest
 TESTING_PORT = 8989
 
 
-def _fill_offering_description(pk, usdl_info, owner):
+def _set_offering_organization(pk, owner):
     offering = Offering.objects.get(pk=pk)
-
-    #usdl = _create_basic_usdl(usdl_info)
-    graph = rdflib.Graph()
-    #graph.parse(data=usdl, format='application/rdf+xml')
-    offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
     offering.owner_organization = User.objects.get(username=owner).userprofile.current_organization
     offering.save()
 
@@ -109,7 +102,7 @@ def _create_tags():
     tm.update_tags(offering3, ['widget'])
 
 
-@unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
+@unittest.skipIf('wstore.selenium_tests' not in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class BasicSearchTestCase(WStoreSeleniumTestCase):
 
     tags = ('selenium', )
@@ -138,42 +131,14 @@ class BasicSearchTestCase(WStoreSeleniumTestCase):
         shutil.copy2(test_icon_path, os.path.join(offering_path2, 'image.png'))
         shutil.copy2(test_icon_path, os.path.join(offering_path3, 'image.png'))
 
-        # Load USDL info
-        offering1_info = {
-            'base_uri': 'http://localhost:8081',
-            'image_url': '/media/provider__test_offering1__1.0/image.png',
-            'name': 'test_offering1',
-            'description': 'test',
-            'pricing': {
-                'price_model': 'free'
-            }
-        }
-        _fill_offering_description('21000aba8e05ac2115f022ff', offering1_info, 'provider')
+        _set_offering_organization('21000aba8e05ac2115f022ff', 'provider')
+        _set_offering_organization('31000aba8e05ac2115f022f0', 'provider')
+        _set_offering_organization('aaaaaaaaaaaaac2115f022f0', 'admin')
 
-        offering2_info = {
-            'base_uri': 'http://localhost:8081',
-            'image_url': '/media/provider__test_offering2__1.0/image.png',
-            'name': 'test_offering2',
-            'description': 'example',
-            'pricing': {
-                'price_model': 'free'
-            }
-        }
-        _fill_offering_description('31000aba8e05ac2115f022f0', offering2_info, 'provider')
-
-        offering3_info = {
-            'base_uri': 'http://localhost:8081',
-            'image_url': '/media/provider__test_offering3__1.0/image.png',
-            'name': 'test_offering3',
-            'description': 'example offering 3',
-            'pricing': {
-                'price_model': 'free'
-            }
-        }
-        _fill_offering_description('aaaaaaaaaaaaac2115f022f0', offering3_info, 'admin')
         _fill_purchase_org('61006aba8e05ac21bbbbbbbb', 'provider')
 
         _fill_provider_role('provider')
+
         # Create indexes
         save_indexes()
         _create_indexes()
@@ -187,15 +152,8 @@ class BasicSearchTestCase(WStoreSeleniumTestCase):
     def tearDown(self):
         # Remove directories
         for path in self._dirs_to_remove:
-            try:
-                files = os.listdir(path)
-                for f in files:
-                    file_path = os.path.join(path, f)
-                    os.remove(file_path)
+            shutil.rmtree(path, ignore_errors=True)
 
-                os.rmdir(path)
-            except:
-                pass
         restore_indexes()
         restore_tags()
         WStoreSeleniumTestCase.tearDown(self)
@@ -235,7 +193,7 @@ class BasicSearchTestCase(WStoreSeleniumTestCase):
         self.open_offering_details('test_offering1')
         self.click_tag('tag')
         self._check_container('search-container', ['test_offering1', 'test_offering2'])
-        
+
         self.logout()
 
     def test_catalogue_search(self):
@@ -263,7 +221,7 @@ class AdministrationTestCase(WStoreSeleniumTestCase):
     pass
 
 
-@unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
+@unittest.skipIf('wstore.selenium_tests' not in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class OfferingManagementTestCase(WStoreSeleniumTestCase):
 
     tags = ('selenium',)
@@ -294,15 +252,8 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
                 pass
 
         path = os.path.join(settings.BASEDIR, 'media/provider__test_offering__1.0')
-        try:
-            files = os.listdir(path)
-            for f in files:
-                file_path = os.path.join(path, f)
-                os.remove(file_path)
+        shutil.rmtree(path, ignore_errors=True)
 
-            os.rmdir(path)
-        except:
-            pass
         WStoreSeleniumTestCase.tearDown(self)
 
     def test_create_offering(self):
@@ -324,31 +275,32 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
         self.driver.find_element_by_css_selector('.modal-footer > .btn').click()
 
         self.fill_usdl_info({
-            'type': 'form',
             'description': 'A test offering',
-            'price': '10',
+            'abstract': 'test',
             'legal': {
                 'title': 'terms and conditions',
                 'text': 'An example terms and conditions'
             }
         })
 
-        self.driver.find_element_by_css_selector('.modal-footer > .btn').click()  # Next
-        self.driver.find_element_by_css_selector('.modal-footer > .btn').click()  # Accept
+        self.driver.find_element_by_css_selector('.modal-footer > input[value=Next]').click()  # Next
+        self.driver.find_element_by_css_selector('.modal-footer > input[value=Next]').click()  # Next
+        self.driver.find_element_by_css_selector('.modal-footer > input[value=Accept]').click()  # Next
         time.sleep(1)
         self.driver.find_element_by_css_selector('.modal-footer > .btn').click()  # Accept
 
         time.sleep(1)
         self.click_second_cat()
         self._check_container('offerings-container', ['test_offering'])
-        
+
         # Update
         self.open_offering_details('test_offering')
 
         # Bind
         # Publish
 
-@unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
+
+@unittest.skipIf('wstore.selenium_tests' not in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class PurchaseTestCase(WStoreSeleniumTestCase):
     tags = ("selenium", "selenium-purchase")
 
@@ -362,17 +314,9 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         self._server.set_port(TESTING_PORT)
         self._server.set_max_request(2)
         self._server.start()
-        # Load USDL info
-        offering1_info = {
-            'base_uri': 'http://localhost:8081',
-            'image_url': '/media/provider__test_offering1__1.0/image.png',
-            'name': 'test_offering1',
-            'description': 'test',
-            'pricing': {
-                'price_model': 'free'
-            }
-        }
-        _fill_offering_description('21000aba8e05ac2115f022ff', offering1_info, 'provider')
+
+        _set_offering_organization('21000aba8e05ac2115f022ff', 'provider')
+
         WStoreSeleniumTestCase.setUp(self)
 
     def tearDown(self):
@@ -412,6 +356,7 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         return not_present_modal
 
     def test_remote_purchase_form(self):
+
         token = self.oauth2_login()
 
         # Make API request to initiate the process
@@ -471,7 +416,7 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         self.assertEquals(self.driver.current_url, expected_url)
 
 
-@unittest.skipIf(not 'wstore.selenium_tests' in settings.INSTALLED_APPS, 'Selenium tests not enabled')
+@unittest.skipIf('wstore.selenium_tests' not in settings.INSTALLED_APPS, 'Selenium tests not enabled')
 class ResourceManagementTestCase(WStoreSeleniumTestCase):
 
     def __init__(self, methodName='runTest'):
@@ -484,4 +429,3 @@ class ResourceManagementTestCase(WStoreSeleniumTestCase):
         self.login()
         self.click_first_nav()
         self.register_resource({})
-

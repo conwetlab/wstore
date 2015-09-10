@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -193,33 +193,14 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         if offering_info['open']:
             self.driver.find_element_by_id('open-offering').click()
 
-    def _fill_usdl_form(self, usdl_info):
+    def fill_usdl_info(self, usdl_info):
         # Fill description field
         self.driver.find_element_by_id('description').send_keys(usdl_info['description'])
-
-        # Fill pricing info if needed
-        if 'price' in usdl_info:
-            self.driver.find_element_by_css_selector('#pricing-select option[value="single_payment"]').click()
-            self.driver.find_element_by_id('price-input').send_keys(usdl_info['price'])
+        self.driver.find_element_by_id('abstract').send_keys(usdl_info['abstract'])
 
         if 'legal' in usdl_info:
             self.driver.find_element_by_id('legal-title').send_keys(usdl_info['legal']['title'])
             self.driver.find_element_by_id('legal-text').send_keys(usdl_info['legal']['text'])
-
-    def _fill_usdl_upload(self, usdl_info):
-        pass
-
-    def _fill_usdl_url(self, usdl_info):
-        pass
-
-    def fill_usdl_info(self, usdl_info):
-        # Select the correct method
-        methods = {
-            'form': self._fill_usdl_form,
-            'upload': self._fill_usdl_upload,
-            'url': self._fill_usdl_url
-        }
-        methods[usdl_info['type']](usdl_info)
 
     def register_resource(self, resource_info):
         pass

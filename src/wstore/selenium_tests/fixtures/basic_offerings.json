@@ -16,7 +16,15 @@
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering1__1.0",
             "resources": [],
             "owner_organization": "91000aba8e06ac2115f022f0",
-            "offering_description": {},
+            "offering_description": {
+                "description": "test",
+                "abstract": "test",
+                "created": "2013-02-05 17:06:46",
+                "modified": "2013-02-05 17:06:46",
+                "pricing": {
+                    "price_plans": []
+                }
+            },
             "creation_date": "2013-02-05 17:06:46"
         }
     },
@@ -37,7 +45,15 @@
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering2__1.0",
             "resources": [],
             "owner_organization": "91000aba8e06ac2115f022f0",
-            "offering_description": {},
+            "offering_description": {
+                "description": "example",
+                "abstract": "example",
+                "created": "2013-02-05 17:06:46",
+                "modified": "2013-02-05 17:06:46",
+                "pricing": {
+                    "price_plans": []
+                }
+            },
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
         }
@@ -59,7 +75,15 @@
             "description_url": "http://testrepository/storeOfferingsCollection/test_organization__test_offering3__1.0",
             "resources": [],
             "owner_organization": "91000aba8e06ac2115f022f0",
-            "offering_description": {},
+            "offering_description": {
+                "description": "example offering 3",
+                "abstract": "example offering 3",
+                "created": "2013-02-05 17:06:46",
+                "modified": "2013-02-05 17:06:46",
+                "pricing": {
+                    "price_plans": []
+                }
+            },
             "creation_date": "2013-02-05 17:06:46",
             "publication_date": "2013-02-05 17:06:46"
         }

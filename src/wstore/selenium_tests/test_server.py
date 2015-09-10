@@ -26,6 +26,7 @@ import SocketServer
 REQ_PATH = None
 IGNORE = False
 
+
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     _req_path = None
@@ -54,10 +55,12 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.path = '/'
         SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
+
 class TCPServerReuse(SocketServer.TCPServer):
     def server_bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.server_address)
+
 
 class TestServer(threading.Thread):
 
@@ -94,4 +97,3 @@ class TestServer(threading.Thread):
                 self._calls_received += 1
 
         self.httpd.socket.close()
-        
