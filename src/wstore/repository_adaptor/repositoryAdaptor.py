@@ -103,7 +103,7 @@ class RepositoryAdaptor(object):
         if settings.OILAUTH:
             headers.update({'Authorization': 'Bearer ' + self._credentials})
 
-        response = method(url, headers=headers, data=data)
+        response = method(url, headers=headers, data=data.encode("utf-8"))
 
         if response.status_code < 200 or response.status_code >= 300:
             raise RepositoryError('The repository has failed processing the request')
