@@ -285,10 +285,16 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
 
         self.driver.find_element_by_css_selector('.modal-footer > input[value=Next]').click()  # Next
         self.driver.find_element_by_css_selector('.modal-footer > input[value=Next]').click()  # Next
-        time.sleep(1)
-        self.driver.find_element_by_css_selector('.modal-footer > input[value=Accept]').click()  # Next
-        time.sleep(1)
-        self.driver.find_element_by_css_selector('.modal-footer > .btn').click()  # Accept
+
+        element = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".modal-footer > input[value=Accept]"))
+        )
+        element.click()
+
+        element = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".modal-footer > .btn"))
+        )
+        element.click()
 
         time.sleep(1)
         self.click_second_cat()
