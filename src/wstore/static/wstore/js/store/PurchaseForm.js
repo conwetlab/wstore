@@ -438,16 +438,11 @@
         $.tmpl('termsTemplate').appendTo('.modal-body');
 
         // Fill legal info
-        for (var i = 0; i < legal.length; i++) {
-            var legalCmp = legal[i];
-            for (var j = 0; j < legalCmp.clauses.length; j++) {
-                $('<h3></h3>').text(legalCmp.clauses[j].name).appendTo('.conditions-container');
+        $('<h3></h3>').text(offeringElement.getLegal().title).appendTo('.conditions-container');
 
-                var text = $('<p></p>').text(legalCmp.clauses[j].text).appendTo('.conditions-container');
-                var repText = text.text().split('\n').join('<br />');
-                text[0].innerHTML = repText;
-            }
-        }
+        var text = $('<p></p>').text(offeringElement.getLegal().text).appendTo('.conditions-container');
+        var repText = text.text().split('\n').join('<br />');
+        text[0].innerHTML = repText;
 
         // Set checkbox listener
         $('#conditions-accepted').change(function() {
@@ -578,7 +573,7 @@
             });
         } else {
             // Check if terms and conditions has been provided
-            if (offeringElement.getLegal().length) {
+            if (offeringElement.getLegal() && !$.isEmptyObject(offeringElement.getLegal())) {
                 showTermsAndConditionsForm(offeringElement, callerObj);
             } else {
                 showTaxAddressForm(offeringElement, callerObj);
