@@ -70,7 +70,7 @@
         } else {
            actions = {
                 'uploaded': null,
-                'published': 'Purchase',
+                'published': 'Acquire',
                 'purchased': 'Resources',
                 'rated': 'Resources',
                 'deleted': null
@@ -79,11 +79,11 @@
 
         action = actions[this.offeringElement.getState()];
 
-        if (action == 'Purchase' && USERPROFILE.orgOwnerMember(this.offeringElement)) {
+        if (action == 'Acquire' && USERPROFILE.orgOwnerMember(this.offeringElement)) {
             action = null;
         }
 
-        if (action == 'Purchase' && this.offeringElement.isOpen()) {
+        if (action == 'Acquire' && this.offeringElement.isOpen()) {
             action = 'Resources';
         }
 
@@ -102,7 +102,7 @@
             $('#main-action').remove();
         }
         // Check price for action button
-        if (action == 'Purchase' && !this.offeringElement.isOpen()) {
+        if (action == 'Acquire' && !this.offeringElement.isOpen()) {
             var priceStr = getPriceStr(this.offeringElement.getPricing());
             if (priceStr != 'View pricing'){
                 $('#main-action').val(priceStr);
@@ -315,7 +315,7 @@
     CatalogueDetailsView.prototype.mainAction = function mainAction (action) {
         if (action == 'Publish') {
             publishOffering(this.offeringElement, this);
-        } else if (action == 'Purchase'){
+        } else if (action == 'Acquire'){
             purchaseOffering(this.offeringElement, this);
         } else if (action == 'Delete') {
             var msg = "Are you sure that you want to delete the offering";

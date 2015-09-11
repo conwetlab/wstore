@@ -58,17 +58,17 @@
             var buttonClass = "btn btn-success";
 
             if (priceStr != 'Free') {
-                padding = '13px';
+                padding = '18px';
                 buttonClass = "btn btn-blue";
             }
 
             if (priceStr == 'View pricing') {
-                text = 'Purchase';
+                text = 'Acquire';
             }
             $('<button></button>').addClass(buttonClass + ' mini-off-btn').text(text).click((function(off) {
                 return function() {
                     off.showView();
-                    off.mainAction('Purchase');
+                    off.mainAction('Acquire');
                 }
             })(offDetailsView)).css('padding-left', padding).appendTo(templ.find('.offering-meta'));
         } else {
