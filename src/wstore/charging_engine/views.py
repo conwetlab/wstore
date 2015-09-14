@@ -87,7 +87,7 @@ class ServiceRecordCollection(Resource):
 
         if not request.user.is_staff and \
                 user.userprofile.current_organization != purchase.owner_organization:
-            return build_response(request, 403, 'You are not authorized to read accouting info of the given purchase')
+            return build_response(request, 403, 'You are not authorized to read accounting info of the given purchase')
 
         # Check if a contract has been created for the given purchase
         try:

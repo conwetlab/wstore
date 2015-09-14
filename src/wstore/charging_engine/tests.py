@@ -23,17 +23,20 @@ from __future__ import absolute_import
 import os
 import json
 import rdflib
+from copy import deepcopy
 from datetime import datetime
 from bson import ObjectId
 from mock import MagicMock
 from nose_parameterized import parameterized
 
 from django.test import TestCase
+from django.test.client import RequestFactory
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test.utils import override_settings
 
 from wstore.charging_engine import charging_engine
+from wstore.charging_engine import views
 from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.models import Organization
@@ -1798,3 +1801,181 @@ class PriceFunctionPaymentTestCase(TestCase):
 
             self.assertTrue(error)
             self.assertEquals(msg, err)
+
+
+SDR_INT1 = {
+    u'component_label': u'usage',
+    u'correlation_number': 1,
+    u'customer': u'test_user',
+    u'offering': {
+        u'name': u'PayPerUse',
+        u'organization': u'fdelavega',
+        u'version': u'1.0'
+    },
+    u'record_type': u'event',
+    u'time_stamp': datetime(2015, 9, 14, 10, 0),
+    u'unit': u'invocation',
+    u'value': 100
+}
+
+SDR_INT2 = {
+    u'component_label': u'usage',
+    u'correlation_number': 2,
+    u'customer': u'test_user',
+    u'offering': {
+        u'name': u'PayPerUse',
+        u'organization': u'fdelavega',
+        u'version': u'1.0'
+    },
+    u'record_type': u'event',
+    u'time_stamp': datetime(2015, 9, 14, 10, 0, 1),
+    u'unit': u'invocation',
+    u'value': 100
+}
+
+SDR_INT3 = {
+    u'component_label': u'usage',
+    u'correlation_number': 3,
+    u'customer': u'test_user',
+    u'offering': {
+        u'name': u'PayPerUse',
+        u'organization': u'fdelavega',
+        u'version': u'1.0'
+    },
+    u'record_type': u'event',
+    u'time_stamp': datetime(2015, 9, 14, 10, 0, 2),
+    u'unit': u'invocation',
+    u'value': 100
+}
+
+SDR_INT4 = {
+    u'component_label': u'usage2',
+    u'correlation_number': 4,
+    u'customer': u'test_user',
+    u'offering': {
+        u'name': u'PayPerUse',
+        u'organization': u'fdelavega',
+        u'version': u'1.0'
+    },
+    u'record_type': u'event',
+    u'time_stamp': datetime(2015, 9, 14, 10, 0, 3),
+    u'unit': u'invocation',
+    u'value': 100
+}
+
+SDR1 = deepcopy(SDR_INT1)
+SDR1['time_stamp'] = unicode(SDR1['time_stamp'])
+
+SDR2 = deepcopy(SDR_INT2)
+SDR2['time_stamp'] = unicode(SDR2['time_stamp'])
+
+SDR3 = deepcopy(SDR_INT3)
+SDR3['time_stamp'] = unicode(SDR3['time_stamp'])
+
+SDR4 = deepcopy(SDR_INT4)
+SDR4['time_stamp'] = unicode(SDR4['time_stamp'])
+
+
+class CDRRetrievingTestCase(TestCase):
+
+    tags = ('sdrs')
+
+    def setUp(self):
+        # Create request
+        self.factory = RequestFactory()
+
+        # Create testing user
+        self.user = User.objects.create_user(
+            username='test_user',
+            email='',
+            password='passwd'
+        )
+
+        self.user.is_staff = True
+        self.user.save()
+
+        # Mock includes
+        self._purchase_mock = MagicMock()
+        self._purchase_mock.organization_owned = False
+        self._purchase_mock.owner_organization = self.user.userprofile.current_organization
+
+        views.Purchase = MagicMock()
+        views.Purchase.objects.get.return_value = self._purchase_mock
+
+    def tearDown(self):
+        reload(views)
+
+    def _add_pending(self):
+        self._purchase_mock.contract.pending_sdrs = [deepcopy(SDR_INT1), deepcopy(SDR_INT2)]
+        self._purchase_mock.contract.applied_sdrs = []
+
+    def _add_applied(self):
+        self._purchase_mock.contract.pending_sdrs = [deepcopy(SDR_INT3), deepcopy(SDR_INT4)]
+        self._purchase_mock.contract.applied_sdrs = [deepcopy(SDR_INT1), deepcopy(SDR_INT2)]
+
+    def _not_staff(self):
+        self._add_pending()
+        self.user.is_staff = False
+
+    def _contract_error(self):
+        self._purchase_mock.contract.side_effect = Exception('')
+
+    def _contract_none(self):
+        self._purchase_mock.contract = None
+
+    def _forbidden(self):
+        self.user.is_staff = False
+        org = Organization.objects.create(name="Example")
+        self.user.userprofile.current_organization = org
+        self.user.userprofile.save()
+
+    def _not_found(self):
+        views.Purchase.objects.get.side_effect = Exception('')
+
+    @parameterized.expand([
+        ('basic', (200, [SDR1, SDR2]), _add_pending),
+        ('applied_from_to', (200, [SDR2, SDR3]), _add_applied, "?from=2015-09-14 10:00:01.0&to=2015-09-14 10:00:02.0"),
+        ('label', (200, [SDR4]), _add_applied, "?label=usage2"),
+        ('not_staff', (200, [SDR1, SDR2]), _not_staff),
+        ('contract_error', (200, []), _contract_error),
+        ('contract_none', (200, []), _contract_error),
+        ('forbidden', (403, {
+            "result": "error",
+            "message": "You are not authorized to read accounting info of the given purchase"
+        }), _forbidden),
+        ('not_found', (404, {
+            "result": "error",
+            "message": "There is not any purchase with reference aaaaa"
+        }), _not_found),
+        ('invalid_from', (400, {
+            "result": "error",
+            "message": 'Invalid "from" parameter, must be a datetime'
+        }), None, "?from=2015:09:14 10:00:01.0"),
+        ('invalid_to', (400, {
+            "result": "error",
+            "message": 'Invalid "to" parameter, must be a datetime'
+        }), None, "?to=2015:09:14 10:00:01.0")
+    ])
+    def test_cdrs_retrieving(self, name, expected, side_effect=None, qstring=""):
+
+        if side_effect is not None:
+            side_effect(self)
+
+        sdr_collection = views.ServiceRecordCollection(permitted_methods=("GET", "POST"))
+
+        request = self.factory.get(
+            '/api/contracting/aaaaa/accounting' + qstring,
+            HTTP_ACCEPT='application/json; charset=utf-8'
+        )
+        request.user = self.user
+
+        # Call the view
+        response = sdr_collection.read(request, 'aaaaa')
+
+        # Validate the response
+        self.assertEqual(response.status_code, expected[0])
+        body_response = json.loads(response.content)
+        self.assertEquals(body_response, expected[1])
+
+        # Validate calls
+        views.Purchase.objects.get.assert_called_once_with(ref='aaaaa')
