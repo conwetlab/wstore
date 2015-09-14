@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -20,14 +20,16 @@
 
 import json
 from bson import ObjectId
+from datetime import datetime
 
 from django.conf import settings
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
 from wstore.store_commons.resource import Resource
-from wstore.store_commons.utils.http import build_response, supported_request_mime_types
+from wstore.store_commons.utils.http import build_response, supported_request_mime_types, authentication_required
 from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.charging_engine.charging_engine import ChargingEngine
@@ -38,18 +40,27 @@ from wstore.store_commons.database import get_database_connection
 
 class ServiceRecordCollection(Resource):
 
+    def _get_datetime(self, time):
+        try:
+            time_stamp = datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%f')
+        except:
+            time_stamp = datetime.strptime(time, '%Y-%m-%d %H:%M:%S.%f')
+
+        return time_stamp
+
     # This method is used to load SDR documents and
     # start the charging process
     @supported_request_mime_types(('application/json',))
+    @authentication_required
     def create(self, request, reference):
         try:
             # Extract SDR document from the HTTP request
             data = json.loads(request.raw_post_data)
 
             # Validate SDR structure
-            if not 'offering' in data or not 'customer' in data or not 'time_stamp' in data \
-            or not 'correlation_number' in data or not 'record_type' in data or not 'unit' in data \
-            or not 'value' in data or not 'component_label' in data:
+            if 'offering' not in data or 'customer' not in data or 'time_stamp' not in data \
+                    or 'correlation_number' not in data or 'record_type' not in data or'unit' not in data \
+                    or 'value' not in data or 'component_label' not in data:
                 raise Exception('Invalid JSON content')
 
             # Get the purchase
@@ -62,6 +73,69 @@ class ServiceRecordCollection(Resource):
 
         # Return response
         return build_response(request, 200, 'OK')
+
+    @authentication_required
+    def read(self, request, reference):
+        # Check reference
+        try:
+            purchase = Purchase.objects.get(ref=reference)
+        except:
+            return build_response(request, 404, 'There is not any purchase with reference ' + reference)
+
+        # Check permissions
+        user = request.user
+
+        if not request.user.is_staff and \
+                user.userprofile.current_organization != purchase.owner_organization:
+            return build_response(request, 403, 'You are not authorized to read accouting info of the given purchase')
+
+        # Check if a contract has been created for the given purchase
+        try:
+            contract = purchase.contract
+        except:
+            return HttpResponse(json.dumps([]), status=200, mimetype="application/json")
+
+        if contract is None:
+            return HttpResponse(json.dumps([]), status=200, mimetype="application/json")
+
+        # Get parameters
+        from_ = request.GET.get('from', None)
+        to = request.GET.get('to', None)
+        label = request.GET.get('label', None)
+
+        # Check from and to formats
+        if from_ is not None:
+            try:
+                from_ = self._get_datetime(from_)
+            except:
+                return build_response(request, 400, 'Invalid "from" parameter, must be a datetime')
+
+        if to is not None:
+            try:
+                to = self._get_datetime(to)
+            except:
+                return build_response(request, 400, 'Invalid "to" parameter, must be a datetime')
+
+        # Build response
+        response = []
+        sdrs = []
+        sdrs.extend(contract.applied_sdrs)
+        sdrs.extend(contract.pending_sdrs)
+
+        for sdr in sdrs:
+            if from_ is not None and from_ > sdr['time_stamp']:
+                continue
+
+            if to is not None and to < sdr['time_stamp']:
+                break
+
+            if label is not None and sdr['component_label'].lower() != label.lower():
+                continue
+
+            sdr['time_stamp'] = unicode(sdr['time_stamp'])
+            response.append(sdr)
+
+        return HttpResponse(json.dumps(response), status=200, mimetype="application/json")
 
 
 class PayPalConfirmation(Resource):
