@@ -1,6 +1,58 @@
 /* this file overwrite CSS rules for pdf */
+*{
+	overflow: visible !important;
+}
+
 section h1{
   page-break-before:always;
+}
+
+tr{
+	page-break-inside:avoid;
+}
+
+h1, h2, h3, h4, h5, h6{
+	page-break-inside:avoid !important;
+	page-break-after: avoid;
+	/**/
+	box-sizing: content-box;
+	/*line-height: normal; */
+	/*overflow-x: visible; */
+	/*text-align: auto !important; */
+	/*text-rendering:auto;*/
+	/*padding-bottom: 10px;*/
+}
+
+div.header{
+	page-break-inside:avoid;
+	display:block;
+	padding-bottom: 5px;
+}
+
+div.header *{
+	page-break-inside:avoid;
+	display:block;
+}
+.exampleButtons:after{
+	clear: both;
+}
+
+@media print{
+@page{
+	margin-bottom: 20%;
+}
+}
+
+pre code{
+	/*display: inline !important;*/
+	/*line-height: 1.8em !important;*/
+}
+.resourceGroup{
+	page-break-inside: avoid;
+}
+
+.resource{
+	page-break-inside: avoid;
 }
 
 .goApiary{

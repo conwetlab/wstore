@@ -83,6 +83,11 @@ table, td, th {
     } 
 }
 
+.packetType{
+    word-break: break-all;
+    word-wrap: break-word;
+}
+
 .selfContainedLink:after{
     content: "" !important;
 }
