@@ -1938,7 +1938,7 @@ class CDRRetrievingTestCase(TestCase):
         ('label', (200, [SDR4]), _add_applied, "?label=usage2"),
         ('not_staff', (200, [SDR1, SDR2]), _not_staff),
         ('contract_error', (200, []), _contract_error),
-        ('contract_none', (200, []), _contract_error),
+        ('contract_none', (200, []), _contract_none),
         ('forbidden', (403, {
             "result": "error",
             "message": "You are not authorized to read accounting info of the given purchase"
