@@ -58,7 +58,7 @@
                         var component = pricePlan.price_components[0];
                         if (component.unit.toLowerCase() == 'single payment') {
                             priceStr = component.value;
-                            if (component.currency == 'EUR') {
+                            if (pricePlan.currency == 'EUR') {
                                 priceStr = priceStr + ' €';
                             } else {
                                 priceStr = priceStr + ' £';
