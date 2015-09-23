@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -28,15 +28,15 @@ from django.http import HttpResponse
 from django.conf import settings
 
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
-authentication_required
+    authentication_required
 from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.resource import Resource
 from wstore.models import UserProfile, RSS
 from wstore.models import Organization
 from wstore.admin.views import is_hidden_credit_card, is_valid_credit_card
-from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
 from wstore.admin.rss.views import _check_limits
+from wstore.rss_adaptor.rss_manager_factory import RSSManagerFactory
 
 
 class UserProfileCollection(Resource):
@@ -293,14 +293,14 @@ class UserProfileEntry(Resource):
                         orgs = []
                         for o in user_profile.organizations:
                             if Organization.objects.get(pk=o['organization']).name == user.username \
-                            and not 'provider' in o['roles']:
+                                    and 'provider' not in o['roles']:
                                 o['roles'].append('provider')
 
                             orgs.append(o)
 
                         user_profile.organizations = orgs
 
-                    elif not 'provider' in data['roles'] and 'provider' in user_profile.get_user_roles():
+                    elif 'provider' not in data['roles'] and 'provider' in user_profile.get_user_roles():
                         # Remove the provider role from the user info
                         orgs = []
                         for o in user_profile.organizations:
@@ -344,7 +344,8 @@ class UserProfileEntry(Resource):
                         raise Exception('No RSS instance registered: An RSS instance is needed for setting up expenditure limits')
                     # Create limits in the RSS
                     try:
-                        exp_manager = ExpenditureManager(rss_instance, rss_instance.access_token)
+                        rss_factory = RSSManagerFactory(rss_instance)
+                        exp_manager = rss_factory.get_expenditure_manager(rss_instance.access_token)
                         exp_manager.set_actor_limit(limits, user.userprofile)
                     except HTTPError as e:
                         if e.code == 401:

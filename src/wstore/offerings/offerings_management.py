@@ -26,6 +26,7 @@ import os
 from datetime import datetime
 from bson.objectid import ObjectId
 from copy import deepcopy
+from urllib2 import HTTPError
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -45,6 +46,9 @@ from wstore.social.tagging.tag_manager import TagManager
 from wstore.store_commons.errors import ConflictError
 from wstore.store_commons.database import get_database_connection
 from wstore.offerings.usdl.usdl_generator import USDLGenerator
+from wstore.models import RSS
+from wstore.charging_engine.models import Unit
+from wstore.rss_adaptor.rss_manager_factory import RSSManagerFactory
 
 
 def get_offering_info(offering, user):
@@ -549,6 +553,85 @@ def update_offering(user, offering, data):
     se.update_index(offering)
 
 
+def build_rs_model(offering):
+
+    # Get RSS object
+    if not len(RSS.objects.all()):
+        return
+
+    rss = RSS.objects.all()[0]
+
+    if rss.api_version == 1:
+        return
+
+    rss_factory = RSSManagerFactory(rss)
+    model_manager = rss_factory.get_model_manager(rss.access_token)
+
+    # Build basic RS model
+    # Get applied class
+    revenue_class = None
+    for plan in (offering.offering_description['pricing']['price_plans']):
+        if 'price_components' in plan:
+
+            for comp in plan['price_components']:
+                if 'price_function' in comp:
+                    revenue_class = 'use'
+                    break
+
+                try:
+                    unit = Unit.objects.get(name=comp['unit'])
+                except:
+                    raise Exception('Unsupported unit in price plan model')
+
+                if unit.defined_model == 'pay per use':
+                    revenue_class = 'use'
+                    break
+                elif unit.defined_model == 'subscription':
+                    revenue_class = 'subscription'
+                elif unit.defined_model == 'single payment' and revenue_class is None:
+                    revenue_class = 'single-payment'
+
+        if revenue_class == 'use':
+            break
+
+    if revenue_class is not None:
+        # Create new provider in the RSS
+        prov_manager = rss_factory.get_provider_manager(rss.access_token)
+        provider_info = {
+            'provider_id': offering.owner_organization.actor_id,
+            'provider_name': offering.owner_organization.name
+        }
+        try:
+            prov_manager.register_provider(provider_info)
+        except HTTPError as e:
+            if e.code == 401:
+                rss.refresh_token()
+                prov_manager.set_credentials(rss.access_token)
+                try:
+                    prov_manager.register_provider(provider_info)
+                except:
+                    pass
+
+        model_info = {}
+        for model in rss.revenue_models:
+            if model.revenue_class == revenue_class:
+                model_info['aggregatorValue'] = model.percentage
+                break
+
+        model_info['ownerValue'] = 100 - model_info['aggregatorValue']
+        model_info['productClass'] = offering.owner_organization.name + '/' + offering.name + '/' + offering.version
+
+        try:
+            model_manager.create_revenue_model(model_info, offering.owner_organization.actor_id)
+        except HTTPError as e:
+            if e.code == 401:
+                rss.refresh_token()
+                model_manager.set_credentials(rss.access_token)
+                model_manager.create_revenue_model(model_info, offering.owner_organization.actor_id)
+            else:
+                raise Exception('Revenue Sharing model for offering ' + offering.owner_organization.name + ' ' + offering.name + ' ' + offering.version)
+
+
 def publish_offering(user, offering, data):
 
     # Validate data
@@ -601,6 +684,9 @@ def publish_offering(user, offering, data):
             marketplace=m,
             offering_name=off_market_name
         ))
+
+    # Create revenue sharing models if needed
+    build_rs_model(offering)
 
     offering.state = 'published'
     offering.publication_date = datetime.now()

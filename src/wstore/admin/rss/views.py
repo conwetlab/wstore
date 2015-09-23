@@ -25,20 +25,19 @@ from urllib2 import HTTPError
 from decimal import Decimal
 
 from django.http import HttpResponse
+from django.conf import settings
 
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.name import is_valid_id
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
-authentication_required, identity_manager_required
-from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
-from wstore.rss_adaptor.model_manager import ModelManager
+    authentication_required, identity_manager_required
+from wstore.rss_adaptor.rss_manager_factory import RSSManagerFactory
 from wstore.rss_adaptor.utils.rss_errors import get_error_message
 from wstore.models import RSS, RevenueModel, Context
-from django.contrib.messages.api import get_messages
 
 
-def _make_rss_request(manager, method, user):
+def _make_rss_request(manager, method, user, arg=None):
     """
     Makes requests to the expenditure manager while
     manages the refresh of the access token
@@ -47,7 +46,11 @@ def _make_rss_request(manager, method, user):
     code = None
     msg = None
     try:
-        method()
+        if arg is None:
+            method()
+        else:
+            method(arg)
+
     except HTTPError as e:
         # Unauthorized: Maybe the token has expired
         if e.code == 401:
@@ -76,7 +79,10 @@ def _make_rss_request(manager, method, user):
         else:
             error = True
             code = 502
-            msg = get_error_message(json.loads(e.read())['exceptionId'])
+            try:
+                msg = get_error_message(json.loads(e.read())['exceptionId'])
+            except:
+                msg = "The RSS has failed processing the request"
 
     # Not an HTTP error
     except Exception as e:
@@ -96,7 +102,7 @@ def _check_limits(user_limits):
 
     cont = Context.objects.all()[0]
 
-    if not 'currency' in user_limits:
+    if 'currency' not in user_limits:
         # Load default currency
         user_limits['currency'] = cont.allowed_currencies['default']
 
@@ -106,9 +112,10 @@ def _check_limits(user_limits):
 
     # Get valid expenditure limits
     for t in limit_types:
-        if t in user_limits and (type(user_limits[t]) == float or \
-        type(user_limits[t]) == int or (type(user_limits[t]) == unicode and \
-        user_limits[t].isdigit())):
+        if t in user_limits and (type(user_limits[t]) == float or
+            type(user_limits[t]) == int or (type(user_limits[t]) == unicode and
+            user_limits[t].isdigit())):
+
             limits[t] = float(user_limits[t])
 
     if len(limits):
@@ -126,7 +133,7 @@ def _check_revenue_models(models):
     found_models = []
     for model in models:
         # Check model contents
-        if not 'class' in model or not 'percentage' in model:
+        if 'class' not in model or 'percentage' not in model:
             raise ValueError('Invalid revenue sharing model: Missing a required field')
 
         # Check product class
@@ -148,8 +155,8 @@ def _check_revenue_models(models):
         fixed_models.append(model)
 
     # Check that a percentage has been included for every needed product class
-    if len(found_models) != 3 or not 'single-payment' in found_models\
-     or not 'subscription' in found_models or not 'use' in found_models:
+    if len(found_models) != 3 or 'single-payment' not in found_models \
+            or 'subscription' not in found_models or 'use' not in found_models:
         raise ValueError('Invalid revenue sharing model: Missing a required product class')
 
     return fixed_models
@@ -167,6 +174,7 @@ class RSSCollection(Resource):
             response.append({
                 'name': rss.name,
                 'host': rss.host,
+                'api_version': rss.api_version,
                 'limits': rss.expenditure_limits,
                 'models': [{'revenue_class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss.revenue_models]
             })
@@ -184,8 +192,19 @@ class RSSCollection(Resource):
 
         data = json.loads(request.raw_post_data)
 
-        if not 'name' in data or not 'host':
-            return build_response(request, 400, 'RSS creation error: Missing a required field')
+        if 'name' not in data or 'host' not in data or 'api_version' not in data:
+            msg = 'RSS creation error: Missing a required field'
+
+            if 'name' not in data:
+                msg += ', name'
+
+            if 'host' not in data:
+                msg += ', host'
+
+            if 'api_version' not in data:
+                msg += ', api_version'
+
+            return build_response(request, 400, msg)
 
         # Check name regex
         if not is_valid_id(data['name']):
@@ -195,10 +214,18 @@ class RSSCollection(Resource):
         if not is_valid_url(data['host']):
             return build_response(request, 400, 'RSS creation error: Invalid URL format')
 
+        # Check api_version format
+        try:
+            api_version = int(data['api_version'])
+        except:
+            return build_response(request, 400, 'RSS creation error: Invalid api_version format, must be an integer (1 or 2)')
+
+        if api_version != 1 and api_version != 2:
+            return build_response(request, 400, 'RSS creation error: Invalid api_version, must be 1 or 2')
+
         # Check if the information provided is not already registered
-        if len(RSS.objects.filter(name=data['name'])) > 0 or \
-        len(RSS.objects.filter(host=data['host'])) > 0:
-            return build_response(request, 409, 'RSS creation error: The RSS instance already exists')
+        if len(RSS.objects.all()) > 0:
+            return build_response(request, 409, 'RSS creation error: There is a RSS instance already registered')
 
         limits = {}
         cont = Context.objects.all()[0]
@@ -232,31 +259,53 @@ class RSSCollection(Resource):
             sharing_models = [{
                 'class': 'single-payment',
                 'percentage': 10.0
-            },{
+            }, {
                 'class': 'subscription',
                 'percentage': 20.0
-            },{
+            }, {
                 'class': 'use',
                 'percentage': 30.0
             }]
 
         # Build revenue models
-        db_revenue_models = [] 
+        db_revenue_models = []
         for model in sharing_models:
             db_revenue_models.append(RevenueModel(
                 revenue_class=model['class'],
                 percentage=Decimal(model['percentage'])
             ))
 
+        if not data['host'].endswith('/'):
+            data['host'] += '/'
+
         # Create the new entry
         rss = RSS.objects.create(
             name=data['name'],
             host=data['host'],
+            api_version=api_version,
             expenditure_limits=limits,
-            revenue_models=db_revenue_models
+            revenue_models=db_revenue_models,
+            aggregator_id=request.user.email
         )
 
-        exp_manager = ExpenditureManager(rss, request.user.userprofile.access_token)
+        rss_factory = RSSManagerFactory(rss)
+
+        # Create a new provider if needed
+        if api_version == 2:
+            prov_manager = rss_factory.get_provider_manager(request.user.userprofile.access_token)
+            provider_info = {
+                'provider_id': settings.STORE_NAME.lower() + '-provider',
+                'provider_name': settings.STORE_NAME + '-Provider'
+            }
+            call_result = _make_rss_request(prov_manager, prov_manager.register_provider, request.user, provider_info)
+
+            if call_result[0]:
+                rss.delete()
+                # Return error response
+                return build_response(request, call_result[1], call_result[2])
+
+        exp_manager = rss_factory.get_expenditure_manager(request.user.userprofile.access_token)
+
         # Create default expenditure limits
         call_result = _make_rss_request(exp_manager, exp_manager.set_provider_limit, request.user)
 
@@ -266,20 +315,21 @@ class RSSCollection(Resource):
             return build_response(request, call_result[1], call_result[2])
 
         # Create default revenue sharing models
-        model_manager = ModelManager(rss, request.user.userprofile.access_token)
+        if api_version == 1:
+            model_manager = rss_factory.get_model_manager(rss, request.user)
 
-        model_created = False
-        for model in sharing_models:
-            def call_model_creation():
-                model_manager.create_revenue_model(model)
+            model_created = False
+            for model in sharing_models:
+                def call_model_creation():
+                    model_manager.create_revenue_model(model)
 
-            call_result = _make_rss_request(model_manager, call_model_creation, request.user)
+                call_result = _make_rss_request(model_manager, call_model_creation, request.user)
 
-            if call_result[0] and not model_created:
-                rss.delete()
-                return build_response(request, call_result[1], call_result[2])
-            elif not call_result[0]:
-                model_created = True
+                if call_result[0] and not model_created:
+                    rss.delete()
+                    return build_response(request, call_result[1], call_result[2])
+                elif not call_result[0]:
+                    model_created = True
 
         # The request has been success so the used credentials are valid
         # Store the credentials for future access
@@ -301,6 +351,7 @@ class RSSEntry(Resource):
             response = {
                 'name': rss_model.name,
                 'host': rss_model.host,
+                'api_version': rss_model.api_version,
                 'limits': rss_model.expenditure_limits,
                 'models': [{'revenue_class': model.revenue_class, 'percentage': unicode(model.percentage)} for model in rss_model.revenue_models]
             }
@@ -323,14 +374,16 @@ class RSSEntry(Resource):
             return build_response(request, 404, 'Not found')
 
         # Delete provider limits
-        exp_manager = ExpenditureManager(rss_model, request.user.userprofile.access_token)
+        rss_factory = RSSManagerFactory(rss_model)
+
+        exp_manager = rss_factory.get_expenditure_manager(request.user.userprofile.access_token)
         call_result = _make_rss_request(exp_manager, exp_manager.delete_provider_limit, request.user)
 
         if call_result[0]:
             return build_response(request, call_result[1], call_result[2])
 
         # Delete rs models
-        model_manager = ModelManager(rss_model, request.user.userprofile.access_token)
+        model_manager = rss_factory.get_model_manager(request.user.userprofile.access_token)
         call_result = _make_rss_request(model_manager, model_manager.delete_provider_models, request.user)
 
         if call_result[0]:
@@ -391,12 +444,13 @@ class RSSEntry(Resource):
                 return build_response(request, 400, unicode(e))
 
         # Update expenditure limits
+        rss_factory = RSSManagerFactory(rss_model)
         if limits:
             old_limits = rss_model.expenditure_limits
             rss_model.expenditure_limits = limits
             rss_model.save()
             # Make the update request
-            exp_manager = ExpenditureManager(rss_model, request.user.userprofile.access_token)
+            exp_manager = rss_factory.get_expenditure_manager(request.user.userprofile.access_token)
             call_result = _make_rss_request(exp_manager, exp_manager.set_provider_limit, request.user)
 
             if call_result[0]:
@@ -407,7 +461,9 @@ class RSSEntry(Resource):
         # Update revenue sharing models
         if len(sharing_models):
             rss_model.revenue_models = []
-            model_manager = ModelManager(rss_model, request.user.userprofile.access_token)
+
+            if rss_model.api_version == 1:
+                model_manager = rss_factory.get_model_manager(request.user.userprofile.access_token)
 
             # Update the models
             for model in sharing_models:
@@ -416,15 +472,16 @@ class RSSEntry(Resource):
                     percentage=Decimal(model['percentage'])
                 )
 
-                def call_model_creation():
-                    model_manager.update_revenue_model(model)
+                if rss_model.api_version == 1:
+                    def call_model_creation():
+                        model_manager.update_revenue_model(model)
 
-                call_result = _make_rss_request(model_manager, call_model_creation, request.user)
+                    call_result = _make_rss_request(model_manager, call_model_creation, request.user)
 
-                if call_result[0]:
-                    return build_response(request, call_result[1], call_result[2])
-                else:
-                    rss_model.revenue_models.append(revenue_model)
+                    if call_result[0]:
+                        return build_response(request, call_result[1], call_result[2])
+
+                rss_model.revenue_models.append(revenue_model)
 
         # Update credentials
         rss_model.access_token = request.user.userprofile.access_token

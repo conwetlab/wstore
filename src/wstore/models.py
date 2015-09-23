@@ -62,6 +62,7 @@ class Organization(models.Model):
     offerings_purchased = ListField()
     rated_offerings = ListField()
     private = models.BooleanField(default=True)
+    correlation_number = models.IntegerField(default=0)
     payment_info = DictField()
     tax_address = DictField()
     managers = ListField()

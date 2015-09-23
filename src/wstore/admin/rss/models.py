@@ -33,13 +33,15 @@ class RevenueModel(models.Model):
     def __unicode__(self):
         return self.revenue_class + ' ' + unicode(self.percentage)
 
+
 class RSS(models.Model):
     """
-    This model is used to store the needed information to interact 
-    with Revenue Sharing and Settlement system instances
+    This model is used to store the needed information to interact
+     with Revenue Sharing and Settlement system instances
     """
     name = models.CharField(max_length=50)
     host = models.CharField(max_length=500)
+    api_version = models.IntegerField(default=2)
     expenditure_limits = DictField()
     revenue_models = ListField(EmbeddedModelField(RevenueModel))
     correlation_number = models.IntegerField(default=0)
@@ -48,6 +50,7 @@ class RSS(models.Model):
     # Not all users of the store are authorized to access the RSS
     # so a valid access access token and refresh token are stored
     # when the RSS info is created
+    aggregator_id = models.CharField(max_length=300)
     access_token = models.CharField(max_length=150, null=True, blank=True)
     refresh_token = models.CharField(max_length=150, null=True, blank=True)
 

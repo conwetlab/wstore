@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -33,13 +33,9 @@ class ExpenditureManager(RSSManager):
         RSSManager.__init__(self, rss, credentials)
 
         from django.conf import settings
-        self._provider_id = settings.STORE_NAME.lower()
+        self._provider_id = settings.STORE_NAME.lower() + '-provider'
 
-    def set_provider_limit(self):
-        """
-           Set the expenditure limit of WStore provider in the RSS
-        """
-
+    def _set_provider_limit(self, endpoint):
         limits = self._rss.expenditure_limits
         currency = limits['currency']
         del(limits['currency'])
@@ -53,26 +49,17 @@ class ExpenditureManager(RSSManager):
                 'maxAmount': limits[limit]
             } for limit in limits]
         }
-        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id)
 
         # Make expenditure request
         self._make_request('POST', endpoint, data=data)
         self._refresh_rss()
 
-    def delete_provider_limit(self):
-        """
-        Delete the expenditure limit of a provider
-        """
-        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id)
-        endpoint += '?service=fiware'
+    def _delete_provider_limit(self, endpoint):
         # Make expenditure request
         self._make_request('DELETE', endpoint)
         self._refresh_rss()
 
-    def set_actor_limit(self, limits, actor_profile):
-        """
-        Create the expenditure limit of a provider
-        """
+    def _set_actor_limit(self, endpoint, limits, actor_profile):
         currency = limits['currency']
         del(limits['currency'])
 
@@ -84,35 +71,135 @@ class ExpenditureManager(RSSManager):
                 'maxAmount': limits[limit]
             } for limit in limits]
         }
+        self._make_request('POST', endpoint, data)
+
+    def _check_balance(self, endpoint, charge, actor_profile, extra=None):
+        data = {
+            'service': 'fiware',
+            'appProvider': self._provider_id,
+            'currency': charge['currency'],
+            'amount': charge['amount'],
+            'chargeType': 'C'
+        }
+
+        if extra is not None:
+            data.update(extra)
+
+        self._make_request('POST', endpoint, data)
+
+    def _update_balance(self, endpoint, charge, actor_profile, extra=None):
+        data = {
+            'service': 'fiware',
+            'appProvider': self._provider_id,
+            'currency': charge['currency'],
+            'amount': charge['amount'],
+            'chargeType': 'C'
+        }
+        if extra is not None:
+            data.update(extra)
+
+        self._make_request('PUT', endpoint, data)
+
+
+class ExpenditureManagerV1(ExpenditureManager):
+
+    def set_provider_limit(self):
+        """
+           Set the expenditure limit of WStore provider in the RSS
+        """
+
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id)
+        self._set_provider_limit(endpoint)
+
+    def delete_provider_limit(self):
+        """
+        Delete the expenditure limit of a provider
+        """
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id)
+        endpoint += '?service=fiware'
+
+        self._delete_provider_limit(endpoint)
+
+    def set_actor_limit(self, limits, actor_profile):
+        """
+        Create the expenditure limit of a provider
+        """
 
         endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id + '/' + str(actor_profile.actor_id))
-        self._make_request('POST', endpoint, data)
+        self._set_actor_limit(endpoint, limits, actor_profile)
 
     def check_balance(self, charge, actor_profile):
         """
         Check the balance of an actor in order to determine
         if it has enough balance
         """
-        data = {
-            'service': 'fiware',
-            'appProvider': self._provider_id,
-            'currency': charge['currency'],
-            'amount': charge['amount'],
-            'chargeType': 'C'
-        }
+
         endpoint = urljoin(self._rss.host, 'expenditureLimit/balanceAccumulated/' + str(actor_profile.actor_id))
-        self._make_request('POST', endpoint, data)
+        self._check_balance(endpoint, charge, actor_profile)
 
     def update_balance(self, charge, actor_profile):
         """
         Update  the balance of an actor when it makes a purchase
         """
-        data = {
-            'service': 'fiware',
-            'appProvider': self._provider_id,
-            'currency': charge['currency'],
-            'amount': charge['amount'],
-            'chargeType': 'C'
-        }
+
         endpoint = urljoin(self._rss.host, 'expenditureLimit/balanceAccumulated/' + str(actor_profile.actor_id))
-        self._make_request('PUT', endpoint, data)
+        self._update_balance(endpoint, charge, actor_profile)
+
+
+class ExpenditureManagerV2(ExpenditureManager):
+
+    def _get_auth_header(self):
+        return 'Authorization'
+
+    def _get_token_type(self):
+        return "Bearer "
+
+    def set_provider_limit(self):
+        """
+           Set the expenditure limit of WStore provider in the RSS
+        """
+
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limits/' + self._rss.aggregator_id + '/' + self._provider_id)
+        self._set_provider_limit(endpoint)
+
+    def delete_provider_limit(self):
+        """
+        Delete the expenditure limit of a provider
+        """
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limits/' + self._rss.aggregator_id + '/' + self._provider_id)
+        endpoint += '?service=fiware'
+
+        self._delete_provider_limit(endpoint)
+
+    def set_actor_limit(self, limits, actor_profile):
+        """
+        Create the expenditure limit of a provider
+        """
+
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limits/' + self._rss.aggregator_id + '/' + self._provider_id + '/' + str(actor_profile.actor_id))
+        self._set_actor_limit(endpoint, limits, actor_profile)
+
+    def check_balance(self, charge, actor_profile):
+        """
+        Check the balance of an actor in order to determine
+        if it has enough balance
+        """
+
+        endpoint = urljoin(self._rss.host, 'expenditureLimit/balance/' + str(actor_profile.actor_id))
+
+        extra_data = {
+            'aggregator': self._rss.aggregator_id
+        }
+        self._check_balance(endpoint, charge, actor_profile, extra=extra_data)
+
+    def update_balance(self, charge, actor_profile):
+        """
+        Update the balance of an actor when it makes a purchase
+        """
+
+        endpoint = urljoin(self._rss.host, 'expenditureLimit/balance/' + str(actor_profile.actor_id))
+
+        extra_data = {
+            'aggregator': self._rss.aggregator_id
+        }
+        self._update_balance(endpoint, charge, actor_profile, extra=extra_data)

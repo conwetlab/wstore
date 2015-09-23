@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2013 -2015 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * This file is part of WStore.
  *
@@ -92,7 +92,8 @@
 
             validation.data = {
                 'name': name,
-                'host': endpoint
+                'host': endpoint,
+                'api_version': $('#rss-version').val()
             }
  
             // Check expenditure limits
@@ -190,6 +191,7 @@
         // Fill RSS entry info
         $('#rss-name').val(rss.name);
         $('#rss-endpoint').val(rss.host).prop('disabled', true);
+        $('#rss-version').val(rss.api_version).prop('disabled', true);
 
         // Fill limits
         limits = rss.limits;
@@ -249,7 +251,7 @@
             // Include RSS redirect button
             extLink = $('<i></i>').addClass('icon-external-link').click((function(self, rssEntry) {
                 return function() {
-                    window.open(rssEntry.host + '/fiware-rss/settlement/settlement.html','_blank');
+                    window.open(rssEntry.host + 'fiware-rss/','_blank');
                 };
             })(this, rss[i])).appendTo(td2);
 

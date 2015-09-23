@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -18,7 +18,6 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
-import re
 import json
 from urllib2 import HTTPError
 
@@ -28,7 +27,7 @@ from django.views.decorators.http import require_http_methods
 from django.conf import settings
 
 from wstore.store_commons.utils.http import build_response, supported_request_mime_types, \
-authentication_required
+    authentication_required
 from wstore.store_commons.resource import Resource
 from wstore.store_commons.utils.url import is_valid_url
 from wstore.store_commons.utils.name import is_valid_id
@@ -36,7 +35,7 @@ from wstore.models import Organization, RSS
 from django.contrib.auth.decorators import login_required
 from wstore.admin.views import is_hidden_credit_card, is_valid_credit_card
 from wstore.admin.rss.views import _check_limits
-from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
+from wstore.rss_adaptor.rss_manager_factory import RSSManagerFactory
 
 
 def get_organization_info(org, private_allowed=False):
@@ -81,7 +80,7 @@ class OrganizationCollection(Resource):
         try:
             data = json.loads(request.raw_post_data)
 
-            if not 'name' in data:
+            if 'name' not in data:
                 raise Exception('Invalid JSON content')
 
             organization_registered = Organization.objects.filter(name=data['name'])
@@ -223,7 +222,7 @@ class OrganizationEntry(Resource):
         if not request.user.is_active:
             return build_response(request, 403, 'Forbidden')
 
-        if not request.user.is_staff and not request.user.pk in organization.managers:
+        if not request.user.is_staff and request.user.pk not in organization.managers:
             return build_response(request, 403, 'Forbidden')
 
         try:
@@ -256,7 +255,7 @@ class OrganizationEntry(Resource):
 
                 if not is_valid_credit_card(number):
                     if 'number' in organization.payment_info and \
-                    is_hidden_credit_card(number, organization.payment_info['number']):
+                            is_hidden_credit_card(number, organization.payment_info['number']):
                         number = organization.payment_info['number']
                     else:
                         raise Exception('Invalid credit card number')
@@ -274,7 +273,8 @@ class OrganizationEntry(Resource):
                 currency = limits['currency']
                 # Get default RSS
                 rss = RSS.objects.all()[0]
-                exp_manager = ExpenditureManager(rss, rss.access_token)
+                rss_factory = RSSManagerFactory(rss)
+                exp_manager = rss_factory.get_expenditure_manager(rss.access_token)
 
                 try:
                     exp_manager.set_actor_limit(limits, organization)
@@ -388,14 +388,14 @@ class OrganizationUserCollection(Resource):
             return build_response(request, 403, 'Forbidden')
 
         # Check if the user can include users in the organization
-        if not request.user.is_staff and not request.user.pk in organization.managers:
+        if not request.user.is_staff and request.user.pk not in organization.managers:
             return build_response(request, 403, 'You do not have permission to add users to this organization.')
 
         # Check the request data
         try:
             data = json.loads(request.raw_post_data)
 
-            if not 'username' in data or not 'roles' in data:
+            if 'username' not in data or 'roles' not in data:
                 raise Exception('')
         except:
             return build_response(request, 400, 'Invalid JSON content')
@@ -419,7 +419,7 @@ class OrganizationUserCollection(Resource):
             if o['organization'] == organization.pk:
                 belongs = True
 
-        if belongs == True:
+        if belongs:
             return build_response(request, 400, 'The user already belongs to this organization')
 
         # Include the new user

@@ -23,6 +23,7 @@ ERROR_CODES = {
     'SVC1006': 'The current instance of WStore is not registered in the Revenue Sharing System, so it is not possible to access RSS APIs. Please contact with the administrator of the RSS.'
 }
 
+
 def get_error_message(code):
     result = 'An error occurs when accessing the RSS'
     if code in ERROR_CODES:

@@ -47,7 +47,7 @@ from wstore.charging_engine.price_resolver import PriceResolver
 from wstore.contracting.purchase_rollback import rollback
 from wstore.rss_adaptor.rss_adaptor import RSSAdaptorThread
 from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
-from wstore.rss_adaptor.expenditure_manager import ExpenditureManager
+from wstore.rss_adaptor.rss_manager_factory import RSSManagerFactory
 from wstore.store_commons.database import get_database_connection
 
 
@@ -169,32 +169,43 @@ class ChargingEngine:
         # Take and increment the correlation number using
         # the mongoDB atomic access in order to avoid race
         # problems
-        corr_number = db.wstore_rss.find_and_modify(
-            query={'_id': ObjectId(cdr_info['rss'].pk)},
-            update={'$inc': {'correlation_number': 1}}
-        )['correlation_number']
+        currency = self._price_model['general_currency']
 
-        # Set the description
-        currency = get_curency_code(part['currency'])
+        if cdr_info['rss'].api_version == 1:
+            # Version 1 uses a global correlation number
+            corr_number = db.wstore_rss.find_and_modify(
+                query={'_id': ObjectId(cdr_info['rss'].pk)},
+                update={'$inc': {'correlation_number': 1}}
+            )['correlation_number']
+
+            currency = get_curency_code(self._price_model['general_currency'])
+
+        else:
+            # Version 2 uses a correlation number per provider
+            corr_number = db.wstore_organization.find_and_modify(
+                query={'_id': ObjectId(self._purchase.owner_organization.pk)},
+                update={'$inc': {'correlation_number': 1}}
+            )['correlation_number']
 
         return {
             'provider': cdr_info['provider'],
             'service': cdr_info['service_name'],
             'defined_model': model,
             'correlation': str(corr_number),
-            'purchase': self._purchase.pk,
+            'purchase': self._purchase.ref,
             'offering': cdr_info['offering'],
             'product_class': cdr_info['product_class'],
             'description': cdr_info['description'],
             'cost_currency': currency,
             'cost_value': str(part['value']),
-            'tax_currency': '1',
+            'tax_currency': currency,
             'tax_value': '0.0',
             'source': '1',
             'operator': '1',
             'country': cdr_info['country_code'],
             'time_stamp': cdr_info['time_stamp'],
             'customer': cdr_info['customer'],
+            'event': self._purchase.contract.revenue_class
         }
 
     def _generate_cdr(self, applied_parts, time_stamp, price=None):
@@ -208,20 +219,30 @@ class ChargingEngine:
             rss = RSS.objects.all()[0]
 
             # Get the provider (Organization)
-            provider = settings.STORE_NAME.lower()
+            if rss.api_version == 1:
+                provider = settings.STORE_NAME.lower() + '-provider'
+            else:
+                provider = self._purchase.offering.owner_organization.actor_id
 
             # Set offering ID
             offering = self._purchase.offering.name + ' ' + self._purchase.offering.version
 
             # Get the customer
-            if self._purchase.organization_owned:
-                customer = self._purchase.owner_organization.name
-            else:
-                customer = self._purchase.customer.username
+            customer = self._purchase.owner_organization.name
 
             # Get the country code
-            country_code = self._get_country_code(self._purchase.tax_address['country'])
-            country_code = get_country_code(country_code)
+            try:
+                country_code = self._get_country_code(self._purchase.tax_address['country'])
+                country_code = get_country_code(country_code)
+            except:
+                country_code = '1'
+
+            # Get the product class
+            if rss.api_version == 1:
+                product_class = self._purchase.contract.revenue_class
+            else:
+                off_model = self._purchase.offering
+                product_class = off_model.owner_organization.name + '/' + off_model.name + '/' + off_model.version
 
             cdr_info = {
                 'rss': rss,
@@ -231,7 +252,7 @@ class ChargingEngine:
                 'country_code': country_code,
                 'time_stamp': time_stamp,
                 'customer': customer,
-                'product_class': self._purchase.contract.revenue_class
+                'product_class': product_class
             }
 
             # If any deduction has been applied the whole payment is
@@ -246,7 +267,7 @@ class ChargingEngine:
                     'currency': self._price_model['general_currency']
                 }
                 cdr_info['description'] = 'Complete Charging event: ' + str(price) + ' ' + self._price_model['general_currency']
-                cdrs.append(self._generate_cdr(aggregated_part, 'Charging event', cdr_info))
+                cdrs.append(self._generate_cdr_part(aggregated_part, 'Charging event', cdr_info))
 
             else:
                 # Check the type of the applied parts
@@ -254,14 +275,14 @@ class ChargingEngine:
 
                     # A cdr is generated for every price part
                     for part in applied_parts['single_payment']:
-                        cdr_info['description'] = 'Single payment: ' + part['value'] + ' ' + part['currency']
+                        cdr_info['description'] = 'Single payment: ' + part['value'] + ' ' + self._price_model['general_currency']
                         cdrs.append(self._generate_cdr_part(part, 'Single payment event', cdr_info))
 
                 if 'subscription' in applied_parts:
 
                     # A cdr is generated by price part
                     for part in applied_parts['subscription']:
-                        cdr_info['description'] = 'Subscription: ' + part['value'] + ' ' + part['currency'] + ' ' + part['unit']
+                        cdr_info['description'] = 'Subscription: ' + part['value'] + ' ' + self._price_model['general_currency'] + ' ' + part['unit']
                         cdrs.append(self._generate_cdr_part(part, 'Subscription event', cdr_info))
 
                 if 'charges' in applied_parts:
@@ -275,7 +296,7 @@ class ChargingEngine:
                             cdr_info['description'] = part['model']['text_function']
                             use_part['currency'] = self._price_model['general_currency']
                         else:
-                            use_part['currency'] = part['model']['currency']
+                            use_part['currency'] = self._price_model['general_currency']
 
                             # Calculate the total consumption
                             use = 0
@@ -785,11 +806,7 @@ class ChargingEngine:
 
         actor = None
         # Check who is the charging actor (user or organization)
-        if self._purchase.organization_owned:
-            actor = self._purchase.owner_organization
-        else:
-            client = self._purchase.customer
-            actor = Organization.objects.get(actor_id=client.userprofile.actor_id)
+        actor = self._purchase.owner_organization
 
         # Check if the actor has defined expenditure limits
         if not actor.expenditure_limits:
@@ -803,7 +820,8 @@ class ChargingEngine:
         # Check balance
         request_failure = None
         try:
-            exp_manager = ExpenditureManager(rss, rss.access_token)
+            rss_factory = RSSManagerFactory(rss)
+            exp_manager = rss_factory.get_expenditure_manager(rss.access_token)
             exp_manager.check_balance(charge, actor)
         except HTTPError as e:
             # Check if it is needed to refresh the access token
@@ -851,7 +869,8 @@ class ChargingEngine:
 
         # Check balance
         try:
-            exp_manager = ExpenditureManager(rss, rss.access_token)
+            rss_factory = RSSManagerFactory(rss)
+            exp_manager = rss_factory.get_expenditure_manager(rss.access_token)
             exp_manager.update_balance(charge, actor)
         except HTTPError as e:
             # Check if it is needed to refresh the access token

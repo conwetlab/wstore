@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -18,13 +18,17 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
+import json
 import urllib2
 import threading
+from bson import ObjectId
 from lxml import etree
 from urllib2 import HTTPError
 from urlparse import urljoin
 
 from wstore.store_commons.utils.method_request import MethodRequest
+from wstore.store_commons.database import get_database_connection
+from wstore.models import Organization
 
 
 class RSSAdaptorThread(threading.Thread):
@@ -35,16 +39,20 @@ class RSSAdaptorThread(threading.Thread):
         self.cdr = cdr_info
 
     def run(self):
-        r = RSSAdaptor(self.rss)
+        from wstore.rss_adaptor.rss_manager_factory import RSSManagerFactory
+        rss_factory = RSSManagerFactory(self.rss)
+        r = rss_factory.get_rss_adaptor()
         r.send_cdr(self.cdr)
 
 
 class RSSAdaptor():
-
     _rss = None
 
     def __init__(self, rss):
         self._rss = rss
+
+
+class RSSAdaptorV1(RSSAdaptor):
 
     def send_cdr(self, cdr_info):
 
@@ -143,3 +151,63 @@ class RSSAdaptor():
 
         if not (response.code > 199 and response.code < 300):
             raise HTTPError(response.url, response.code, response.msg, None, None)
+
+
+class RSSAdaptorV2(RSSAdaptor):
+
+    def send_cdr(self, cdr_info):
+
+        # Build CDRs
+        data = []
+        for cdr in cdr_info:
+            time = cdr['time_stamp'].split(' ')
+            time = time[0] + 'T' + time[1] + 'Z'
+
+            data.append({
+                'cdrSource': self._rss.aggregator_id,
+                'productClass': cdr['product_class'],
+                'correlationNumber': cdr['correlation'],
+                'timestamp': time,
+                'application': cdr['offering'],
+                'transactionType': 'C',
+                'event': cdr['event'],
+                'referenceCode': cdr['purchase'],
+                'description': cdr['description'],
+                'chargedAmount': cdr['cost_value'],
+                'chargedTaxAmount': cdr['tax_value'],
+                'currency': cdr['cost_currency'],
+                'customerId': cdr['customer'],
+                'appProvider': cdr['provider']
+            })
+
+        # Make request
+        url = urljoin(self._rss.host, 'fiware-rss/rss/cdrs')
+        headers = {
+            'content-type': 'application/json',
+            'Authorization': 'Bearer ' + self._rss.access_token
+        }
+
+        request = MethodRequest('POST', url, json.dumps(data), headers)
+
+        opener = urllib2.build_opener()
+        try:
+            try:
+                opener.open(request)
+            except HTTPError as e:
+                if e.code == 401:
+                    self._rss.refresh_token()
+                    headers['Authorization'] = 'Bearer ' + self._rss.access_token
+                    request = MethodRequest('POST', url, json.dumps(data), headers)
+                    opener.open(request)
+                else:
+                    raise e
+        except:
+
+            db = get_database_connection()
+            # Restore correlation numbers
+            for cdr in cdr_info:
+                org = Organization.objects.get(actor_id=cdr['provider'])
+                db.wstore_organization.find_and_modify(
+                    query={'_id': ObjectId(org.pk)},
+                    update={'$inc': {'correlation_number': -1}}
+                )['correlation_number']
