@@ -159,7 +159,7 @@ class RSSAdaptorTestCase(TestCase):
         rss = MagicMock()
         rss.host = 'http://examplerss/fiware_rss/'
         rss.access_token = 'accesstoken'
-        rss_adap = rss_adaptor.RSSAdaptor(rss)
+        rss_adap = rss_adaptor.RSSAdaptorV1(rss)
         rss_adap.send_cdr(cdr)
 
         opener = fake_urllib2._opener
