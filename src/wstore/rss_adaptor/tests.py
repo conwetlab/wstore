@@ -376,7 +376,7 @@ class ModelManagerTestCase(TestCase):
     def setUp(self):
         self.rss_mock.reset_mock()
         self.rss_mock.host = 'http://testrss.com/'
-        self.manager = model_manager.ModelManager(self.rss_mock, 'accesstoken')
+        self.manager = model_manager.ModelManagerV1(self.rss_mock, 'accesstoken')
         self.manager._make_request = MagicMock()
         TestCase.setUp(self)
 
@@ -423,7 +423,7 @@ class ModelManagerTestCase(TestCase):
             if provider:
                 exp_prov = provider
             else:
-                exp_prov = settings.STORE_NAME.lower()
+                exp_prov = settings.STORE_NAME.lower() + '-provider'
 
             exp_data = {
                 'appProviderId': exp_prov,
@@ -460,7 +460,7 @@ class ModelManagerTestCase(TestCase):
 
         # Check calls
         if not provider:
-            provider = settings.STORE_NAME.lower()
+            provider = settings.STORE_NAME.lower() + '-provider'
 
         self.manager._make_request.assert_called_once_with('GET', 'http://testrss.com/fiware-rss/rss/rsModelsMgmt?appProviderId=' + provider)
 
