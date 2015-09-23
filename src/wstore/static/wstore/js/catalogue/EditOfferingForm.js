@@ -25,6 +25,62 @@
     var caller;
     var logoFailure = false;
     var screenFailure = false;
+    var info = {};
+    var currs;
+    var currUnits;
+    var pricingEditor;
+
+    var fillErrorMessage = function fillErrorMessage(msg, errElems, errContainer) {
+        var errorContainer = $('#error-message');
+
+        if (errContainer) {
+            errorContainer = errContainer;
+        }
+
+        for (var i = 0; i < errElems.length; i++) {
+            errElems[i].parent().parent().addClass('error');
+        }
+        MessageManager.showAlertError('Error', '', errorContainer);
+        // Build message content
+        $('.alert-error').append(msg[0]);
+        for (var i = 1; i < msg.length; i++) {
+            $('.alert-error').append('<br>');
+            $('.alert-error').append(msg[i]);
+        }
+        $('.alert-error').removeClass('span8');
+        $('.alert-error').bind('closed', function() {
+            $('.error').removeClass('error');
+        })
+    }
+
+    var setVisited = function setVisited(elem) {
+        if (!elem.hasClass('.visited')) {
+            elem.addClass('visited');
+        }
+    };
+
+    var getPricingUnits = function (currencies, offeringElement, callerObj) {
+        if (!$('#offering-creation-pricing').length) {
+            currs = currencies;
+            var client = new ServerClient('', 'UNIT_COLLECTION');
+            client.get(function(units) {
+                displayPricingEditor(units, offeringElement, callerObj)
+            });
+        } else {
+            displayPricingEditor([], offeringElement, callerObj);
+        }
+    };
+
+    var getAllowedCurrencies = function (offeringElement, callerObj) {
+        if (!$('#offering-creation-pricing').length) {
+            var client = new ServerClient('', 'CURRENCY_COLLECTION');
+            client.get(function(data) {
+                getPricingUnits(data, offeringElement, callerObj);
+            });
+        } else {
+            getPricingUnits([], offeringElement, callerObj);
+        }
+    };
 
     /**
      * Handles the selection of images, including the validation and
@@ -101,32 +157,6 @@
         readImages(imagesList);
     };
 
-    var handleUSDLFileSelection = function handleUSDLFileSelection(evnt) {
-        var f = evnt.target.files[0];
-        var reader = new FileReader();
-
-        usdl = {};
-        reader.onload = (function(file) {
-            return function(e) {
-                var type = file.type;
-                if (!type) {
-                    if (file.name.match(/\.n3/i)) {
-                        type = "text/n3";
-                    } else if (file.name.match(/\.ttl/i)) {
-                        type = "text/turtle";
-                    }
-
-                }
-                if (type == 'application/rdf+xml' || type == 'text/n3' || type == 'text/turtle') {
-                    usdl = {
-                        'content_type': type,
-                        'data': e.target.result
-                    };
-                }
-            };
-        })(f);
-        reader.readAsText(f);
-    };
 
     var helpHandler = function helpHandler(evnt) {
         var helpId = evnt.target;
@@ -148,87 +178,7 @@
     var makeEditRequest = function makeEditRequest(offeringElement) {
         var csrfToken = $.cookie('csrftoken');
         var msg, request = {};
-        var provided = false, error = false;
 
-        // Check and get new logo
-        if (logo.length > 0) {
-            request.image = logo[0];
-            provided = true;
-        }
-
-        // Check and get new screenshots
-        if (screenShots.length > 0) {
-            request.related_images = screenShots;
-            provided = true;
-        }
-
-        // Check failures in image loading
-        if (logoFailure) {
-            error = true;
-            msg = 'The provided logo is not valid: Unsupported character in file name';
-        }
-
-        // Check failures in image loading
-        if (screenFailure) {
-            error = true;
-            msg = 'Invalid screenshot(s): Unsupported character in file name';
-        }
-        // Check and get new USDL description
-        if ($('#usdl-doc').length > 0) {
-            if (usdl.data && usdl.content_type) {
-                request.offering_description = usdl;
-                provided = true;
-            }
-        } else if($('#price-input').length > 0) {
-
-            var description;
-            var pricing = {};
-            var legal = {};
-            var rep = $('#repositories').val();
-            // Check provided info
-            description = $.trim($('#description').val());
-
-            if (description == '') {
-                error = true;
-                msg = 'The description is required';
-            }
-            pricing.price_model = $('#pricing-select').val();
-
-            // If a payment model is selected the price is required
-            if (pricing.price_model == 'single_payment') {
-                var price = $.trim($('#price-input').val());
-                if (price == '') {
-                    error = true;
-                    msg = 'The price is required for a single payment model';
-                } else if (!$.isNumeric(price)){
-                    error = true;
-                    msg = 'The price must be a number';
-                } else {
-                    pricing.price = price;
-                }
-            }
-            legal.title = $.trim($('#legal-title').val());
-            legal.text = $.trim($('#legal-text').val());
-
-            // Include the info
-            request.offering_description = {
-                'description': description,
-                'pricing': pricing
-            }
-            // Include the legal info if completed
-            if (legal.title && legal.text) {
-                request.offering_description.legal = legal
-            }
-            provided = true
-
-        }
-
-        if (!error && !provided) {
-            error = true
-            msg = 'No information provided';
-        }
-
-        if (!error) {
             var endpoint = EndpointManager.getEndpoint('OFFERING_ENTRY', {
                 'name' : offeringElement.getName(),
                 'organization': offeringElement.getOrganization(),
@@ -246,7 +196,7 @@
                 url: endpoint,
                 dataType: 'json',
                 contentType: 'application/json',
-                data: JSON.stringify(request),
+                data: JSON.stringify(info),
                 success: function (response) {
                     $('#loading').addClass('hide');
                     $('#message').modal('hide');
@@ -261,103 +211,137 @@
                     MessageManager.showMessage('Error', msg);
                 }
             });
+    };
+
+
+    var displayPricingEditor = function (units, offeringElement, callerObj) {
+        var footBtn, backBtn;
+
+        // Set navigation button
+        $('.off-nav.selected').removeClass('selected');
+        $('#off-nav-3').addClass('selected');
+        setVisited($('#off-nav-3'));
+
+        if (!$('#offering-creation-pricing').length) {
+            currUnits = units;
+            pricingEditor = new PricingEditor($('.modal-body'), currUnits, currs);
+            pricingEditor.setPricing(offeringElement.getPricing());
+            pricingEditor.createListeners();
         } else {
-            MessageManager.showAlertError('Error', msg, $('#edit-error'));
+            $('#offering-creation-pricing').removeClass('hide');
         }
-    };
 
-    var displayUploadUSDLForm = function displayUploadUSDLForm() {
-        var i;
-        var helpMsg = "Upload an USDL document containing the offering info";
-        $('#warning-container').empty();
-
-        $('#upload-help').attr('data-content', helpMsg);
-
-        $('#usdl-container').empty();
-        $.template('usdlFormTemplate', $('#upload_usdl_form_template'));
-        $.tmpl('usdlFormTemplate', {}).appendTo('#usdl-container');
-
-        $('#repositories').remove();
-        $('label:contains(Select the repository)').remove();
-
-        $('#usdl-editor').click(function(event) {
-            window.open(USDLEDITOR, 'USDL editor');
+        $('.modal-footer').empty();
+        backBtn = $('<input class="btn btn-basic" type="button" value="Back"></input>').appendTo('.modal-footer');
+        backBtn.click(function(evnt) {
+            $('#offering-creation-pricing').addClass('hide');
+            showEditDescription(offeringElement, callerObj);
         });
 
-        $('#usdl-doc').change(function(event) {
-            handleUSDLFileSelection(event);
+        footBtn = $('<input class="btn btn-blue" type="button" value="Accept"></input>').appendTo('.modal-footer');
+        footBtn.click(function(){
+            info.offering_description.pricing = pricingEditor.getPricing();
+            $('#offering-creation-pricing').addClass('hide');
+            makeEditRequest(offeringElement);
         });
     };
 
-    var checkBasicUSDL = function checkBasicUSDL(offeringElement) {
-        var basic = true;
-        var pricing = offeringElement.getPricing();
-        var legal = offeringElement.getLegal();
+    var showEditDescription = function (offeringElement, callerObj) {
+        var footBtn, backBtn;
 
-        if (legal.length > 0) {
-            legal = legal[0];
-        }
+        // Set navigation button
+        $('.off-nav.selected').removeClass('selected');
+        $('#off-nav-2').addClass('selected');
+        setVisited($('#off-nav-2'));
 
-        $('#description').val(offeringElement.getDescription());
-        // Check Pricing model
-        if (pricing.price_plans && pricing.price_plans.length > 0) {
-            var plan = pricing.price_plans[0];
-            if (plan.price_components && plan.price_components.length > 1) {
-                basic = false;
-            } else if (plan.price_components && plan.price_component.length == 1) {
-                var comp = plan.price_components[0];
-                if (comp.unit.toLowerCase() == 'single payment') {
-                    // Fill the form info
-                    $('#pricing-select').val('single_payment');
-                    $('#price-input').val(comp.value);
-                    $('#price-input').attr('disabled', false);
-                } else {
-                    basic = false;
-                }
+        // Create the form
+        if (!$('#offering-creation-usdl').length) {
+            $.template('usdlTemplate', $('#select_usdl_form_template'));
+            $.tmpl('usdlTemplate').appendTo('.modal-body');
+            $('#description').val(offeringElement.getDescription());
+            $('#abstract').val(offeringElement.getShortDescription());
+
+            try {
+                var legal = offeringElement.getLegal();
+                $('#legal-title').val(legal.title);
+                $('#legal-text').val(legal.text);
+            } catch (err){
             }
+        } else {
+            $('#offering-creation-usdl').removeClass('hide');
         }
         
-        // Check Legal conditions
-        if (legal.clauses && legal.clauses.length > 0) {
-            if (legal.clauses.length == 1) {
-                var clause = legal.clauses[0];
-                // Fill form info
-                $('#legal-title').val(clause.name);
-                $('#legal-text').val(clause.text);
-            } else {
-                basic = false;
+        // Listener for application selection
+        $('.modal-footer').empty();
+
+        backBtn = $('<input class="btn btn-basic" type="button" value="Back"></input>').appendTo('.modal-footer');
+        backBtn.click(function(evnt) {
+            $('#offering-creation-usdl').addClass('hide');
+            editOfferingForm(offeringElement, callerObj);
+        });
+
+        // Set next action
+        footBtn = $('<input></input>').addClass('btn btn-basic').attr('type', 'button').val('Next').appendTo('.modal-footer');
+        footBtn.click(function(event) {
+            var msg = [];
+            var errElems = [];
+            var error = false;
+            var description, abstract;
+            var legal = {};
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            // Check provided info
+            description = $.trim($('#description').val());
+            abstract = $.trim($('#abstract').val());
+
+            if (description == '') {
+                error = true;
+                msg.push('The description is required');
+                errElems.push($('#description'));
             }
-        }
-        return basic;
-    };
 
-    var displayUpdateUSDLInfo = function displayUpdateUSDLInfo(offeringElement) {
-        var helpMsg = "Update manually your basic USDL info. This method only supports free or single payment as price models";
-        $('#warning-container').empty();
+            if (abstract == '') {
+                error = true;
+                msg.push('The abstract is required');
+                errElems.push($('#abstract'));
+            }
 
-        $('#upload-help').attr('data-content', helpMsg);
-        $('#usdl-container').empty();
-        $.template('usdlFormTemplate', $('#create_usdl_form_template'));
-        $.tmpl('usdlFormTemplate', {}).appendTo('#usdl-container');
+            legal.title = $.trim($('#legal-title').val());
+            legal.text = $.trim($('#legal-text').val());
 
-        // Remove unecesary inputs
-        $('label:contains(Select the repository)').remove();
-        $('#repositories').remove();
+            if (legal.title && !legal.text) {
+                error = true;
+                msg.push('A legal clause needs both title and text');
+            errElems.push($('#legal-text'));
+            }
+            if (legal.text && !legal.title) {
+                error = true;
+                msg.push('A legal clause needs both title and text');
+                errElems.push($('#legal-title'));
+            }
+            // Include the info
+            info.offering_description = {
+                'description': description,
+                'abstract': abstract,
+            }
 
-        if (!checkBasicUSDL(offeringElement)) {
-            var msg = 'This offering contains a complex USDL. If you use this method the USDL will be overridden and you may lose some info';
-            MessageManager.showAlertWarnig('Warning', msg, $('#warning-container'));
-        }
+            // Include the legal info if conpleted
+            if (legal.title && legal.text) {
+                info.offering_description.legal = legal
+            }
 
-        // Set listeners
-        $('#pricing-select').change(function() {
-            if ($(this).val() == 'free') {
-                $('#price-input').prop('disabled', true);
+            // If the USDL is loaded go to the final step, application selection
+            if (!error) {
+                $('#offering-creation-usdl').addClass('hide');
+                getAllowedCurrencies(offeringElement, callerObj);
             } else {
-                $('#price-input').prop('disabled', false);
+                fillErrorMessage(msg, errElems, $('#error-message-usdl'));
             }
         });
     };
+
     editOfferingForm = function editOfferingForm(offeringElement, callerObj) {
 
         caller = callerObj;
@@ -366,15 +350,21 @@
         usdl = {};
 
         // Create the window
-        MessageManager.showMessage('Edit', '');
+        if (!$('#update-basic-info').length) {
+            MessageManager.showMessage('Edit', '');
 
-        $('<div></div>').attr('id', 'edit-error').appendTo('.modal-body');
-        $('<div></div>').addClass('clear space').appendTo('.modal-body');
+            $.template('editFormTemplate', $('#update_off_form_template'));
+            $.tmpl('editFormTemplate', {
+                'image_url': offeringElement.getLogo()
+            }).appendTo('.modal-body');
 
-        $.template('editFormTemplate', $('#update_off_form_template'));
-        $.tmpl('editFormTemplate', {
-            'image_url': offeringElement.getLogo()
-        }).appendTo('.modal-body');
+        } else {
+            $('#update-basic-info').removeClass('hide');
+        }
+
+        $('.off-nav.selected').removeClass('selected');
+        $('#off-nav-1').addClass('selected');
+        setVisited($('#off-nav-1'));
 
         // Set listeners
         $('#img-logo').change(function(event) {
@@ -385,36 +375,73 @@
             handleImageFileSelection(event, 'screenshots');
         });
 
-        $('#usdl-sel').change(function() {
-            if($(this).val() == "1") {
-                displayUpdateUSDLInfo(offeringElement);
-            } else if($(this).val() == "2") {
-                displayUploadUSDLForm();
-            } else {
-                var helpMsg = "Select the method to provide the USDL with the new info. You can provide an USDL or provide an URL pointing to an USDL. You can also manually update the info, if you created a basic USDL when you created the offering.";
-                $('#upload-help').attr('data-content', helpMsg);
-                $('#warning-container').empty();
-                $('#usdl-container').empty()
-            }
-            // Quit the help menu if needed
-            if ($('#upload-help').prop('displayed')) {
-                $('#upload-help').popover('hide');
-                $('#upload-help').prop('displayed', false);
-                $('#upload-help').removeClass('question-sing-sel');
-            }
+        $('[name="notify-select"]').change(function() {
+           if ($(this).val() == 'new') {
+               $('#notify').removeClass('hide');
+           } else {
+               $('#notify').addClass('hide');
+           }
         });
 
-        $('#upload-help').popover({'trigger': 'manual'});
-        $('#upload-help').click(helpHandler);
-        $('#message').on('hide', function() {
-            $(document).unbind('click');
-            $('.popover').remove();
-        });
+        $('.modal-footer').empty();
 
-        $('.modal-footer > .btn').click(function(evnt) {
+        var footBtn = $('<input></input>').addClass('btn btn-basic').attr('type', 'button').val('Next').appendTo('.modal-footer');
+
+        footBtn.click(function(evnt) {
+            error = false;
+            errElems = [];
+            var msg = [];
+
             evnt.preventDefault();
             evnt.stopPropagation();
-            makeEditRequest(offeringElement);
+            // Check and get new logo
+            if (logo.length > 0) {
+                info.image = logo[0];
+                provided = true;
+            }
+
+            // Check and get new screenshots
+            if (screenShots.length > 0) {
+                info.related_images = screenShots;
+                provided = true;
+            }
+
+            // Check failures in image loading
+            if (logoFailure) {
+                error = true;
+                msg.push('The provided logo is not valid: Unsupported character in file name');
+            }
+
+            // Check failures in image loading
+            if (screenFailure) {
+                error = true;
+                msg.push('Invalid screenshot(s): Unsupported character in file name');
+            }
+
+            if ($('#not-opt-2').prop('checked')) {
+                var not_url = $.trim($('#notify').val());
+                if (not_url == '') {
+                    error = true;
+                    msg.push('Missing notification URL');
+                }
+                var nameReg = new RegExp(/(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/);
+                if (!nameReg.test(not_url)) {
+                    error = true;
+
+                    msg.push('Invalid notification URL format');
+                } else {
+                    info.notification_url = not_url;
+                }
+            } else if ($('#not-opt-1').prop('checked')) {
+                info.notification_url = 'default';
+            }
+
+            if (!error) {
+                $('#update-basic-info').addClass('hide');
+                showEditDescription(offeringElement);
+            } else {
+                fillErrorMessage(msg, errElems, $('#update-basic-err'));
+            }
         })
     };
 })();

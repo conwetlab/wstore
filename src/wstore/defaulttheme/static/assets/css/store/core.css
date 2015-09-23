@@ -1373,3 +1373,221 @@ header {
 .non-portal-navbar {
   max-width: none !important;
 }
+
+.pricing-add {
+  padding: 3px 9px 2px;
+  margin-left: 10px;
+  height: 23px;
+  width: 15px;
+  text-align: center;
+  padding-top: 7px;
+}
+
+.pricing-add i {
+  font-size: 16px;
+}
+
+#legal-text {
+  height: 70px;
+}
+
+#add-price-plan {
+  float: left;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+#add-price-plan:hover {
+    cursor: pointer;
+    color: rgb(96, 193, 207);
+}
+
+#create-off-navigation {
+  height: 40px;
+}
+
+#plan-form {
+  height: 0px;
+  overflow: overlay;
+  transition: height 1s;
+}
+
+.plan-selected {
+  float: left;
+  display: inline;
+  padding: 6px;
+  border: solid 1px;
+  margin-right: 10px;
+  margin-top: 10px;
+  border-radius: 3px;
+  padding-top: 8px;
+}
+
+.plan-selected > i {
+  font-size: 16px;
+  margin-left: 5px;
+}
+
+.plan-selected > i.icon-save {
+  margin-right: 4px;
+}
+
+.plan-selected > i:hover {
+  cursor: pointer;
+  color: rgb(96, 193, 207);
+}
+
+#add-price-comp {
+  width: 22px;
+}
+
+#add-price-comp:hover {
+    cursor: pointer;
+    color: rgb(96, 193, 207);
+}
+
+.off-nav {
+  border: solid 1px;
+  padding: 5px;
+  width: 80px;
+  float: left;
+  border-radius: 5px;
+  text-align: center;
+  margin-left: 10px;
+  background-color: rgb(180, 193, 207);
+  color: rgb(255, 255, 255);
+}
+
+.off-nav.visited {
+  background-color: rgb(96, 193, 207);
+}
+
+.off-nav.selected {
+  background-color: rgb(0, 45, 103); 
+}
+
+/* CONTROLS - CLASSES */
+
+.control-slider {
+    position: relative;
+    display: block;
+}
+
+.control-slider .control {
+    display: block;
+    font: normal 400 14px/20px Helvetica, Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.control-slider .control-item {
+    position: relative;
+    margin: 0px 30px;
+    overflow: hidden;
+    height: 50px;
+}
+
+.control-slider .control-back, .control-next {
+    position: absolute;
+    top: 0;
+    width: 30px;
+    padding: 14px 0px;
+    color: rgb(50, 120, 180);
+    text-align: center;
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(220, 220, 220);
+    cursor: pointer;
+    z-index: 10;
+}
+
+.control-slider .control-back:hover, .control-next:hover {
+    color: rgb(35, 85, 125);
+    background-color: rgb(250, 250, 250);
+    border-color: rgba(220, 220, 220);
+}
+
+.control-slider .control-back {
+    left: 0;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+.control-slider .control-next {
+    right: 0;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+/* SLIDING ITEMS - CLASSES */
+
+.control-slider .sliding-list {
+    position: relative;
+    display: block;
+    height: 100%;
+}
+
+.control-slider .sliding-list:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.control-slider .sliding-item {
+  position: relative;
+  display: block;
+  height: 100%;
+  float: left;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.control-slider .payment-unique {
+  color: #3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+
+.control-slider .payment-subs {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+}
+
+.control-slider .payment-usage {
+      color: #8a6d3b;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
+
+
+.control-slider .price {
+    margin-top: 5px;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.control-slider .title {
+    font-weight: 700;
+}
+
+.control-slider .editable-text {
+    cursor: pointer;
+    padding: 0 5px;
+  border: none;
+  background-color: transparent;
+  box-sizing: border-box;
+  display: inline-block;
+  color: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  width: 60px;
+  line-height: inherit;
+  text-align: right;
+    outline: none;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+}
+
+.control-slider .editable-text:focus {
+    cursor: text;
+}

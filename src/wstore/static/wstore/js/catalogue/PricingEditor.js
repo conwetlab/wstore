@@ -82,6 +82,7 @@ ComponentSlider.prototype.init = function init() {
         $.template('pricingTemplate', $('#pricing_form_template'));
         $.tmpl('pricingTemplate').appendTo(container);
 
+        this.pricingProvided = false;
         this.pricing = {
             'price_plans': []
         };
@@ -441,11 +442,21 @@ ComponentSlider.prototype.init = function init() {
     };
 
     PricingEditor.prototype.createListeners = function createListeners() {
+        
+        for (var i = 0; i < this.pricing.price_plans.length; i++) {
+            var target = $('<div class="plan-selected"><i class="icon-save"></i><i class="icon-remove"></i></div>').appendTo('#price-plans');
+            this.existingPlans.push(this.pricing.price_plans[i].label);
+            buildEditBox(target, this.pricing.price_plans[i].label, editHandler.bind(this), removeHandler.bind(this));
+        }
         $('#add-price-plan').click(addPlanHandler.bind(this));
     }
 
     PricingEditor.prototype.getPricing = function getPricing() {
         return this.pricing;
+    }
+
+    PricingEditor.prototype.setPricing = function setPricing(pricing) {
+        this.pricing = pricing;
     }
 
 })();
