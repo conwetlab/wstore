@@ -76,42 +76,42 @@ class RSSAdaptorTestCase(TestCase):
         <?xmlversion='1.0'encoding='ASCII'?>
         <cdrs>
             <cdr>
-                <id_service_provider>test_provider</id_service_provider> 
-                <id_application>test_service</id_application> 
-                <id_event>Subscription event</id_event> 
-                <id_correlation>2</id_correlation> 
-                <purchase_code>1234567890</purchase_code> 
-                <parent_app_id>test_offering</parent_app_id> 
-                <product_class>SaaS</product_class> 
-                <description>The description</description> 
-                <cost_currency>EUR</cost_currency> 
-                <cost_units>10</cost_units> 
-                <tax_currency>EUR</tax_currency> 
-                <tax_units>0.0</tax_units> 
-                <cdr_source>WStore</cdr_source> 
-                <id_operator>1</id_operator> 
-                <id_country>SP</id_country> 
-                <time_stamp>10-05-13 10:00:00</time_stamp> 
-                <id_user>test_customer</id_user> 
+                <id_service_provider>test_provider</id_service_provider>
+                <id_application>test_service</id_application>
+                <id_event>Subscription event</id_event>
+                <id_correlation>2</id_correlation>
+                <purchase_code>1234567890</purchase_code>
+                <parent_app_id>test_offering</parent_app_id>
+                <product_class>SaaS</product_class>
+                <description>The description</description>
+                <cost_currency>EUR</cost_currency>
+                <cost_units>10</cost_units>
+                <tax_currency>EUR</tax_currency>
+                <tax_units>0.0</tax_units>
+                <cdr_source>WStore</cdr_source>
+                <id_operator>1</id_operator>
+                <id_country>SP</id_country>
+                <time_stamp>10-05-13 10:00:00</time_stamp>
+                <id_user>test_customer</id_user>
             </cdr>
             <cdr>
-                <id_service_provider>test_provider</id_service_provider> 
-                <id_application>test_service</id_application> 
-                <id_event>Pay per use event</id_event> 
-                <id_correlation>3</id_correlation> 
-                <purchase_code>1234567890</purchase_code> 
-                <parent_app_id>test_offering</parent_app_id> 
-                <product_class>SaaS</product_class> 
-                <description>The description</description> 
-                <cost_currency>EUR</cost_currency> 
-                <cost_units>1</cost_units> 
-                <tax_currency>EUR</tax_currency> 
-                <tax_units>0.0</tax_units> 
-                <cdr_source>WStore</cdr_source> 
-                <id_operator>1</id_operator> 
-                <id_country>SP</id_country> 
-                <time_stamp>10-05-13 10:00:00</time_stamp> 
-                <id_user>test_customer</id_user> 
+                <id_service_provider>test_provider</id_service_provider>
+                <id_application>test_service</id_application>
+                <id_event>Pay per use event</id_event>
+                <id_correlation>3</id_correlation>
+                <purchase_code>1234567890</purchase_code>
+                <parent_app_id>test_offering</parent_app_id>
+                <product_class>SaaS</product_class>
+                <description>The description</description>
+                <cost_currency>EUR</cost_currency>
+                <cost_units>1</cost_units>
+                <tax_currency>EUR</tax_currency>
+                <tax_units>0.0</tax_units>
+                <cdr_source>WStore</cdr_source>
+                <id_operator>1</id_operator>
+                <id_country>SP</id_country>
+                <time_stamp>10-05-13 10:00:00</time_stamp>
+                <id_user>test_customer</id_user>
             </cdr>
         </cdrs>"""
 
@@ -133,8 +133,7 @@ class RSSAdaptorTestCase(TestCase):
             'country': 'SP',
             'time_stamp': '10-05-13 10:00:00',
             'customer': 'test_customer',
-        },
-        {
+        }, {
             'provider': 'test_provider',
             'service': 'test_service',
             'defined_model': 'Pay per use event',
@@ -213,7 +212,7 @@ class ExpenditureManagerTestCase(TestCase):
         self.rss_mock.reset_mock()
         self.rss_mock.host = 'http://testrss.com/'
         # Create tested object
-        self.manager = expenditure_manager.ExpenditureManager(self.rss_mock, 'accesstoken')
+        self.manager = expenditure_manager.ExpenditureManagerV1(self.rss_mock, 'accesstoken')
         self.manager._provider_id = 'test_store'
 
     def test_make_request(self):
@@ -252,7 +251,7 @@ class ExpenditureManagerTestCase(TestCase):
             'currency': 'EUR',
             'perTransaction': '100',
             'weekly': '150'
-        } 
+        }
         expected_data = {
             'service': 'fiware',
             'limits': [{
@@ -284,7 +283,7 @@ class ExpenditureManagerTestCase(TestCase):
             'currency': 'EUR',
             'perTransaction': '100',
             'weekly': '150'
-        } 
+        }
         expected_data = {
             'service': 'fiware',
             'limits': [{
