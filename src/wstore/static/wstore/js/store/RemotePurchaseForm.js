@@ -94,7 +94,7 @@
         $('#back').remove();
 
         // Display purchase form
-        offDetailsView.mainAction('Purchase');
+        offDetailsView.mainAction('Acquire');
 
         // Replace the event handler in order to remove created components
         $('#message').on('hidden', function(evnt) {
