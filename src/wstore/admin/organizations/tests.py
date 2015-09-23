@@ -33,8 +33,7 @@ from wstore.admin.organizations import views
 from wstore.store_commons.utils import http
 from wstore.models import Organization
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
-decorator_mock_callable, HTTPResponseMock
-from wstore.admin.rss.tests import ExpenditureMock
+    decorator_mock_callable, HTTPResponseMock
 
 
 class OrganizationChangeTestCase(TestCase):
@@ -111,10 +110,6 @@ class OrganizationEntryTestCase(TestCase):
         reload(views)
         views.build_response = build_response_mock
         views.HttpResponse = HTTPResponseMock
-        views.RSS = MagicMock()
-        rss_object = MagicMock()
-        views.RSS.objects.all.return_value = [rss_object]
-        views.ExpenditureManager = MagicMock()
 
         views._check_limits = MagicMock()
         views._check_limits.return_value = {
@@ -133,6 +128,10 @@ class OrganizationEntryTestCase(TestCase):
         super(OrganizationEntryTestCase, cls).tearDownClass()
 
     def setUp(self):
+        views.RSS = MagicMock()
+        self.rss_object = MagicMock()
+        views.RSS.objects.all.return_value = [self.rss_object]
+
         # Create request user mock
         user_object = MagicMock()
         user_object.username = 'test_user'
@@ -151,9 +150,12 @@ class OrganizationEntryTestCase(TestCase):
         views.Organization = MagicMock()
         views.Organization.objects.get.return_value = self.org_object
 
-    def _mock_expenditure_401(self):
-        exp_mock = ExpenditureMock()
-        views.ExpenditureManager = exp_mock.ExpenditureManager
+        views.RSSManagerFactory = MagicMock()
+        self._limits_factory = MagicMock()
+        views.RSSManagerFactory.return_value = self._limits_factory
+
+        self._exp_mock = MagicMock(name="ExpenditureManager")
+        self._limits_factory.get_expenditure_manager.return_value = self._exp_mock
 
     def _not_found(self):
         views.Organization.objects.get.side_effect = Exception('')
@@ -162,78 +164,72 @@ class OrganizationEntryTestCase(TestCase):
         self.org_object.managers = []
 
     def _unauthorized(self):
-        views.ExpenditureManager = MagicMock()
-        exp_object = MagicMock()
-        exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 401, 'Unauthorized', None, None)
-        views.ExpenditureManager.return_value = exp_object
+        self._exp_mock.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 401, 'Unauthorized', None, None)
 
     def _rss_failure(self):
-        views.ExpenditureManager = MagicMock()
-        exp_object = MagicMock()
-        exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 500, 'Server error', None, None)
-        views.ExpenditureManager.return_value = exp_object
+        self._exp_mock.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 500, 'Server error', None, None)
 
     @parameterized.expand([
-    ({
-        'notification_url': 'http://notificationurl.com',
-        'tax_address': {
-            'street': 'fake street 123',
-            'country': 'Country',
-            'city': 'City',
-            'postal': '12345'
-        },
-        'payment_info': {
-            'number': '1234123412341234',
-            'type': 'visa',
-            'expire_year': '2018',
-            'expire_month': '5',
-            'cvv2': '111'
-        },
-        'limits': {
-            'perTransaction': '100',
-            'weekly': '150'
-        }
-    }, (200, 'OK', 'correct'), False),
-    ({
-        'payment_info': {
-            'number': 'xxxxxxxxxxxx4567',
-            'type': 'visa',
-            'expire_year': '2018',
-            'expire_month': '5',
-            'cvv2': '111'
-        },
-        'limits': {
-            'perTransaction': '100',
-            'weekly': '150'
-        }
-    }, (200, 'OK', 'correct'), False, _mock_expenditure_401),
-    ({}, (200, 'OK', 'correct'), False),
-    ({}, (404, 'Organization not found', 'error'), True, _not_found),
-    ({}, (403, 'Forbidden', 'error'), True, _forbidden),
-    ({
-        'notification_url': 'invalidurl'
-    }, (400, 'Enter a valid URL', 'error'), True),
-    ({
-        'limits': {
-            'perTransaction': '100',
-            'weekly': '150'
-        }
-    }, (400, 'Invalid JSON content', 'error'), True, _unauthorized),
-    ({
-        'limits': {
-            'perTransaction': '100',
-            'weekly': '150'
-        }
-    }, (400, 'Invalid JSON content', 'error'), True, _rss_failure),
-    ({
-        'payment_info': {
-            'number': '1234',
-            'type': 'visa',
-            'expire_year': '2018',
-            'expire_month': '5',
-            'cvv2': '111'
-        }
-    }, (400, 'Invalid credit card number', 'error'), True),
+        ({
+            'notification_url': 'http://notificationurl.com',
+            'tax_address': {
+                'street': 'fake street 123',
+                'country': 'Country',
+                'city': 'City',
+                'postal': '12345'
+            },
+            'payment_info': {
+                'number': '1234123412341234',
+                'type': 'visa',
+                'expire_year': '2018',
+                'expire_month': '5',
+                'cvv2': '111'
+            },
+            'limits': {
+                'perTransaction': '100',
+                'weekly': '150'
+            }
+        }, (200, 'OK', 'correct'), False),
+        ({
+            'payment_info': {
+                'number': 'xxxxxxxxxxxx4567',
+                'type': 'visa',
+                'expire_year': '2018',
+                'expire_month': '5',
+                'cvv2': '111'
+            },
+            'limits': {
+                'perTransaction': '100',
+                'weekly': '150'
+            }
+        }, (200, 'OK', 'correct'), False),
+        ({}, (200, 'OK', 'correct'), False),
+        ({}, (404, 'Organization not found', 'error'), True, _not_found),
+        ({}, (403, 'Forbidden', 'error'), True, _forbidden),
+        ({
+            'notification_url': 'invalidurl'
+        }, (400, 'Enter a valid URL', 'error'), True),
+        ({
+            'limits': {
+                'perTransaction': '100',
+                'weekly': '150'
+            }
+        }, (400, 'Invalid JSON content', 'error'), True, _unauthorized),
+        ({
+            'limits': {
+                'perTransaction': '100',
+                'weekly': '150'
+            }
+        }, (400, 'Invalid JSON content', 'error'), True, _rss_failure),
+        ({
+            'payment_info': {
+                'number': '1234',
+                'type': 'visa',
+                'expire_year': '2018',
+                'expire_month': '5',
+                'cvv2': '111'
+            }
+        }, (400, 'Invalid credit card number', 'error'), True),
     ])
     def test_update_organization(self, data, exp_resp, error, side_effect=None):
         # Create object
@@ -271,6 +267,9 @@ class OrganizationEntryTestCase(TestCase):
             if 'limits' in data:
                 data['limits']['currency'] = 'EUR'
                 self.assertEquals(data['limits'], self.org_object.expenditure_limits)
+                views.RSSManagerFactory.assert_called_once_with(self.rss_object)
+                self._limits_factory.get_expenditure_manager.assert_called_once_with(self.rss_object.access_token)
+                self._exp_mock.set_actor_limit.assert_called_once_with(data['limits'], self.org_object)
 
     def _revoke_staff(self):
         self.request.user.is_staff = False
