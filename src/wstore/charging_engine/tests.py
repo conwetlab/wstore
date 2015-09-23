@@ -1367,6 +1367,17 @@ class CDRGeranationTestCase(TestCase):
         self._cdrs = None
         TestCase.tearDown(self)
 
+    def _create_purchase(self):
+        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
+        org = Organization.objects.get(name="test_user")
+        org.actor_id = "test_user"
+        org.save()
+
+        purchase.owner_organization = org
+        purchase.save()
+
+        return purchase
+
     def test_basic_cdr_generation(self):
 
         applied_parts = {
@@ -1378,38 +1389,30 @@ class CDRGeranationTestCase(TestCase):
             }]
         }
 
-        # Load usdl
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_price.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
-        purchase.offering.save()
-
+        purchase = self._create_purchase()
         charging = charging_engine.ChargingEngine(purchase)
+        charging._price_model = {
+            'general_currency': 'EUR'
+        }
+
         charging._generate_cdr(applied_parts, str(datetime.now()))
 
         self.assertEqual(len(self._cdrs), 1)
 
         cdr = self._cdrs[0]
-        self.assertEqual(cdr['provider'], 'wstore')
+        self.assertEqual(cdr['provider'], 'test_organization')
         self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Single payment event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
         self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'use')
+        self.assertEqual(cdr['product_class'], 'test_organization/test_offering/1.0')
         self.assertEqual(cdr['description'], 'Single payment: 1 EUR')
-        self.assertEqual(cdr['cost_currency'], '1')
+        self.assertEqual(cdr['cost_currency'], 'EUR')
         self.assertEqual(cdr['cost_value'], '1')
         self.assertEqual(cdr['country'], '1')
         self.assertEqual(cdr['customer'], 'test_user')
+        self.assertEqual(cdr['event'], 'use')
 
     def test_cdr_generation_initial(self):
 
@@ -1428,49 +1431,40 @@ class CDRGeranationTestCase(TestCase):
             }]
         }
 
-        # Load usdl
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_price.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
-        purchase.offering.save()
+        purchase = self._create_purchase()
 
         charging = charging_engine.ChargingEngine(purchase)
+        charging._price_model = {
+            'general_currency': 'EUR'
+        }
         charging._generate_cdr(applied_parts, str(datetime.now()))
 
         self.assertEqual(len(self._cdrs), 2)
 
         cdr = self._cdrs[0]
-        self.assertEqual(cdr['provider'], 'wstore')
+        self.assertEqual(cdr['provider'], 'test_organization')
         self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Single payment event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
         self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'use')
+        self.assertEqual(cdr['product_class'], 'test_organization/test_offering/1.0')
         self.assertEqual(cdr['description'], 'Single payment: 1 EUR')
-        self.assertEqual(cdr['cost_currency'], '1')
+        self.assertEqual(cdr['cost_currency'], 'EUR')
         self.assertEqual(cdr['cost_value'], '1')
         self.assertEqual(cdr['country'], '1')
         self.assertEqual(cdr['customer'], 'test_user')
 
         cdr = self._cdrs[1]
-        self.assertEqual(cdr['provider'], 'wstore')
+        self.assertEqual(cdr['provider'], 'test_organization')
         self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Subscription event')
         self.assertEqual(cdr['correlation'], '1')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
         self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'use')
+        self.assertEqual(cdr['product_class'], 'test_organization/test_offering/1.0')
         self.assertEqual(cdr['description'], 'Subscription: 10 EUR per month')
-        self.assertEqual(cdr['cost_currency'], '1')
+        self.assertEqual(cdr['cost_currency'], 'EUR')
         self.assertEqual(cdr['cost_value'], '10')
         self.assertEqual(cdr['country'], '1')
         self.assertEqual(cdr['customer'], 'test_user')
@@ -1486,25 +1480,16 @@ class CDRGeranationTestCase(TestCase):
             }]
         }
 
-        # Load usdl
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_price.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
-        purchase.offering.save()
+        purchase = self._create_purchase()
 
         purchase.organization_owned = True
         purchase.owner_organization = Organization.objects.get(name='test_organization')
         purchase.save()
 
         charging = charging_engine.ChargingEngine(purchase)
+        charging._price_model = {
+            'general_currency': 'EUR'
+        }
         charging._generate_cdr(applied_parts, str(datetime.now()))
 
         self.assertEqual(len(self._cdrs), 1)
@@ -1545,35 +1530,26 @@ class CDRGeranationTestCase(TestCase):
             }]
         }
 
-        # Load usdl
-        model = os.path.join(settings.BASEDIR, 'wstore')
-        model = os.path.join(model, 'charging_engine')
-        model = os.path.join(model, 'test')
-        model = os.path.join(model, 'basic_price.ttl')
-        f = open(model, 'rb')
-        graph = rdflib.Graph()
-        graph.parse(data=f.read(), format='n3')
-        f.close()
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase.offering.offering_description = json.loads(graph.serialize(format='json-ld', auto_compact=True))
-        purchase.offering.save()
+        purchase = self._create_purchase()
 
         charging = charging_engine.ChargingEngine(purchase)
+        charging._price_model = {
+            'general_currency': 'EUR'
+        }
         charging._generate_cdr(applied_parts, str(datetime.now()))
 
         self.assertEqual(len(self._cdrs), 1)
 
         cdr = self._cdrs[0]
-        self.assertEqual(cdr['provider'], 'wstore')
+        self.assertEqual(cdr['provider'], 'test_organization')
         self.assertEqual(cdr['service'], 'test_offering 1.0')
         self.assertEqual(cdr['defined_model'], 'Pay per use event')
         self.assertEqual(cdr['correlation'], '0')
         self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
         self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'use')
+        self.assertEqual(cdr['product_class'], 'test_organization/test_offering/1.0')
         self.assertEqual(cdr['description'], 'Fee per invocation, Consumption: 25')
-        self.assertEqual(cdr['cost_currency'], '1')
+        self.assertEqual(cdr['cost_currency'], 'EUR')
         self.assertEqual(cdr['cost_value'], '25.0')
         self.assertEqual(cdr['country'], '1')
         self.assertEqual(cdr['customer'], 'test_user')

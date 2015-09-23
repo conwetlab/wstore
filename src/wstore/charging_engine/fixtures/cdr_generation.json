@@ -115,6 +115,7 @@
         "fields": {
             "name": "test_organization",
             "offerings_purchased": [],
+            "actor_id": "test_organization",
             "managers": []
         }
     }
