@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -18,7 +18,6 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
-import types
 import json
 from mock import MagicMock
 from urllib2 import HTTPError
@@ -33,7 +32,7 @@ from django.test.utils import override_settings
 from wstore.admin.users import views
 from wstore.store_commons.utils import http
 from wstore.store_commons.utils.testing import decorator_mock, build_response_mock,\
-decorator_mock_callable, HTTPResponseMock
+    decorator_mock_callable, HTTPResponseMock
 from wstore.admin.rss.tests import ExpenditureMock
 
 
@@ -227,57 +226,57 @@ class UserCollectionTestCase(TestCase):
         }
 
     @parameterized.expand([
-    (['user1', 'user2'], False, [{
-        'username': 'user1',
-        'complete_name': 'Test user1',
-        'first_name': 'Test',
-        'last_name': 'user1',
-        'current_organization': 'test_org1',
-        'organizations': [{
-            'name': 'test_org1',
-            'roles': ['provider', 'customer', 'manager'],
-            'notification_url': 'http://examplenot2.com',
-        }],
-        'notification_url': 'http://examplenot1.com',
-        'tax_address': {},
-        'roles': ['customer', 'provider', 'admin'],
-        'payment_info': {
-                'number': 'xxxxxxxxxxxx1234',
-                'type': 'visa',
-                'expire_year': '2018',
-                'expire_month': '5',
-                'cvv2': '111'
-        }
-    }, {
-       'username': 'user2',
-       'complete_name': 'Test user2',
-       'first_name': 'Test',
-       'last_name': 'user2',
-       'current_organization': 'test_org2',
-       'organizations': [{
-            'name': 'test_org2',
-            'roles': ['customer']
-        }],
-       'notification_url': 'http://examplenot4.com',
-       'tax_address': {},
-       'roles': ['customer'],
-       'payment_info': {}
-    }], 200, False),
-    (['user2'], False, [{
-       'username': 'user2',
-       'complete_name': 'Test user2',
-       'current_organization': 'test_org2',
-       'organizations': [{
-            'name': 'test_org2',
-            'roles': ['customer']
-        }],
-       'notification_url': 'http://examplenot4.com',
-       'tax_address': {},
-       'roles':['customer'],
-       'payment_info': {},
-       'limits': {}
-    }], 200, True),
-    (['user1'], True, ('error', 'Forbidden'), 403, False)
+        (['user1', 'user2'], False, [{
+            'username': 'user1',
+            'complete_name': 'Test user1',
+            'first_name': 'Test',
+            'last_name': 'user1',
+            'current_organization': 'test_org1',
+            'organizations': [{
+                'name': 'test_org1',
+                'roles': ['provider', 'customer', 'manager'],
+                'notification_url': 'http://examplenot2.com',
+            }],
+            'notification_url': 'http://examplenot1.com',
+            'tax_address': {},
+            'roles': ['customer', 'provider', 'admin'],
+            'payment_info': {
+                    'number': 'xxxxxxxxxxxx1234',
+                    'type': 'visa',
+                    'expire_year': '2018',
+                    'expire_month': '5',
+                    'cvv2': '111'
+            }
+        }, {
+           'username': 'user2',
+           'complete_name': 'Test user2',
+           'first_name': 'Test',
+           'last_name': 'user2',
+           'current_organization': 'test_org2',
+           'organizations': [{
+                'name': 'test_org2',
+                'roles': ['customer']
+            }],
+           'notification_url': 'http://examplenot4.com',
+           'tax_address': {},
+           'roles': ['customer'],
+           'payment_info': {}
+        }], 200, False),
+        (['user2'], False, [{
+           'username': 'user2',
+           'complete_name': 'Test user2',
+           'current_organization': 'test_org2',
+           'organizations': [{
+                'name': 'test_org2',
+                'roles': ['customer']
+            }],
+           'notification_url': 'http://examplenot4.com',
+           'tax_address': {},
+           'roles': ['customer'],
+           'payment_info': {},
+           'limits': {}
+        }], 200, True),
+        (['user1'], True, ('error', 'Forbidden'), 403, False)
     ])
     def test_user_retrieving(self, users, error, expected_response, code, ext_auth):
 
@@ -342,9 +341,6 @@ class UserEntryTestCase(TestCase):
             'perTransaction': 100.0,
             'weekly': 150.0
         }
-        cls.views.RSS = MagicMock()
-        rss_object = MagicMock()
-        cls.views.RSS.objects.all.return_value = [rss_object]
         super(UserEntryTestCase, cls).setUpClass()
 
     @classmethod
@@ -356,6 +352,10 @@ class UserEntryTestCase(TestCase):
         super(UserEntryTestCase, cls).tearDownClass()
 
     def setUp(self):
+        views.RSS = MagicMock()
+        self.rss_object = MagicMock()
+        self.views.RSS.objects.all.return_value = [self.rss_object]
+
         # Create mock request
         user_object = MagicMock()
         user_object.is_staff = True
@@ -373,8 +373,12 @@ class UserEntryTestCase(TestCase):
         views.UserProfile = FakeProfile()
         views.Organization = FakeOrganization()
 
-    def test_user_retrieving(self):
-        pass
+        views.RSSManagerFactory = MagicMock()
+        self._rss_factory = MagicMock()
+        views.RSSManagerFactory.return_value = self._rss_factory
+
+        self.exp_object = MagicMock()
+        self._rss_factory.get_expenditure_manager.return_value = self.exp_object
 
     def _provider_org(self):
         up = views.UserProfile.objects.get(user=self.request.user)
@@ -393,119 +397,107 @@ class UserEntryTestCase(TestCase):
     def _mock_expenditure(self):
         views.ExpenditureManager = MagicMock()
 
-    def _mock_expenditure_401(self):
-        exp_mock = ExpenditureMock()
-        views.ExpenditureManager = exp_mock.ExpenditureManager
-
     def _revoke_staff(self):
         self.request.user.is_staff = False
         self.request.user.username = 'user3'
 
     def _unauthorized(self):
-        exp_object = MagicMock()
-        exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 401, 'Unauthorized', None, None)
-        views.ExpenditureManager = MagicMock()
-        views.ExpenditureManager.return_value = exp_object
+        self.exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 401, 'Unauthorized', None, None)
 
     def _rss_failure(self):
-        exp_object = MagicMock()
-        exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 500, 'Server error', None, None)
-        views.ExpenditureManager = MagicMock()
-        views.ExpenditureManager.return_value = exp_object
+        self.exp_object.set_actor_limit.side_effect = HTTPError('http://rss.test.com', 500, 'Server error', None, None)
 
     @parameterized.expand([
-    ({
-        'roles': ['admin', 'provider'],
-        'notification_url': 'http://newnotification.com',
-        'password': '12345',
-        'first_name': 'Test',
-        'last_name': 'user3',
-        'tax_address': {
-            'street': 'fake street 123',
-            'postal': '123451',
-            'city': 'City',
-            'country': 'Country'
-        },
-        'payment_info': {
-            'number': '1234123412341234',
-            'type': 'Visa',
-            'expire_month': '5',
-            'expire_year': '2018',
-            'cvv2': '121'
-        }
-    }, 'user3', False, (200, 'OK', 'correct'), False),
-    ({
-        'roles': [],
-        'complete_name': 'Test user3-2',
-    }, 'user3', False, (200, 'OK', 'correct'), False, _provider_org),
-    ({
-        'roles': [],
-        'payment_info': {
-            'number': 'xxxxxxxxxxxx4567',
-            'type': 'Visa',
-            'expire_month': '5',
-            'expire_year': '2018',
-            'cvv2': '121'
-        }
-    }, 'user3', False, (200, 'OK', 'correct'), False, _not_provider),
-    ({
-        'tax_address': {
-            'street': 'fake street 123',
-            'postal': '123451',
-            'city': 'City',
-            'country': 'Country'
-        }
-    }, 'user3', False, (200, 'OK', 'correct'), False),
-    ({
-        'notification_url': 'http://newnotificationurl.com',
-        'limits': {
-            'perTransaction': '100',
-            'weekly': '150',
-        }
-    }, 'user3', True, (200, 'OK', 'correct'), False, _mock_expenditure),
-    ({
-        'notification_url': 'http://newnotificationurl.com',
-        'limits': {
-            'perTransaction': '100',
-            'weekly': '150',
-        }
-    }, 'user3', True, (200, 'OK', 'correct'), False, _mock_expenditure_401),
-    ({
-        'notification_url': 'http://newnotificationurl.com',
-        'limits': {
-            'perTransaction': '100',
-            'weekly': '150',
-        }
-    }, 'user4', True, (403, 'Forbidden', 'error'), True, _revoke_staff),
-    ({
-        'notification_url': 'http://newnotificationurl.com',
-        'limits': {
-            'perTransaction': '100',
-            'weekly': '150',
-        }
-    }, 'user3', True, (400, 'Invalid content', 'error'), True, _unauthorized),
-    ({
-        'notification_url': 'http://newnotificationurl.com',
-        'limits': {
-            'perTransaction': '100',
-            'weekly': '150',
-        }
-    }, 'user3', True, (400, 'Invalid content', 'error'), True, _rss_failure),
-    ({
-        'roles': [],
-        'payment_info': {
-            'number': 'xxxxxxxxxxxx3333',
-            'type': 'Visa',
-            'expire_month': '5',
-            'expire_year': '2018',
-            'cvv2': '121'
-        }
-    }, 'user3', True, (400, 'Invalid content', 'error'), True)
+        ({
+            'roles': ['admin', 'provider'],
+            'notification_url': 'http://newnotification.com',
+            'password': '12345',
+            'first_name': 'Test',
+            'last_name': 'user3',
+            'tax_address': {
+                'street': 'fake street 123',
+                'postal': '123451',
+                'city': 'City',
+                'country': 'Country'
+            },
+            'payment_info': {
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_month': '5',
+                'expire_year': '2018',
+                'cvv2': '121'
+            }
+        }, 'user3', False, (200, 'OK', 'correct'), False),
+        ({
+            'roles': [],
+            'complete_name': 'Test user3-2',
+        }, 'user3', False, (200, 'OK', 'correct'), False, _provider_org),
+        ({
+            'roles': [],
+            'payment_info': {
+                'number': 'xxxxxxxxxxxx4567',
+                'type': 'Visa',
+                'expire_month': '5',
+                'expire_year': '2018',
+                'cvv2': '121'
+            }
+        }, 'user3', False, (200, 'OK', 'correct'), False, _not_provider),
+        ({
+            'tax_address': {
+                'street': 'fake street 123',
+                'postal': '123451',
+                'city': 'City',
+                'country': 'Country'
+            }
+        }, 'user3', False, (200, 'OK', 'correct'), False),
+        ({
+            'notification_url': 'http://newnotificationurl.com',
+            'limits': {
+                'perTransaction': '100',
+                'weekly': '150',
+            }
+        }, 'user3', True, (200, 'OK', 'correct'), False, _mock_expenditure),
+        ({
+            'notification_url': 'http://newnotificationurl.com',
+            'limits': {
+                'perTransaction': '100',
+                'weekly': '150',
+            }
+        }, 'user3', True, (200, 'OK', 'correct'), False),
+        ({
+            'notification_url': 'http://newnotificationurl.com',
+            'limits': {
+                'perTransaction': '100',
+                'weekly': '150',
+            }
+        }, 'user4', True, (403, 'Forbidden', 'error'), True, _revoke_staff),
+        ({
+            'notification_url': 'http://newnotificationurl.com',
+            'limits': {
+                'perTransaction': '100',
+                'weekly': '150',
+            }
+        }, 'user3', True, (400, 'Invalid content', 'error'), True, _unauthorized),
+        ({
+            'notification_url': 'http://newnotificationurl.com',
+            'limits': {
+                'perTransaction': '100',
+                'weekly': '150',
+            }
+        }, 'user3', True, (400, 'Invalid content', 'error'), True, _rss_failure),
+        ({
+            'roles': [],
+            'payment_info': {
+                'number': 'xxxxxxxxxxxx3333',
+                'type': 'Visa',
+                'expire_month': '5',
+                'expire_year': '2018',
+                'cvv2': '121'
+            }
+        }, 'user3', True, (400, 'Invalid content', 'error'), True)
     ])
     def test_user_update(self, data, username, idm_auth, exp_resp, error, side_effect=None):
-        """
-        Test user update
-        """
+
         self.request.user.username = username
         views.settings.OILAUTH = idm_auth
 
