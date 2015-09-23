@@ -53,12 +53,11 @@
         // Append button if needed
         if ((USERPROFILE.getCurrentOrganization() != offeringElem.getOrganization()) 
                 && (labelValue == 'published') && !offeringElem.isOpen()) {
-            var padding = '18px';
+            var padding = '17px';
             var text = priceStr;
             var buttonClass = "btn btn-success";
 
             if (priceStr != 'Free') {
-                padding = '18px';
                 buttonClass = "btn btn-blue";
             }
 
@@ -70,7 +69,7 @@
                     off.showView();
                     off.mainAction('Acquire');
                 }
-            })(offDetailsView)).css('padding-left', padding).appendTo(templ.find('.offering-meta'));
+            })(offDetailsView)).css('padding-left', padding).css('overflow', 'hidden').css('height', '25px').appendTo(templ.find('.offering-meta'));
         } else {
             if (labelValue == 'rated' && offeringElem.isOpen()) {
                 labelValue = 'published';
