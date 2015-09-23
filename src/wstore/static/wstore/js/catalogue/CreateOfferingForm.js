@@ -171,18 +171,9 @@
         });
     };
 
-    var setVisited = function setVisited(elem, callback) {
+    var setVisited = function setVisited(elem) {
         if (!elem.hasClass('.visited')) {
             elem.addClass('visited');
-            elem.click(function() {
-                // Hide forms
-                $('#offering-creation-pricing').addClass('hide');
-                $('#offering-creation-usdl').addClass('hide');
-                $('#offering-creation-apps').addClass('hide');
-                $('#offering-creation-resources').addClass('hide');
-                $('#offering-creation-main').addClass('hide');
-                callback();
-            })
         }
     };
 
@@ -211,7 +202,7 @@
         // Set navigation button
         $('.off-nav.selected').removeClass('selected');
         $('#off-nav-3').addClass('selected');
-        setVisited($('#off-nav-3'), this.displayPricingEditor.bind(this));
+        setVisited($('#off-nav-3'));
 
         if (!$('#offering-creation-pricing').length) {
             this.units = units;
@@ -255,7 +246,7 @@
         // Set navigation button
         $('.off-nav.selected').removeClass('selected');
         $('#off-nav-2').addClass('selected');
-        setVisited($('#off-nav-2'), this.showUSDLForm.bind(this));
+        setVisited($('#off-nav-2'));
 
         // Create the form
         if (!$('#offering-creation-usdl').length) {
@@ -370,7 +361,7 @@
         // Set navigation button
         $('.off-nav.selected').removeClass('selected');
         $('#off-nav-4').addClass('selected');
-        setVisited($('#off-nav-4'), this.showApplicationsForm.bind(this));
+        setVisited($('#off-nav-4'));
 
         // Create the form
         if (!$('#offering-creation-apps').length) {
@@ -470,7 +461,7 @@
         // Set navigation button
         $('.off-nav.selected').removeClass('selected');
         $('#off-nav-5').addClass('selected');
-        setVisited($('#off-nav-5'), this.showResourcesForm.bind(this));
+        setVisited($('#off-nav-5'));
 
         $()
         $('.modal-footer').empty()
@@ -612,7 +603,7 @@
 
         $('.off-nav.selected').removeClass('selected');
         $('#off-nav-1').addClass('selected');
-        setVisited($('#off-nav-1'), this.includeContents.bind(this));
+        setVisited($('#off-nav-1'));
 
         // Create the listeners
         $('#img-logo').change(function(event) {

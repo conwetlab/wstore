@@ -214,10 +214,6 @@
   background-color: rgb(0, 45, 103); 
 }
 
-.off-nav.visited:hover {
-  cursor: pointer;
-}
-
 /* CONTROLS - CLASSES */
 
 .control-slider {
