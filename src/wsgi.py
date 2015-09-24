@@ -1,18 +1,8 @@
 import os
-import sys
-import site
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wstore.settings")
 
-site.addsitedir('/home/francisco/store_env-1.4/local/lib/python2.7/site-packages')
-
-path = '/home/francisco/Trabajo/WStore/src'
-if path not in sys.path:
-    sys.path.insert(0, path)
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-
-# Activate your virtual env
-activate_env=os.path.expanduser("/home/francisco/store_env-1.4/bin/activate_this.py")
-execfile(activate_env, dict(__file__=activate_env))
-
-import django.core.handlers.wsgi
-application = django.core.handlers.wsgi.WSGIHandler()
+# This application object is used by any WSGI server configured to use this
+# file. This includes Django's development server, if the WSGI_APPLICATION
+# setting points here.
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
