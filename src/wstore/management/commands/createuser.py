@@ -21,8 +21,17 @@
 
 from wstore.models import User
 from django.core.management.base import BaseCommand
+from optparse import make_option
 
 class Command(BaseCommand):
+    option_list = BaseCommand.option_list + (
+        make_option('--staff',
+                action='store_true',
+                dest='staff',
+                default=False,
+                help="Whether the new user is staff"),
+    )
+
 
     def handle(self, *args, **options):
         """
@@ -32,4 +41,9 @@ class Command(BaseCommand):
         password = args[1]
 
         # Create the site
-        User.objects.create_user(username=username, password=password)
+        user = User.objects.create_user(username=username, password=password)
+
+        if options['staff']:
+            user.is_staff = True
+            user.save()
+
