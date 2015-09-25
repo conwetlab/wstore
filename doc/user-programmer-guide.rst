@@ -23,20 +23,20 @@ All users can configure their profile including some information such as a defau
 
 To configure the user profile, move your mouse to username on the top right of the page and choose settings.
 
-.. image:: /images/Wstore_ug.png
+.. image:: /images/customer/Wstore_ug_conf_1.png
    :align: center
 
 In the displayed modal, it is possible to view user profile info. To change this info or provide new one, select the Edit button.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_conf_2.png
    :align: center
 
 Fill the different fields through the Tabs and press Update.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_conf_3.png
    :align: center
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_conf_4.png
    :align: center
 
 Service provider
@@ -51,12 +51,12 @@ Resources are used in the offerings in order to allow to include downloadable di
 
 To register a resource, select the My Offerings view.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_1.png
    :align: center
 
 Select the options dropdown and choose Register resource
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_2.png
    :align: center
 
 In the displayed modal, the first step is filling the resource name, the resource version and the resource description. Then, it is necessary to provide a mime type for the resource. The next step consists on uploading the resource or providing a link from where the resource can be accessed.
@@ -71,17 +71,17 @@ Viewing resources
 
 A service provider is able to view the resources which are already registered. To view the resources, select the catalogue view and choose View resources in the dropdown menu.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_4.png
    :align: center
 
 In the displayed modal, you can see the different resources you have registered.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_5.png
    :align: center
 
 It is possible to view the details of a registered resource clicking on it.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_6.png
    :align: center
 
 Editing a resource
@@ -91,17 +91,17 @@ Depending on the state of the resource (created or used) a service provider can 
 
 To edit a resource, click on the edit button inside the resource details view.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_7.png
    :align: center
 
 If the resource is in created state, that is, the resource has not been included in any offering, it is possible to modify the description, the content type and whether the resource is open or not.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_8.png
    :align: center
 
 If the resource is in used state, only the description can be modified.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_9.png
    :align: center
 
 Upgrading a resource
@@ -111,7 +111,7 @@ It is possible to upgrade resources providing a new version of them. Note that w
 
 To upgade a resource, click on the upgrade button in the resource details view.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_10.png
    :align: center
 
 Then, it is necesary to provide the new version number and the new resource itself.
@@ -126,12 +126,12 @@ A provider can delete their resources, depending on the state of the resource th
 
 To remove a resource, click on the remove button in the resource details view.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_12.png
    :align: center
 
 Then, press Accept when asked.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_res_13.png
    :align: center
 
 Creating an offering
@@ -622,29 +622,29 @@ Implementing Event Handlers
 
 It can be seen in the previous section that the main class of a plugin can implement some methods that are inherited from WStore Plugin class. This methods can be used to implement handlers of the different events of the life cycle of a resource. Concretely, WStore defines the following events:
 
-*on pre create validation*: This event is raised before WStore validates the information of the resource given by the provider. The main objective of this event is allowing the concrete plug-in to override some information of the resource, which is then validated by WStore. The handler of this event receives the provider, and the raw information given by the provider for the creation of the resource, that may include a file for "FILE" formats. Additionally, the handler of this event must return the processed data of the resource.
+* *on pre create validation*: This event is raised before WStore validates the information of the resource given by the provider. The main objective of this event is allowing the concrete plug-in to override some information of the resource, which is then validated by WStore. The handler of this event receives the provider, and the raw information given by the provider for the creation of the resource, that may include a file for "FILE" formats. Additionally, the handler of this event must return the processed data of the resource.
 
-*on post create validation*: This event is raised after the information given by the provider for creating the resource has been validated by WStore. The main objective of this event is allowing plug-ins to override resource information that is not intended to be validated by the Store. The event handler of this event receives the provider and validated information given by the provider.
+* *on post create validation*: This event is raised after the information given by the provider for creating the resource has been validated by WStore. The main objective of this event is allowing plug-ins to override resource information that is not intended to be validated by the Store. The event handler of this event receives the provider and validated information given by the provider.
 
-*on pre create*: This event is raised before a new resource is saved to the database. This event can be used to modify the resource object before saving it or for executing some tasks required by the concrete type of resource, such as generating some meta data to be saved with resource or performing specific validations. The handler of this event is called passing the provider and the validated data of the resource as parameters.
+* *on pre create*: This event is raised before a new resource is saved to the database. This event can be used to modify the resource object before saving it or for executing some tasks required by the concrete type of resource, such as generating some meta data to be saved with resource or performing specific validations. The handler of this event is called passing the provider and the validated data of the resource as parameters.
 
-*on post create*: This event is raised after a new resource has been saved to the database. The intention of this event is allowing the plug-in to perform some tasks that depend on the complete creation of the resource, for example notifying a server that a resource has been created in case it might be necessary. The handler of this event receives the saved resource object.
+* *on post create*: This event is raised after a new resource has been saved to the database. The intention of this event is allowing the plug-in to perform some tasks that depend on the complete creation of the resource, for example notifying a server that a resource has been created in case it might be necessary. The handler of this event receives the saved resource object.
 
-*on pre update*: This event is raised before WStore saves the result of updating the basic info of a resource. This event is intended to allow plug-ins to perform specific validations of the data or override some fields. The handler of this event receives the modified resource object before saving it.
+* *on pre update*: This event is raised before WStore saves the result of updating the basic info of a resource. This event is intended to allow plug-ins to perform specific validations of the data or override some fields. The handler of this event receives the modified resource object before saving it.
 
-*on post update*: This event is raised after WStore has saved the result of updating the basic info of a resource. The main objective of this event is allowing plug-ins to execute specific tasks that require the updated resource to have been saved in the database (e.g sending notifications). The handler of this event receives the modified resource object already saved in the database.
+* *on post update*: This event is raised after WStore has saved the result of updating the basic info of a resource. The main objective of this event is allowing plug-ins to execute specific tasks that require the updated resource to have been saved in the database (e.g sending notifications). The handler of this event receives the modified resource object already saved in the database.
 
-*on pre upgrade validation*: This event is raised before WStore validates the information of a new version of a resource given by the provider. The main objective of this event is allowing the concrete plug-in to override some information of the new version of the resource, which is then validated by WStore. The handler of this event receives the raw information given by the provider for upgrading of the resource and the resource object.
+* *on pre upgrade validation*: This event is raised before WStore validates the information of a new version of a resource given by the provider. The main objective of this event is allowing the concrete plug-in to override some information of the new version of the resource, which is then validated by WStore. The handler of this event receives the raw information given by the provider for upgrading of the resource and the resource object.
 
-*on post upgrade validation*: This event is raised after the information given by the provider for upgrading the resource has been validated by WStore. The main objective of this event is allowing plug-ins to override some information of the new version of the resource that is not intended to be validated by WStore. The event handler of this event receives the validated information given by the provider and the resource object.
+* *on post upgrade validation*: This event is raised after the information given by the provider for upgrading the resource has been validated by WStore. The main objective of this event is allowing plug-ins to override some information of the new version of the resource that is not intended to be validated by WStore. The event handler of this event receives the validated information given by the provider and the resource object.
 
-*on pre upgrade*: This event is raised before a new version of a resource is saved to the database. This event can be used to modify the resource object before saving it or for executing some tasks required by the concrete type of resource, such as generating some meta data to be saved with resource or performing specific validations. The handler of this event is called passing the resource object as a parameter.
+* *on pre upgrade*: This event is raised before a new version of a resource is saved to the database. This event can be used to modify the resource object before saving it or for executing some tasks required by the concrete type of resource, such as generating some meta data to be saved with resource or performing specific validations. The handler of this event is called passing the resource object as a parameter.
 
-*on post upgrade*: This event is raised after a new version of a resource has been saved to the database. The intention of this event is allowing the plug-in to perform some tasks that depend on the upgrade of the resource, for example notifying a server that a resource has been upgraded. The handler of this event receives the saved resource object.
+* *on post upgrade*: This event is raised after a new version of a resource has been saved to the database. The intention of this event is allowing the plug-in to perform some tasks that depend on the upgrade of the resource, for example notifying a server that a resource has been upgraded. The handler of this event receives the saved resource object.
 
-*on pre delete*: This event is raised before WStore deletes a resource. This event is intended to allow plug-ins to perform specific tasks and validations before a resource is removed.  In this regard, a concrete resource type might require some actions to have been tackled by the provider of the resource before allowing a deletion. The handler of this event receives the resource object to be deleted.
+* *on pre delete*: This event is raised before WStore deletes a resource. This event is intended to allow plug-ins to perform specific tasks and validations before a resource is removed.  In this regard, a concrete resource type might require some actions to have been tackled by the provider of the resource before allowing a deletion. The handler of this event receives the resource object to be deleted.
 
-*on post delete*: This event is raised after WStore has deleted a resource. The main objective of this event is allowing plug-ins to execute specific tasks that require the resource to have been deleted from the database (e.g sending notifications). The handler of this event receives a copy of the deleted resource.
+* *on post delete*: This event is raised after WStore has deleted a resource. The main objective of this event is allowing plug-ins to execute specific tasks that require the resource to have been deleted from the database (e.g sending notifications). The handler of this event receives a copy of the deleted resource.
 
 Managing Plugins
 ================
@@ -655,6 +655,7 @@ When a new plugin is registered WStore automatically generates an id for the plu
 
 ::
     python manage.py loadplugin TestPlugin.zip
+
 
 It is also possible to list the existing plugins in order to retrieve the generated ids:
 
