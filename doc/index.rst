@@ -28,6 +28,6 @@ Index
    :maxdepth: 2
    :caption: Documentation
 
-   installation-guide
+   installation-administration-guide
    user-programmer-guide
 
