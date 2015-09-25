@@ -487,614 +487,184 @@ It is possible to view existing units by click on the Pricing model units row.
 Programmer Guide
 ----------------
 
-The programmer guide contains a description of the actions that can be performed by a developer, in order to integrate WStore capabilities with her solution using WStore API. For a complete description of WStore API view `Store GE Open API Specification`_.
+WStore allows to offer any kind of digital asset. In this regard, some kind of digital assets may require to perform specifific actions and validations that require to know the format of the asset. To deal with this problem WStore allows to register types of resources by creating plugins. This section explains how these plugins are created.
+
+Additionally, WStore exposes an API that can be used by developers in order to integrate the monetization features offered with their own solutions. The complete description of this API can be found in:
+
+
+* `Apiary <http://docs.fiwarestore.apiary.io>`__
+* `GitHub Pages <http://conwetlab.github.io/wstore>`__
+
+
+Plugin Package
+==============
+
+WStore plugins must be packaged in a zip. This file will contain all the sources of the plugin and a configuration file called *package.json* in the root of the zip. 
+This configuration file allows to specify some aspects of the behaviuor of the plugin and contains the following fields:
+
+* name: Name given to the resource type. This is the field that will be shown to providers 
+* author: Author of the plugin.
+* formats: List that specify the different allowed formats for providing a resource of the given type. This list can contain the values "URL" and "FILE".
+* module: This field is used to specify the main class of the Plugin.
+* version: Current version of the plugin.
+* overrides: List that specify a set of fields of the resource that will be overriden by the plugin code when creating a resource of the given type. This list can contain the values "NAME", "VERSION" and "OPEN".
+* media_types: List of allowed media types that can be selected when creating a resource of the given type
+* form: Optional field that can be used to define a form that is displayed to providers in order to retrieve meta information that is required by this specific resource type.
+
+Following you can find an example of a *package.json* file:
+
+::
+
+    {
+        "name": "Test Resource",
+        "author": "fdelavega",
+        "formats": ["FILE"],
+        "module": "plugin.TestPlugin",
+        "version": "1.0",
+        "overrides": ["NAME", "VERSION"],
+        "form": {}
+    }
 
-.. _Store GE Open API Specification: https://forge.fiware.org/plugins/mediawiki/wiki/fiware/index.php/FIWARE.OpenSpecification.Apps.Store
 
-API Authentication and authorization
-====================================
+The form field allows to specify a concrete form that is rendered and diaplyed to providers when registering a resource of the given type in order to retrieve metadata. In this regard, this field allows to specify text inputs, selects, checkboxes and textareas. The following example shows a configuration file where this form has been filled:
 
-WStore API requires users to be authenticated and requires them to authorize developer‘s application in order to access WStore API in their name. To perform this process WStore uses an OAuth2 approach.
+::
 
-Depending on the authorization mode of the WStore instance there are two possible ways for API authorization. If the WStore instance is using an idM GE, the developer application should include a valid token obtained from the idM in all the related requests. For information on how to authorize an application using the idM GE have a look at `Identitity Management GE User and Programmers Guide`_.
+    {
+        "defined_type": "CKAN Dataset",
+        "author": "fdelavega",
+        "version": "1.0",
+        "module": "ckan_dataset.CKANDataset",
+        "media_types": [],
+        "formats": ["FILE", "URL"],
+        "overrides": [],
+        "form": {
+            "notif": {
+                "type": "text",
+                "placeholder": "Notification URL",
+                "default": "http://data.lab.fiware.org/notify_creation",
+                "label": "Notification URL",
+                "mandatory": true
+            },
+            "license" : {
+                "type": "select",
+                "label": "Dataset license",
+                "options": [{
+                    "text": "Creative Commons",
+                    "value": "opt1"
+                }, {
+                    "text": "BSD",
+                    "value": "opt2"
+                }]
+            },
+            "is_private": {
+                "type": "checkbox",
+                "label": "Is private",
+                "text": "Check if the provided dataset is private or not",
+                "default": true
+            },
+            "add_data": {
+                "type": "textarea",
+                "label": "Additional data",
+                "placeholder": "Additional data"
+            }
+        }
+    }
 
-.. _Identitity Management GE User and Programmers Guide: https://forge.fi-ware.eu/plugins/mediawiki/wiki/fiware/index.php/Identity_Management_-_KeyRock_-_User_and_Programmers_Guide
 
-In case the WStore instance uses it own authentication mechanism the developer should follow the following process.
+The source code of the plugin must be written in Python and must contain a main class that must be a child class of the Plugin class defined in WStore. Following you can find an example of a plugin main class.
 
-The first step consist on user authentication and application authorization. Note that the application should be registered in WStore in order to have a client_id and a client_secret. To perform this step is necessary to make the following request: ::
+::
 
-	GET /oauth2/auth HTTP/1.1
-	Accept: application/json
+    from wstore.offerings.resource_plugins.plugin import Plugin
 
+    class TestPlugin(Plugin):
+        def on_pre_create_validation(self, provider, data, file_=None):
+            return data
 
-This request must include the following params.
+        def on_post_create_validation(self, provider, data, file_=None):
+            pass
 
-* client_id: Id of the application in WStore.
-* redirect_uri: URI where WStore redirects when the call finishes
-* response_type:
+        def on_pre_create(self, provider, data):
+            pass
 
-When this request is performed the user is redirected to a page where the user can log in
+        def on_post_create(self, resource):
+            pass
 
-.. image:: /images/none.png
-   :align: center
+        def on_pre_update(self, resource):
+            pass
 
-and authorize the application.
+        def on_post_update(self, resource):
+            pass
 
-.. image:: /images/none.png
-   :align: center
+        def on_pre_upgrade_validation(self, resource, data, file_=None):
+            return data
 
-Once the user has authorized the application, an authorization code is returned to the redirect_uri provided.
+        def on_post_upgrade_validation(self, resource, data, file_=None):
+            pass
 
-The next step is to acquire the access token. To perform this step, it is necessary to make the following request: ::
+        def on_pre_upgrade(self, resource):
+            pass
 
-	POST /oauth2/token HTTP/1.1
+        def on_post_upgrade(self, resource):
+            pass
 
+        def on_pre_delete(self, resource):
+            pass
 
-This request must include the following params.
+        def on_post_delete(self, resource):
+            pass
 
-* client_id: Id of the application in WStore
-* client_secret: Secret of the application in WStore
-* grant_type:
-* code: Authorization code provided in the previous step
-* redirect_uri: URI where WStore redirects when the call finishes
 
-WStore responds to this request providing an access and a refresh token. The access token must be included as a header in all API requests, and the refresh token is used to acquire a new access token in case it expires.
 
-To refresh the access token is necessary to make the following request: ::
+Implementing Event Handlers
+===========================
 
-	POST /oauth2/token HTTP/1.1
+It can be seen in the previous section that the main class of a plugin can implement some methods that are inherited from WStore Plugin class. This methods can be used to implement handlers of the different events of the life cycle of a resource. Concretely, WStore defines the following events:
 
+*on pre create validation*: This event is raised before WStore validates the information of the resource given by the provider. The main objective of this event is allowing the concrete plug-in to override some information of the resource, which is then validated by WStore. The handler of this event receives the provider, and the raw information given by the provider for the creation of the resource, that may include a file for "FILE" formats. Additionally, the handler of this event must return the processed data of the resource.
 
-This request must include the following params.
-* client_id: Id of the application in WStore,
-* client_secret: Secret of the application in WStore,
-* grant_type:
-* refresh_token: refresh token provided in the previous step
+*on post create validation*: This event is raised after the information given by the provider for creating the resource has been validated by WStore. The main objective of this event is allowing plug-ins to override resource information that is not intended to be validated by the Store. The event handler of this event receives the provider and validated information given by the provider.
 
-Resources management integration
-================================
+*on pre create*: This event is raised before a new resource is saved to the database. This event can be used to modify the resource object before saving it or for executing some tasks required by the concrete type of resource, such as generating some meta data to be saved with resource or performing specific validations. The handler of this event is called passing the provider and the validated data of the resource as parameters.
 
-It is possible for a developer to integrate the Resources API in order to monetize different catalogues included in the developer solution. To perform this monetization, it is necessary to register the resources using a POST request, making them available to be bound in an offering.
+*on post create*: This event is raised after a new resource has been saved to the database. The intention of this event is allowing the plug-in to perform some tasks that depend on the complete creation of the resource, for example notifying a server that a resource has been created in case it might be necessary. The handler of this event receives the saved resource object.
 
-Registering resources
----------------------
+*on pre update*: This event is raised before WStore saves the result of updating the basic info of a resource. This event is intended to allow plug-ins to perform specific validations of the data or override some fields. The handler of this event receives the modified resource object before saving it.
 
-The contents of the request depends on the resource characteristics and the developer criteria.
+*on post update*: This event is raised after WStore has saved the result of updating the basic info of a resource. The main objective of this event is allowing plug-ins to execute specific tasks that require the updated resource to have been saved in the database (e.g sending notifications). The handler of this event receives the modified resource object already saved in the database.
 
-* Downloadable resource
+*on pre upgrade validation*: This event is raised before WStore validates the information of a new version of a resource given by the provider. The main objective of this event is allowing the concrete plug-in to override some information of the new version of the resource, which is then validated by WStore. The handler of this event receives the raw information given by the provider for upgrading of the resource and the resource object.
 
-	If the resource is a downloadable resource and the resource is provided, it is possible to provide the resource itself by creating a multipart request or encode it in base64 and include this encoding in the JSON ::
+*on post upgrade validation*: This event is raised after the information given by the provider for upgrading the resource has been validated by WStore. The main objective of this event is allowing plug-ins to override some information of the new version of the resource that is not intended to be validated by WStore. The event handler of this event receives the validated information given by the provider and the resource object.
 
-		POST /api/offering/resources HTTP 1.1
-		Content-type: multipart/form-data
-		{
+*on pre upgrade*: This event is raised before a new version of a resource is saved to the database. This event can be used to modify the resource object before saving it or for executing some tasks required by the concrete type of resource, such as generating some meta data to be saved with resource or performing specific validations. The handler of this event is called passing the resource object as a parameter.
 
-		   “name”: “Smart City Lights Mashup”,
-		   “version”: “1.0”,
-		   “description”: “This resource contains a mashup for Smart City Lights”,
-		   “content_type”: “application/x-mashup+mashable-application-component”
+*on post upgrade*: This event is raised after a new version of a resource has been saved to the database. The intention of this event is allowing the plug-in to perform some tasks that depend on the upgrade of the resource, for example notifying a server that a resource has been upgraded. The handler of this event receives the saved resource object.
 
-		}
-		+ FILE
+*on pre delete*: This event is raised before WStore deletes a resource. This event is intended to allow plug-ins to perform specific tasks and validations before a resource is removed.  In this regard, a concrete resource type might require some actions to have been tackled by the provider of the resource before allowing a deletion. The handler of this event receives the resource object to be deleted.
 
+*on post delete*: This event is raised after WStore has deleted a resource. The main objective of this event is allowing plug-ins to execute specific tasks that require the resource to have been deleted from the database (e.g sending notifications). The handler of this event receives a copy of the deleted resource.
 
-	::
+Managing Plugins
+================
 
-		POST /api/offering/resources HTTP 1.1
-		Content-type: application/json
-		{
+Once the plugin has been packaged in a zip file, WStore offers some management command that can be used to manage the plugins.
 
-		   “name”: “Smart City Lights Mashup”,
-		   “version”: “1.0”,
-		   “description”: “This resource contains a mashup for Smart City Lights”,
-		   “content_type”: “application/x-mashup+mashable-application-component”,
-		   “content”: {
-		       “name”: “SmartCityLights.wgt”,
-		       “data”: “encoded_data”
-		   }
-		}
-
-
-* Downloadable resource providing link
-
-	If the resource is a downloadable resource but the service provider has her own server to serve media files, s/he can provide an URL where the resource can be downloaded instead of the resource itself, making the request as follows. ::
-
-		POST /api/offering/resources HTTP 1.1
-		Content-type: application/json
-		{
-		    “name”: “Smart City Lights Mashup”,
-		    “version”: “1.0”,
-		    “description”: “This resource contains a mashup for Smart City Lights”,
-		    “content_type”: “application//x-mashup+mashable-application-component”,
-		    “link”: “https://downloadmashuplink.com/smartcity”
-		}
-
-	All this requests return a 201 code if everything is sucessful.
-
-Getting resources
------------------
-
-It is also possible to retrieve the information of the different resources belonging to the user making the following call. ::
-
-	GET /api/offering/resources HTTP 1.1
-	Accept: application/json
+When a new plugin is registered WStore automatically generates an id for the plugin that is used for managing it. To register a new plugin the following command is used:
 
-This call returns a list with the following format ::
+::
+    python manage.py loadplugin TestPlugin.zip
 
-	HTTP/1.1 200 OK
-	Content-Type: application/json
-	Vary: Cookie
+It is also possible to list the existing plugins in order to retrieve the generated ids:
 
-	{
-	  [
-	     {
-	        “content_type”: "application/x-mashup+mashable-application-component"
-	        “description”: "Smart City Lights is an app"
-	        “name”: "Smart City Management"
-	        “version”: "1.0"
-	     }
-	  ]
-	}
+::
 
+    python manage.py listplugins
 
-Offerings management integration
-================================
-
-WStore also offers the different operations to manage offerings through its API in order to allow developers to create different applications capable of performing this management and allowing external applications to enrich their resources with pricing models, service level agreements, etc.
-
-Getting offerings
------------------
-
-The next request shows how is possible to retrieve offerings using WStore API. The next call is supposed to return all the offerings published (its state is published) in WStore. ::
-
-	GET /api/offering/offerings HTTP 1.1
-	Accept: application/json
-
-
-WStore responds with a list of offerings with the following format: ::
-
-	HTTP/1.1 200 OK
-	Content-Type: application/json
-	Vary: Cookie
-
-	[
-	    {
-	        "name":"SmartCityLights",
-	        "owner_organization": "CoNWeT",
-	        "owner_admin_user": "app_provider",
-	        "version": "1.0",
-	        "state": "published",
-	        "description_url": "http://examplerepository.com/storeCollection/SmartCityLights",
-	        "marketplaces": [example_marketplace],
-	        "resources": [{
-	             “name”: “Smart City Lights Mashup”,
-	             “version”: “1.0”,
-	             “description”: “This resource contains a mashup for Smart City Lights”,
-	        }],
-	        "applications": [{
-	            "id": 18,
-	            "name": "Context broker",
-	            "url": "https://orion.lab.fi-ware.eu",
-	            "description": "Context broker"
-	        }],
-	        "rating": "5",
-	        "comments": [{
-	             "date": "2013/01/16",
-	             "user": "admin",
-	             "rating": "5",
-	             "comments": "Good offering"
-	        }],
-	        "tags": [smart, city],
-	        "image_url": "http://examplestore.com/media/image",
-	        "related_images": [],
-	        "offering_description": {parsed USDL description info},
-	    }
-	]
-
-
-The applications field only appears if an identity manager is being used. This field contains the different OAuth2 applications offered in the offering.
-
-Note that the resources field contains the information of the resources bound to the offering. In case that the offering had been purchased by the user making the call and that the resource was a downloadable resource, this field contains also a URL where download the resource. As it is mentioned above the previous call returns all offerings whose state is published. However it is possible to configure the API call using query strings in order to limit the number, select the first offering expected or ask for the user offerings (provided and purchased). To perform this calls the following query strings can be used and combined.
-
-* filter=published : Returns published offerings
-* filter=purchased : Returns the offerings purchased by the user making the call
-* filter=provided : Returns the offerings provided by the user making the call
-
-* sort=date : Sorts the returned offerings using the date (default).
-* sort=name : Sorts he returned offerings using the name.
-* sort=popularity : Sorts he returned offerings using the popularity.
-
-* start=<number> : Defines the first offering to be returned
-* limit=<number> : Defines the number of offerings to be returned
-
-This two query strings can be combined with the filter query string and are used to paginate the results. Additionally is possible to use action=count. This query string can be combined with filter, and modifies the functionally of the call that now returns the number of offerings instead of the offerings info. It is also possible to request a single offering by making the following request ::
-
-	GET /api/offering/offerings/{organization}/{name}/{version} HTTP 1.1
-	Accept: application/json
-
-
-The response of that call is similar as the previous one but only an offering is returned instead of a list of offerings.
-
-Searching offerings
--------------------
-
-WStore allows to search for offerings using a keyword. To perform this action it is necessary to make the following call. ::
-
-	GET /api/search/{keyword} HTTP 1.1
-	Accept: application/json
-
-In this case the response is similar to the getting offerings call but only offerings that satisfy the keyword are returned
-
-Creating an offering
---------------------
-
-WStore allows to create new offerings through its offering API. There are three different ways of creating an offering depending on the state of the USDL describing the offering. If the user has the USDL, s/he can include it in the request as in the following call. ::
-
-	POST  /api/offering/offerings HTTP 1.1
-	Content-Type: application/json
-	{
-	   "name": "SmartCityLigths",
-	   "version": "1.0",
-	   "image": {
-	       “name”: “catalogue.png”,
-	       “data”: <encoded_data>,
-	   },
-	   "applications": [{
-	       "id": 18,
-	       "name": "Context broker",
-	       "url": "https://orion.lab.fi-ware.eu",
-	       "description": "Context broker"
-	   }],
-	   "related_images": [],
-	   "repository": "testbed_repository",
-	   "resources": [{
-	        "provider": "app_provider",
-	        "name": "Smart City Management",
-	        "version": "1.0"
-	    }],
-	   "offering_description": {
-	       “content_type”: “text/turtle”,
-	       “data”: "raw USDL document (RDF XML, N3 , Turtle)"
-	   }
-	}
-
-
-If the USDL is uploaded previously into a repository then the user can include its URL as in the following request. ::
-
-	POST  /api/offering/offerings HTTP 1.1
-	Content-Type: application/json
-	{
-
-	   "name": "example_offering",
-	   "version": "1.0",
-	   "image": {
-	       “name”: “catalogue.png”,
-	       “data”: <encoded_data>,
-	   },
-	   "applications": [{
-	       "id": 18,
-	       "name": "Context broker",
-	       "url": "https://orion.lab.fi-ware.eu",
-	       "description": "Context broker"
-	   }],
-	   "related_images": [],
-	   "resources": [{
-	        "provider": "app_provider",
-	        "name": "Smart City Management",
-	        "version": "1.0"
-	    }],
-	   "description_url”: “http://examplerepository/collection/SmartCity.rdf”
-	}
-
-
-Finally, If the user does not have an USDL s/he can provide basic info that is used to create an USDL document in WStore. ::
-
-	POST  /api/offering/offerings HTTP 1.1
-	Content-Type: application/json
-	{
-
-	   "name": "example_offering",
-	   "version": "1.0",
-	   "image": {
-	       “name”: “catalogue.png”,
-	       “data”: <encoded_data>,
-	   },
-	   "related_images": [],
-	   "resources": [{
-	        "provider": "app_provider",
-	        "name": "Smart City Management",
-	        "version": "1.0"
-	    }],
-	   "offering_info": {
-	       "description": "Description of the offering",
-	       "pricing": {
-	           "price_model": "free"
-	       },
-	       "legal" : {
-	           "title": "Terms and conditions",
-	           "text": "Text of terms and conditions"
-	       }
-	   }
-	}
-
-The images passed in this call are included in the JSON document directly, encoded in base64 format; moreover, screenshots must be included in the related_images field as a list of elements with the same format as the image field.
-
-WStore responds to this call with a 201 Created code if the request is successful. Note that to perform this action the user making the call must have the provider role.
-
-Updating an offering
---------------------
-
-WStore supports updating created offerings that have not been published yet. To update an uploaded offering, new logo, screenshots or USDL can be provided. Note that the name and version of the offering cannot be changed since are used to identify the offering. Similarly to the offering creation, there are three different ways of updating an offering depending on where the USDL is. If the USDL document is directly provided, this document overrides the previous USDL description in the repository; therefore, this method for updating can be used even if the offering was created using a repository link. ::
-
-	PUT /api/offering/offerings/{organization}/{name}/{version} HTTP 1.1
-	Content-Type: application/json
-	{
-	   "image": {
-	       “name”: “catalogue.png”,
-	       “data”: <encoded_data>,
-	   },
-	   "related_images": [],
-	   "repository": "example_repository",
-	   "offering_description":  {
-	       “content_type”: “text/turtle”,
-	       “data”: "raw USDL document (RDF XML, N3 , Turtle)"
-	   }
-	}
-
-
-If a USDL link is provided, this URL must be the same as the provided when the offering was created. This method is the one used in case that multiple applications were writing over the USDL description. ::
-
-	PUT /api/offering/offerings/{organization}/{name}/{version} HTTP 1.1
-	Content-Type: application/json
-	{
-	   "image": {
-	       “name”: “catalogue.png”,
-	       “data”: <encoded_data>,
-	   },
-	   "related_images": [],
-	   "repository": "example_repository",
-	   "description_url": "http://examplerepository/collection/SmartCity.rdf"
-	}
-
-
-If the information is included, the new created USDL will override the existing one. ::
-
-	PUT /api/offering/offerings/{organization}/{name}/{version} HTTP 1.1
-	Content-Type: application/json
-	{
-	   "image": {
-	       “name”: “catalogue.png”,
-	       “data”: <encoded_data>,
-	   },
-	   "related_images": [],
-	   "repository": "example_repository",
-	   "offering_info": {
-	       "description": "Description of the offering",
-	       "pricing": {
-	           "price_model": "free"
-	       },
-	       "legal" : {
-	           "title": "Terms and conditions",
-	           "text": "Text of terms and conditions"
-	       }
-	   }
-	}
-
-WStore returns a 200 OK code in case the request is successful. Note that to perform this action, the user making the call must be the owner of the offering.
-
-Binding resources
------------------
-
-WStore supports bind registered resources with created offerings using the offering management API. To perform the binding, it is necessary to have the resources info, so may be useful to make a getting resources request as defined in the resources management section. ::
-
-	POST /api/offering/offerings/{organization}/{name}/{version}/bind
-	Content-Type: application/json
-	{
-
-	   “resources”: [{
-	        "provider": "app_provider",
-	        "name": "Smart City Management",
-	        "version": "1.0"
-	   },
-
-	   {
-	        "provider": "app_provider",
-	        "name": "HistoryMod",
-	        "version": "1.0"
-	   }]
-
-	}
-
-
-WStore returns a 200 OK code in case the request is successful.
-
-The binding process is an absolute update, that is, when the request finishes, the offering resources are the same as the contained in the request. Note that this action only can be performed if the offering is not published.
-
-Publishing an offering
-----------------------
-
-WStore supports publishing an offering using the offerings management API, Publishing an offering means start selling it. Note that in this request is possible to select in what Marketplaces (WStore must be registered on them) the offering is going to be published. It is also possible not publishing the offering in any Marketplace. ::
-
-	POST /api/offering/offerings/{organization}/{name}/{version}/publish
-	Content-Type: application/json
-	{
-
-	   “marketplaces”: [“testbed_marketplace”,]
-
-	}
-
-
-WStore returns a 200 OK code in case the request is successful.
-
-The marketplaces list contains the name of the different Marketplaces as was included in WStore when WStore was registered in those marketplaces.
-
-
-Deleting an offering
---------------------
-
-WStore supports to delete offerings via API. Note if the offering has been published it is not deleted but its state is changed to deleted. ::
-
-	DELETE /api/offering/offerings/{organization}/{name}/{version} HTTP 1.1
-
-
-WStore returns a 204 No content code if the request is successful
-
-Purchases
-=========
-
-Purchase API integration
-------------------------
-
-WStore supports to integrate purchases with different external applications using the purchases API directly. Using this method to integrate purchases requires the developer to take into account the payment method since it is possible that it needs to redirect users to the PayPal confirmation page.
-
-The requests to perform a purchase directly using the purchases API are different depending on the payment method selected.
-
-* Credit card
-
-	The following request shows how to perform a purchase using a credit card. If no tax address or credit card provided, then default values stored in user’s profile are used. Moreover, the field offering used to identify the offering to be purchased could contain different values, apart for the method used in the request (organization, name, version), it is also possible to provide the URL of the USDL in the Repository GEi (description_url field in offering requests), this method is useful to purchase offerings that have been searched in a Marketplace GEi. The plan label field is used to identify the price plan when there are more than one, if only a plan exists this field is not mandatory. ::
-
-		POST /api/contracting HTTP 1.1
-		Content-Type: application/json
-		{
-		   “offering”: {
-		       “organization”: "CoNWeT"
-		       “name”: "SmartCityLights"
-		       “version”: "1.0"
-		   },
-		   "plan_label": "update",
-		   “tax_address”: {
-		       “street”: "C/Los alamos n 17",
-		       “city”: "Santander",
-		       “postal”: "39011",
-		       “country”: "Spain"
-		   }
-		   “payment_info”: {
-		       “payment_method”: “credit card”,
-		       “credit_card”: {
-		           “number”: "546798367265",
-		           “type”: "MasterCard",
-		           “expire_year”: "2018",
-		           “expire_month”: "5",
-		           “cvv2”: "111"
-		       }
-		   }
-		}
-
-	WStore responds with a 201 Created code is the request is successful.
-
-* PayPal
-
-	The following request shows how to perform a purchase using a PayPal account. Note that if no tax address provided the default value is used. ::
-
-		POST /api/contracting HTTP 1.1
-		Content-Type: application/json
-		Accept: application/json
-		{ 
-		    “offering”: {
-		        “organization”: "CoNWeT"
-		        “name”: "SmartCityLights"
-		        “version”: "1.0"
-		    },
-		    "plan_label": "update",
-		    “tax_address”: {
-		        “street”: "C/Los alamos n 17",
-		        “city”: "Santander",
-		        “postal”: "39011",
-		        “country”: "Spain"
-		    }
-		    “payment_info”: {
-		        “payment_method”: “paypal”
-		    }
-		}
-
-
-	If the request is success WStore will respond with a redirection URL. This URL is created by PayPal and the user browser should be redirected to that window, since, PayPal requires user authentication and confirmation to perform the payment.
-	
-	Response: ::
-
-		HTTP/1.1 200 OK
-		Content-Type: application/json
-		Vary: Cookie
-
-		{
-		    "redirection_link": "http://paypalredirectionlink.com/"
-		}
-
-
-Purchase redirection integration
---------------------------------
-
-WStore also supports to integrate external applications with the purchase process using WStore web interface to perform the payment. To integrate an application using this method, the client application requests for a purchase formulary for a concrete offering and WStore responds with a redirection URL where the client application should redirect the user browser in order to start the purchasing process. ::
-
-	POST /api/contracting/form HTTP 1.1
-	Content-Type: application/json
-	Accept: application/json
-	{
-	    "offering": {
-	        "organization": "CoNWeT",
-	        "name": "SmartCityLights",
-	        "version": 1.0,
-	    },
-	    "redirect_uri": "http://customerredirecturi.com"
-	}
-
-Note that the offering field, used to identify the offering, could also contain the URL pointing to the USDL description in the Repository GEi (description_url field in offering request) in order to allow to integrate WStore with a solution that uses a Marketplace GEi for searching offerings.
-
-Response: ::
-
-	HTTP/1.1 200 OK
-	Content-Type: application/json
-	Vary: Cookie
-
-	{
-	    "url": "http://wstore.lab.fi-ware.eu/contracting/form?ID=63865adf6c2ca6f7"
-	}
-
-
-The URL returned should be used to redirect the user browser. This URL points to a formulary that allows the user to pay using the WStore GUI.
-
-When the user ends the purchase, the window is closed and WStore sends a notification to the client application using the redirect URI provided in the call.
-
-Purchases notifications
------------------------
-
-When a service provider publish an offering in WStore, s/he should provide an URL where s/he can receive a notification when her offering is purchased in order to know the customer and the purchase reference. The provided URL should support a POST request with the following structure. ::
-
-	POST notification_url HTTP 1.1
-	Content-Type: application/json
-	{
-	    "offering": {
-	        "organization": "CoNWeT",
-	        "name": "SmartCityLights",
-	        "version": "1.0"
-	    }
-	    "reference": "51c2d2825d9af944d0d1cfe0",
-	    "customer": "santander_crm"
-	}
-
-
-Accounting and Pay-Per-Use integration
-======================================
-
-If a service provider wants to provide a service under a pay-per-use pricing model, it is necessary to develop some modules in charge of providing accounting info to WStore in order to allow it to perform the charging process. To perform the accounting process, the service provider must have received the purchase notification as defined in the previous section since the offering, the customer, and the reference are required.
-
-The accounting request is defined as follows: ::
-
-	POST /api/contracting/{reference}/accounting HTTP 1.1
-	Content-Type: application/json
-	{
-	    “offering”: {
-	        “name”: “offering_name”
-	        “version”: “1.0”
-	        “organization”: “organization”
-	    },
-	    "component_label": "issues",
-	    “customer”: “test_user”,
-	    “correlation_number”: “1”,
-	    “time_stamp”: “2013-07-01T10:00:00-0”,
-	    “record_type”: “event”,
-	    “value”: “1”,
-	    “unit”: “issue”
-	}
+To remove a plugin it is needed to provide the plugin id. This can be done using the following command:
+
+::
+
+    python manage.py removeplugin test-plugin
 
