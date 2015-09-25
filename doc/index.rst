@@ -19,7 +19,7 @@ Index
 :doc:`installation-administration-guide`
   The guide for Store maintainers that explains how to install it.
 
-:doc:`user-and-programmer-guide`
+:doc:`user-programmer-guide`
   The guide for user and programmers where that explains how ...
 
 .. _documentation:
@@ -29,4 +29,4 @@ Index
    :caption: Documentation
 
    installation-guide
-   user-and-programmer-guide
+   user-programmer-guide
