@@ -579,7 +579,7 @@ It is possible to view existing currencies by click on the Allowed currencies ro
 Programmer Guide
 ----------------
 
-WStore allows to offer any kind of digital asset. In this regard, some kind of digital assets may require to perform specifific actions and validations that require to know the format of the asset. To deal with this problem WStore allows to register types of resources by creating plugins. This section explains how these plugins are created.
+WStore allows to offer any kind of digital asset. In this regard, some kind of digital assets may require to perform specific actions and validations that require to know the format of the asset. To deal with this problem WStore allows to register types of resources by creating plugins. This section explains how these plugins are created.
 
 Additionally, WStore exposes an API that can be used by developers in order to integrate the monetization features offered with their own solutions. The complete description of this API can be found in:
 
