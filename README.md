@@ -25,13 +25,14 @@ WStore provides functionality for the monetization of different kind of digital 
 
 # Installation
 
-The instructions to install WStore can be found at [the Installation Guide](http://wstore.readthedocs.org/en/latest/installation-guide.html). You can install the software in three different ways:
+The instructions to install WStore can be found at [the Installation Guide](http://wstore.readthedocs.org/en/latest/installation-administration-guide.html). You can install the software in three different ways:
 
 * Using the provided scripts
 * Using a [Docker Container](https://hub.docker.com/r/fiware/wstore/)
 * Manually
 
 # API Overview
+
 # API Reference
 
 For further documentation, you can check the API Reference available at:
@@ -42,7 +43,7 @@ For further documentation, you can check the API Reference available at:
 # Testing
 ### End-to-End tests
 
-End-to-End tests are described in the [Installation Guide](http://wstore.readthedocs.org/en/latest/installation-guide.html#end-to-end-testing)
+End-to-End tests are described in the [Installation Guide](http://wstore.readthedocs.org/en/latest/installation-adminstration-guide.html#end-to-end-testing)
 
 ### Unit tests
 
@@ -55,6 +56,6 @@ python manage.py test
 ## Advanced Topics
 
 * [User & Programmers Guide](doc/user-programmer-guide.rst)
-* [Installation & Administration Guide](doc/installation-guide.rst)
+* [Installation & Administration Guide](doc/installation-administration-guide.rst)
 
 You can also find this documentation on [ReadTheDocs](http://wstore.readthedocs.org)
