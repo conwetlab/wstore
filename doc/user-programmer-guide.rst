@@ -153,37 +153,62 @@ Creating an offering
 
 Offerings are the main entity managed by WStore and include all the relevant information such as the pricing model, legal conditions, interactions, service level agreement, etc. To create an offering, go to My Offerings. and choose Create offering from the Provider Options dropdown.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_createoff_1.png
    :align: center
 
 In the displayed modal, fill the name, version and description fields. Next, provide an image and an optional set of screenshots
 
 The next step consits on selecting how to provide the notification URL. This field is used by WStore to notify the service provider when its offering has been purchased. There are three different options: (a) Provide a new notification URL for this offering. (b) Use the default notification URL of the provider that can be configured in the user profile configuration form. (c) Not using a notification URL for this offering.
 
-Finally, choose whether the offering is open or not, that is, all the resources will be direcly accessible by WStore customers whitout the need of acquiring the offering. Note that if the offering is created as open, only open resources (resources that do not contain an external authetication mechanism that do not depend on WStore)can be bound to it.
+Finally, choose whether the offering is open or not, that is, all the resources will be direcly accessible by WStore customers whitout the need of acquiring the offering. Note that if the offering is created as open, only open resources (resources that do not contain an external authetication mechanism that do not depend on WStore) can be bound to it.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_createoff_2.png
    :align: center
 
-The next step is providing an USDL document describing the offering. There are three possible options: (a) Create a simple USDL just by using the provided form. (b) Upload a USDL document. (c) Provide an URL pointing to the USDL document if it as been previously uploaded into a repository.
+The next step consist on providing description information for the offering, including an abstract and a long description. Additionally, it is also possible to provide a legal description including the terms and conditions of the offering.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_createoff_3.png
    :align: center
 
-.. image:: /images/none.png
+Once offering description has been provided, the next step is providing pricing information. The pricing models in WStore are based different price plans that can be chosen by the customers when acquiring the offering. To create a price plan click on *Add Plan*
+
+
+.. image:: /images/customer/Wstore_ug_createoff_4.png
    :align: center
 
-.. image:: /images/none.png
+Then, it is required to include a label that identifies the price plan, a display name, and a description. Additionally, it is needed to select the currency of the price plan.
+
+.. image:: /images/customer/Wstore_ug_createoff_5.png
    :align: center
 
-Once the USDL info has been provided, the next step consist of including Applications. This applications need to be uderstood as OAuth2 Applications and are those registered in the Identity Manger by the provider. Including Applications in an offering allows to grant real access to the related services via OAuth2 to the customers that acquire the offering.
+For including the pricing information, it is needed to create price components. To create a price component click on the *add* button in the price components section.
 
-.. image:: /images/none.png
+
+.. image:: /images/customer/Wstore_ug_createoff_6.png
+   :align: center
+
+Next, provide a label for identifying the component and a description. Next, provide the value of the component chosing the unit from the ones available. Finally, save the price component clickin on the *save* button.
+
+.. image:: /images/customer/Wstore_ug_createoff_7.png
+   :align: center
+
+The last step for the creation of a price plan is saving it by clicking on the *save* button.
+
+.. image:: /images/customer/Wstore_ug_createoff_8.png
+   :align: center
+
+.. note::
+    For creating a free offering you can just skip this step.
+
+Once the pricing info has been provided, the next step consist of including Applications. This applications need to be uderstood as OAuth2 Applications and are those registered in the Identity Manger by the provider. Including Applications in an offering allows to grant real access to the related services via OAuth2 to the customers that acquire the offering.
+
+
+.. image:: /images/customer/Wstore_ug_createoff_9.png
    :align: center
 
 The final step consist of selecting resources previously registered by the provider.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_createoff_10.png
    :align: center
 
 Updating an offering
