@@ -214,26 +214,34 @@ The final step consist of selecting resources previously registered by the provi
 Updating an offering
 --------------------
 
-It is possible to update an offering info by providing a new USDL description or including new images.
-
 To update an offering, go to My Offerings view and the Provided section. This tab contains the offerings provided by the service provider.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_update_1.png
    :align: center
 
 Select the offering to be updated. Note that only offerings with uploaded state (Offerings that have not been published yet) can be updated.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_update_2.png
    :align: center
 
 In the advanced operations, select Edit.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_update_3.png
    :align: center
 
-In the displayed modal, it is possible to provide a USDL as in the offering creation. It is also possible to provide some screenshots or a new logo.
+In the displayed modal, it possible to provide some screenshots or a new logo. Additionally, it allows to modify the notification URL of the offering.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_update_4.png
+   :align: center
+
+The next step, allows to modify the description information of the offering.
+
+.. image:: /images/customer/Wstore_ug_update_4.png
+   :align: center
+
+Finally, the last step allows to modify the pricing model of the offering.
+
+.. image:: /images/customer/Wstore_ug_update_4.png
    :align: center
 
 Binding resources
