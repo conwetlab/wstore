@@ -236,12 +236,12 @@ In the displayed modal, it possible to provide some screenshots or a new logo. A
 
 The next step, allows to modify the description information of the offering.
 
-.. image:: /images/customer/Wstore_ug_update_4.png
+.. image:: /images/customer/Wstore_ug_update_5.png
    :align: center
 
 Finally, the last step allows to modify the pricing model of the offering.
 
-.. image:: /images/customer/Wstore_ug_update_4.png
+.. image:: /images/customer/Wstore_ug_update_6.png
    :align: center
 
 Binding resources
@@ -256,7 +256,7 @@ Select the “Bind resources” option.
 
 In the displayed modal, select the resources to be bound and press Accept
 
-.. image:: /images/customer/Wstore_ug_bind_1.png
+.. image:: /images/customer/Wstore_ug_bind_2.png
    :align: center
 
 Note that this operation is an absolute update, that is, the selected resources are the bound resources. Therefore, it is possible to bind and unbind resources in the same action.
@@ -421,9 +421,25 @@ To review and rate an offering, select an acquired or an open offering and click
 .. image:: /images/customer/Wstore_ug_com_1.png
    :align: center
 
-Fill the number of stars and give a comment.
+Fill the number of stars, give a title and a comment for your review.
 
 .. image:: /images/customer/Wstore_ug_com_2.png
+   :align: center
+
+Additionally, the owner of the offering can reply to the existing reviews. To reply a review, the first step is clicking on the review to display its whole information.
+
+
+.. image:: /images/customer/Wstore_ug_reply_1.png
+   :align: center
+
+Then, click on the *reply* button.
+
+.. image:: /images/customer/Wstore_ug_reply_2.png
+   :align: center
+
+Finally, provide a title and a comment for your reply.
+
+.. image:: /images/customer/Wstore_ug_reply_3.png
    :align: center
 
 Admin
@@ -440,25 +456,28 @@ Note that this process is made from WStore GUI, since WStore needs to have infor
 
 To register WStore on a Marketplace, select the Administration view.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_market_1.png
    :align: center
 
 Press the Add symbol of the Marketplaces row.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_market_2.png
    :align: center
 
-Fill the internal name and the host of the Marketplace.
+Fill the internal name, the host and the API version (1 or 2) of the Marketplace.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_market_3.png
    :align: center
+
+.. note::
+    Marketplace API version 1 is deprecated
 
 Pressing on the Marketplaces row is possible to view in what Marketplaces WStore is registered on.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_market_4.png
    :align: center
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_market_5.png
    :align: center
 
 Registering a Repository on WStore
@@ -468,20 +487,23 @@ It is possible to register some instances of the Repository GE in order to allow
 
 To register a Repository on WStore select the Administration view and press the Add symbol of the Repositories row.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_repo_1.png
    :align: center
 
-Fill the internal name and the host of the Repository.
+Fill the internal name and the host of the Repository. Addtionally, it is possible to specify that the current repository is the default one in WStore by selecting the flag *is default*. Moreover, it is necessary to provide the collections that will be used for storing offering and resource USDL description. Finally, it is required to choose the API version of the repository (1 or 2).
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_repo_2.png
    :align: center
+
+.. note::
+    Repository API version 1 is deprecated
 
 Pressing on the Repositories row is possible to view what Repositories are registered on WStore.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_repo_3.png
    :align: center
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_repo_4.png
    :align: center
 
 Registering a RSS on WStore
@@ -491,20 +513,20 @@ It is possible to register RSS instances on WStore in order to perform the reven
 
 To register a RSS on WStore select the Administration view and press the Add symbol of the RSS row.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_rss_1.png
    :align: center
 
-Fill the internal name and the host of the RSS, as well as the default expenditure limits for WStore.
+Fill the internal name, the host and the API version (1 or 2) of the RSS. Then provide the basic revenue models for WStore. This fields are used to specify the percentage of the revenues generated in WStore that belongs to WStore owners as platform providers. It allows to specify a different percentage for offerings containing single payments, subscriptions and pay-per-use respectively. Finally, it is also possible to provide the default expenditure limits for WStore.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_rss_2.png
    :align: center
 
 Pressing on the RSS row is possible to view what RSSs are registered on WStore.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_rss_3.png
    :align: center
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_rss_4.png
    :align: center
 
 Registering a Price Unit
@@ -514,20 +536,43 @@ Price Units are used in order to determine the concrete pricing model that appli
 
 To include a new supported price unit select the Administration view and click the add symbol in the Pricing model units row.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_units_1.png
    :align: center
 
 Fill the name and the defined model of the unit. If the defined model is Subscription it is also necessary to specify the renovation period.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_units_2.png
    :align: center
 
 It is possible to view existing units by click on the Pricing model units row.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_units_3.png
    :align: center
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_units_4.png
+   :align: center
+
+Registering a Currency
+----------------------
+
+Currencies are used in order to determine what currencies can be used in the pricing model of an offering.
+
+To include a new supported currency select the Administration view and click the add symbol in the Allowed currencies units row.
+
+.. image:: /images/customer/Wstore_ug_curr_1.png
+   :align: center
+
+Fill the name and choose whether the currency is the default one or not.
+
+.. image:: /images/customer/Wstore_ug_curr_2.png
+   :align: center
+
+It is possible to view existing currencies by click on the Allowed currencies row.
+
+.. image:: /images/customer/Wstore_ug_curr_3.png
+   :align: center
+
+.. image:: /images/customer/Wstore_ug_curr_4.png
    :align: center
 
 ----------------
@@ -701,6 +746,7 @@ Once the plugin has been packaged in a zip file, WStore offers some management c
 When a new plugin is registered WStore automatically generates an id for the plugin that is used for managing it. To register a new plugin the following command is used:
 
 ::
+
     python manage.py loadplugin TestPlugin.zip
 
 
