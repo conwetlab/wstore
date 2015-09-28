@@ -251,12 +251,12 @@ Once an offering has been created it is still possible to manage the included re
 
 Select the “Bind resources” option.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_bind_1.png
    :align: center
 
 In the displayed modal, select the resources to be bound and press Accept
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_bind_1.png
    :align: center
 
 Note that this operation is an absolute update, that is, the selected resources are the bound resources. Therefore, it is possible to bind and unbind resources in the same action.
@@ -268,12 +268,12 @@ Publishing an offering means start selling it. To publish an offering select the
 
 In the offering details view select the Publish option.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_pub_1.png
    :align: center
 
 In the displayed modal, select the Marketplaces where publish the offerings. Note that selecting a Marketplace is not mandatory.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_pub_2.png
    :align: center
 
 The offering is now Published and cannot be updated.
@@ -285,17 +285,17 @@ It is possible for an offering provider to tag their offerings. To tag an offeri
 
 Select the Update tags option
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_tags_1.png
    :align: center
 
 Include the different tags and press Accept
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_tags_2.png
    :align: center
 
 You may also be suggested some tags that may fit your offering.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_tags_3.png
    :align: center
 
 Deleting an offering
@@ -307,17 +307,17 @@ To delete an offering, select the My Offerings view and the Provided section. Th
 
 In the offering details view, select the Delete offering option
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_del_1.png
    :align: center
 
 Select accept in the displayed window.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_del_2.png
    :align: center
 
 If the offering has been published the option Delete replaces Publish as main action.
 
-.. image:: /images/none.png
+.. image:: /images/customer/Wstore_ug_del_3.png
    :align: center
 
 Customer
