@@ -778,15 +778,6 @@ Apache version 2.4+ ::
     </Directory>
 
 
-Extra documentation
--------------------
-
-* `Open API specification`_
-* `User and Programmer Guide`_
-
-.. _Open API specification: https://forge.fi-ware.org/plugins/mediawiki/wiki/fiware/index.php/Store_Open_RESTful_API_Specification
-.. _User and Programmer Guide: https://forge.fi-ware.org/plugins/mediawiki/wiki/fiware/index.php/Store_-_W-Store_-_User_and_Programmer_Guide
-
 -----------------------
 Sanity check Procedures
 -----------------------
