@@ -64,7 +64,7 @@ For further documentation, you can check the API Reference available at:
 # Testing
 ### End-to-End tests
 
-End-to-End tests are described in the [Installation Guide](http://wstore.readthedocs.org/en/latest/installation-adminstration-guide.html#end-to-end-testing)
+End-to-End tests are described in the [Installation Guide](http://wstore.readthedocs.org/en/latest/installation-administration-guide.html#end-to-end-testing)
 
 ### Unit tests
 
