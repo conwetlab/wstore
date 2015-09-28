@@ -42,7 +42,7 @@ Installing basic dependencies
 The Web Server, MongoDB, wkhtmltopdf, python and pip itself can be installed using the 
 package management tools provided by your operating system or using the available installers.
 
-These packages are available for Linux and Mac OS so WStore should work in those systems. However, the current version of WStore and its installer / installation guide have been tested under Ubuntu 12.04, Ubuntu 13.10, Ubuntu 14.04, CentOS 6.3, CentOS 6.5 and CentOS 7. THESE ARE THEREFORE CONSIDERED AS THE SUPPORTED OPERATIVE SYSTEMS. 
+These packages are available for Linux and Mac OS so WStore should work in those systems. However, the current version of WStore and its installer / installation guide have been tested under Ubuntu 12.04, Ubuntu 13.10, Ubuntu 14.04, CentOS 6.3, CentOS 6.5 and CentOS 7. THESE ARE THEREFORE CONSIDERED AS THE SUPPORTED OPERATING SYSTEMS. 
 
 .. note:: 
     WStore needs Python 2.7 to work; however, CentOS 6 uses Python 2.6 in the system. Although it is possible to install WStore in CentOS 6 (as explained before), it is strongly recommended to use an Ubuntu/Debian distribution.
