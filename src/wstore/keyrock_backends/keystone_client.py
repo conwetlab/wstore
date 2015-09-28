@@ -40,7 +40,11 @@ class KeystoneClient(object):
         self._purchaser_role_id = pur_id
 
         if prov_id is None or pur_id is None:
-            self._map_roles()
+            try:
+                self._map_roles()
+            except:
+                self._provider_role_id = '106'
+                self._purchaser_role_id = '191'
 
     def _get_keystone_token(self, access_token):
         """
