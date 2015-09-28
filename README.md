@@ -33,6 +33,27 @@ The instructions to install WStore can be found at [the Installation Guide](http
 
 # API Overview
 
+WStore API is available under <code>/api/</code> path, and the main available resources are:
+
+* Offerings <code>/api/offering/offerings</code>
+* Resources <code>/api/offering/resources</code>
+
+With these resources you can:
+
+* Use <code>POST</code> to create entities:
+   * Create a resource making <code>POST</code> to <code>/api/offering/resources</code>
+   * Create an offering making <code>POST</code> to <code>/api/offering/offerings</code>
+* Use </code>GET</code> to retrieve entities:
+   * Retrieve a collection of resources making <code>GET</code> to <code>/api/offering/resources</code>
+   * Retrieve a collection of offerings making  <code>GET</code> to <code>/api/offering/offerings</code>
+   * Retrieve an offering making  <code>GET</code> to <code>/api/offering/offerings/ORG/NAME/VERSION</code>
+* Use <code>PUT</code> to update entities:
+   * Update a resource making  <code>PUT</code> to <code>/api/offering/resource/ORG/NAME/VERSION</code>
+   * Update an offering making  <code>PUT</code> to <code>/api/offering/offerings/ORG/NAME/VERSION</code>
+* Use <code>DELETE</code> to remove entities:
+   * Remove a resource making  <code>DELETE</code> to <code>/api/offering/resource/ORG/NAME/VERSION</code>
+   * Remove an offering making  <code>DELETE</code> to <code>/api/offering/offerings/ORG/NAME/VERSION</code>
+
 # API Reference
 
 For further documentation, you can check the API Reference available at:
