@@ -800,70 +800,59 @@ Please note that the following information is required before performing this pr
 
 * The computer name or the IP address where WStore is running.
 * Valid credentials for WStore (i.e credentials created during the syncdb command or an Identity Manager user).
-* Access to a Repository GE (a new deployed instance or an existing one).
 * A logo image.
-* Some images to be used as screenshots.
 
 To check if WStore is running follow these steps:
 
 1. Open a browser and enter WStore.
 2. The login window should appear (WStore or idM depending on the configuration).
 
-.. image:: /images/customer/Wstore_ug_search_1.png
+.. image:: /images/installation/sanity_1.png
    :align: center
 
 3. Introduce your credentials and click login
-4. Go to the Administration view
+4. Go to *My Offerings*
 
-.. image:: /images/collection.png
+.. image:: /images/installation/sanity_2.png
    :align: center
 
-5. Click add Repository
+5. Select the *Provider Options* dropdown and choose *Create offering*
 
-.. image:: /images/collection.png
+.. image:: /images/installation/sanity_3.png
    :align: center
 
-6. Fill Repository info and press Register
+6. Fill the name, and the version
+7. Include the logo and the screenshots
+8. Select the option for not providing a notification URL
+9. Press *Next*
 
-.. image:: /images/collection.png
+.. image:: /images/installation/sanity_4.png
    :align: center
 
-7. Go to the Catalogue view
+10. Fill description Info and press *Next*
 
-.. image:: /images/collection.png
+.. image:: /images/installation/sanity_5.png
    :align: center
 
-8. Select the Options Tab and choose Create new offering
+10. Click  *Next* in the pricing form.
 
-.. image:: /images/collection.png
+.. image:: /images/installation/sanity_6.png
+
    :align: center
 
-9. Fill the name, and the version
-10. Include the logo and the screenshots
-11. Select the option for not providing a notification URL
-12. Press Next
+14. Click *Next* in the Application selection form (This form only appears if using idM for authentication).
 
-.. image:: /images/collection.png
+.. image:: /images/installation/sanity_7.png
    :align: center
 
-13. Fill USDL Info and press Next
+15. Press *Accept*
 
-.. image:: /images/collection.png
+.. image:: /images/installation/sanity_8.png
    :align: center
 
-14. Press Next in the Application selection form (This form only appears if using idM for authentication).
+16. The created offering should appear in the Provided section
 
-.. image:: /images/collection.png
-   :align: center
-
-15. Press Accept
-
-.. image:: /images/collection.png
-   :align: center
-
-16. The created offering should appear in the Provided Tab
-
-.. image:: /images/collection.png
+.. image:: /images/installation/sanity_9.png
    :align: center
 
 
