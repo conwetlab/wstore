@@ -521,6 +521,9 @@ Fill the internal name, the host and the API version (1 or 2) of the RSS. Then p
 .. image:: /images/customer/Wstore_ug_rss_2.png
    :align: center
 
+.. note::
+    RSS API version 1 is deprecated
+
 Pressing on the RSS row is possible to view what RSSs are registered on WStore.
 
 .. image:: /images/customer/Wstore_ug_rss_3.png
