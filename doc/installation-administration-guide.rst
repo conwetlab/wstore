@@ -6,7 +6,7 @@ Installation and Administration Guide
 Introduction
 ------------
 
-This Installation and Administration Guide covers WStore versions since 0.3 (0.3.0, 0.3.1 and 0.4 corresponding to FI-WARE releases 3.3.1, 3.3.2 and 4.4.1). Any feedback on this document is highly welcomed, including bugs, typos or things you think should be included but aren't. Please send it to the "Contact Person" email that appears in the `Catalogue page for this GEi`_.
+This Installation and Administration Guide covers WStore versions since 0.3 (0.3.0, 0.3.1, 0.4 and 0.5) corresponding to FIWARE releases 3.3.1, 3.3.2, 4.1.1 and 4.4.3). Any feedback on this document is highly welcomed, including bugs, typos or things you think should be included but aren't. Please send it to the "Contact Person" email that appears in the `Catalogue page for this GEi`_.
 
 .. _Catalogue page for this GEi: http://catalogue.fi-ware.eu/enablers/store-wstore
 
@@ -42,7 +42,7 @@ Installing basic dependencies
 The Web Server, MongoDB, wkhtmltopdf, python and pip itself can be installed using the 
 package management tools provided by your operating system or using the available installers.
 
-These packages are available for Linux and Mac OS so WStore should work in those systems. However, the current version of WStore and its installer / installation guide have been tested under Ubuntu 12.04, Ubuntu 13.10, Ubuntu 14.04, CentOS 6.3 and CentOS 6.5. THESE ARE THEREFORE CONSIDERED AS THE SUPPORTED OPERATIVE SYSTEMS. 
+These packages are available for Linux and Mac OS so WStore should work in those systems. However, the current version of WStore and its installer / installation guide have been tested under Ubuntu 12.04, Ubuntu 13.10, Ubuntu 14.04, CentOS 6.3, CentOS 6.5 and CentOS 7. THESE ARE THEREFORE CONSIDERED AS THE SUPPORTED OPERATIVE SYSTEMS. 
 
 .. note:: 
     WStore needs Python 2.7 to work; however, CentOS 6 uses Python 2.6 in the system. Although it is possible to install WStore in CentOS 6 (as explained before), it is strongly recommended to use an Ubuntu/Debian distribution.
@@ -50,7 +50,7 @@ These packages are available for Linux and Mac OS so WStore should work in those
 Installing basic dependecies using the script
 ---------------------------------------------
 
-In order to facilitate the installation of the basic dependencies the script *resolve-basic-dep.sh* has been provided. This script will install the needed packages for both Ubuntu/Debian and CentOS 6 systems. For CentOS systems, this script will install Python 2.7 and its tools, without replacing the system Python, making them avalailable as python2.7, pip2.7 and vitualenv2.7.
+In order to facilitate the installation of the basic dependencies the script *resolve-basic-dep.sh* has been provided. This script will install the needed packages for both Ubuntu/Debian and CentOS systems. For CentOS 6 systems, this script will install Python 2.7 and its tools, without replacing the system Python, making them avalailable as python2.7, pip2.7 and vitualenv2.7.
 
 .. note::
     The script *resolve-basic-dep.sh* may replace some of your system packages, so if you have software with common dependencies you may want to manually resolve WStore basic dependencies.
@@ -87,7 +87,7 @@ To install wkhtmltopdf ::
 CentOS/RedHat
 -------------
 
-As mentioned above, CentOS systems include Python 2.6. Replacing this Python version with Python 2.7 may break the system, so it should be installed separately.
+As mentioned above, CentOS 6 systems include Python 2.6. Replacing this Python version with Python 2.7 may break the system, so it should be installed separately.
 
 To install Python 2.7, you need to resolve some development dependencies ::
 
@@ -132,6 +132,13 @@ Finally, install Python 2.7 setup tools ::
 
 Now, Python 2.7 and its pip are available as python2.7 and pip2.7
 
+In CentOS 7, python 2.7 is included with the system. To install pip execute the following commands: ::
+
+    # rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+    # yum -y update
+    # yum install -y python-pip
+
+
 MongoDB is included in the official MongoDB downloads repositories. Once the related repositories has been included (see http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fedora-linux/ ) install MongoDB with the command ::
 
     # yum install -y mongodb-org
@@ -153,10 +160,10 @@ Once basic dependencies have been resolved, it is possible to install python and
 
 * The script used to resolve python dependencies will create a virtual environment for the project with the corresponding packages, so to use this script you need virtualenv2.7 and python 2.7. ::
 
-    # Ubuntu/Debian
+    # Ubuntu/Debian, CentOS 7
     $ pip install virtualenv
 
-    #CentOS/RedHat (Suposing you have installed Python 2.7 following the previous instructions)
+    #CentOS 6 (Suposing you have installed Python 2.7 following the previous instructions)
     $ pip2.7 install virtualenv
 
 
@@ -228,7 +235,7 @@ After that, the script will ask you the domain where the Store is to going run. 
 Later, you will be required to introduce the name of your store instance. You are free to introduce any name that you want. This will be the name used to register your WStore instance in external components such as the Marketplace: ::
     
     Include a name for your instance: 
-    FI-WARE
+    FIWARE
 
 
 Then, the script will ask you for a basic e-mail configuration. If you don't want to provide a mail configuration, just type 'n' when asked. ::
@@ -269,6 +276,14 @@ If you choose the identity manager option, you will be asked for the identity ma
     Include client secret:
     {CLIENT_SECRET}
 
+If you are installing WStore version 0.5 (FIWARE 4.4.3), it includes support for KeyRock new version, so this step requires more information. First you will be asked to provide the identity manager endpoint. In this case, you can leave the default one (The one in the FIWARE Lab). If you choose a different identity manager, you will need to provide the API version and the endpoint of the KeyStone instance of the concrete cloud environment :: 
+
+    Include Identity manager endpoint: (default https://account.lab.fiware.org/)
+    {IDM_END_POINT}
+    Include KeyRock API version [1/2]:
+    {API_VERSION}
+    Include KeyStone endpoint:
+    {KEYSTONE_ENDPOINT}
 
 In you choose the Django Authentication System and you don't have a superuser in the selected database, you will be asked to create a new superuser in order to be able to manage the Store. ::
 
@@ -304,9 +319,9 @@ Then it is needed to activate the virtual env ::
     $ source src/virtenv/bin/activate
 
 
-To install *rdflib*, *lxml*, and *pymongo* ::
+To install *rdflib*, *lxml*,  *pymongo*, Whoosh, Stemming, requests, and regex ::
 
-    $ pip install lxml "rdflib>=3.2.0" pymongo 
+    $ pip install "lxml==3.4.4" "rdflib==4.2.0" "pymongo==2.8" "Whoosh==2.7.0" "Stemming==1.0.1" requests regex
 
 
 .. note::
@@ -344,22 +359,17 @@ To install the PayPal module *paypalpy* use the following command: ::
 
 WStore uses some plugins for django, to install them use the following commands: ::
     
-    $ pip install nose django-nose
+    $ pip install "nose==1.3.6" "django-nose==1.4"
     
 
 ::
     
-    $ pip install django-social-auth
+    $ pip install "django-social-auth==0.7.28"
     
 
 ::
     
-    $ pip install django-crontab
-    
-
-::
-    
-    $ pip install whoosh
+    $ pip install "django-crontab==0.6.0"
     
 
 -------------
@@ -423,8 +433,11 @@ Include the site id in ''settings.py'' updating the ''SITE_ID'' setting ::
 PayPal Credentials Configuration
 ================================
 
-WStore uses PayPal to perform chargings. In order to receive the payments, it is 
-necessary to include the credentials of a Business PayPal account in the *src/wstore/charging_engine/payment_client/paypal_client.py* 
+WStore can use PayPal to perform chargings. To activate this fuctionality change PAYMENT_METHOD setting: ::
+
+    PAYMENT_METHOD = 'paypal'
+
+In order to receive the payments, it is necessary to include the credentials of a Business PayPal account in the *src/wstore/charging_engine/payment_client/paypal_client.py* 
 file. In this file is also possible to configure the endpoints used by PayPal, 
 this settings contain by default the testing sandbox endpoints. ::
 
@@ -527,6 +540,11 @@ Finally, include OAuth2 credentials in your WStore instance by filling the setti
     FIWARE_APP_ID = client_id_number
     FIWARE_API_SECRET = client_secret
 
+
+If you are using WStore version 0.5 (FIWARE 4.4.3), you will need to include some aditional fields. First, it is needed to include the Idm API version.  If the API has version 2, it is also required to include the KeyStone endpoint : ::
+
+    FIWARE_IDM_API_VERSION = 2
+    FIWARE_KEYSTONE_ENDPOINT = '{ KEYSTONE_ENDPOINT }'
 
 WStore Identity Management
 --------------------------
