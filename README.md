@@ -28,7 +28,7 @@ WStore provides functionality for the monetization of different kind of digital 
 The instructions to install WStore can be found at [the Installation Guide](http://wstore.readthedocs.org/en/latest/installation-guide.html). You can install the software in three different ways:
 
 * Using the provided scripts
-* Using a [Docker Container](https://hub.docker.com/r/conwetlab/wstore/)
+* Using a [Docker Container](https://hub.docker.com/r/fiware/wstore/)
 * Manually
 
 # API Overview
