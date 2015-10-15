@@ -205,7 +205,12 @@ class MarketAdaptorV2(MarketAdaptor):
             if splitted_path.index('v2') > 1:
                 service_url += '/' + splitted_path[1]
 
-            query = "CONSTRUCT { ?a ?b ?c . ?d ?e ?f . } WHERE { GRAPH <%s> { ?a ?b ?c } . { ?m <http://www.linked-usdl.org/ns/usdl-core#includes> ?n } . GRAPH ?n { ?d ?e ?f } . }" % (offering.get_uri())
+            query = "CONSTRUCT { ?a ?b ?c . ?d ?e ?f . } WHERE {"
+            query += " { GRAPH <%s> { ?a ?b ?c }  }" % (offering.get_uri())
+            query += " UNION"
+            query += " { <%s> <http://www.linked-usdl.org/ns/usdl-core#includes> ?n  ." % (offering.get_uri())
+            query += " GRAPH ?n { ?d ?e ?f }  }}"
+
             query = urllib.quote_plus(query)
 
             service_url += '/v2/services/query?query=' + query
