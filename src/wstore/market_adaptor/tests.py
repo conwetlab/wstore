@@ -336,11 +336,11 @@ class MarketAdaptorTestCase(TestCase):
         }),
         ("repo_v2_no_webapp", {
             "displayName": "test_org test_service 1.0",
-            "url": 'http://test_service_uri.com/v2/services/query?query=CONSTRUCT+%7B+%3Fa+%3Fb+%3Fc+.+%3Fd+%3Fe+%3Ff+.+%7D+WHERE+%7B+GRAPH+%3Chttp%3A%2F%2Foffering_usdl_uri.org%2F%3E+%7B+%3Fa+%3Fb+%3Fc+%7D+.+%7B+%3Fm+%3Chttp%3A%2F%2Fwww.linked-usdl.org%2Fns%2Fusdl-core%23includes%3E+%3Fn+%7D+.+GRAPH+%3Fn+%7B+%3Fd+%3Fe+%3Ff+%7D+.+%7D',
+            "url": 'http://test_service_uri.com/v2/services/query?query=CONSTRUCT+%7B+%3Fa+%3Fb+%3Fc+.+%3Fd+%3Fe+%3Ff+.+%7D+WHERE+%7B+%7B+GRAPH+%3Chttp%3A%2F%2Foffering_usdl_uri.org%2F%3E+%7B+%3Fa+%3Fb+%3Fc+%7D+%7D+UNION+%7B+%3Chttp%3A%2F%2Foffering_usdl_uri.org%2F%3E+%3Chttp%3A%2F%2Fwww.linked-usdl.org%2Fns%2Fusdl-core%23includes%3E+%3Fn+.+GRAPH+%3Fn+%7B+%3Fd+%3Fe+%3Ff+%7D+%7D%7D'
         }, _set_v2_repo_url),
         ("repo_v2", {
             "displayName": "test_org test_service 1.0",
-            "url": 'http://test_service_uri.com/repo/v2/services/query?query=CONSTRUCT+%7B+%3Fa+%3Fb+%3Fc+.+%3Fd+%3Fe+%3Ff+.+%7D+WHERE+%7B+GRAPH+%3Chttp%3A%2F%2Foffering_usdl_uri.org%2F%3E+%7B+%3Fa+%3Fb+%3Fc+%7D+.+%7B+%3Fm+%3Chttp%3A%2F%2Fwww.linked-usdl.org%2Fns%2Fusdl-core%23includes%3E+%3Fn+%7D+.+GRAPH+%3Fn+%7B+%3Fd+%3Fe+%3Ff+%7D+.+%7D',
+            "url": 'http://test_service_uri.com/repo/v2/services/query?query=CONSTRUCT+%7B+%3Fa+%3Fb+%3Fc+.+%3Fd+%3Fe+%3Ff+.+%7D+WHERE+%7B+%7B+GRAPH+%3Chttp%3A%2F%2Foffering_usdl_uri.org%2F%3E+%7B+%3Fa+%3Fb+%3Fc+%7D+%7D+UNION+%7B+%3Chttp%3A%2F%2Foffering_usdl_uri.org%2F%3E+%3Chttp%3A%2F%2Fwww.linked-usdl.org%2Fns%2Fusdl-core%23includes%3E+%3Fn+.+GRAPH+%3Fn+%7B+%3Fd+%3Fe+%3Ff+%7D+%7D%7D',
         }, _set_v2_repo_url_app)
     ])
     def test_add_service_v2(self, name, expected_body, side_effect=None):
