@@ -418,6 +418,7 @@ class UserEntryTestCase(TestCase):
                 'street': 'fake street 123',
                 'postal': '123451',
                 'city': 'City',
+                'province': 'Province',
                 'country': 'Country'
             },
             'payment_info': {
@@ -447,6 +448,7 @@ class UserEntryTestCase(TestCase):
                 'street': 'fake street 123',
                 'postal': '123451',
                 'city': 'City',
+                'province': 'Province',
                 'country': 'Country'
             }
         }, 'user3', False, (200, 'OK', 'correct'), False),

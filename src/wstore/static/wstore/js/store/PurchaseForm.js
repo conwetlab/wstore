@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * This file is part of WStore.
  *
@@ -220,7 +220,7 @@
             $('#message').modal('hide');
             $.ajax({
                 headers: {
-                    'X-CSRFToken': csrfToken,
+                    'X-CSRFToken': csrfToken
                 },
                 type: "POST",
                 url: EndpointManager.getEndpoint('PURCHASE_COLLECTION'),
@@ -400,18 +400,20 @@
             // Read the tax address and organization owned values in order to make them
             // available to the next window
             if (!$('#tax_addr').prop('checked')) {
-                var street, postal, city, country;
+                var street, postal, city, province, country;
 
                 street = $.trim($('#street').val());
                 postal = $.trim($('#postal').val());
                 city = $.trim($('#city').val());
+                province = $.trim($('#province').val());
                 country = $.trim($('#country').val());
 
-                if (street != '' && postal != '' && city != '' && country != '') {
+                if (street != '' && postal != '' && city != '' && province != '' && country != '') {
                     taxAddr = {
                         'street': street,
                         'postal': postal,
                         'city': city,
+                        'province': province,
                         'country': country
                     };
                 } else {
@@ -537,8 +539,8 @@
 
             // Add handlers for help messages if needed
             if (helpNeeded) {
-                $('.special-plan-help').popover({'trigger': 'manual'});
-                $('.special-plan-help').click(helpHandler);
+                $('.special-plan-help').popover({'trigger': 'manual'})
+                    .click(helpHandler);
             }
 
             $('[name="plan-inp"]').change(function() {
@@ -552,9 +554,10 @@
                 evnt.stopPropagation();
 
                 if ($('.special-plan-help').prop('displayed')) {
-                    $('.special-plan-help').popover('hide');
-                    $('.special-plan-help').prop('displayed', false);
-                    $('.special-plan-help').removeClass('question-sing-sel');
+
+                    $('.special-plan-help').popover('hide')
+                        .prop('displayed', false)
+                        .removeClass('question-sing-sel');
                     $(document).unbind('click');
                 }
 

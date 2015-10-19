@@ -176,6 +176,7 @@ class OrganizationEntryTestCase(TestCase):
                 'street': 'fake street 123',
                 'country': 'Country',
                 'city': 'City',
+                'province': 'Province',
                 'postal': '12345'
             },
             'payment_info': {
@@ -329,6 +330,7 @@ BASIC_ORGANIZATION = {
     'notification_url': 'http://notificationurl.com'
 }
 
+
 class OrganizationCollectionTestCase(TestCase):
 
     tags = ('org-admin',)
@@ -468,6 +470,7 @@ class OrganizationCollectionTestCase(TestCase):
             'city': 'city',
             'street': 'fake street 123',
             'country': 'country',
+            'province': 'province',
             'postal': '12344'
         },
         'payment_info': {
@@ -511,7 +514,6 @@ class OrganizationCollectionTestCase(TestCase):
     ])
     def test_organization_creation(self, data, exp_resp, created=True, side_effect=None, user_included=False):
 
-        #import ipdb; ipdb.set_trace()
         # Load request data
         self.request.raw_post_data = json.dumps(data)
 

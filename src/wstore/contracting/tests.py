@@ -169,6 +169,7 @@ class PurchasesCreationTestCase(TestCase):
                 'street': 'test street',
                 'postal': '28000',
                 'city': 'test city',
+                'province': 'test_province',
                 'country': 'test country'
             },
             'payment_method': 'incorrect'
@@ -178,6 +179,7 @@ class PurchasesCreationTestCase(TestCase):
                 'street': 'test street',
                 'postal': '28000',
                 'city': 'test city',
+                'province': 'test_province',
                 'country': 'test country'
             },
             'payment_method': 'credit_card',
@@ -188,6 +190,7 @@ class PurchasesCreationTestCase(TestCase):
                 'street': 'test street',
                 'postal': '28000',
                 'city': 'test city',
+                'province': 'test_province',
                 'country': 'test country'
             },
             'payment_method': 'credit_card',
@@ -218,7 +221,24 @@ class PurchasesCreationTestCase(TestCase):
                 'city': 'test city',
                 'country': 'test country'
             }
-        }, ValueError, 'The tax address is not valid'),
+        }, ValueError, 'Missing a required field in the tax address. It must contain street, postal, city, province and country'),
+        ('invalid_tax_address_2', None, False, {
+            'payment_method': 'credit_card',
+            'credit_card': {
+                'number': '1234123412341234',
+                'type': 'Visa',
+                'expire_year': '2018',
+                'expire_month': '3',
+                'cvv2': '111'
+            },
+            'tax_address': {
+                'street': '',
+                'postal': '28000',
+                'city': 'test city',
+                'province': 'test_province',
+                'country': 'test country'
+            }
+        }, ValueError, 'Missing a required field in the tax address. It must contain street, postal, city, province and country'),
         ('invalid_card_info', None, False, {
             'payment_method': 'credit_card',
             'credit_card': {
@@ -231,6 +251,7 @@ class PurchasesCreationTestCase(TestCase):
                 'street': 'test street',
                 'postal': '28000',
                 'city': 'test city',
+                'province': 'test_province',
                 'country': 'test country'
             }
         }, ValueError, 'Invalid credit card info'),
@@ -281,237 +302,6 @@ class PurchasesCreationTestCase(TestCase):
         else:
             self.assertTrue(isinstance(error, err_type))
             self.assertEquals(unicode(e), err_msg)
-
-    def test_basic_purchase_creation(self):
-
-        user = User.objects.get(username='test_user')
-        offering = Offering.objects.get(name='test_offering')
-
-        tax_address = {
-            'street': 'test street',
-            'postal': '28000',
-            'city': 'test city',
-            'country': 'test country'
-        }
-
-        user_profile = UserProfile.objects.get(user=user)
-        user_profile.tax_address = tax_address
-        org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
-        user_profile.save()
-
-        payment_info = {
-            'payment_method': 'credit_card',
-            'credit_card': {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            }
-        }
-
-        purchase = purchases_management.create_purchase(user, offering, payment_info=payment_info)
-
-        self.assertEqual(purchase.customer.username, 'test_user')
-        self.assertEqual(purchase.organization_owned, False)
-        self.assertEqual(purchase.offering_id, offering.pk)
-        self.assertEqual(purchase.tax_address['street'], 'test street')
-        self.assertEqual(purchase.tax_address['postal'], '28000')
-        self.assertEqual(purchase.tax_address['city'], 'test city')
-        self.assertEqual(purchase.tax_address['country'], 'test country')
-
-        purchase = Purchase.objects.get(customer=user, offering=offering)
-
-        self.assertEqual(purchase.customer.username, 'test_user')
-        self.assertEqual(purchase.organization_owned, False)
-        self.assertEqual(purchase.offering_id, offering.pk)
-        self.assertEqual(purchase.tax_address['street'], 'test street')
-        self.assertEqual(purchase.tax_address['postal'], '28000')
-        self.assertEqual(purchase.tax_address['city'], 'test city')
-        self.assertEqual(purchase.tax_address['country'], 'test country')
-
-        user_profile = UserProfile.objects.get(user=user)
-        self.assertEqual(len(user_profile.offerings_purchased), 1)
-        self.assertEqual(user_profile.offerings_purchased[0], offering.pk)
-
-    def test_purchase_creation_org_owned(self):
-
-        user = User.objects.get(username='test_user')
-        offering = Offering.objects.get(name='test_offering')
-
-        tax_address = {
-            'street': 'test street',
-            'postal': '28000',
-            'city': 'test city',
-            'country': 'test country'
-        }
-
-        user_profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        org.tax_address = tax_address
-        org.save()
-        user_profile.current_organization = org
-        user_profile.organizations = [{
-            'organization': org.pk,
-            'roles': ['customer']
-        }]
-        user_profile.save()
-
-        payment_info = {
-            'payment_method': 'credit_card',
-            'credit_card': {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            }
-        }
-
-        purchase = purchases_management.create_purchase(user, offering, True, payment_info=payment_info)
-
-        self.assertEqual(purchase.customer.username, 'test_user')
-        self.assertEqual(purchase.organization_owned, True)
-        self.assertEqual(purchase.owner_organization.name, 'test_organization')
-        self.assertEqual(purchase.offering_id, offering.pk)
-        self.assertEqual(purchase.tax_address['street'], 'test street')
-        self.assertEqual(purchase.tax_address['postal'], '28000')
-        self.assertEqual(purchase.tax_address['city'], 'test city')
-        self.assertEqual(purchase.tax_address['country'], 'test country')
-
-        organization = Organization.objects.get(name='test_organization')
-        self.assertEqual(len(organization.offerings_purchased), 1)
-        self.assertEqual(organization.offerings_purchased[0], offering.pk)
-
-    test_purchase_creation_org_owned.tags = ('fiware-ut-26', )
-
-    def test_purchase_creation_tax_address(self):
-
-        user = User.objects.get(username='test_user')
-        offering = Offering.objects.get(name='test_offering')
-
-        payment_info = {
-            'payment_method': 'credit_card',
-            'credit_card': {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-            },
-            'tax_address': {
-                'street': 'test street',
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }
-
-        user_profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        user_profile.organization = org
-        user_profile.save()
-
-        purchase = purchases_management.create_purchase(user, offering, payment_info=payment_info)
-
-        self.assertEqual(purchase.customer.username, 'test_user')
-        self.assertEqual(purchase.organization_owned, False)
-        self.assertEqual(purchase.offering_id, offering.pk)
-        self.assertEqual(purchase.tax_address['street'], 'test street')
-        self.assertEqual(purchase.tax_address['postal'], '28000')
-        self.assertEqual(purchase.tax_address['city'], 'test city')
-        self.assertEqual(purchase.tax_address['country'], 'test country')
-
-        purchase = Purchase.objects.get(customer=user, offering=offering)
-
-        self.assertEqual(purchase.customer.username, 'test_user')
-        self.assertEqual(purchase.organization_owned, False)
-        self.assertEqual(purchase.offering_id, offering.pk)
-        self.assertEqual(purchase.tax_address['street'], 'test street')
-        self.assertEqual(purchase.tax_address['postal'], '28000')
-        self.assertEqual(purchase.tax_address['city'], 'test city')
-        self.assertEqual(purchase.tax_address['country'], 'test country')
-
-        user_profile = UserProfile.objects.get(user=user)
-        self.assertEqual(len(user_profile.offerings_purchased), 1)
-        self.assertEqual(user_profile.offerings_purchased[0], offering.pk)
-
-    def test_purchase_creation_paypal(self):
-        user = User.objects.get(username='test_user')
-        offering = Offering.objects.get(name='test_offering')
-        payment_info = {
-            'payment_method': 'paypal',
-            'tax_address': {
-                'street': 'test street',
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }
-        purchase = purchases_management.create_purchase(user, offering, payment_info=payment_info)
-
-        self.assertEqual(purchase.customer.username, 'test_user')
-        self.assertEqual(purchase.organization_owned, False)
-        self.assertEqual(purchase.offering_id, offering.pk)
-        self.assertEqual(purchase.tax_address['street'], 'test street')
-        self.assertEqual(purchase.tax_address['postal'], '28000')
-        self.assertEqual(purchase.tax_address['city'], 'test city')
-        self.assertEqual(purchase.tax_address['country'], 'test country')
-
-        purchase = Purchase.objects.get(customer=user, offering=offering)
-
-        self.assertEqual(purchase.customer.username, 'test_user')
-        self.assertEqual(purchase.organization_owned, False)
-        self.assertEqual(purchase.offering_id, offering.pk)
-        self.assertEqual(purchase.tax_address['street'], 'test street')
-        self.assertEqual(purchase.tax_address['postal'], '28000')
-        self.assertEqual(purchase.tax_address['city'], 'test city')
-        self.assertEqual(purchase.tax_address['country'], 'test country')
-
-        user_profile = UserProfile.objects.get(user=user)
-        self.assertEqual(len(user_profile.offerings_purchased), 1)
-        self.assertEqual(user_profile.offerings_purchased[0], offering.pk)
-
-    test_purchase_creation_paypal.tags = ('fiware-ut-17', 'fiware-ut-16')
-
-    def test_purchase_creation_organization_payment(self):
-        user = User.objects.get(username='test_user')
-        offering = Offering.objects.get(name='test_offering')
-
-        user_profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization')
-        org.payment_info = {
-                'number': '1234123412341234',
-                'type': 'Visa',
-                'expire_year': '2018',
-                'expire_month': '3',
-                'cvv2': '111'
-        }
-        org.save()
-        user_profile.current_organization = org
-        user_profile.organizations = [{
-            'organization': org.pk,
-            'roles': ['customer']
-        }]
-        user_profile.save()
-        payment_info = {
-            'payment_method': 'credit_card',
-            'tax_address': {
-                'street': 'test street',
-                'postal': '28000',
-                'city': 'test city',
-                'country': 'test country'
-            }
-        }
-
-        purchases_management.ChargingEngine.resolve_charging.return_value = 'http://paypal.com/redirect'
-        redirect_url = purchases_management.create_purchase(user, offering, True, payment_info=payment_info)
-        purchases_management.ChargingEngine.resolve_charging.assert_called_once_with(new_purchase=True)
-
-        self.assertEquals(redirect_url, 'http://paypal.com/redirect')
-
-    test_purchase_creation_organization_payment.tags = ('fiware-ut-26',)
 
 
 class PurchaseRollbackTestCase(TestCase):

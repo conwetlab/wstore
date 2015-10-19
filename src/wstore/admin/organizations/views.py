@@ -102,6 +102,7 @@ class OrganizationCollection(Resource):
                     'street': data['tax_address']['street'],
                     'postal': data['tax_address']['postal'],
                     'city': data['tax_address']['city'],
+                    'province': data['tax_address']['province'],
                     'country': data['tax_address']['country']
                 }
 
@@ -242,6 +243,7 @@ class OrganizationEntry(Resource):
                     'street': data['tax_address']['street'],
                     'postal': data['tax_address']['postal'],
                     'city': data['tax_address']['city'],
+                    'province': data['tax_address']['province'],
                     'country': data['tax_address']['country']
                 }
 

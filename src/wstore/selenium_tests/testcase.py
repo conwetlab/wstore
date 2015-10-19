@@ -221,4 +221,5 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
         element.send_keys(tax['street'])
         self.driver.find_element_by_id('postal').send_keys(tax['postal'])
         self.driver.find_element_by_id('city').send_keys(tax['city'])
+        self.driver.find_element_by_id('province').send_keys(tax['province'])
         self.driver.find_element_by_id('country').send_keys(tax['country'])

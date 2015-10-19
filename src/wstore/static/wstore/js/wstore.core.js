@@ -613,6 +613,7 @@
         tax_street: '',
         tax_postcode: '',
         tax_city: '',
+        tax_province: '',
         tax_country: '',
       },
       payment_form: {
@@ -629,6 +630,7 @@
       tax_street: 'input[name="tax_street"]',
       tax_postcode: 'input[name="tax_postcode"]',
       tax_city: 'input[name="tax_city"]',
+      tax_province: 'input[name="tax_province"]',
       tax_country: 'input[name="tax_country"]',
       card_type: 'select[name="card_type"]',
       card_number: 'input[name="card_number"]',
@@ -683,6 +685,7 @@
       context.tax_address.street = this.data.tax_address.tax_street;
       context.tax_address.postal = this.data.tax_address.tax_postcode;
       context.tax_address.city = this.data.tax_address.tax_city;
+      context.tax_address.province = this.data.tax_address.tax_province;
       context.tax_address.country = this.data.tax_address.tax_country;
     }
 
@@ -977,13 +980,14 @@
     
     newData.name = data.name;
     newData.notification_url = data.notification_url;
-    
+
     if (data['tax_address']) {
       newData.tax_address = {
         tax_street: data['tax_address']['street'],
         tax_postcode: data['tax_address']['postal'],
         tax_city: data['tax_address']['city'],
-        tax_country: data['tax_address']['country'],
+        tax_province: data['tax_address']['province'],
+        tax_country: data['tax_address']['country']
       };
     }
     

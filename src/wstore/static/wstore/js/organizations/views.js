@@ -266,6 +266,7 @@
       $container.find('#id_org_inf_tax_street').append(data.tax_address.tax_street);
       $container.find('#id_org_inf_tax_postcode').append(data.tax_address.tax_postcode);
       $container.find('#id_org_inf_tax_city').append(data.tax_address.tax_city);
+      $container.find('#id_org_inf_tax_province').append(data.tax_address.tax_province);
       $container.find('#id_org_inf_tax_country').append(data.tax_address.tax_country);
     }
   };

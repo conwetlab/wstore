@@ -241,6 +241,7 @@
             tax_address.street = $.trim($('input[id="id_tax_street"]').val());
             tax_address.postal = $.trim($('input[id="id_tax_postcode"]').val());
             tax_address.city = $.trim($('input[id="id_tax_city"]').val());
+            tax_address.province = $.trim($('input[id="id_tax_province"]').val())
             tax_address.country = $.trim($('input[id="id_tax_country"]').val());
             validation.data.tax_address = tax_address;
         }
@@ -288,6 +289,7 @@
             $('input[id="id_tax_street"]').val(tax_address.street);
             $('input[id="id_tax_postcode"]').val(tax_address.postal);
             $('input[id="id_tax_city"]').val(tax_address.city);
+            $('input[id="id_tax_province"]').val(tax_address.province);
             $('input[id="id_tax_country"]').val(tax_address.country);
         }
 

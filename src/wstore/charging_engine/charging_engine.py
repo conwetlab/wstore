@@ -478,6 +478,7 @@ class ChargingEngine:
             'address': tax.get('street'),
             'postal': tax.get('postal'),
             'city': tax.get('city'),
+            'province': tax.get('province'),
             'country': tax.get('country'),
             'taxes': [],
             'subtotal': price,  # TODO price without taxes
