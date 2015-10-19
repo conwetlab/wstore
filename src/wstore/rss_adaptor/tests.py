@@ -462,7 +462,8 @@ class ModelManagerTestCase(TestCase):
         if not provider:
             provider = settings.STORE_NAME.lower() + '-provider'
 
-        self.manager._make_request.assert_called_once_with('GET', 'http://testrss.com/fiware-rss/rss/rsModelsMgmt?appProviderId=' + provider)
+        from urllib import quote
+        self.manager._make_request.assert_called_once_with('GET', 'http://testrss.com/fiware-rss/rss/rsModelsMgmt?appProviderId=' + quote(provider))
 
         # Check returned value
         self.assertEquals(models, mock_models)

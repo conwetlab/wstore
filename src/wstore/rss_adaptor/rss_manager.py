@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -29,7 +29,7 @@ from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.models import RSS
 
 
-class RSSManager():
+class RSSManager(object):
 
     _rss = None
     _credentials = None
@@ -53,7 +53,7 @@ class RSSManager():
         auth_header = self._get_auth_header()
 
         headers = {
-            'content-type': 'application/json',
+            'content-type': 'application/json'
         }
 
         headers[auth_header] = self._get_token_type() + self._credentials

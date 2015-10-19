@@ -21,6 +21,7 @@
 from __future__ import unicode_literals
 
 from urlparse import urljoin
+from urllib import quote
 
 from django.conf import settings
 
@@ -93,7 +94,7 @@ class ModelManagerV1(ModelManager):
             provider = settings.STORE_NAME.lower() + '-provider'
 
         # Build the url
-        endpoint = urljoin(self._rss.host, '/fiware-rss/rss/rsModelsMgmt?appProviderId=' + provider)
+        endpoint = urljoin(self._rss.host, '/fiware-rss/rss/rsModelsMgmt?appProviderId=' + quote(provider))
 
         # Make the request
         self._make_request('DELETE', endpoint)
@@ -106,7 +107,7 @@ class ModelManagerV1(ModelManager):
             provider = settings.STORE_NAME.lower() + '-provider'
 
         # Build URL
-        endpoint = urljoin(self._rss.host, '/fiware-rss/rss/rsModelsMgmt?appProviderId=' + provider)
+        endpoint = urljoin(self._rss.host, '/fiware-rss/rss/rsModelsMgmt?appProviderId=' + quote(provider))
 
         # Get provider models from the RSS
         models = self._make_request('GET', endpoint)

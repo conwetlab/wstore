@@ -21,6 +21,7 @@
 from __future__ import unicode_literals
 
 from urlparse import urljoin
+from urllib import quote
 
 from wstore.rss_adaptor.rss_manager import RSSManager
 
@@ -108,14 +109,14 @@ class ExpenditureManagerV1(ExpenditureManager):
            Set the expenditure limit of WStore provider in the RSS
         """
 
-        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id)
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + quote(self._provider_id))
         self._set_provider_limit(endpoint)
 
     def delete_provider_limit(self):
         """
         Delete the expenditure limit of a provider
         """
-        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id)
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + quote(self._provider_id))
         endpoint += '?service=fiware'
 
         self._delete_provider_limit(endpoint)
@@ -125,7 +126,7 @@ class ExpenditureManagerV1(ExpenditureManager):
         Create the expenditure limit of a provider
         """
 
-        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + self._provider_id + '/' + str(actor_profile.actor_id))
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limitManagement/' + quote(self._provider_id) + '/' + quote(str(actor_profile.actor_id)))
         self._set_actor_limit(endpoint, limits, actor_profile)
 
     def check_balance(self, charge, actor_profile):
@@ -134,7 +135,7 @@ class ExpenditureManagerV1(ExpenditureManager):
         if it has enough balance
         """
 
-        endpoint = urljoin(self._rss.host, 'expenditureLimit/balanceAccumulated/' + str(actor_profile.actor_id))
+        endpoint = urljoin(self._rss.host, 'expenditureLimit/balanceAccumulated/' + quote(str(actor_profile.actor_id)))
         self._check_balance(endpoint, charge, actor_profile)
 
     def update_balance(self, charge, actor_profile):
@@ -142,7 +143,7 @@ class ExpenditureManagerV1(ExpenditureManager):
         Update  the balance of an actor when it makes a purchase
         """
 
-        endpoint = urljoin(self._rss.host, 'expenditureLimit/balanceAccumulated/' + str(actor_profile.actor_id))
+        endpoint = urljoin(self._rss.host, 'expenditureLimit/balanceAccumulated/' + quote(str(actor_profile.actor_id)))
         self._update_balance(endpoint, charge, actor_profile)
 
 
@@ -159,14 +160,14 @@ class ExpenditureManagerV2(ExpenditureManager):
            Set the expenditure limit of WStore provider in the RSS
         """
 
-        endpoint = urljoin(self._rss.host, '/expenditureLimit/limits/' + self._rss.aggregator_id + '/' + self._provider_id)
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limits/' + quote(self._rss.aggregator_id) + '/' + quote(self._provider_id))
         self._set_provider_limit(endpoint)
 
     def delete_provider_limit(self):
         """
         Delete the expenditure limit of a provider
         """
-        endpoint = urljoin(self._rss.host, '/expenditureLimit/limits/' + self._rss.aggregator_id + '/' + self._provider_id)
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limits/' + quote(self._rss.aggregator_id) + '/' + quote(self._provider_id))
         endpoint += '?service=fiware'
 
         self._delete_provider_limit(endpoint)
@@ -176,7 +177,7 @@ class ExpenditureManagerV2(ExpenditureManager):
         Create the expenditure limit of a provider
         """
 
-        endpoint = urljoin(self._rss.host, '/expenditureLimit/limits/' + self._rss.aggregator_id + '/' + self._provider_id + '/' + str(actor_profile.actor_id))
+        endpoint = urljoin(self._rss.host, '/expenditureLimit/limits/' + quote(self._rss.aggregator_id) + '/' + quote(self._provider_id) + '/' + quote(str(actor_profile.actor_id)))
         self._set_actor_limit(endpoint, limits, actor_profile)
 
     def check_balance(self, charge, actor_profile):
@@ -185,7 +186,7 @@ class ExpenditureManagerV2(ExpenditureManager):
         if it has enough balance
         """
 
-        endpoint = urljoin(self._rss.host, 'expenditureLimit/balance/' + str(actor_profile.actor_id))
+        endpoint = urljoin(self._rss.host, 'expenditureLimit/balance/' + quote(str(actor_profile.actor_id)))
 
         extra_data = {
             'aggregator': self._rss.aggregator_id
@@ -197,7 +198,7 @@ class ExpenditureManagerV2(ExpenditureManager):
         Update the balance of an actor when it makes a purchase
         """
 
-        endpoint = urljoin(self._rss.host, 'expenditureLimit/balance/' + str(actor_profile.actor_id))
+        endpoint = urljoin(self._rss.host, 'expenditureLimit/balance/' + quote(str(actor_profile.actor_id)))
 
         extra_data = {
             'aggregator': self._rss.aggregator_id
