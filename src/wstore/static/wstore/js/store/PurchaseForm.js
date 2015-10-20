@@ -494,7 +494,7 @@
             var form = $('<form></form>').addClass('form').appendTo('.modal-body');
             var plansContainer = $('<fieldset></fieldset>').appendTo(form);
             var regularPlans = [];
-            var devPlan, updatePlan, currPlan, helpNeeded = false;
+            var devPlan, updatePlan, helpNeeded = false;
 
             // Classify price plans
             for (var i = 0; i < plans.length; i++) {
@@ -566,7 +566,8 @@
                     MessageManager.showAlertError('Error', 'A price plan is needed', $('#error-message'));
                 } else {
                     // Check if terms and conditions has been provided
-                    if (offeringElement.getLegal().length) {
+                    if (offeringElement.getLegal() && !$.isEmptyObject(offeringElement.getLegal())) {
+                        $('.modal-body').empty();
                         showTermsAndConditionsForm(offeringElement, callerObj);
                     } else {
                         showTaxAddressForm(offeringElement, callerObj);

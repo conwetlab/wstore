@@ -34,6 +34,7 @@ from selenium.common.exceptions import NoSuchElementException
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.test.utils import override_settings
 
 from wstore.store_commons.utils.method_request import MethodRequest
 from wstore.store_commons.utils.testing import save_indexes, restore_indexes, save_tags, restore_tags
@@ -308,6 +309,7 @@ class OfferingManagementTestCase(WStoreSeleniumTestCase):
 
 
 @unittest.skipIf('wstore.selenium_tests' not in settings.INSTALLED_APPS, 'Selenium tests not enabled')
+@override_settings(PAYMENT_METHOD=None)
 class PurchaseTestCase(WStoreSeleniumTestCase):
     tags = ("selenium", "selenium-purchase")
 
@@ -391,6 +393,14 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         form_url = json.loads(response.read())['url']
         self.driver.get(form_url)
 
+        # Select price plan
+        self.select_plan('plan1')
+        self.driver.find_element_by_css_selector('.modal-footer .btn-basic').click()
+
+        # Accept terms and conditions
+        self.accept_conditions()
+        self.driver.find_element_by_css_selector('.modal-footer .btn-basic').click()
+
         # Fill purchase form
         self.fill_tax_address({
             'street': 'fake street',
@@ -403,7 +413,7 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
         self.driver.find_element_by_css_selector('.modal-footer .btn-basic').click()
 
         # Wait until the purchase modal dissapears
-        element = WebDriverWait(self.driver, 5).until(self.get_modal_wait('postal'))
+        WebDriverWait(self.driver, 5).until(self.get_modal_wait('postal'))
 
         # Close download resources modal
         WebDriverWait(self.driver, 5).until(

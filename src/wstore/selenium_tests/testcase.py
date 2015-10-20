@@ -213,6 +213,18 @@ class WStoreSeleniumTestCase(TestCase, LiveServerTestCase):
                 te.click()
                 break
 
+    def select_plan(self, plan):
+        element = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.ID, plan))
+        )
+        element.click()
+
+    def accept_conditions(self):
+        element = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.ID, "conditions-accepted"))
+        )
+        element.click()
+
     def fill_tax_address(self, tax):
         # Wait until the form is loaded
         element = WebDriverWait(self.driver, 5).until(
