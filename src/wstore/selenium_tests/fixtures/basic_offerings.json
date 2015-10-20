@@ -22,7 +22,33 @@
                 "created": "2013-02-05 17:06:46",
                 "modified": "2013-02-05 17:06:46",
                 "pricing": {
-                    "price_plans": []
+                    "price_plans": [{
+                        "currency": "EUR",
+                        "label": "plan1",
+                        "title": "Plan 1",
+                        "description": "Plan 1",
+                        "price_components": [{
+                            "label": "comp1",
+                            "description": "comp1",
+                            "unit": "single payment",
+                            "value": "10"
+                        }]
+                    }, {
+                        "currency": "EUR",
+                        "label": "plan2",
+                        "title": "Plan 2",
+                        "description": "Plan 2",
+                        "price_components": [{
+                            "label": "comp2",
+                            "description": "comp2",
+                            "unit": "single payment",
+                            "value": "15"
+                        }]
+                    }]
+                },
+                "legal": {
+                    "title": "Terms and conditions",
+                    "text": "Legal text of the offering"
                 }
             },
             "creation_date": "2013-02-05 17:06:46"
