@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -18,8 +18,7 @@
 # along with WStore.
 # If not, see <https://joinup.ec.europa.eu/software/page/eupl/licence-eupl>.
 
-
-from paypalpy import paypal
+import paypalrestsdk
 
 from django.contrib.sites.models import Site
 
@@ -27,87 +26,69 @@ from wstore.charging_engine.payment_client.payment_client import PaymentClient
 
 
 # Paypal creadetials
-PAYPAL_USER = ''
-PAYPAL_PASSWD = ''
-PAYPAL_SIGNATURE = ''
-PAYPAL_URL = 'https://api-3t.sandbox.paypal.com/nvp'
-PAYPAL_CHECKOUT_URL='https://www.sandbox.paypal.com/webscr?cmd=_express-checkout'
+PAYPAL_CLIENT_ID = 'AVOLRuc4jN599UD5FMLHv07T7pnmh76zrllx60cQ-fPK39Bu4yR2iOCzNrzqou6XmAFbnuYhdMY4cExY'
+PAYPAL_CLIENT_SECRET = 'EAgeaOxAgJ5ZMMu9Tf4riICdT7Sz2y77PRBwUIYppNlf_xw2Q0WD1_jCG4YzSLNxQFevkNnFovtT02u7'
+MODE = 'sandbox'  # sandbox or live
+
 
 class PayPalClient(PaymentClient):
 
     _purchase = None
-    _client = None
-    _response = None
+    _checkout_url = None
 
     def __init__(self, purchase):
         self._purchase = purchase
-        paypal.SKIP_AMT_VALIDATION = True
-        self._client = paypal.PayPal(PAYPAL_USER, PAYPAL_PASSWD, PAYPAL_SIGNATURE, PAYPAL_URL)
-
-    def _get_country_code(self, country):
-
-        country_code = None
-        # Get country code
-        for cc in paypal.COUNTRY_CODES:
-            if cc[1].lower() == country.lower():
-                country_code = cc[0]
-                break
-
-        return country_code
+        # Configure API connection
+        paypalrestsdk.configure({
+            "mode": MODE,
+            "client_id": PAYPAL_CLIENT_ID,
+            "client_secret": PAYPAL_CLIENT_SECRET
+        })
 
     def start_redirection_payment(self, price, currency):
-        # Set express checkout
+        # Build URL
         url = Site.objects.all()[0].domain
         if url[-1] != '/':
             url += '/'
 
-        try:
-            self._response = self._client.SetExpressCheckout(
-                paymentrequest_0_paymentaction='Sale',
-                paymentrequest_0_amt=price,
-                paymentrequest_0_currencycode=currency,
-                returnurl=url + 'api/contracting/' + self._purchase.ref + '/accept',
-                cancelurl=url + 'api/contracting/' + self._purchase.ref + '/cancel',
-            )
+        # Build payment object
+        payment = paypalrestsdk.Payment({
+            'intent': 'sale',
+            'payer': {
+                'payment_method': 'paypal'
+            },
+            'redirect_urls': {
+                'return_url': url + 'api/contracting/' + self._purchase.ref + '/accept',
+                'cancel_url': url + 'api/contracting/' + self._purchase.ref + '/cancel'
+            },
+            'transactions': [{
+                'amount': {
+                    'total': unicode(price),
+                    'currency': currency
+                },
+                'description': 'Payment related to the offering: ' + self._purchase.offering.owner_organization.name + ' ' + self._purchase.offering.name + ' version ' + self._purchase.offering.version
+            }]
+        })
 
-        except Exception, e:
-            raise Exception('Error while creating payment: ' + e.value[0])
+        # Create Payment
+        if not payment.create():
+            raise Exception("The payment cannot be created: " + payment.error)
+
+        # Extract URL where redirecting the customer
+        response = payment.to_dict()
+        for l in response['links']:
+            if l['rel'] == 'approval_url':
+                self._checkout_url = l['href']
+                break
 
     def direct_payment(self, currency, price, credit_card):
-
-        country_code = self._get_country_code(self._purchase.tax_address['country'])
-
-        if country_code == None:
-            raise Exception('Country not recognized')
-        try:
-            self._response = self._client.DoDirectPayment(
-                paymentaction='Sale',
-                ipaddress='192.168.1.1',
-                creditcardtype=credit_card['type'],
-                acct=credit_card['number'],
-                expdate=paypal.ShortDate(int(credit_card['expire_year']), int(credit_card['expire_month'])),
-                cvv2=credit_card['cvv2'],
-                firstname=self._purchase.customer.first_name,
-                lastname=self._purchase.customer.last_name,
-                street=self._purchase.tax_address['street'],
-                state='mad',
-                city=self._purchase.tax_address['city'],
-                countrycode=country_code,
-                zip=self._purchase.tax_address['postal'],
-                amt=price,
-                currencycode=currency
-            )
-        except Exception, e:
-            raise Exception('Error while creating payment: ' + e.value[0])
+        pass
 
     def end_redirection_payment(self, token, payer_id):
-        self._client.DoExpressCheckoutPayment(
-            paymentrequest_0_paymentaction='Sale',
-            paymentrequest_0_amt=self._purchase.contract.pending_payment['price'],
-            paymentrequest_0_currencycode='EUR',
-            token=token,
-            payerid=payer_id
-        )
+        payment = paypalrestsdk.Payment.find(token)
+
+        if not payment.execute({"payer_id": payer_id}):
+            raise Exception("The payment cannot be executed: " + payment.error)
 
     def get_checkout_url(self):
-        return PAYPAL_CHECKOUT_URL + '&token=' + self._response['TOKEN'][0]
+        return self._checkout_url

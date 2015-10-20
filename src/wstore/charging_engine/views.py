@@ -146,7 +146,7 @@ class PayPalConfirmation(Resource):
     def read(self, request, reference):
         purchase = None
         try:
-            token = request.GET.get('token')
+            token = request.GET.get('paymentId')
             payer_id = request.GET.get('PayerID', '')
 
             db = get_database_connection()
@@ -162,13 +162,13 @@ class PayPalConfirmation(Resource):
             # that the time out function has acquired it previously so the
             # view ends
             if '_lock' in pre_value and pre_value['_lock']:
-                raise Exception('')
+                raise Exception('The timeout set by WStore has finished')
 
             purchase = Purchase.objects.get(ref=reference)
 
             # Check that the request user is authorized to end the payment
             if request.user.userprofile.current_organization != purchase.owner_organization:
-                raise Exception()
+                raise Exception('You are not authorized to execute the payment')
 
             # If the purchase state value is different from pending means that
             # the timeout function has completely ended before acquire the resource
@@ -178,7 +178,7 @@ class PayPalConfirmation(Resource):
                     query={'_id': ObjectId(reference)},
                     update={'$set': {'_lock': False}}
                 )
-                raise Exception('')
+                raise Exception('The timeout set by WStore has finished')
 
             pending_info = purchase.contract.pending_payment
 
@@ -200,14 +200,18 @@ class PayPalConfirmation(Resource):
                 accounting = pending_info['accounting']
 
             charging_engine.end_charging(pending_info['price'], pending_info['concept'], pending_info['related_model'], accounting)
-        except:
+        except Exception as e:
             # Rollback the purchase if existing
             if purchase is not None:
                 rollback(purchase)
 
+            msg = 'Your payment has been canceled. '
+            msg += unicode(e)
+            msg += '. If you want to acquire the offering, purchase it again in WStore.'
+
             context = {
                 'title': 'Payment Canceled',
-                'message': 'Your payment has been canceled. An error occurs or the timeout has finished, if you want to acquire the offering purchase it again in WStore.'
+                'message': msg
             }
             return render(request, 'err_msg.html', context)
 
@@ -264,6 +268,6 @@ class PayPalCancelation(Resource):
 
         context = {
             'title': 'Payment Canceled',
-            'message': 'Your payment has been canceled. If you want to acquire the offering purchase it again in WStore.'
+            'message': 'Your payment has been canceled. If you want to acquire the offering, purchase it again in WStore.'
         }
         return render(request, 'err_msg.html', context)
