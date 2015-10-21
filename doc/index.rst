@@ -17,10 +17,10 @@ Index
 =====
 
 :doc:`installation-administration-guide`
-  The guide for Store maintainers that explains how to install it.
+  The guide for WStore maintainers that explains how to install it.
 
 :doc:`user-programmer-guide`
-  The guide for user and programmers where that explains how ...
+  The guide for WStore users and programmers that explains how to use it and how to develop plugins for it.
 
 .. _documentation:
 
