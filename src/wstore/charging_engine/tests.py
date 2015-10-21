@@ -105,14 +105,6 @@ def fake_cdr_generation(parts, time):
     pass
 
 
-class FakeSubprocess():
-
-    def __init__(self):
-        pass
-
-    def call(self, prams):
-        pass
-
 BASIC_PRCING = {
     "pricing": {
         "price_plans": [{
@@ -168,7 +160,6 @@ class SinglePaymentChargingTestCase(TestCase):
     def setUpClass(cls):
         reload(charging_engine)
         cls._auth = settings.OILAUTH
-        charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
         super(SinglePaymentChargingTestCase, cls).setUpClass()
@@ -180,6 +171,7 @@ class SinglePaymentChargingTestCase(TestCase):
 
     def setUp(self):
         charging_engine.CDRManager = MagicMock()
+        charging_engine.InvoiceBuilder = MagicMock()
 
     @parameterized.expand([
         ('basic',  BASIC_PRCING, 5),
@@ -222,9 +214,6 @@ class SinglePaymentChargingTestCase(TestCase):
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
-        bills = purchase.bill
-
-        self.assertEqual(len(bills), 1)
 
         contract = purchase.contract
         charges = contract.charges
@@ -263,8 +252,10 @@ class SubscriptionChargingTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
-        charging_engine.subprocess = FakeSubprocess()
         super(SubscriptionChargingTestCase, cls).setUpClass()
+
+    def setUp(self):
+        charging_engine.InvoiceBuilder = MagicMock()
 
     def test_basic_subscription_charging(self):
 
@@ -513,7 +504,6 @@ class PayPerUseChargingTestCase(TestCase):
     def setUpClass(cls):
         cls._auth = settings.OILAUTH
         settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
-        charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         super(PayPerUseChargingTestCase, cls).setUpClass()
 
@@ -521,6 +511,9 @@ class PayPerUseChargingTestCase(TestCase):
     def tearDownClass(cls):
         settings.OILAUTH = cls._auth
         super(PayPerUseChargingTestCase, cls).tearDownClass()
+
+    def setUp(self):
+        charging_engine.InvoiceBuilder = MagicMock()
 
     def test_new_purchase_use(self):
 
@@ -549,9 +542,6 @@ class PayPerUseChargingTestCase(TestCase):
         charging.resolve_charging(new_purchase=True)
 
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
-
-        bills = purchase.bill
-        self.assertEqual(len(bills), 1)
 
         self.assertEqual(purchase.state, 'paid')
         contract = purchase.contract
@@ -606,9 +596,6 @@ class PayPerUseChargingTestCase(TestCase):
 
         purchase = Purchase.objects.get(pk='61077ab75e07a7c415f372f2')
 
-        bills = purchase.bill
-        self.assertEqual(len(bills), 1)
-
         self.assertEqual(purchase.state, 'paid')
 
         contract = purchase.contract
@@ -651,12 +638,12 @@ class AsynchronousPaymentTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
-        charging_engine.subprocess = FakeSubprocess()
         charging_engine.threading = FakeThreading()
         super(AsynchronousPaymentTestCase, cls).setUpClass()
 
     def setUp(self):
         charging_engine.CDRManager = MagicMock()
+        charging_engine.InvoiceBuilder = MagicMock()
 
     def test_basic_asynchronous_payment(self):
 
@@ -705,9 +692,6 @@ class AsynchronousPaymentTestCase(TestCase):
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
         self.assertEqual(purchase.state, 'paid')
-        bills = purchase.bill
-
-        self.assertEqual(len(bills), 1)
 
         contract = purchase.contract
         self.assertEqual(len(contract.charges), 1)
@@ -1003,7 +987,6 @@ class PriceFunctionPaymentTestCase(TestCase):
     def setUpClass(cls):
         cls._auth = settings.OILAUTH
         settings.PAYMENT_CLIENT = 'wstore.charging_engine.tests.FakeClient'
-        charging_engine.subprocess = FakeSubprocess()
         settings.OILAUTH = False
         super(PriceFunctionPaymentTestCase, cls).setUpClass()
 
@@ -1011,6 +994,9 @@ class PriceFunctionPaymentTestCase(TestCase):
     def tearDownClass(cls):
         settings.OILAUTH = cls._auth
         super(PriceFunctionPaymentTestCase, cls).tearDownClass()
+
+    def setUp(self):
+        charging_engine.InvoiceBuilder = MagicMock()
 
     def test_basic_price_function_payment(self):
 
@@ -1043,9 +1029,6 @@ class PriceFunctionPaymentTestCase(TestCase):
         charging.resolve_charging(sdr=True)
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        bills = purchase.bill
-        self.assertEqual(len(bills), 1)
 
         self.assertEqual(purchase.state, 'paid')
 
@@ -1101,9 +1084,6 @@ class PriceFunctionPaymentTestCase(TestCase):
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f55555')
 
-        bills = purchase.bill
-        self.assertEqual(len(bills), 1)
-
         self.assertEqual(purchase.state, 'paid')
 
         contract = purchase.contract
@@ -1158,9 +1138,6 @@ class PriceFunctionPaymentTestCase(TestCase):
         charging.resolve_charging()
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f77777')
-
-        bills = purchase.bill
-        self.assertEqual(len(bills), 1)
 
         self.assertEqual(purchase.state, 'paid')
 

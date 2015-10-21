@@ -20,28 +20,23 @@
 
 from __future__ import absolute_import
 
-import os
 import json
 import time
-import codecs
-import subprocess
 import threading
 from bson import ObjectId
 from urllib2 import HTTPError
-
 from datetime import datetime
 
 from django.conf import settings
-from django.template import loader, Context
 
-from wstore.models import Resource, Organization
-from wstore.models import UserProfile, Context as WStore_context
+from wstore.models import Organization, Context as WStore_context
 from wstore.models import Purchase
 from wstore.models import RSS
 from wstore.charging_engine.models import Contract
 from wstore.charging_engine.models import Unit
 from wstore.charging_engine.price_resolver import PriceResolver
 from wstore.charging_engine.charging.cdr_manager import CDRManager
+from wstore.charging_engine.invoice_builder import InvoiceBuilder
 from wstore.contracting.purchase_rollback import rollback
 from wstore.rss_adaptor.rss_manager_factory import RSSManagerFactory
 from wstore.store_commons.database import get_database_connection
@@ -130,6 +125,7 @@ class ChargingEngine:
         if self._payment_method == 'credit_card':
             client.direct_payment(currency, price, self._credit_card_info)
             self._purchase.state = 'paid'
+            self._purchase.save()
 
         elif self._payment_method == 'paypal':
             client.start_redirection_payment(price, currency)
@@ -144,265 +140,9 @@ class ChargingEngine:
                 return checkout_url
             else:
                 self._purchase.state = 'paid'
+                self._purchase.save()
         else:
             raise Exception('Invalid payment method')
-
-    def _generate_invoice(self, price, applied_parts, type_):
-
-        parts = None
-        currency = self._purchase.contract.pricing_model['general_currency']
-        if type_ == 'initial':
-            # If initial can only contain single payments and subscriptions
-            parts = {
-                'single_parts': [],
-                'subs_parts': []
-            }
-            if 'single_payment' in applied_parts:
-                for part in applied_parts['single_payment']:
-                    parts['single_parts'].append((part['label'], part['value'], currency))
-
-            if 'subscription' in applied_parts:
-                for part in applied_parts['subscription']:
-                    parts['subs_parts'].append((part['label'], part['value'], currency, part['unit'], str(part['renovation_date'])))
-
-            # Get the bill template
-            bill_template = loader.get_template('contracting/bill_template_initial.html')
-
-        elif type_ == 'renovation':
-            parts = {
-                'subs_parts': [],
-                'subs_subtotal': 0
-            }
-            # If renovation, It contains subscriptions
-            for part in applied_parts['subscription']:
-                parts['subs_parts'].append((part['label'], part['value'], currency, part['unit'], str(part['renovation_date'])))
-                parts['subs_subtotal'] += float(part['value'])
-
-            # Check use based charges
-            if 'charges' in applied_parts and len(applied_parts['charges']) > 0:
-                parts['use_parts'] = []
-                parts['use_subtotal'] = 0
-
-                # Fill use tuples for the invoice
-                for part in applied_parts['charges']:
-                    model = part['model']
-                    if 'price_function' in model:
-                        unit = 'price function'
-                        value_unit = model['text_function']
-                        use = '- '
-                    else:
-                        unit = model['unit']
-                        value_unit = model['value']
-
-                        # Aggregate use made
-                        use = 0
-                        for sdr in part['accounting']:
-                            use += int(sdr['value'])
-
-                    parts['use_parts'].append((model['label'], unit, value_unit, use, part['price']))
-                    parts['use_subtotal'] += part['price']
-
-            # Check deductions
-            if 'deductions' in applied_parts and len(applied_parts['deductions']) > 0:
-                parts['deduct_parts'] = []
-                parts['deduct_subtotal'] = 0
-
-                # Fill use tuples for the invoice
-                for part in applied_parts['deductions']:
-                    model = part['model']
-                    if 'price_function' in model:
-                        unit = 'price function'
-                        value_unit = model['text_function']
-                        use = '- '
-                    else:
-                        unit = model['unit']
-                        value_unit = model['value']
-
-                        # Aggregate use made
-                        use = 0
-                        for sdr in part['accounting']:
-                            use += int(sdr['value'])
-
-                    parts['deduct_parts'].append((model['label'], unit, value_unit, use, part['price']))
-                    parts['deduct_subtotal'] += part['price']
-
-            # Get the bill template
-            bill_template = loader.get_template('contracting/bill_template_renovation.html')
-
-        elif type_ == 'use':
-            # If use, can only contain pay per use parts or deductions
-            parts = {
-                'use_parts': [],
-                'use_subtotal': 0
-            }
-            for part in applied_parts['charges']:
-                model = part['model']
-                if 'price_function' in model:
-                    unit = 'price function'
-                    value_unit = model['text_function']
-                    use = '- '
-                else:
-                    unit = model['unit']
-                    value_unit = model['value']
-
-                    # Aggregate use made
-                    use = 0
-                    for sdr in part['accounting']:
-                        use += int(sdr['value'])
-
-                parts['use_parts'].append((model['label'], unit, value_unit, use, part['price']))
-                parts['use_subtotal'] += part['price']
-
-            # Check deductions
-            if len(applied_parts['deductions']) > 0:
-                parts['deduct_parts'] = []
-                parts['deduct_subtotal'] = 0
-
-                # Fill use tuples for the invoice
-                for part in applied_parts['deductions']:
-                    model = part['model']
-                    if 'price_function' in model:
-                        unit = 'price function'
-                        value_unit = model['text_function']
-                        use = '- '
-                    else:
-                        unit = model['unit']
-                        value_unit = model['value']
-
-                        # Aggregate use made
-                        use = 0
-                        for sdr in part['accounting']:
-                            use += int(sdr['value'])
-
-                    parts['deduct_parts'].append((model['label'], unit, value_unit, use, part['price']))
-                    parts['deduct_subtotal'] += part['price']
-
-            # Get the bill template
-            bill_template = loader.get_template('contracting/bill_template_use.html')
-
-        tax = self._purchase.tax_address
-
-        # Render the bill template
-        offering = self._purchase.offering
-        customer = self._purchase.customer
-
-        customer_profile = UserProfile.objects.get(user=customer)
-
-        resources = []
-        for res in offering.resources:
-            r = Resource.objects.get(pk=str(res))
-            resources.append((r.name, r.description))
-
-        last_charge = self._purchase.contract.last_charge
-
-        if last_charge is None:
-            # If last charge is None means that it is the invoice generation
-            # associated with a free offering
-            date = str(datetime.now()).split(' ')[0]
-        else:
-            date = str(last_charge).split(' ')[0]
-
-        # Load pricing info into the context
-        context = {
-            'BASEDIR': settings.BASEDIR,
-            'offering_name': offering.name,
-            'off_organization': offering.owner_organization.name,
-            'off_version': offering.version,
-            'ref': self._purchase.ref,
-            'date': date,
-            'organization': customer_profile.current_organization.name,
-            'customer': customer_profile.complete_name,
-            'address': tax.get('street'),
-            'postal': tax.get('postal'),
-            'city': tax.get('city'),
-            'province': tax.get('province'),
-            'country': tax.get('country'),
-            'taxes': [],
-            'subtotal': price,  # TODO price without taxes
-            'tax': '0',
-            'total': price,
-            'resources': resources,
-            'cur': currency  # General currency of the invoice
-        }
-
-        # Include the corresponding parts in the context
-        # depending on the type of applied parts
-        # Initial Charge
-        if type_ == 'initial':
-            context['exists_single'] = False
-            context['exists_subs'] = False
-
-            if len(parts['single_parts']) > 0:
-                context['single_parts'] = parts['single_parts']
-                context['exists_single'] = True
-
-            if len(parts['subs_parts']) > 0:
-                context['subs_parts'] = parts['subs_parts']
-                context['exists_subs'] = True
-
-        # Renovation Charge
-        elif type_ == 'renovation':
-
-            context['subs_parts'] = parts['subs_parts']
-            context['subs_subtotal'] = parts['subs_subtotal']
-
-            if 'use_parts' in parts:
-                context['use'] = True
-                context['use_parts'] = parts['use_parts']
-                context['use_subtotal'] = parts['use_subtotal']
-            else:
-                context['use'] = False
-
-            if 'deduct_parts' in parts:
-                context['deduction'] = True
-                context['deduct_parts'] = parts['deduct_parts']
-                context['deduct_subtotal'] = parts['deduct_subtotal']
-            else:
-                context['deduction'] = False
-
-        # Use based charge
-        else:
-            context['use_parts'] = parts['use_parts']
-            context['use_subtotal'] = parts['use_subtotal']
-
-            if 'deduct_parts' in parts:
-                context['deduction'] = True
-                context['deduct_parts'] = parts['deduct_parts']
-                context['deduct_subtotal'] = parts['deduct_subtotal']
-            else:
-                context['deduction'] = False
-
-        bill_code = bill_template.render(Context(context))
-
-        # Create the bill code file
-        invoice_name = self._purchase.ref + '_' + date
-        bill_path = os.path.join(settings.BILL_ROOT, invoice_name + '.html')
-        f = codecs.open(bill_path, 'wb', 'utf-8')
-        f.write(bill_code)
-        f.close()
-
-        in_name = bill_path[:-4] + 'pdf'
-
-        if os.path.exists(in_name):
-            in_name = bill_path[:-5] + '_1.pdf'
-            invoice_name += '_1'
-
-        # Compile the bill file
-        try:
-            subprocess.call([settings.BASEDIR + '/create_invoice.sh', bill_path, in_name])
-        except:
-            raise Exception('Invoice generation problem')
-
-        # Remove temporal files
-        for file_ in os.listdir(settings.BILL_ROOT):
-
-            if not file_.endswith('.pdf'):
-                os.remove(os.path.join(settings.BILL_ROOT, file_))
-
-        # Load bill path into the purchase
-        self._purchase.bill.append(os.path.join(settings.MEDIA_URL, 'bills/' + invoice_name + '.pdf'))
-
-        self._purchase.save()
 
     def _create_purchase_contract(self):
         # Generate the pricing model structure
@@ -575,7 +315,7 @@ class ChargingEngine:
             # Check if the error is due to an insufficient balance
             else:
                 request_failure = e
-        except:
+        except Exception as e:
             request_failure = e
 
         # Raise  the correct failure
@@ -644,6 +384,8 @@ class ChargingEngine:
 
         contract.last_charge = time_stamp
 
+        invoice_builder = InvoiceBuilder(self._purchase)
+
         if concept == 'initial charge':
             # If a subscription part has been charged update renovation date
             if 'subscription' in related_model:
@@ -662,7 +404,7 @@ class ChargingEngine:
                 related_model['subscription'] = updated_subscriptions
 
             # Generate the invoice
-            self._generate_invoice(price, related_model, 'initial')
+            invoice_builder.generate_invoice(price, related_model, 'initial')
 
         elif concept == 'Renovation':
 
@@ -683,14 +425,14 @@ class ChargingEngine:
                 contract.applied_sdrs.extend(contract.pending_sdrs)
                 contract.pending_sdrs = []
 
-            self._generate_invoice(price, related_model, 'renovation')
+            invoice_builder.generate_invoice(price, related_model, 'renovation')
 
         elif concept == 'pay per use':
             # Move SDR from pending to applied
             contract.applied_sdrs.extend(contract.pending_sdrs)
             contract.pending_sdrs = []
             # Generate the invoice
-            self._generate_invoice(price, accounting, 'use')
+            invoice_builder.generate_invoice(price, accounting, 'use')
             related_model['charges'] = accounting['charges']
             related_model['deductions'] = accounting['deductions']
 
@@ -698,6 +440,7 @@ class ChargingEngine:
         # that a transmission error in RSS request causes the
         # customer being charged twice
         contract.save()
+        self._purchase.save()
 
         # If the customer has been charged create the CDR and update balance
         if price > 0:
