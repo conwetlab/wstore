@@ -86,6 +86,7 @@
         "model": "charging_engine.contract",
         "fields": {
             "pricing_model": {
+                "general_currency": "EUR",
                 "pay_per_use": [{
                     "title": "pay per use",
                     "value": "1",

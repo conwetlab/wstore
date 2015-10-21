@@ -168,6 +168,7 @@ class UserProfileCollection(Resource):
                     'street': data['tax_address']['street'],
                     'postal': data['tax_address']['postal'],
                     'city': data['tax_address']['city'],
+                    'province': data['tax_address']['province'],
                     'country': data['tax_address']['country']
                 }
             if 'payment_info' in data:
@@ -239,12 +240,7 @@ class UserProfileEntry(Resource):
             user_profile['organizations'].append(org_info)
 
         if 'street' in profile.tax_address:
-            user_profile['tax_address'] = {
-                'street': profile.tax_address['street'],
-                'postal': profile.tax_address['postal'],
-                'city': profile.tax_address['city'],
-                'country': profile.tax_address['country']
-            }
+            user_profile['tax_address'] = profile.tax_address
 
         # Include roles for the user
         user_profile['roles'] = profile.get_user_roles()
@@ -365,6 +361,7 @@ class UserProfileEntry(Resource):
                     'street': data['tax_address']['street'],
                     'postal': data['tax_address']['postal'],
                     'city': data['tax_address']['city'],
+                    'province': data['tax_address']['province'],
                     'country': data['tax_address']['country']
                 }
             else:

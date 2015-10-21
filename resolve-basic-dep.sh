@@ -45,7 +45,7 @@ if [[ $DIST ==  "deb" ]]; then
     apt-get install xvfb
     # Install lxml dependencies
     apt-get install gcc
-    apt-get install libxml2-dev libxslt1-dev zlib1g-dev python-dev
+    apt-get install libxml2-dev libxslt1-dev zlib1g-dev python-dev libffi-dev libssl-dev
 
     # Install virtualenv
     pip install virtualenv
@@ -60,6 +60,7 @@ elif [[  $DIST == "rhel" ]]; then
     yum install -y bzip2-devel
     yum install -y openssl-devel
     yum install -y ncurses-devel
+    yum install -y libffi-devel libssl-devel
 
     # Download and compile python 2.7
     if [[ $VER == "6" ]]; then

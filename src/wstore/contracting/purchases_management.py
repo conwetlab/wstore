@@ -78,9 +78,10 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
         tax = payment_info['tax_address']
 
         # Check tax_address fields
-        if ('street' not in tax) or ('postal' not in tax)\
-                or ('city' not in tax) or ('country' not in tax):
-            raise ValueError('The tax address is not valid')
+        if ('street' not in tax) or (not len(tax['street']) > 0) or ('postal' not in tax) or (not len(tax['postal']) > 0)\
+                or ('city' not in tax) or (not len(tax['city']) > 0) or ('country' not in tax)\
+                or (not len(tax['country']) > 0) or ('province' not in tax) or (not len(tax['province']) > 0):
+            raise ValueError('Missing a required field in the tax address. It must contain street, postal, city, province and country')
 
     # Check the payment method before purchase creation in order to avoid
     # an inconsistent state in the database

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
  *
  * This file is part of WStore.
  *
@@ -27,15 +27,11 @@
     UserConfForm = function UserConfForm(userProfile, isOrg) {
         this.isOrg = isOrg;
         this.userProfile = userProfile;
-        this.userDisplayed = false;
-        this.addrDisplayed = false;
-        this.paymentDisplayed = false;
         this.userFormDisplayed = false;
         this.addrFormDisplayed = false;
         this.paymentFormDisplayed = false;
 
         if($('#expenditure-tab').lenght) {
-            this.expenditureDisplayed = false;
             this.expenditureFormDisplayed = false;
         }
     };
@@ -86,7 +82,7 @@
 
         // If any field is filled all fields must be filled
         if (filled != 0) {
-            if (filled != 3) {
+            if (filled != 4) {
                 error = true;
                 msg = 'If a field of tax address is filled all fields must be filled';
             } else {
@@ -94,6 +90,7 @@
                     'street': $.trim($('#street').val()),
                     'postal': $.trim($('#postal').val()),
                     'city': $.trim($('#city').val()),
+                    'province': $.trim($('#province').val()),
                     'country': $.trim($('#country').val())
                 };
             }
@@ -189,12 +186,14 @@
                     'street': taxAddr.street,
                     'postal': taxAddr.postal,
                     'city': taxAddr.city,
+                    'province': taxAddr.province
                 };
             } else {
                 context = {
                     'street': '',
                     'postal': '',
                     'city': '',
+                    'province': '',
                     'country': ''
                 };
             }
@@ -317,7 +316,6 @@
             $.template('infoConfTemplate', $('#org_info_conf_template'));
         }
         $.tmpl('infoConfTemplate', context).appendTo('#userinfo-tab');
-        this.userDisplayed = true;
     };
 
     /**
@@ -326,14 +324,13 @@
     UserConfForm.prototype.paintAddressInfo = function paintAddressInfo() {
         var taxAddr = this.userProfile.getTaxAddress();
 
-        this.addrDisplayed = true;
-
         // Create context for the template
         if (taxAddr) {
             var context = {
                 'street': taxAddr.street,
                 'postal': taxAddr.postal,
                 'city': taxAddr.city,
+                'province': taxAddr.province,
                 'country': taxAddr.country
             };
 
@@ -351,8 +348,6 @@
      */
     UserConfForm.prototype.paintPaymentInfo = function paintPaymentInfo() {
         var paymentInfo = this.userProfile.getPaymentInfo();
-
-        this.paymentDisplayed = true;
 
         // Create context for template
         if (paymentInfo) {
@@ -379,8 +374,6 @@
      */
     UserConfForm.prototype.paintExpenditureInfo = function paintExpenditureInfo() {
         var expenditureInfo = this.userProfile.getExpenditureInfo();
-
-        this.expenditureDisplayed = true;
 
         if (!$.isEmptyObject(expenditureInfo)) {
             $.template('expenditureInfoTemplate', $('#expenditure_conf_template'));

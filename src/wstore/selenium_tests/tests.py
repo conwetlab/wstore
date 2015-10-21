@@ -406,6 +406,7 @@ class PurchaseTestCase(WStoreSeleniumTestCase):
             'street': 'fake street',
             'postal': '12345',
             'city': 'fake city',
+            'province': 'fake province',
             'country': 'Spain'
         })
 
