@@ -33,6 +33,7 @@ from wstore.store_commons.utils.http import build_response, supported_request_mi
 from wstore.models import Purchase
 from wstore.models import UserProfile
 from wstore.charging_engine.charging_engine import ChargingEngine
+from wstore.charging_engine.accounting.sdr_manager import SDRManager
 from wstore.contracting.purchase_rollback import rollback
 from wstore.contracting.notify_provider import notify_provider
 from wstore.store_commons.database import get_database_connection
@@ -66,8 +67,8 @@ class ServiceRecordCollection(Resource):
             # Get the purchase
             purchase = Purchase.objects.get(ref=reference)
             # Call the charging engine core with the SDR
-            charging_engine = ChargingEngine(purchase)
-            charging_engine.include_sdr(data)
+            sdr_manager = SDRManager(purchase)
+            sdr_manager.include_sdr(data)
         except Exception, e:
             return build_response(request, 400, e.message)
 

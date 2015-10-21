@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -30,23 +30,19 @@ from bson import ObjectId
 from urllib2 import HTTPError
 
 from datetime import datetime
-from paypalpy import paypal
 
 from django.conf import settings
 from django.template import loader, Context
-from django.contrib.auth.models import User
 
 from wstore.models import Resource, Organization
 from wstore.models import UserProfile, Context as WStore_context
 from wstore.models import Purchase
-from wstore.models import Offering
 from wstore.models import RSS
 from wstore.charging_engine.models import Contract
 from wstore.charging_engine.models import Unit
 from wstore.charging_engine.price_resolver import PriceResolver
+from wstore.charging_engine.charging.cdr_manager import CDRManager
 from wstore.contracting.purchase_rollback import rollback
-from wstore.rss_adaptor.rss_adaptor import RSSAdaptorThread
-from wstore.rss_adaptor.utils.rss_codes import get_country_code, get_curency_code
 from wstore.rss_adaptor.rss_manager_factory import RSSManagerFactory
 from wstore.store_commons.database import get_database_connection
 
@@ -56,27 +52,27 @@ class ChargingEngine:
     _price_model = None
     _purchase = None
     _payment_method = None
-    _credit_card_info = None
     _plan = None
+    _cdr_manager = None
 
-    def __init__(self, purchase, payment_method=None, credit_card=None, plan=None):
+    def __init__(self, purchase, payment_method=None, plan=None, credit_card=None):
         self._purchase = purchase
         if payment_method is not None:
 
             if payment_method != 'paypal':
-                if payment_method != 'credit_card':
+                if credit_card is None:
                     raise Exception('Invalid payment method')
-                else:
-                    if credit_card is None:
-                        raise Exception('No credit card provided')
-                    self._credit_card_info = credit_card
 
             self._payment_method = payment_method
 
         if plan:
             self._plan = plan
 
+        if credit_card is not None:
+            self._credit_card_info = credit_card
+
         self._expenditure_used = False
+        self._cdr_manager = CDRManager(self._purchase)
 
     def _timeout_handler(self):
 
@@ -114,20 +110,9 @@ class ChargingEngine:
             if len(splited_price[1]) > 2:
                 price = splited_price[0] + '.' + splited_price[1][:2]
             elif len(splited_price[1]) < 2:
-                price = price + '0'
+                price += '0'
 
         return price
-
-    def _get_country_code(self, country):
-
-        country_code = None
-        # Get country code
-        for cc in paypal.COUNTRY_CODES:
-            if cc[1].lower() == country.lower():
-                country_code = cc[0]
-                break
-
-        return country_code
 
     def _charge_client(self, price, concept, currency):
 
@@ -161,154 +146,6 @@ class ChargingEngine:
                 self._purchase.state = 'paid'
         else:
             raise Exception('Invalid payment method')
-
-    def _generate_cdr_part(self, part, model, cdr_info):
-        # Create connection for raw database access
-        db = get_database_connection()
-
-        # Take and increment the correlation number using
-        # the mongoDB atomic access in order to avoid race
-        # problems
-        currency = self._price_model['general_currency']
-
-        if cdr_info['rss'].api_version == 1:
-            # Version 1 uses a global correlation number
-            corr_number = db.wstore_rss.find_and_modify(
-                query={'_id': ObjectId(cdr_info['rss'].pk)},
-                update={'$inc': {'correlation_number': 1}}
-            )['correlation_number']
-
-            currency = get_curency_code(self._price_model['general_currency'])
-
-        else:
-            # Version 2 uses a correlation number per provider
-            corr_number = db.wstore_organization.find_and_modify(
-                query={'_id': ObjectId(self._purchase.owner_organization.pk)},
-                update={'$inc': {'correlation_number': 1}}
-            )['correlation_number']
-
-        return {
-            'provider': cdr_info['provider'],
-            'service': cdr_info['service_name'],
-            'defined_model': model,
-            'correlation': str(corr_number),
-            'purchase': self._purchase.ref,
-            'offering': cdr_info['offering'],
-            'product_class': cdr_info['product_class'],
-            'description': cdr_info['description'],
-            'cost_currency': currency,
-            'cost_value': str(part['value']),
-            'tax_currency': currency,
-            'tax_value': '0.0',
-            'source': '1',
-            'operator': '1',
-            'country': cdr_info['country_code'],
-            'time_stamp': cdr_info['time_stamp'],
-            'customer': cdr_info['customer'],
-            'event': self._purchase.contract.revenue_class
-        }
-
-    def _generate_cdr(self, applied_parts, time_stamp, price=None):
-
-        cdrs = []
-
-        # Take the first RSS registered
-        rss_collection = RSS.objects.all()
-
-        if len(rss_collection) > 0:
-            rss = RSS.objects.all()[0]
-
-            # Get the provider (Organization)
-            if rss.api_version == 1:
-                provider = settings.STORE_NAME.lower() + '-provider'
-            else:
-                provider = self._purchase.offering.owner_organization.actor_id
-
-            # Set offering ID
-            offering = self._purchase.offering.name + ' ' + self._purchase.offering.version
-
-            # Get the customer
-            customer = self._purchase.owner_organization.name
-
-            # Get the country code
-            try:
-                country_code = self._get_country_code(self._purchase.tax_address['country'])
-                country_code = get_country_code(country_code)
-            except:
-                country_code = '1'
-
-            # Get the product class
-            if rss.api_version == 1:
-                product_class = self._purchase.contract.revenue_class
-            else:
-                off_model = self._purchase.offering
-                product_class = off_model.owner_organization.name + '/' + off_model.name + '/' + off_model.version
-
-            cdr_info = {
-                'rss': rss,
-                'provider': provider,
-                'service_name': offering,
-                'offering': offering,
-                'country_code': country_code,
-                'time_stamp': time_stamp,
-                'customer': customer,
-                'product_class': product_class
-            }
-
-            # If any deduction has been applied the whole payment is
-            # included in a single CDR instead of including parts in
-            # order to avoid a mismatch between the revenues being shared
-            # and the real payment
-
-            if price:
-                # Create a payment part representing the whole payment
-                aggregated_part = {
-                    'value': price,
-                    'currency': self._price_model['general_currency']
-                }
-                cdr_info['description'] = 'Complete Charging event: ' + str(price) + ' ' + self._price_model['general_currency']
-                cdrs.append(self._generate_cdr_part(aggregated_part, 'Charging event', cdr_info))
-
-            else:
-                # Check the type of the applied parts
-                if 'single_payment' in applied_parts:
-
-                    # A cdr is generated for every price part
-                    for part in applied_parts['single_payment']:
-                        cdr_info['description'] = 'Single payment: ' + part['value'] + ' ' + self._price_model['general_currency']
-                        cdrs.append(self._generate_cdr_part(part, 'Single payment event', cdr_info))
-
-                if 'subscription' in applied_parts:
-
-                    # A cdr is generated by price part
-                    for part in applied_parts['subscription']:
-                        cdr_info['description'] = 'Subscription: ' + part['value'] + ' ' + self._price_model['general_currency'] + ' ' + part['unit']
-                        cdrs.append(self._generate_cdr_part(part, 'Subscription event', cdr_info))
-
-                if 'charges' in applied_parts:
-
-                    # A cdr is generated by price part
-                    for part in applied_parts['charges']:
-                        use_part = {
-                            'value': part['price'],
-                        }
-                        if 'price_function' in part['model']:
-                            cdr_info['description'] = part['model']['text_function']
-                            use_part['currency'] = self._price_model['general_currency']
-                        else:
-                            use_part['currency'] = self._price_model['general_currency']
-
-                            # Calculate the total consumption
-                            use = 0
-                            for sdr in part['accounting']:
-                                use += int(sdr['value'])
-                            cdr_info['description'] = 'Fee per ' + part['model']['unit'] + ', Consumption: ' + str(use)
-
-                        cdrs.append(self._generate_cdr_part(use_part, 'Pay per use event', cdr_info))
-
-            # Send the created CDRs to the Revenue Sharing System
-            r = RSSAdaptorThread(rss, cdrs)
-            r.start()
 
     def _generate_invoice(self, price, applied_parts, type_):
 
@@ -694,106 +531,6 @@ class ChargingEngine:
         renovation_date = datetime.fromtimestamp(renovation_date)
         return renovation_date
 
-    def include_sdr(self, sdr):
-        # Check the offering and customer
-        off_data = sdr['offering']
-        org = Organization.objects.get(name=off_data['organization'])
-        offering = Offering.objects.get(name=off_data['name'], owner_organization=org, version=off_data['version'])
-
-        if offering != self._purchase.offering:
-            raise Exception('The offering defined in the SDR is not the purchase offering')
-
-        customer = User.objects.get(username=sdr['customer'])
-
-        if self._purchase.organization_owned:
-            # Check if the user belongs to the organization
-            profile = UserProfile.objects.get(user=customer)
-            belongs = False
-
-            for org in profile.organizations:
-                if org['organization'] == self._purchase.owner_organization.pk:
-                    belongs = True
-                    break
-
-            if not belongs:
-                raise Exception('The user does not belongs to the owner organization')
-        else:
-            # Check if the user has purchased the offering
-            if customer != self._purchase.customer:
-                raise Exception('The user has not purchased the offering')
-
-        # Extract the pricing model from the purchase
-        self._price_model = self._purchase.contract.pricing_model
-
-        if 'pay_per_use' not in self._price_model:
-            raise Exception('No pay per use parts in the pricing model of the offering')
-
-        # Check the correlation number and timestamp
-        applied_sdrs = self._purchase.contract.applied_sdrs
-        pending_sdrs = self._purchase.contract.pending_sdrs
-        last_corr = 0
-        last_time = 0
-
-        if len(pending_sdrs) > 0:
-            last_corr = int(pending_sdrs[-1]['correlation_number'])
-            last_time = pending_sdrs[-1]['time_stamp']
-            last_time = time.mktime(last_time.timetuple())
-        else:
-            if len(applied_sdrs) > 0:
-                last_corr = int(applied_sdrs[-1]['correlation_number'])
-                last_time = applied_sdrs[-1]['time_stamp']
-                last_time = time.mktime(last_time.timetuple())
-
-        try:
-            time_stamp = datetime.strptime(sdr['time_stamp'], '%Y-%m-%dT%H:%M:%S.%f')
-        except:
-            time_stamp = datetime.strptime(sdr['time_stamp'], '%Y-%m-%d %H:%M:%S.%f')
-
-        time_stamp_sec = time.mktime(time_stamp.timetuple())
-
-        if (int(sdr['correlation_number']) != last_corr + 1):
-            raise Exception('Invalid correlation number, expected: ' + str(last_corr + 1))
-
-        if last_time > time_stamp_sec:
-            raise Exception('Invalid time stamp')
-
-        # Check unit or component_label depending if the model defines components or
-        # price functions
-        found_model = False
-        for comp in self._price_model['pay_per_use']:
-            if 'price_function' not in comp:
-                if sdr['unit'] == comp['unit']:
-                    found_model = True
-                    break
-            else:
-                for k, var in comp['price_function']['variables'].iteritems():
-                    if var['type'] == 'usage' and var['label'] == sdr['component_label']:
-                        found_model = True
-                        break
-
-        # Check if any deduction depends on the sdr variable
-        found_deduction = False
-        if 'deductions' in self._price_model:
-            for comp in self._price_model['deductions']:
-                if 'price_function' not in comp:
-                    if sdr['unit'] == comp['unit']:
-                        found_deduction = True
-                        break
-                else:
-                    for k, var in comp['price_function']['variables'].iteritems():
-                        if var['type'] == 'usage' and var['label'] == sdr['component_label']:
-                            found_deduction = True
-                            break
-
-        if found_model or found_deduction:
-            # Store the SDR
-            sdr['time_stamp'] = time_stamp
-            self._purchase.contract.pending_sdrs.append(sdr)
-        else:
-            raise Exception('The specified unit or component label is not included in the pricing model')
-
-        self._purchase.contract.save()
-
     def _check_expenditure_limits(self, price):
         """
         Check if the user can purchase the offering depending on its
@@ -805,7 +542,6 @@ class ChargingEngine:
         else:
             rss = RSS.objects.all()[0]
 
-        actor = None
         # Check who is the charging actor (user or organization)
         actor = self._purchase.owner_organization
 
@@ -855,7 +591,6 @@ class ChargingEngine:
     def _update_actor_balance(self, price):
         rss = RSS.objects.all()[0]
 
-        actor = None
         # Check who is the charging actor (user or organization)
         if self._purchase.organization_owned:
             actor = self._purchase.owner_organization
@@ -966,7 +701,7 @@ class ChargingEngine:
 
         # If the customer has been charged create the CDR and update balance
         if price > 0:
-            self._generate_cdr(related_model, str(time_stamp))
+            self._cdr_manager.generate_cdr(related_model, str(time_stamp))
             if self._expenditure_used:
                 self._update_actor_balance(price)
 

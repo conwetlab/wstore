@@ -62,7 +62,7 @@ COUNTRIES = {
 }
 
 
-def get_curency_code(curr):
+def get_currency_code(curr):
 
     try:
         code = CURRENCIES[curr]

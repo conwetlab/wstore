@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -20,9 +20,7 @@
 
 from __future__ import absolute_import
 
-import os
 import json
-import rdflib
 from copy import deepcopy
 from datetime import datetime
 from bson import ObjectId
@@ -33,7 +31,6 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.test.utils import override_settings
 
 from wstore.charging_engine import charging_engine
 from wstore.charging_engine import views
@@ -181,6 +178,9 @@ class SinglePaymentChargingTestCase(TestCase):
         settings.OILAUTH = cls._auth
         super(SinglePaymentChargingTestCase, cls).tearDownClass()
 
+    def setUp(self):
+        charging_engine.CDRManager = MagicMock()
+
     @parameterized.expand([
         ('basic',  BASIC_PRCING, 5),
         ('multiple', MULTIPLE_PRCING, 17)
@@ -293,10 +293,10 @@ class SubscriptionChargingTestCase(TestCase):
             'cvv2': '111',
         }
 
+        charging_engine.CDRManager = MagicMock()
+
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
         charging._calculate_renovation_date = fake_renovation_date
-
-        charging._generate_cdr = fake_cdr_generation
         charging._check_expenditure_limits = MagicMock()
         charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
@@ -522,344 +522,6 @@ class PayPerUseChargingTestCase(TestCase):
         settings.OILAUTH = cls._auth
         super(PayPerUseChargingTestCase, cls).tearDownClass()
 
-    def test_basic_sdr_feeding(self):
-
-        sdr = {
-            'offering': {
-                'name': 'test_offering',
-                'organization': 'test_organization',
-                'version': '1.0'
-            },
-            'component_label': 'invocations',
-            'customer': 'test_user',
-            'correlation_number': '1',
-            'time_stamp': str(datetime.now()),
-            'record_type': 'event',
-            'value': '10',
-            'unit': 'invocation'
-        }
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        charging = charging_engine.ChargingEngine(purchase)
-        charging.include_sdr(sdr)
-
-        # Refresh the purchase
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        contract = purchase.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 1)
-
-        loaded_sdr = contract.pending_sdrs[0]
-
-        self.assertEqual(loaded_sdr['customer'], 'test_user')
-        self.assertEqual(loaded_sdr['correlation_number'], '1')
-        self.assertEqual(loaded_sdr['record_type'], 'event')
-        self.assertEqual(loaded_sdr['value'], '10')
-        self.assertEqual(loaded_sdr['unit'], 'invocation')
-
-    test_basic_sdr_feeding.tags = ('fiware-ut-14',)
-
-    def test_sdr_feeding_some_applied(self):
-
-        settings.OILAUTH = False
-
-        sdr = {
-            'offering': {
-                'name': 'test_offering',
-                'organization': 'test_organization',
-                'version': '1.0'
-            },
-            'component_label': 'invocations',
-            'customer': 'test_user',
-            'correlation_number': '2',
-            'time_stamp': str(datetime.now()),
-            'record_type': 'event',
-            'value': '10',
-            'unit': 'invocation'
-        }
-
-        purchase = Purchase.objects.get(pk='61074ab65e05acc415f322f2')
-        applied_date = purchase.contract.applied_sdrs[0]['time_stamp']
-        applied_date = datetime.strptime(applied_date, '%Y-%m-%d %H:%M:%S')
-        purchase.contract.applied_sdrs[0]['time_stamp'] = applied_date
-        purchase.contract.save()
-
-        charging = charging_engine.ChargingEngine(purchase)
-        charging.include_sdr(sdr)
-
-        # Refresh the purchase
-        purchase = Purchase.objects.get(pk='61074ab65e05acc415f322f2')
-        contract = purchase.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 1)
-        self.assertEqual(len(contract.applied_sdrs), 1)
-        self.assertEqual(len(contract.charges), 1)
-
-        loaded_sdr = contract.pending_sdrs[0]
-
-        self.assertEqual(loaded_sdr['customer'], 'test_user')
-        self.assertEqual(loaded_sdr['correlation_number'], '2')
-        self.assertEqual(loaded_sdr['record_type'], 'event')
-        self.assertEqual(loaded_sdr['value'], '10')
-        self.assertEqual(loaded_sdr['unit'], 'invocation')
-
-    test_sdr_feeding_some_applied.tags = ('fiware-ut-14',)
-
-    def test_sdr_feeding_some_pending(self):
-
-        sdr = {
-            'offering': {
-                'name': 'test_offering',
-                'organization': 'test_organization',
-                'version': '1.0'
-            },
-            'component_label': 'invocations',
-            'customer': 'test_user',
-            'correlation_number': '2',
-            'time_stamp': str(datetime.now()),
-            'record_type': 'event',
-            'value': '10',
-            'unit': 'invocation'
-        }
-
-        purchase = Purchase.objects.get(pk='61077ab75e07a7c415f372f2')
-        applied_date = purchase.contract.pending_sdrs[0]['time_stamp']
-        applied_date = datetime.strptime(applied_date, '%Y-%m-%d %H:%M:%S')
-        purchase.contract.pending_sdrs[0]['time_stamp'] = applied_date
-        purchase.contract.save()
-
-        charging = charging_engine.ChargingEngine(purchase)
-        charging.include_sdr(sdr)
-
-        # Refresh the purchase
-        purchase = Purchase.objects.get(pk='61077ab75e07a7c415f372f2')
-        contract = purchase.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 2)
-
-        loaded_sdr = contract.pending_sdrs[1]
-
-        self.assertEqual(loaded_sdr['customer'], 'test_user')
-        self.assertEqual(loaded_sdr['correlation_number'], '2')
-        self.assertEqual(loaded_sdr['record_type'], 'event')
-        self.assertEqual(loaded_sdr['value'], '10')
-        self.assertEqual(loaded_sdr['unit'], 'invocation')
-
-    test_sdr_feeding_some_pending.tags = ('fiware-ut-14',)
-
-    def test_sdr_feeding_org_owned(self):
-
-        sdr = {
-            'offering': {
-                'name': 'test_offering',
-                'organization': 'test_organization',
-                'version': '1.0'
-            },
-            'component_label': 'invocations',
-            'customer': 'test_user2',
-            'correlation_number': '1',
-            'time_stamp': str(datetime.now()),
-            'record_type': 'event',
-            'value': '10',
-            'unit': 'invocation'
-        }
-
-        user = User.objects.get(username='test_user2')
-        profile = UserProfile.objects.get(user=user)
-        org = Organization.objects.get(name='test_organization1')
-        profile.current_organization = org
-        profile.organizations = [{
-            'organization': org.pk,
-            'roles': ['customer', 'provider']
-        }]
-        profile.save()
-
-        purchase = Purchase.objects.get(pk='61004a9a5e95ac9115902290')
-        charging = charging_engine.ChargingEngine(purchase)
-        charging.include_sdr(sdr)
-
-        # Refresh the purchase
-        purchase = Purchase.objects.get(pk='61004a9a5e95ac9115902290')
-        contract = purchase.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 1)
-
-        loaded_sdr = contract.pending_sdrs[0]
-
-        self.assertEqual(loaded_sdr['customer'], 'test_user2')
-        self.assertEqual(loaded_sdr['correlation_number'], '1')
-        self.assertEqual(loaded_sdr['record_type'], 'event')
-        self.assertEqual(loaded_sdr['value'], '10')
-        self.assertEqual(loaded_sdr['unit'], 'invocation')
-
-    test_sdr_feeding_org_owned.tags = ('fiware-ut-14',)
-
-    def test_sdr_feeding_invalid_user(self):
-
-        sdr = {
-            'offering': {
-                'name': 'test_offering',
-                'organization': 'test_organization',
-                'version': '1.0'
-            },
-            'customer': 'test_user2',
-            'correlation_number': '1',
-            'time_stamp': str(datetime.now()),
-            'record_type': 'event',
-            'value': '10',
-            'unit': 'invocation'
-        }
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        charging = charging_engine.ChargingEngine(purchase)
-
-        error = False
-        msg = None
-        try:
-            charging.include_sdr(sdr)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEquals(msg, 'The user has not purchased the offering')
-
-    test_sdr_feeding_invalid_user.tags = ('fiware-ut-14',)
-
-    def test_sdr_feeding_invalid_correlation(self):
-
-        sdr = {
-            'offering': {
-                'name': 'test_offering',
-                'organization': 'test_organization',
-                'version': '1.0'
-            },
-            'customer': 'test_user',
-            'correlation_number': '3',
-            'time_stamp': str(datetime.now()),
-            'record_type': 'event',
-            'value': '10',
-            'unit': 'invocation'
-        }
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        charging = charging_engine.ChargingEngine(purchase)
-
-        error = False
-        msg = None
-        try:
-            charging.include_sdr(sdr)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEquals(msg, 'Invalid correlation number, expected: 1')
-
-    test_sdr_feeding_invalid_correlation.tags = ('fiware-ut-14',)
-
-    def test_sdr_feeding_invalid_timestamp(self):
-
-        settings.OILAUTH = False
-        sdr = {
-            'offering': {
-                'name': 'test_offering',
-                'organization': 'test_organization',
-                'version': '1.0'
-            },
-            'customer': 'test_user',
-            'correlation_number': '2',
-            'time_stamp': '1980-05-01 11:10:01.234',
-            'record_type': 'event',
-            'value': '10',
-            'unit': 'invocation'
-        }
-
-        purchase = Purchase.objects.get(pk='61074ab65e05acc415f322f2')
-        applied_date = purchase.contract.applied_sdrs[0]['time_stamp']
-        applied_date = datetime.strptime(applied_date, '%Y-%m-%d %H:%M:%S')
-        purchase.contract.applied_sdrs[0]['time_stamp'] = applied_date
-        purchase.contract.save()
-
-        charging = charging_engine.ChargingEngine(purchase)
-
-        error = False
-        msg = None
-        try:
-            charging.include_sdr(sdr)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEquals(msg, 'Invalid time stamp')
-
-    test_sdr_feeding_invalid_timestamp.tags = ('fiware-ut-14',)
-
-    def test_sdr_feeding_invalid_offering(self):
-
-        sdr = {
-            'offering': {
-                'name': 'test_offering2',
-                'organization': 'test_organization',
-                'version': '1.0'
-            },
-            'customer': 'test_user',
-            'correlation_number': '3',
-            'time_stamp': str(datetime.now()),
-            'record_type': 'event',
-            'value': '10',
-            'unit': 'invocation'
-        }
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        charging = charging_engine.ChargingEngine(purchase)
-
-        error = False
-        msg = None
-        try:
-            charging.include_sdr(sdr)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEquals(msg, 'The offering defined in the SDR is not the purchase offering')
-
-    test_sdr_feeding_invalid_offering.tags = ('fiware-ut-14',)
-
-    def test_sdr_feeding_invalid_purchase(self):
-
-        sdr = {
-            'offering': {
-                'name': 'test_offering2',
-                'organization': 'test_organization',
-                'version': '1.0'
-            },
-            'customer': 'test_user',
-            'correlation_number': '1',
-            'time_stamp': str(datetime.now()),
-            'record_type': 'event',
-            'value': '10',
-            'unit': 'invocation'
-        }
-
-        purchase = Purchase.objects.get(pk='01003ab55e043cc335f132f3')
-        charging = charging_engine.ChargingEngine(purchase)
-
-        error = False
-        msg = None
-        try:
-            charging.include_sdr(sdr)
-        except Exception, e:
-            error = True
-            msg = e.message
-
-        self.assertTrue(error)
-        self.assertEquals(msg, 'No pay per use parts in the pricing model of the offering')
-
-    test_sdr_feeding_invalid_purchase.tags = ('fiware-ut-14',)
-
     def test_new_purchase_use(self):
 
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
@@ -879,9 +541,9 @@ class PayPerUseChargingTestCase(TestCase):
 
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
 
-        charging = charging_engine.ChargingEngine(purchase)
+        charging_engine.CDRManager = MagicMock()
 
-        charging._generate_cdr = fake_cdr_generation
+        charging = charging_engine.ChargingEngine(purchase)
         charging._check_expenditure_limits = MagicMock()
         charging._update_actor_balance = MagicMock()
         charging.resolve_charging(new_purchase=True)
@@ -937,7 +599,7 @@ class PayPerUseChargingTestCase(TestCase):
 
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
-        charging._generate_cdr = fake_cdr_generation
+        charging.CDRGeneration = MagicMock()
         charging._check_expenditure_limits = MagicMock()
         charging._update_actor_balance = MagicMock()
         charging.resolve_charging(sdr=True)
@@ -993,6 +655,9 @@ class AsynchronousPaymentTestCase(TestCase):
         charging_engine.threading = FakeThreading()
         super(AsynchronousPaymentTestCase, cls).setUpClass()
 
+    def setUp(self):
+        charging_engine.CDRManager = MagicMock()
+
     def test_basic_asynchronous_payment(self):
 
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
@@ -1034,8 +699,6 @@ class AsynchronousPaymentTestCase(TestCase):
 
         # Second step
         charging = charging_engine.ChargingEngine(purchase)
-
-        charging._generate_cdr = fake_cdr_generation
         charging._check_expenditure_limits = MagicMock()
         charging._update_actor_balance = MagicMock()
         charging.end_charging(contract.pending_payment['price'], contract.pending_payment['concept'], contract.pending_payment['related_model'])
@@ -1331,230 +994,6 @@ class ChargingDaemonTestCase(TestCase):
         self.assertEqual(len(contract.applied_sdrs), 0)
 
 
-class AdaptorWrapperThread():
-
-    _context = None
-    _url = None
-    _cdr = None
-
-    def __init__(self, context):
-        self._context = context
-
-    def __call__(self, url, cdr):
-        self._url = url
-        self._cdr = cdr
-        return self
-
-    def start(self):
-        self._context._cdrs = self._cdr
-
-
-@override_settings(STORE_NAME='wstore')
-class CDRGeranationTestCase(TestCase):
-
-    tags = ('fiware-ut-18',)
-    fixtures = ['cdr_generation.json']
-    _cdrs = None
-
-    @classmethod
-    def setUpClass(cls):
-        charging_engine.RSSAdaptorThread = AdaptorWrapperThread(cls)
-        charging_engine.get_country_code = lambda x: '1'
-        charging_engine.get_curency_code = lambda x: '1'
-        super(CDRGeranationTestCase, cls).setUpClass()
-
-    def tearDown(self):
-        self._cdrs = None
-        TestCase.tearDown(self)
-
-    def _create_purchase(self):
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        org = Organization.objects.get(name="test_user")
-        org.actor_id = "test_user"
-        org.save()
-
-        purchase.owner_organization = org
-        purchase.save()
-
-        return purchase
-
-    def test_basic_cdr_generation(self):
-
-        applied_parts = {
-            'single_payment': [{
-               'title': 'example part',
-               'unit': 'single_payment',
-               'currency': 'EUR',
-               'value': '1'
-            }]
-        }
-
-        purchase = self._create_purchase()
-        charging = charging_engine.ChargingEngine(purchase)
-        charging._price_model = {
-            'general_currency': 'EUR'
-        }
-
-        charging._generate_cdr(applied_parts, str(datetime.now()))
-
-        self.assertEqual(len(self._cdrs), 1)
-
-        cdr = self._cdrs[0]
-        self.assertEqual(cdr['provider'], 'test_organization')
-        self.assertEqual(cdr['service'], 'test_offering 1.0')
-        self.assertEqual(cdr['defined_model'], 'Single payment event')
-        self.assertEqual(cdr['correlation'], '0')
-        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
-        self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'test_organization/test_offering/1.0')
-        self.assertEqual(cdr['description'], 'Single payment: 1 EUR')
-        self.assertEqual(cdr['cost_currency'], 'EUR')
-        self.assertEqual(cdr['cost_value'], '1')
-        self.assertEqual(cdr['country'], '1')
-        self.assertEqual(cdr['customer'], 'test_user')
-        self.assertEqual(cdr['event'], 'use')
-
-    def test_cdr_generation_initial(self):
-
-        applied_parts = {
-            'single_payment': [{
-               'title': 'example part',
-               'unit': 'single_payment',
-               'currency': 'EUR',
-               'value': '1'
-            }],
-            'subscription': [{
-                'title': 'example part2',
-                'unit': 'per month',
-                'currency': 'EUR',
-                'value': '10'
-            }]
-        }
-
-        purchase = self._create_purchase()
-
-        charging = charging_engine.ChargingEngine(purchase)
-        charging._price_model = {
-            'general_currency': 'EUR'
-        }
-        charging._generate_cdr(applied_parts, str(datetime.now()))
-
-        self.assertEqual(len(self._cdrs), 2)
-
-        cdr = self._cdrs[0]
-        self.assertEqual(cdr['provider'], 'test_organization')
-        self.assertEqual(cdr['service'], 'test_offering 1.0')
-        self.assertEqual(cdr['defined_model'], 'Single payment event')
-        self.assertEqual(cdr['correlation'], '0')
-        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
-        self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'test_organization/test_offering/1.0')
-        self.assertEqual(cdr['description'], 'Single payment: 1 EUR')
-        self.assertEqual(cdr['cost_currency'], 'EUR')
-        self.assertEqual(cdr['cost_value'], '1')
-        self.assertEqual(cdr['country'], '1')
-        self.assertEqual(cdr['customer'], 'test_user')
-
-        cdr = self._cdrs[1]
-        self.assertEqual(cdr['provider'], 'test_organization')
-        self.assertEqual(cdr['service'], 'test_offering 1.0')
-        self.assertEqual(cdr['defined_model'], 'Subscription event')
-        self.assertEqual(cdr['correlation'], '1')
-        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
-        self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'test_organization/test_offering/1.0')
-        self.assertEqual(cdr['description'], 'Subscription: 10 EUR per month')
-        self.assertEqual(cdr['cost_currency'], 'EUR')
-        self.assertEqual(cdr['cost_value'], '10')
-        self.assertEqual(cdr['country'], '1')
-        self.assertEqual(cdr['customer'], 'test_user')
-
-    def test_cdr_generation_org_owned(self):
-
-        applied_parts = {
-            'single_payment': [{
-               'title': 'example part',
-               'unit': 'single_payment',
-               'currency': 'EUR',
-               'value': '1'
-            }]
-        }
-
-        purchase = self._create_purchase()
-
-        purchase.organization_owned = True
-        purchase.owner_organization = Organization.objects.get(name='test_organization')
-        purchase.save()
-
-        charging = charging_engine.ChargingEngine(purchase)
-        charging._price_model = {
-            'general_currency': 'EUR'
-        }
-        charging._generate_cdr(applied_parts, str(datetime.now()))
-
-        self.assertEqual(len(self._cdrs), 1)
-
-        cdr = self._cdrs[0]
-        self.assertEqual(cdr['customer'], 'test_organization')
-
-    def test_cdr_generation_use(self):
-
-        applied_parts = {
-            'charges': [{
-                'accounting': [{
-                    'offering': {
-                        'name': 'test_offering',
-                        'organization': 'test_organization',
-                        'version': '1.0'
-                    },
-                    'customer': 'test_user',
-                    'value': '15',
-                    'unit': 'invocation'
-                }, {
-                    'offering': {
-                        'name': 'test_offering',
-                        'organization': 'test_organization',
-                        'version': '1.0'
-                    },
-                    'customer': 'test_user',
-                    'value': '10',
-                    'unit': 'invocation'
-                }],
-                'model': {
-                    'title': 'example part',
-                    'unit': 'invocation',
-                    'currency': 'EUR',
-                    'value': '1'
-                },
-                'price': 25.0
-            }]
-        }
-
-        purchase = self._create_purchase()
-
-        charging = charging_engine.ChargingEngine(purchase)
-        charging._price_model = {
-            'general_currency': 'EUR'
-        }
-        charging._generate_cdr(applied_parts, str(datetime.now()))
-
-        self.assertEqual(len(self._cdrs), 1)
-
-        cdr = self._cdrs[0]
-        self.assertEqual(cdr['provider'], 'test_organization')
-        self.assertEqual(cdr['service'], 'test_offering 1.0')
-        self.assertEqual(cdr['defined_model'], 'Pay per use event')
-        self.assertEqual(cdr['correlation'], '0')
-        self.assertEqual(cdr['purchase'], '61004aba5e05acc115f022f0')
-        self.assertEqual(cdr['offering'], 'test_offering 1.0')
-        self.assertEqual(cdr['product_class'], 'test_organization/test_offering/1.0')
-        self.assertEqual(cdr['description'], 'Fee per invocation, Consumption: 25')
-        self.assertEqual(cdr['cost_currency'], 'EUR')
-        self.assertEqual(cdr['cost_value'], '25.0')
-        self.assertEqual(cdr['country'], '1')
-        self.assertEqual(cdr['customer'], 'test_user')
-
-
 class PriceFunctionPaymentTestCase(TestCase):
 
     fixtures = ['price_function.json']
@@ -1599,9 +1038,8 @@ class PriceFunctionPaymentTestCase(TestCase):
             'cvv2': '111',
         }
 
+        charging_engine.CDRManager = MagicMock()
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
-
-        charging._generate_cdr = fake_cdr_generation
         charging.resolve_charging(sdr=True)
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
@@ -1656,9 +1094,8 @@ class PriceFunctionPaymentTestCase(TestCase):
             'cvv2': '111',
         }
 
+        charging_engine.CDRManager = MagicMock()
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
-
-        charging._generate_cdr = fake_cdr_generation
         charging._calculate_renovation_date = fake_renovation_date
         charging.resolve_charging()
 
@@ -1715,9 +1152,8 @@ class PriceFunctionPaymentTestCase(TestCase):
             'cvv2': '111',
         }
 
+        charging_engine.CDRManager = MagicMock()
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
-
-        charging._generate_cdr = fake_cdr_generation
         charging._calculate_renovation_date = fake_renovation_date
         charging.resolve_charging()
 
