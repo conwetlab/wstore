@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -701,8 +701,9 @@ class UpdatingPurchasesTestCase(TestCase):
 
         offering.save()
 
-        from wstore.charging_engine.charging_engine import ChargingEngine
-        charging = ChargingEngine(purchase, payment_method='paypal', plan='update')
+        from wstore.charging_engine import charging_engine
+        charging_engine.BalanceManager = MagicMock()
+        charging = charging_engine.ChargingEngine(purchase, payment_method='paypal', plan='update')
         charging._create_purchase_contract()
 
         # Refresh purchase
@@ -814,8 +815,9 @@ class UpdatingPurchasesTestCase(TestCase):
         }
         offering.save()
 
-        from wstore.charging_engine.charging_engine import ChargingEngine
-        charging = ChargingEngine(purchase, payment_method='paypal', plan='update')
+        from wstore.charging_engine import charging_engine
+        charging_engine.BalanceManager = MagicMock()
+        charging = charging_engine.ChargingEngine(purchase, payment_method='paypal', plan='update')
         charging._create_purchase_contract()
 
         # Refresh purchase
@@ -905,7 +907,8 @@ class UpdatingPurchasesTestCase(TestCase):
             },
             bill=['/media/bills/11111111111.pdf']
         )
-        from wstore.charging_engine.charging_engine import ChargingEngine
+        from wstore.charging_engine import charging_engine
+        charging_engine.BalanceManager = MagicMock()
 
         # Check exceptions that can occur with multiple price plans when
         # creating the related purchase contract
@@ -918,7 +921,7 @@ class UpdatingPurchasesTestCase(TestCase):
             error = False
             msg = None
             try:
-                charging = ChargingEngine(purchase, payment_method='paypal', plan=errors[err])
+                charging = charging_engine.ChargingEngine(purchase, payment_method='paypal', plan=errors[err])
                 charging._create_purchase_contract()
             except Exception, e:
                 error = True

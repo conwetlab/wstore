@@ -172,6 +172,8 @@ class SinglePaymentChargingTestCase(TestCase):
     def setUp(self):
         charging_engine.CDRManager = MagicMock()
         charging_engine.InvoiceBuilder = MagicMock()
+        self._balance_manager = MagicMock()
+        charging_engine.BalanceManager = MagicMock(return_value=self._balance_manager)
 
     @parameterized.expand([
         ('basic',  BASIC_PRCING, 5),
@@ -256,6 +258,8 @@ class SubscriptionChargingTestCase(TestCase):
 
     def setUp(self):
         charging_engine.InvoiceBuilder = MagicMock()
+        self._balance_manager = MagicMock()
+        charging_engine.BalanceManager = MagicMock(return_value=self._balance_manager)
 
     def test_basic_subscription_charging(self):
 
@@ -644,6 +648,9 @@ class AsynchronousPaymentTestCase(TestCase):
     def setUp(self):
         charging_engine.CDRManager = MagicMock()
         charging_engine.InvoiceBuilder = MagicMock()
+        self._balance_manager = MagicMock()
+        charging_engine.BalanceManager = MagicMock(return_value=self._balance_manager)
+
 
     def test_basic_asynchronous_payment(self):
 
@@ -686,8 +693,6 @@ class AsynchronousPaymentTestCase(TestCase):
 
         # Second step
         charging = charging_engine.ChargingEngine(purchase)
-        charging._check_expenditure_limits = MagicMock()
-        charging._update_actor_balance = MagicMock()
         charging.end_charging(contract.pending_payment['price'], contract.pending_payment['concept'], contract.pending_payment['related_model'])
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
@@ -768,7 +773,6 @@ class ChargingDaemonTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-
         resolve_use_charging.ChargingEngine = FakeChargingEngine
         cls._command = resolve_use_charging.Command()
         super(ChargingDaemonTestCase, cls).setUpClass()
@@ -997,6 +1001,8 @@ class PriceFunctionPaymentTestCase(TestCase):
 
     def setUp(self):
         charging_engine.InvoiceBuilder = MagicMock()
+        self._balance_manager = MagicMock()
+        charging_engine.BalanceManager = MagicMock(return_value=self._balance_manager)
 
     def test_basic_price_function_payment(self):
 
