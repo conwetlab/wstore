@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2013 - 2015 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of WStore.
 
@@ -32,6 +32,17 @@ from wstore.contracting.models import Purchase
 
 class Command(BaseCommand):
 
+    def resolve_purchase_usage(self, purchase):
+        # Get payment info
+        if purchase.organization_owned:
+            org = purchase.owner_organization
+            payment_info = org.payment_info
+        else:
+            payment_info = purchase.customer.userprofile.payment_info
+
+        charging = ChargingEngine(purchase, payment_method='credit_card', credit_card=payment_info)
+        charging.resolve_charging(type_='use')
+
     def handle(self, *args, **options):
         """
             This method is used to perform the charging process
@@ -52,16 +63,7 @@ class Command(BaseCommand):
 
                     if (time_stamp + 2592000) <= now:  # A month
                         # Get the related payment info
-                        purchase = contract.purchase
-
-                        if purchase.organization_owned:
-                            org = purchase.owner_organization
-                            payment_info = org.payment_info
-                        else:
-                            payment_info = purchase.customer.userprofile.payment_info
-
-                        charging = ChargingEngine(purchase, payment_method='credit_card', credit_card=payment_info)
-                        charging.resolve_charging(sdr=True)
+                        self.resolve_purchase_usage(contract.purchase)
 
         elif len(args) == 1:
             # Get the purchase
@@ -74,18 +76,8 @@ class Command(BaseCommand):
             contract = purchase.contract
 
             # Check if there are pending SDRs
-            if (len(contract.pending_sdrs) > 0):
-
-                # Get payment info
-                if purchase.organization_owned:
-                    org = purchase.owner_organization
-                    payment_info = org.payment_info
-                else:
-                    payment_info = purchase.customer.userprofile.payment_info
-
-                charging = ChargingEngine(purchase, payment_method='credit_card', credit_card=payment_info)
-                charging.resolve_charging(sdr=True)
-
+            if len(contract.pending_sdrs) > 0:
+                self.resolve_purchase_usage(purchase)
             else:
                 raise Exception('No accounting info in the provided purchase')
         else:

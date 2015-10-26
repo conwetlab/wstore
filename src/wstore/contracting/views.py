@@ -319,7 +319,7 @@ class PurchaseEntry(Resource):
                         credit_card = purchase.customer.userprofile.payment_info
                 charging_engine = ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
 
-            charging_engine.resolve_charging()
+            charging_engine.resolve_charging(type_='renovation')
         except:
             # Refresh the purchase info
             purchase = Purchase.objects.get(ref=reference)

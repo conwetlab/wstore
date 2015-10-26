@@ -134,7 +134,7 @@ def create_purchase(user, offering, org_owned=False, payment_info=None):
     else:
         charging_engine = ChargingEngine(purchase, payment_method='paypal', plan=plan)
 
-    redirect_url = charging_engine.resolve_charging(new_purchase=True)
+    redirect_url = charging_engine.resolve_charging()
 
     if redirect_url is None:
         result = purchase

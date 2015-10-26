@@ -81,26 +81,6 @@ class FakeThreading():
             pass
 
 
-class FakeChargingEngine():
-
-    _purchase = None
-    _payment_method = None
-    _credit_card = None
-
-    def __init__(self, purchase, payment_method, credit_card):
-        self._purchase = purchase
-        self._payment_method = payment_method
-        self._credit_card = credit_card
-
-    def resolve_charging(self, sdr=False):
-
-        if sdr and self._payment_method == 'credit_card':
-            sdrs = self._purchase.contract.pending_sdrs
-            self._purchase.contract.pending_sdrs = []
-            self._purchase.contract.applied_sdrs.extend(sdrs)
-            self._purchase.contract.save()
-
-
 def fake_cdr_generation(parts, time):
     pass
 
@@ -180,6 +160,7 @@ class SinglePaymentChargingTestCase(TestCase):
         ('multiple', MULTIPLE_PRCING, 17)
     ])
     def test_charging_single_payment(self, name, pricing_model, value):
+
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
         profile = UserProfile.objects.get(user=user)
 
@@ -209,11 +190,7 @@ class SinglePaymentChargingTestCase(TestCase):
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
-
-        charging._generate_cdr = fake_cdr_generation
-        charging._check_expenditure_limits = MagicMock()
-        charging._update_actor_balance = MagicMock()
-        charging.resolve_charging(new_purchase=True)
+        charging.resolve_charging()
 
         purchase = Purchase.objects.get(pk='61005aba8e05ac2115f022f0')
 
@@ -223,7 +200,7 @@ class SinglePaymentChargingTestCase(TestCase):
         self.assertEqual(len(charges), 1)
         self.assertEqual(charges[0]['cost'], value)
         self.assertEqual(charges[0]['currency'], 'EUR')
-        self.assertEqual(charges[0]['concept'], 'initial charge')
+        self.assertEqual(charges[0]['concept'], 'initial')
 
         price_model = contract.pricing_model
 
@@ -294,14 +271,14 @@ class SubscriptionChargingTestCase(TestCase):
         charging._calculate_renovation_date = fake_renovation_date
         charging._check_expenditure_limits = MagicMock()
         charging._update_actor_balance = MagicMock()
-        charging.resolve_charging(new_purchase=True)
+        charging.resolve_charging()
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
         contract = purchase.contract
 
         self.assertEqual(len(contract.charges), 1)
         self.assertEqual(contract.charges[0]['cost'], 10)
         self.assertEqual(contract.charges[0]['currency'], 'EUR')
-        self.assertEqual(contract.charges[0]['concept'], 'initial charge')
+        self.assertEqual(contract.charges[0]['concept'], 'initial')
 
         pricing_model = contract.pricing_model
 
@@ -365,7 +342,7 @@ class SubscriptionChargingTestCase(TestCase):
         charging._generate_cdr = fake_cdr_generation
         charging._check_expenditure_limits = MagicMock()
         charging._update_actor_balance = MagicMock()
-        charging.resolve_charging()
+        charging.resolve_charging(type_='renovation')
         purchase = Purchase.objects.get(pk="61005a1a8205ac3115111111")
         contract = purchase.contract
 
@@ -375,7 +352,7 @@ class SubscriptionChargingTestCase(TestCase):
         self.assertEqual(contract.charges[0]['concept'], 'initial')
         self.assertEqual(contract.charges[1]['cost'], 10)
         self.assertEqual(contract.charges[1]['currency'], 'EUR')
-        self.assertEqual(contract.charges[1]['concept'], 'Renovation')
+        self.assertEqual(contract.charges[1]['concept'], 'renovation')
 
         pricing_model = contract.pricing_model
 
@@ -439,7 +416,7 @@ class SubscriptionChargingTestCase(TestCase):
         charging._generate_cdr = fake_cdr_generation
         charging._check_expenditure_limits = MagicMock()
         charging._update_actor_balance = MagicMock()
-        charging.resolve_charging()
+        charging.resolve_charging(type_='renovation')
         purchase = Purchase.objects.get(pk='61005aba8e06ac2015f022f0')
         contract = purchase.contract
 
@@ -449,7 +426,7 @@ class SubscriptionChargingTestCase(TestCase):
         self.assertEqual(contract.charges[0]['concept'], 'initial')
         self.assertEqual(contract.charges[1]['cost'], 5)
         self.assertEqual(contract.charges[1]['currency'], 'EUR')
-        self.assertEqual(contract.charges[1]['concept'], 'Renovation')
+        self.assertEqual(contract.charges[1]['concept'], 'renovation')
 
         pricing_model = contract.pricing_model
 
@@ -489,13 +466,13 @@ class SubscriptionChargingTestCase(TestCase):
 
         error = False
         try:
-            charging.resolve_charging()
+            charging.resolve_charging(type_='renovation')
         except Exception, e:
             error = True
             msg = e.message
 
         self.assertTrue(error)
-        self.assertEqual(msg, 'No subscriptions to renovate')
+        self.assertEqual(msg, 'The pricing model does not contain any subscription to renovate')
 
 
 class PayPerUseChargingTestCase(TestCase):
@@ -543,7 +520,7 @@ class PayPerUseChargingTestCase(TestCase):
         charging = charging_engine.ChargingEngine(purchase)
         charging._check_expenditure_limits = MagicMock()
         charging._update_actor_balance = MagicMock()
-        charging.resolve_charging(new_purchase=True)
+        charging.resolve_charging()
 
         purchase = Purchase.objects.get(pk='61074ab65e05acc415f77777')
 
@@ -596,7 +573,7 @@ class PayPerUseChargingTestCase(TestCase):
         charging.CDRGeneration = MagicMock()
         charging._check_expenditure_limits = MagicMock()
         charging._update_actor_balance = MagicMock()
-        charging.resolve_charging(sdr=True)
+        charging.resolve_charging(type_='use')
 
         purchase = Purchase.objects.get(pk='61077ab75e07a7c415f372f2')
 
@@ -606,7 +583,7 @@ class PayPerUseChargingTestCase(TestCase):
 
         self.assertEqual(len(contract.charges), 1)
         self.assertEqual(contract.charges[0]['cost'], 10.00)
-        self.assertEqual(contract.charges[0]['concept'], 'pay per use')
+        self.assertEqual(contract.charges[0]['concept'], 'use')
 
         self.assertEqual(len(contract.pending_sdrs), 0)
         self.assertEqual(len(contract.applied_sdrs), 1)
@@ -621,13 +598,13 @@ class PayPerUseChargingTestCase(TestCase):
         error = False
         msg = None
         try:
-            charging.resolve_charging(sdr=True)
+            charging.resolve_charging(type_='use')
         except Exception, e:
             error = True
             msg = e.message
 
         self.assertTrue(error)
-        self.assertEquals(msg, 'No SDRs to charge')
+        self.assertEquals(msg, 'There is not pending SDRs to process')
 
     test_resolve_use_charging_no_sdr.tags = ('fiware-ut-15',)
 
@@ -651,7 +628,6 @@ class AsynchronousPaymentTestCase(TestCase):
         self._balance_manager = MagicMock()
         charging_engine.BalanceManager = MagicMock(return_value=self._balance_manager)
 
-
     def test_basic_asynchronous_payment(self):
 
         user = User.objects.get(pk='51070aba8e05cc2115f022f9')
@@ -673,7 +649,7 @@ class AsynchronousPaymentTestCase(TestCase):
 
         # First step
         charging = charging_engine.ChargingEngine(purchase, payment_method='paypal')
-        url = charging.resolve_charging(new_purchase=True)
+        url = charging.resolve_charging()
 
         self.assertEqual(url, 'https://www.sandbox.paypal.com/webscr?cmd=_express-checkout&token=11111111')
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
@@ -684,7 +660,7 @@ class AsynchronousPaymentTestCase(TestCase):
         contract = purchase.contract
         self.assertEqual(len(contract.charges), 0)
         self.assertEqual(contract.pending_payment['price'], '5.00')
-        self.assertEqual(contract.pending_payment['concept'], 'initial charge')
+        self.assertEqual(contract.pending_payment['concept'], 'initial')
 
         model = contract.pending_payment['related_model']
         self.assertEqual(len(model['single_payment']), 1)
@@ -703,7 +679,7 @@ class AsynchronousPaymentTestCase(TestCase):
 
         self.assertEqual(contract.charges[0]['cost'], '5.00')
         self.assertEqual(contract.charges[0]['currency'], 'EUR')
-        self.assertEqual(contract.charges[0]['concept'], 'initial charge')
+        self.assertEqual(contract.charges[0]['concept'], 'initial')
 
         self.assertEqual(contract.pending_payment, {})
 
@@ -773,88 +749,29 @@ class ChargingDaemonTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        resolve_use_charging.ChargingEngine = FakeChargingEngine
         cls._command = resolve_use_charging.Command()
         super(ChargingDaemonTestCase, cls).setUpClass()
 
-    def test_basic_charging_daemon(self):
+    def setUp(self):
+        self._charging_engine = MagicMock()
+        resolve_use_charging.ChargingEngine = MagicMock(return_value=self._charging_engine)
 
-        # Fill userprofile model
-        user = User.objects.get(pk='51000aba8e05ac2115f022f9')
-        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
-
-        user.userprofile.organization = org
-        user.userprofile.payment_info = {
-        }
-
-        user.userprofile.save()
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        # Add dateinfo to sdr
-        pending_sdrs = []
-        pending_sdrs.append({
+    @parameterized.expand([
+        ('basic', '61004aba5e05acc115f022f0', [{
             'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
-        })
-
-        purchase.contract.pending_sdrs = pending_sdrs
-
-        purchase.contract.save()
-
-        # Run the method
-        self._command.handle()
-
-        # Check the contract
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        contract = purchase.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 0)
-        self.assertEqual(len(contract.applied_sdrs), 1)
-
-    def test_charging_daemon_multiple_sdrs(self):
-
-        # Fill userprofile model
-        user = User.objects.get(pk='51000aba8e05ac2115f022f9')
-        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
-
-        user.userprofile.organization = org
-        user.userprofile.payment_info = {
-        }
-
-        user.userprofile.save()
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        # Add dateinfo to sdr
-        pending_sdrs = []
-        pending_sdrs.append({
+        }]),
+        ('multiple', '61004aba5e05acc115f022f0', [{
             'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
-        })
-        pending_sdrs.append({
+        },{
             'time_stamp': datetime(2013, 04, 02, 00, 00, 00, 00)
-        })
-        pending_sdrs.append({
+        }, {
             'time_stamp': datetime(2013, 04, 03, 00, 00, 00, 00)
-        })
-
-        purchase.contract.pending_sdrs = pending_sdrs
-
-        purchase.contract.save()
-
-        # Run the method
-        self._command.handle()
-
-        # Check the contract
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        contract = purchase.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 0)
-        self.assertEqual(len(contract.applied_sdrs), 3)
-
-    def test_charging_daemon_multiple_contracts(self):
-
+        }]),
+        ('org_owned', '61004aba5e05acc115f08888', [{
+            'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
+        }])
+    ])
+    def test_charging_daemon(self, name, purchase_id, sdrs):
         # Fill userprofile model
         user = User.objects.get(pk='51000aba8e05ac2115f022f9')
         org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
@@ -865,121 +782,18 @@ class ChargingDaemonTestCase(TestCase):
 
         user.userprofile.save()
 
-        purchase_1 = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-        purchase_2 = Purchase.objects.get(pk='61004aba5e05acc115f03333')
-
-        # Add dateinfo to sdr
-        pending_sdrs_1 = []
-        pending_sdrs_1.append({
-            'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
-        })
-
-        pending_sdrs_2 = []
-        pending_sdrs_2.append({
-            'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
-        })
-        pending_sdrs_2.append({
-            'time_stamp': datetime(2013, 04, 02, 00, 00, 00, 00)
-        })
-        pending_sdrs_2.append({
-            'time_stamp': datetime(2013, 04, 03, 00, 00, 00, 00)
-        })
-
-        purchase_1.contract.pending_sdrs = pending_sdrs_1
-        purchase_1.contract.save()
-
-        purchase_2.contract.pending_sdrs = pending_sdrs_2
-        purchase_2.contract.save()
-
-        # Run the method
-        self._command.handle()
-
-        # Check the first contract
-        purchase_1 = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        contract = purchase_1.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 0)
-        self.assertEqual(len(contract.applied_sdrs), 1)
-
-        # Check the first contract
-        purchase_2 = Purchase.objects.get(pk='61004aba5e05acc115f03333')
-
-        contract = purchase_2.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 0)
-        self.assertEqual(len(contract.applied_sdrs), 3)
-
-    def test_charging_daemon_organization_purchased(self):
-
-        # Fill userprofile model
-        user = User.objects.get(pk='51000aba8e05ac2115f022f9')
-        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
-
-        org.payment_info = {}
-        org.save()
-
-        user.userprofile.organization = org
-
-        user.userprofile.save()
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f08888')
-
-        # Add dateinfo to sdr
-        pending_sdrs = []
-        pending_sdrs.append({
-            'time_stamp': datetime(2013, 04, 01, 00, 00, 00, 00)
-        })
-
-        purchase.contract.pending_sdrs = pending_sdrs
+        purchase = Purchase.objects.get(pk=purchase_id)
+        purchase.contract.pending_sdrs = sdrs
 
         purchase.contract.save()
 
         # Run the method
         self._command.handle()
 
-        # Check the contract
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f08888')
-
-        contract = purchase.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 0)
-        self.assertEqual(len(contract.applied_sdrs), 1)
-
-    def test_charging_daemon_now_time(self):
-
-        # Fill userprofile model
-        user = User.objects.get(pk='51000aba8e05ac2115f022f9')
-        org = Organization.objects.get(pk='91000aba8e06ac2115f022f0')
-
-        user.userprofile.organization = org
-        user.userprofile.payment_info = {
-        }
-
-        user.userprofile.save()
-
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        # Add dateinfo to sdr
-        pending_sdrs = []
-        pending_sdrs.append({
-            'time_stamp': datetime.now()
-        })
-
-        purchase.contract.pending_sdrs = pending_sdrs
-
-        purchase.contract.save()
-
-        # Run the method
-        self._command.handle()
-
-        # Check the contract
-        purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
-
-        contract = purchase.contract
-
-        self.assertEqual(len(contract.pending_sdrs), 1)
-        self.assertEqual(len(contract.applied_sdrs), 0)
+        # Check calls
+        resolve_use_charging.ChargingEngine.assert_called_once_with(
+            purchase, payment_method='credit_card', credit_card=user.userprofile.payment_info)
+        self._charging_engine.resolve_charging(type_='use')
 
 
 class PriceFunctionPaymentTestCase(TestCase):
@@ -1032,7 +846,7 @@ class PriceFunctionPaymentTestCase(TestCase):
 
         charging_engine.CDRManager = MagicMock()
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
-        charging.resolve_charging(sdr=True)
+        charging.resolve_charging(type_='use')
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f022f0')
 
@@ -1042,7 +856,7 @@ class PriceFunctionPaymentTestCase(TestCase):
 
         self.assertEqual(len(contract.charges), 1)
         self.assertEqual(contract.charges[0]['cost'], 33.00)
-        self.assertEqual(contract.charges[0]['concept'], 'pay per use')
+        self.assertEqual(contract.charges[0]['concept'], 'use')
 
         self.assertEqual(len(contract.pending_sdrs), 0)
         self.assertEqual(len(contract.applied_sdrs), 3)
@@ -1086,7 +900,7 @@ class PriceFunctionPaymentTestCase(TestCase):
         charging_engine.CDRManager = MagicMock()
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
         charging._calculate_renovation_date = fake_renovation_date
-        charging.resolve_charging()
+        charging.resolve_charging(type_='renovation')
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f55555')
 
@@ -1096,7 +910,7 @@ class PriceFunctionPaymentTestCase(TestCase):
 
         self.assertEqual(len(contract.charges), 1)
         self.assertEqual(contract.charges[0]['cost'], 38.00)
-        self.assertEqual(contract.charges[0]['concept'], 'Renovation')
+        self.assertEqual(contract.charges[0]['concept'], 'renovation')
 
         self.assertEqual(len(contract.pending_sdrs), 0)
         self.assertEqual(len(contract.applied_sdrs), 3)
@@ -1141,7 +955,7 @@ class PriceFunctionPaymentTestCase(TestCase):
         charging_engine.CDRManager = MagicMock()
         charging = charging_engine.ChargingEngine(purchase, payment_method='credit_card', credit_card=credit_card)
         charging._calculate_renovation_date = fake_renovation_date
-        charging.resolve_charging()
+        charging.resolve_charging(type_='renovation')
 
         purchase = Purchase.objects.get(pk='61004aba5e05acc115f77777')
 
@@ -1151,7 +965,7 @@ class PriceFunctionPaymentTestCase(TestCase):
 
         self.assertEqual(len(contract.charges), 1)
         self.assertEqual(contract.charges[0]['cost'], 33.30)
-        self.assertEqual(contract.charges[0]['concept'], 'Renovation')
+        self.assertEqual(contract.charges[0]['concept'], 'renovation')
 
         self.assertEqual(len(contract.pending_sdrs), 0)
         self.assertEqual(len(contract.applied_sdrs), 3)
