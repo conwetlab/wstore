@@ -115,7 +115,7 @@ class KeystoneClient(object):
         """
             Retrieves the info of given app
         """
-        url = urljoin(self._keystone_host, 'v3/OS-OAUTH2/consumers/' + app_id)
+        url = urljoin(self._keystone_host, 'v3/OS-ROLES/consumers/' + app_id)
         resp = self._make_request(url, requests.get)
 
         content = resp.json()
