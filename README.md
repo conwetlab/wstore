@@ -1,5 +1,7 @@
 # WStore
 
+[![License](https://img.shields.io/badge/license-EUPL%201.1-blue.svg?style=flat)](https://opensource.org/licenses/EUPL-1.1) [![Docs](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](http://wstore.readthedocs.org/en/latest/) [![Docker](https://img.shields.io/docker/pulls/fiware/wstore.svg)](https://hub.docker.com/r/fiware/wstore) [![Support](https://img.shields.io/badge/support-askbot-yellowgreen.svg)](https://ask.fiware.org)
+
  * [Introduction](#introduction)
  * [GEi Overall Description](#gei-overall-description)
  * [Installation](#build-and-install)
