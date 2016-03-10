@@ -42,5 +42,5 @@ EXPOSE 8000
 CMD service mongodb start && \
     echo "Waiting till database is initialized" && \
     sleep 20 && \
-    echo "Stating WStore" && \
+    echo "Starting WStore" && \
     ./src/manage.py runserver 0.0.0.0:8000
