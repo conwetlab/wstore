@@ -793,6 +793,10 @@ Please note that the following information is required before performing this pr
 * Valid credentials for WStore (i.e credentials created during the syncdb command or an Identity Manager user).
 * A logo image.
 
+
+.. note::
+    If you are using local authentication, users are not authorized by default to create offerings. In this regard, you will need to give the provider role to the user used to execute the sanity check using the WStore administration. ::
+
 To check if WStore is running follow these steps:
 
 1. Open a browser and enter WStore.
