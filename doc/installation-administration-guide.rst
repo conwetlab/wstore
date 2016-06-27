@@ -8,7 +8,7 @@ Introduction
 
 This Installation and Administration Guide covers WStore versions since 0.3 (0.3.0, 0.3.1, 0.4 and 0.5) corresponding to FIWARE releases 3.3.1, 3.3.2, 4.1.1 and 4.4.3). Any feedback on this document is highly welcomed, including bugs, typos or things you think should be included but aren't. Please send it to the "Contact Person" email that appears in the `Catalogue page for this GEi`_.
 
-.. _Catalogue page for this GEi: http://catalogue.fi-ware.eu/enablers/store-wstore
+.. _Catalogue page for this GEi: http://catalogue.fiware.org/enablers/store-wstore
 
 ------------
 Installation
@@ -497,13 +497,13 @@ of the WStore instance. Note that WStore does not store exactly the same info
 for the two methods, so, changing between authentication methods when the 
 system has started to be used may cause unexpected behaviours.
 
-FI-WARE Identity management
+FIWARE Identity management
 ---------------------------
 
-It is possible to delegate the authentication of users to the FI-WARE Identity 
-Management system on a FI-WARE instance. View FI-LAB info in:
+It is possible to delegate the authentication of users to the FIWARE Identity 
+Management system on a FIWARE instance. View FIWARE Lab info in:
 
-* http://help.lab.fi-ware.org
+* http://help.lab.fiware.org
 
 To do that, the first step is setting up the OILAUTH setting
 to True (Note that this is the default value). ::
@@ -572,7 +572,7 @@ by using this command: ::
 
 This command creates indexes for the different models of the database and ask if you 
 want to create a Django superuser. In case you are using WStore authentication, this 
-superuser is required in order to perform administrative tasks. If you are using FI-WARE 
+superuser is required in order to perform administrative tasks. If you are using FIWARE 
 authentication, users are taken from the identity management system, so do not create the user.
 Users with corresponding role (Provider) will be able to perform the administrative tasks.
 
