@@ -835,7 +835,7 @@ To check if WStore is running follow these steps:
 
    :align: center
 
-14. Click *Next* in the Application selection form (This form only appears if using idM for authentication).
+14. If using the FIWARE Idm for authentication, click *Next* in the application selection form. Otherwise, go to the next step.
 
 .. image:: /images/installation/sanity_7.png
    :align: center
